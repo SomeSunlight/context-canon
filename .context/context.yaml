@@ -1,0 +1,75 @@
+schema: contextcanon-poc/v1
+node:
+  id: 8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a
+  name: ContextCanon
+  version: 0.1.0-draft
+human_files:
+  source: CONTEXT.src.md
+  official: CONTEXT.md
+  state: STATE.md
+  agent_entry: AGENTS.md
+  goose_entry: .goosehints
+sources: []
+local:
+  rules:
+    - id: CC-001
+      title: One official context
+      group: Canonical context
+    - id: CC-002
+      title: Edit source, not generated context
+      group: Canonical context
+    - id: CC-003
+      title: Keep compiler bookkeeping out of the normal workflow
+      group: Machine state
+    - id: CC-004
+      title: No implicit source precedence
+      group: Composition
+    - id: CC-005
+      title: Stable identity
+      group: Identity
+    - id: CC-006
+      title: Publish IDs that children may reference
+      group: Identity
+    - id: CC-007
+      title: Use Topics for deeper context
+      group: Progressive disclosure
+    - id: CC-008
+      title: State stays local
+      group: Project state
+    - id: CC-009
+      title: Harness files are adapters
+      group: Harness independence
+    - id: CC-010
+      title: Keep standard repository documents explicit
+      group: Repository conventions
+  changes: []
+  topics:
+    - CC-TOPIC-CONCEPTS
+    - CC-TOPIC-COMPOSITION
+    - CC-TOPIC-FORMATS
+    - CC-TOPIC-HARNESSES
+    - CC-TOPIC-STATE
+official:
+  rule_ids:
+    - CC-001
+    - CC-002
+    - CC-003
+    - CC-004
+    - CC-005
+    - CC-006
+    - CC-007
+    - CC-008
+    - CC-009
+    - CC-010
+  topic_ids:
+    - CC-TOPIC-CONCEPTS
+    - CC-TOPIC-COMPOSITION
+    - CC-TOPIC-FORMATS
+    - CC-TOPIC-HARNESSES
+    - CC-TOPIC-STATE
+provenance:
+  note: All current rules and topics are defined locally by this root node.
+package:
+  revision: POC-UNPINNED
+  effective_digest: POC-NOT-CALCULATED
+  package_digest: POC-NOT-CALCULATED

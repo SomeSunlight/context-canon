@@ -1,0 +1,6 @@
+# GENERATED FILE — DO NOT EDIT.
+# Managed by ContextCanon. See docs/harnesses.md.
+
+Read and follow CONTEXT.md. It is the official compiled context for this repository.
+Load only topic-specific files named there when the current task needs them.
+Read STATE.md when current project state or planning matters.
