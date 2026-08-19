@@ -14,21 +14,13 @@ A node may be large or extremely small. ContextCanon Gateway in this repository 
 
 A **Context Source** is the published Official Context Package of another node accepted at a specific immutable version/revision/package identity.
 
-A node may compose zero, one, or several sources. Sources may represent orthogonal concerns such as:
-
-- company or private governance,
-- Python or Java development practice,
-- security requirements,
-- personal coding style,
-- a shared framework foundation.
+A node may compose zero, one, or several sources. Sources may represent orthogonal concerns such as company governance, Python or Java development practice, security requirements, personal coding style, or a shared framework foundation.
 
 Source order is not precedence.
 
 ## Local Context
 
-The **Local Context** is the node's own delta: local rules, explicit changes to imported elements, and Topics.
-
-It is authored in `CONTEXT.src.md`.
+The **Local Context** is the node's own delta: local Rules, explicit changes to imported elements, and Topics. It is authored in `CONTEXT.src.md`.
 
 This gives a reader an intentionally small answer to:
 
@@ -36,17 +28,11 @@ This gives a reader an intentionally small answer to:
 
 ## Official Context Package
 
-The **Official Context Package** is the compiled result of accepted source packages plus the Local Context.
+The **Official Context Package** is the compiled result of accepted Source packages plus the Local Context.
 
-It is the one canonical result that:
+It is the one canonical result that applies to the current node and is published for child nodes to compose.
 
-1. applies to the current node,
-2. is published for child nodes to compose,
-3. is exposed to humans and agents through `CONTEXT.md` and, when needed, `CONTEXT/`.
-
-`CONTEXT.md` is always the compact generated entry. `CONTEXT/` exists only when the node has deeper resources to materialize.
-
-`.context/` is related machine state about the package, not the human/agent context surface itself.
+`CONTEXT.md` is always the compact generated entry. `CONTEXT/` exists only when the node has deeper resources to materialize. `.context/` is related machine state about the package, not the human/agent context surface itself.
 
 ## Topics
 
@@ -77,8 +63,8 @@ The ContextCanon schema/specification defines what a valid Node, Source, Rule, T
 
 A Context Node contains actual context content. A separate "interface node" is unnecessary unless there is reusable context content that deserves its own lifecycle.
 
-## Context is broader than rules
+## Context is broader than Rules
 
 Rules are the first structured element because they are easy to reason about and immediately useful. The model is intentionally extensible toward glossaries, examples, patterns, practices, hints, skills, structured data, media, and experience.
 
-Future element types should reuse the same principles where appropriate: stable identity, source composition, local delta, provenance, versioned publication, materialization, and progressive disclosure.
+Future element types should reuse the same principles where appropriate: stable identity, Source composition, local delta, provenance, versioned publication, materialization, and progressive disclosure.
