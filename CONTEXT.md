@@ -1,19 +1,19 @@
-# ContextCanon Development — Official Context
+# ContextCanon Development (`t-intern`) — Official Context
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
 > This is the compact official entry view for developing ContextCanon itself.
-> The complete Official Context is the compiled package represented by this entry view plus Topic material and machine package data.
+> Together with the generated `CONTEXT/` directory it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
-> Client projects should compose [ContextCanon Standard](contexts/standard/CONTEXT.md), not this Development node.
+> Ordinary client projects should compose [ContextCanon Public (`t`)](contexts/public/CONTEXT.md), not this Development node.
 
-**Node:** ContextCanon Development  
+**Node:** ContextCanon Development (`t-intern`)  
 **Context version:** `0.1.0-draft`
 
 Published rule IDs are stable contract identifiers. Titles and wording may change without changing identity.
 
-## Rules from ContextCanon Standard
+## Rules from ContextCanon Public (`t`)
 
 ### Canonical context
 
@@ -21,9 +21,9 @@ Published rule IDs are stable contract identifiers. Titles and wording may chang
 
 The compiled Official Context Package is the single canonical context for a node: it applies to the node itself and is the package meaning published to child nodes.
 
-#### `CC-002` — Edit source, not generated views
+#### `CC-002` — Edit source, not generated output
 
-Human context changes are authored in `CONTEXT.src.md`; generated context views, machine state, and harness adapters are not edited directly.
+Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.
 
 ### Machine state
 
@@ -71,6 +71,12 @@ Project code and canonical project context must not depend on a particular LLM o
 
 Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
 
+### Documentation style
+
+#### `CC-011` — Write for intelligent readers
+
+Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
+
 ## Local Development rules
 
 ### Compiler architecture
@@ -79,21 +85,15 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is
 
 Prefer deterministic mechanisms whenever behavior can be specified and computed exactly; use LLMs only for work that genuinely requires semantic interpretation.
 
-Why: Deterministic structure provides reproducibility and auditability, while LLM reasoning is most valuable where meaning rather than mechanics must be understood.
-
 ### Development method
 
 #### `CCI-002` — Validate vertically before hardening
 
 Validate ContextCanon through concrete repository use cases before hardening abstractions into compiler code.
 
-Why: Simple real workflows should shape the framework; implementation convenience must not force unnecessary ceremony on users.
-
 #### `CCI-003` — Repository documentation is the design record
 
 Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
-
-Why: ContextCanon itself should demonstrate durable, reviewable project context.
 
 ## Topics
 
@@ -102,39 +102,39 @@ Why: ContextCanon itself should demonstrate durable, reviewable project context.
 When changing the compiler boundary, package model, node structure, deterministic/semantic split, or generated artifacts:
 
 **Required**
-- `docs/architecture.md`
-- `docs/use-case-walkthrough.md`
+- [`CONTEXT/references/docs/architecture.md`](CONTEXT/references/docs/architecture.md)
+- [`CONTEXT/references/docs/use-case-walkthrough.md`](CONTEXT/references/docs/use-case-walkthrough.md)
 
 **Optional**
-- `docs/concepts.md`
+- [`CONTEXT/references/docs/concepts.md`](CONTEXT/references/docs/concepts.md)
 
 ### Source and official formats
 
 When changing authoring syntax, IDs, Topics, official entry views, or machine representation:
 
 **Required**
-- `docs/source-format.md`
-- `docs/official-context.md`
-- `docs/topics.md`
+- [`CONTEXT/references/docs/source-format.md`](CONTEXT/references/docs/source-format.md)
+- [`CONTEXT/references/docs/official-context.md`](CONTEXT/references/docs/official-context.md)
+- [`CONTEXT/references/docs/topics.md`](CONTEXT/references/docs/topics.md)
 
 ### Composition
 
 When changing source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-node repositories:
 
 **Required**
-- `docs/composition.md`
-- `docs/use-case-walkthrough.md`
+- [`CONTEXT/references/docs/composition.md`](CONTEXT/references/docs/composition.md)
+- [`CONTEXT/references/docs/use-case-walkthrough.md`](CONTEXT/references/docs/use-case-walkthrough.md)
 
 ### Harness integration
 
 When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 **Required**
-- `docs/harnesses.md`
+- [`CONTEXT/references/docs/harnesses.md`](CONTEXT/references/docs/harnesses.md)
 
 ### State and planning
 
 When deciding whether information belongs in current state, planning, governance, or history:
 
 **Required**
-- `docs/state.md`
+- [`CONTEXT/references/docs/state.md`](CONTEXT/references/docs/state.md)
