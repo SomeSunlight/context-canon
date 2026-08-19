@@ -1,12 +1,13 @@
-# GENERATED ContextCanon machine state for the public Standard node.
+# GENERATED ContextCanon machine state for the public node (`t`).
 # Humans normally read CONTEXT.src.md (local source) or CONTEXT.md (official entry) instead.
 
 schema: contextcanon-poc/v1
 
-# Stable node identity. Name/path may change without changing this ID after publication.
+# Stable node identity. Human name/path may change without changing this ID after publication.
 node:
   id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
-  name: ContextCanon Standard
+  name: ContextCanon Public
+  alias: t
   version: 0.1.0-draft
 
 # This is a root reusable node: it currently composes no other ContextCanon sources.
@@ -16,7 +17,7 @@ sources: []
 local:
   rules:
     - {id: CC-001, title: One official package, group: Canonical context}
-    - {id: CC-002, title: Edit source, not generated views, group: Canonical context}
+    - {id: CC-002, title: Edit source, not generated output, group: Canonical context}
     - {id: CC-003, title: Keep compiler bookkeeping out of the normal workflow, group: Machine state}
     - {id: CC-004, title: No implicit source precedence, group: Composition}
     - {id: CC-005, title: Stable identity, group: Identity}
@@ -25,23 +26,33 @@ local:
     - {id: CC-008, title: State stays local, group: Project state}
     - {id: CC-009, title: Canonical context is model- and harness-neutral, group: Harness independence}
     - {id: CC-010, title: Keep standard repository documents explicit, group: Repository conventions}
+    - {id: CC-011, title: Write for intelligent readers, group: Documentation style}
   changes: []
   topics:
     - CC-TOPIC-AUTHORING
     - CC-TOPIC-COMPOSITION
     - CC-TOPIC-HARNESSES
 
-# The normalized official package contains the same identities plus materialized Topic resources.
+# Human/agent-facing generated package.
 official:
-  rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010]
+  entry: CONTEXT.md
+  resource_root: CONTEXT/
+  rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
   topic_ids: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
 
-# All current elements originate in this node; later compilers record full event provenance here.
+# Source paths are rewritten/materialized into package-local paths at build time.
+resources:
+  - {source: ../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
+  - {source: ../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
+  - {source: ../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
+  - {source: ../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
+  - {source: ../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
+
 provenance:
-  note: All current rules and topics are defined locally by ContextCanon Standard.
+  note: All current rules and topics are defined locally by ContextCanon Public.
 
 # Exact immutable package/revision data is intentionally not implemented in this documentation POC.
 package:
   revision: POC-UNPINNED
-  effective_digest: POC-NOT-CALCULATED
+  normalized_digest: POC-NOT-CALCULATED
   package_digest: POC-NOT-CALCULATED
