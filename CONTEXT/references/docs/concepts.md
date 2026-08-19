@@ -42,15 +42,17 @@ It is the one canonical result that:
 
 1. applies to the current node,
 2. is published for child nodes to compose,
-3. produces the human/agent entry view and machine representation.
+3. is exposed to humans and agents through `CONTEXT.md` plus `CONTEXT/`.
 
 There is intentionally no separate "context used by this parent" and "context exported to children."
 
-## `CONTEXT.md`
+`.context/` is related machine state about the package, not the human/agent context surface itself.
 
-`CONTEXT.md` is the compact generated official **entry view** into the Official Context Package.
+## `CONTEXT.md` and `CONTEXT/`
 
-It should contain broadly required context and a precise Topic map, not every piece of material contained in the package.
+`CONTEXT.md` is the compact generated official **entry view**. `CONTEXT/` holds deeper package-local resources.
+
+The entry should contain broadly required context and a precise Topic map, not every piece of material available in the package.
 
 This distinction allows the package to remain complete while protecting the LLM context window from unrelated information.
 
@@ -65,8 +67,16 @@ Topic material distinguishes:
 
 This pattern may repeat recursively: summary first, then deeper links.
 
+Topics are also the first general context-integration mechanism: they can later connect tasks not only to Markdown, but also to glossaries, example code, structured data, PDFs, images, skills, and experience.
+
+## Schema versus Node
+
+The ContextCanon schema/specification defines what a valid Node, Source, Rule, Topic, Change, identifier, and package look like. In object-oriented terms, this is the structural interface.
+
+A Context Node contains actual context content. A separate "interface node" is therefore unnecessary unless there is reusable context content that deserves its own lifecycle.
+
 ## Context is broader than rules
 
-Rules are the first structured element because they are easy to reason about and immediately useful. The model is intentionally extensible toward glossaries, examples, patterns, practices, hints, skills, and experience.
+Rules are the first structured element because they are easy to reason about and immediately useful. The model is intentionally extensible toward glossaries, examples, patterns, practices, hints, skills, structured data, media, and experience.
 
-These future element types should reuse the same principles: stable identity, source composition, local delta, provenance, versioned publication, and progressive disclosure where appropriate.
+Future element types should reuse the same principles where appropriate: stable identity, source composition, local delta, provenance, versioned publication, materialization, and progressive disclosure.
