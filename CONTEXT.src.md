@@ -1,10 +1,10 @@
-# ContextCanon Development — Local Context Source
+# ContextCanon Development (`t-intern`) — Local Context Source
 
 > [!IMPORTANT]
 > **Edit this file to change the local context for developing ContextCanon itself.**
-> `CONTEXT.md` is generated from this source plus accepted context sources.
+> `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted context sources.
 >
-> Client projects should compose the public [ContextCanon Standard](contexts/standard/CONTEXT.md), not this Development node.
+> Ordinary client projects should compose [ContextCanon Public (`t`)](contexts/public/CONTEXT.md), not this Development node.
 >
 > **Source syntax**
 > - `## Sources` lists reusable published ContextCanon nodes to compose. Source order is not precedence.
@@ -49,7 +49,7 @@ Optional:
 
 ## Sources
 
-- [ContextCanon Standard](contexts/standard/CONTEXT.md) — `0.1.0-draft`
+- [ContextCanon Public (`t`)](contexts/public/CONTEXT.md) — `0.1.0-draft`
   <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.1.0-draft" revision="POC-UNPINNED" -->
 
 ## Rules
