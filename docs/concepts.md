@@ -4,13 +4,15 @@ ContextCanon manages reusable project context as versioned, composable knowledge
 
 ## Context Node
 
-A **Context Node** is an independently versioned unit that publishes an official context. A project repository is a natural node, but node identity is logical rather than tied to a physical path.
+A **Context Node** is an independently addressable and versioned unit that publishes an Official Context Package.
 
-Every node has a stable opaque identity that survives renames or moves.
+Node identity is logical rather than tied to a Git repository or physical directory. One repository may contain several nodes, and a node may move without changing identity.
+
+Every published node has a stable opaque identity that survives ordinary renames or moves.
 
 ## Context Source
 
-A **Context Source** is the published official context of another node accepted at a specific version/revision.
+A **Context Source** is the published Official Context Package of another node accepted at a specific immutable version/revision/package identity.
 
 A node may compose zero, one, or several sources. Sources may represent orthogonal concerns such as:
 
@@ -20,23 +22,48 @@ A node may compose zero, one, or several sources. Sources may represent orthogon
 - personal coding style,
 - a shared framework or parent project.
 
+Source order is not precedence.
+
 ## Local Context
 
 The **Local Context** is the node's own delta: local rules, explicit changes to imported elements, and Topics.
 
 It is authored in `CONTEXT.src.md`.
 
-## Official Context
+This gives a reader an intentionally small answer to:
 
-The **Official Context** is the compiled result of accepted sources plus the local context.
+> What is special about this node compared with the context it composes?
 
-It is the one canonical context that:
+## Official Context Package
+
+The **Official Context Package** is the compiled result of accepted source packages plus the Local Context.
+
+It is the one canonical result that:
 
 1. applies to the current node,
-2. is read by humans and agents,
-3. is published for child nodes to consume.
+2. is published for child nodes to compose,
+3. produces the human/agent entry view and machine representation.
 
-There is intentionally no separate "context for this parent" and "context exported to children."
+There is intentionally no separate "context used by this parent" and "context exported to children."
+
+## `CONTEXT.md`
+
+`CONTEXT.md` is the compact generated official **entry view** into the Official Context Package.
+
+It should contain broadly required context and a precise Topic map, not every piece of material contained in the package.
+
+This distinction allows the package to remain complete while protecting the LLM context window from unrelated information.
+
+## Topics
+
+A **Topic** describes when deeper context becomes relevant.
+
+Topic material distinguishes:
+
+- **Required** material that must be loaded when the Topic applies,
+- **Optional** material that remains discoverable for deeper exploration.
+
+This pattern may repeat recursively: summary first, then deeper links.
 
 ## Context is broader than rules
 
