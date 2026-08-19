@@ -1,13 +1,13 @@
-# ContextCanon Standard — Official Context
+# ContextCanon Public (`t`) — Official Context
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
-> This is the compact official entry view of the public ContextCanon Standard node.
-> Managed client nodes may compose this published node as a context source.
+> This is the compact official entry view of the public ContextCanon node.
+> Together with the generated `CONTEXT/` directory it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
-**Node:** ContextCanon Standard  
+**Node:** ContextCanon Public (`t`)  
 **Context version:** `0.1.0-draft`
 
 The IDs shown with rules are stable contract identifiers. Child nodes use them for removes, overrides, exceptions, tracing, and diagnostics.
@@ -20,9 +20,9 @@ The IDs shown with rules are stable contract identifiers. Child nodes use them f
 
 The compiled Official Context Package is the single canonical context for a node: it applies to the node itself and is the package meaning published to child nodes.
 
-#### `CC-002` — Edit source, not generated views
+#### `CC-002` — Edit source, not generated output
 
-Human context changes are authored in `CONTEXT.src.md`; generated context views, machine state, and harness adapters are not edited directly.
+Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.
 
 ### Machine state
 
@@ -70,6 +70,12 @@ Project code and canonical project context must not depend on a particular LLM o
 
 Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
 
+### Documentation style
+
+#### `CC-011` — Write for intelligent readers
+
+Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
+
 ## Topics
 
 ### Context authoring
@@ -77,20 +83,20 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is
 When editing ContextCanon source, IDs, generated views, or Topics:
 
 **Required**
-- `../../docs/source-format.md`
-- `../../docs/official-context.md`
-- `../../docs/topics.md`
+- [`CONTEXT/references/docs/source-format.md`](CONTEXT/references/docs/source-format.md)
+- [`CONTEXT/references/docs/official-context.md`](CONTEXT/references/docs/official-context.md)
+- [`CONTEXT/references/docs/topics.md`](CONTEXT/references/docs/topics.md)
 
 ### Context composition
 
 When adding sources or changing inherited rules:
 
 **Required**
-- `../../docs/composition.md`
+- [`CONTEXT/references/docs/composition.md`](CONTEXT/references/docs/composition.md)
 
 ### Harness adapters
 
 When adding or changing a harness-specific entry file:
 
 **Required**
-- `../../docs/harnesses.md`
+- [`CONTEXT/references/docs/harnesses.md`](CONTEXT/references/docs/harnesses.md)
