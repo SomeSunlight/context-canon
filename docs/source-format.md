@@ -4,7 +4,23 @@
 
 It is intentionally constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
 
-Every generated source file should start with a visible header explaining how to edit it and linking to this documentation.
+Every source file should start with a visible header explaining how to edit it and linking to this documentation.
+
+## Compiler-managed authoring help
+
+The raw Markdown may contain a compiler-managed HTML comment block with copyable templates for common operations.
+
+Rendered Markdown stays clean, while a first-time editor immediately sees valid examples in the source.
+
+The default direction is a compact help block with generic templates once per file. A future user preference may support:
+
+- `compact` — generic templates,
+- `expanded` — additional ready-to-edit snippets for imported elements,
+- `none` — minimal source for experienced users.
+
+Generating one commented template for every imported rule by default would scale poorly and conflicts with progressive disclosure.
+
+Authoring-help verbosity is tooling/presentation preference, not inherited project governance.
 
 ## Sections
 
@@ -12,13 +28,13 @@ Every generated source file should start with a visible header explaining how to
 
 `## Sources` lists accepted reusable ContextCanon nodes.
 
-A future compiler will maintain package identity/version/revision metadata in hidden comments while leaving the visible source name and version readable.
+A future compiler maintains stable source identity/version/revision metadata in hidden comments while leaving the visible source name and version readable.
 
 Source order is not precedence.
 
 ### Rules
 
-`## Rules` contains local rules. `###` headings group related rules by topic.
+`## Rules` contains local rules. `###` headings group related rules.
 
 Example:
 
@@ -30,15 +46,13 @@ Example:
   <!-- ctx:rule id="SEC-001" -->
 ```
 
-The `ctx:rule` comment contains the stable ID. POC direction: the compiler inserts and maintains these IDs automatically so a human normally does not manage them.
-
-The ID is mandatory in the framework data model even though it is visually hidden in the editable Markdown rendering.
+The compiler-managed comment contains the stable local ID. The ID is mandatory in the framework data model even though it need not clutter rendered source Markdown.
 
 ### Changes
 
 `## Changes` records explicit operations against accepted sources.
 
-Because titles and wording can change, operations must target the stable ID published by the source node. The human-visible text should also show the current source title/description so the operation remains understandable.
+Because titles and wording can change, operations target stable IDs published by the source node. Human-visible source name/title is included for orientation but is not identity.
 
 Conceptual example:
 
@@ -47,29 +61,36 @@ Conceptual example:
 
 ### Remove
 
-- `python-context#PY-017` — Require Python 3.13
+- `Python Development / PY-017` — Require Python 3.13
   Why: This project deliberately supports Python 3.12.
   <!-- ctx:remove target="<stable-node-id>#PY-017" -->
 ```
 
-The visible reference is not merely decoration: a user must be able to identify the exact inherited element being changed.
+The source's published `CONTEXT.md` must make `PY-017` easy to discover.
+
+If a later accepted source package no longer contains the targeted ID, the compiler reports a dangling change operation rather than silently ignoring it.
 
 ### Topics
 
 `## Topics` maps task themes to deeper information.
 
-Example:
+Current design direction:
 
 ```markdown
 ## Topics
 
 ### Logging
 
-When changing logging, diagnostics, or structured events, read:
-- `docs/logging.md`
+When changing logging, diagnostics, or structured events:
+
+Required:
+- `docs/logging-contract.md`
+
+Optional:
+- `docs/logging-history.md`
 ```
 
-The human concept is **Topics**. A compiler may internally model this as routing, but that implementation vocabulary should not leak into normal authoring.
+The exact parser syntax remains open until the next vertical POC, but `required` versus `optional` is a semantic requirement.
 
 ## IDs
 

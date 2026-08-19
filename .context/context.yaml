@@ -1,74 +1,52 @@
+# GENERATED ContextCanon machine state for the repository's Development node.
+# Humans normally read CONTEXT.src.md (local delta) or CONTEXT.md (official entry) instead.
+
 schema: contextcanon-poc/v1
+
 node:
   id: 8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a
-  name: ContextCanon
+  name: ContextCanon Development
   version: 0.1.0-draft
+
 human_files:
   source: CONTEXT.src.md
-  official: CONTEXT.md
+  official_entry: CONTEXT.md
   state: STATE.md
   agent_entry: AGENTS.md
   goose_entry: .goosehints
-sources: []
+
+# Accepted reusable packages. Order is not precedence.
+sources:
+  - id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
+    name: ContextCanon Standard
+    version: 0.1.0-draft
+    revision: POC-UNPINNED
+    locator: contexts/standard
+
+# Only the Development-node delta lives here; Standard rules remain owned by the source node.
 local:
   rules:
-    - id: CC-001
-      title: One official context
-      group: Canonical context
-    - id: CC-002
-      title: Edit source, not generated context
-      group: Canonical context
-    - id: CC-003
-      title: Keep compiler bookkeeping out of the normal workflow
-      group: Machine state
-    - id: CC-004
-      title: No implicit source precedence
-      group: Composition
-    - id: CC-005
-      title: Stable identity
-      group: Identity
-    - id: CC-006
-      title: Publish IDs that children may reference
-      group: Identity
-    - id: CC-007
-      title: Use Topics for deeper context
-      group: Progressive disclosure
-    - id: CC-008
-      title: State stays local
-      group: Project state
-    - id: CC-009
-      title: Harness files are adapters
-      group: Harness independence
-    - id: CC-010
-      title: Keep standard repository documents explicit
-      group: Repository conventions
+    - {id: CCI-001, title: Deterministic skeleton, semantic intelligence on top, group: Compiler architecture}
+    - {id: CCI-002, title: Validate vertically before hardening, group: Development method}
+    - {id: CCI-003, title: Repository documentation is the design record, group: Development method}
   changes: []
   topics:
-    - CC-TOPIC-CONCEPTS
-    - CC-TOPIC-COMPOSITION
-    - CC-TOPIC-FORMATS
-    - CC-TOPIC-HARNESSES
-    - CC-TOPIC-STATE
+    - CCI-TOPIC-ARCHITECTURE
+    - CCI-TOPIC-FORMATS
+    - CCI-TOPIC-COMPOSITION
+    - CCI-TOPIC-HARNESSES
+    - CCI-TOPIC-STATE
+
+# The official package is source package(s) plus local delta after deterministic changes.
 official:
-  rule_ids:
-    - CC-001
-    - CC-002
-    - CC-003
-    - CC-004
-    - CC-005
-    - CC-006
-    - CC-007
-    - CC-008
-    - CC-009
-    - CC-010
-  topic_ids:
-    - CC-TOPIC-CONCEPTS
-    - CC-TOPIC-COMPOSITION
-    - CC-TOPIC-FORMATS
-    - CC-TOPIC-HARNESSES
-    - CC-TOPIC-STATE
+  inherited_rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010]
+  local_rule_ids: [CCI-001, CCI-002, CCI-003]
+  topic_ids: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+
+# Later compilers record exact define/inherit/remove/override/exception events here.
 provenance:
-  note: All current rules and topics are defined locally by this root node.
+  note: CC-* comes from ContextCanon Standard; CCI-* is defined by ContextCanon Development.
+
 package:
   revision: POC-UNPINNED
   effective_digest: POC-NOT-CALCULATED

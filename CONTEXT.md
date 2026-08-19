@@ -1,31 +1,29 @@
-# ContextCanon Official Context
+# ContextCanon Development — Official Context
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
-> This is the official compiled context for this node. It applies to ContextCanon itself and is the context published to child nodes.
+> This is the compact official entry view for developing ContextCanon itself.
+> The complete Official Context is the compiled package represented by this entry view plus Topic material and machine package data.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
+> Client projects should compose [ContextCanon Standard](contexts/standard/CONTEXT.md), not this Development node.
 
-**Node:** ContextCanon  
+**Node:** ContextCanon Development  
 **Context version:** `0.1.0-draft`
 
-The IDs shown with published rules are stable contract identifiers. Child nodes use them for explicit remove, override, exception, tracing, and diagnostics operations.
+Published rule IDs are stable contract identifiers. Titles and wording may change without changing identity.
 
-## Rules
+## Rules from ContextCanon Standard
 
 ### Canonical context
 
-#### `CC-001` — One official context
+#### `CC-001` — One official package
 
-The compiled official context is the single canonical context for a node: it applies to the node itself and is the context the node publishes to children.
+The compiled Official Context Package is the single canonical context for a node: it applies to the node itself and is the package meaning published to child nodes.
 
-Why: Parent and child views must never diverge into two competing truths.
+#### `CC-002` — Edit source, not generated views
 
-#### `CC-002` — Edit source, not generated context
-
-Human context changes are authored in `CONTEXT.src.md`; generated context and harness adapters are not edited directly.
-
-Why: One editable source prevents drift between equivalent instruction files.
+Human context changes are authored in `CONTEXT.src.md`; generated context views, machine state, and harness adapters are not edited directly.
 
 ### Machine state
 
@@ -33,15 +31,11 @@ Why: One editable source prevents drift between equivalent instruction files.
 
 Framework bookkeeping belongs under `.context/` and should not be required reading for normal human or agent work.
 
-Why: IDs, snapshots, provenance, and digests are necessary for the compiler but should not dominate the user experience.
-
 ### Composition
 
 #### `CC-004` — No implicit source precedence
 
 Context sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than source order.
-
-Why: Hidden first-parent-wins behavior would make composed context difficult to reason about and unsafe to maintain.
 
 ### Identity
 
@@ -49,21 +43,15 @@ Why: Hidden first-parent-wins behavior would make composed context difficult to 
 
 Every addressable context element has a stable ID independent of its title, wording, file location, and presentation.
 
-Why: Children must be able to remove, override, trace, or debug inherited elements even after their human wording changes.
-
 #### `CC-006` — Publish IDs that children may reference
 
 Published official contexts expose stable IDs for rules and other elements that child nodes may reference.
 
-Why: Users must be able to discover the correct target without searching hidden comments or machine YAML.
-
 ### Progressive disclosure
 
-#### `CC-007` — Use Topics for deeper context
+#### `CC-007` — Keep entry context small
 
-Use Topics to direct humans and agents to deeper information only when a task needs it.
-
-Why: Context is scarce; the always-loaded official context should remain compact while deeper project knowledge stays discoverable.
+Keep the official entry context compact and use Topics to load deeper context only when needed; Topic references distinguish required from optional material.
 
 ### Project state
 
@@ -71,15 +59,11 @@ Why: Context is scarce; the always-loaded official context should remain compact
 
 `STATE.md` describes the current local project situation and is never inherited as governance by child nodes.
 
-Why: Temporary project reality is useful locally but is not a reusable rule of descendants.
-
 ### Harness independence
 
-#### `CC-009` — Harness files are adapters
+#### `CC-009` — Canonical context is model- and harness-neutral
 
-Harness-specific files are thin generated adapters that point to the official context; project truth must not live only in a harness-specific file.
-
-Why: ContextCanon must remain usable across models and agent harnesses.
+Project code and canonical project context must not depend on a particular LLM or agent harness; harness-specific files are thin generated adapters at the edge.
 
 ### Repository conventions
 
@@ -87,30 +71,70 @@ Why: ContextCanon must remain usable across models and agent harnesses.
 
 Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
 
-Why: Explicit standard documents make repository intent and history easier to discover.
+## Local Development rules
+
+### Compiler architecture
+
+#### `CCI-001` — Deterministic skeleton, semantic intelligence on top
+
+Prefer deterministic mechanisms whenever behavior can be specified and computed exactly; use LLMs only for work that genuinely requires semantic interpretation.
+
+Why: Deterministic structure provides reproducibility and auditability, while LLM reasoning is most valuable where meaning rather than mechanics must be understood.
+
+### Development method
+
+#### `CCI-002` — Validate vertically before hardening
+
+Validate ContextCanon through concrete repository use cases before hardening abstractions into compiler code.
+
+Why: Simple real workflows should shape the framework; implementation convenience must not force unnecessary ceremony on users.
+
+#### `CCI-003` — Repository documentation is the design record
+
+Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
+
+Why: ContextCanon itself should demonstrate durable, reviewable project context.
 
 ## Topics
 
-### Concepts
+### Framework architecture
 
-For terminology and the ContextCanon mental model, read `docs/concepts.md`.
+When changing the compiler boundary, package model, node structure, deterministic/semantic split, or generated artifacts:
 
-### Composition and inheritance
+**Required**
+- `docs/architecture.md`
+- `docs/use-case-walkthrough.md`
 
-For source composition, dependency graphs, update propagation, conflicts, removes, overrides, or exceptions, read `docs/composition.md`.
+**Optional**
+- `docs/concepts.md`
 
 ### Source and official formats
 
-For authoring syntax, IDs, generated output, and machine representation, read:
+When changing authoring syntax, IDs, Topics, official entry views, or machine representation:
 
+**Required**
 - `docs/source-format.md`
 - `docs/official-context.md`
-- `docs/architecture.md`
+- `docs/topics.md`
+
+### Composition
+
+When changing source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-node repositories:
+
+**Required**
+- `docs/composition.md`
+- `docs/use-case-walkthrough.md`
 
 ### Harness integration
 
-For `AGENTS.md`, `.goosehints`, and other adapters, read `docs/harnesses.md`.
+When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
+
+**Required**
+- `docs/harnesses.md`
 
 ### State and planning
 
-For the boundary between current state, planning, governance, and history, read `docs/state.md`.
+When deciding whether information belongs in current state, planning, governance, or history:
+
+**Required**
+- `docs/state.md`
