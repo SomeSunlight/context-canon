@@ -1,13 +1,13 @@
-# ContextCanon Development — Official Context
+# ContextCanon Framework Development — Official Context
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
-> This is the compact official entry for developing ContextCanon itself.
+> This is the compact official entry for designing and implementing ContextCanon itself.
 > Together with `CONTEXT/` it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
-**Node:** ContextCanon Development  
+**Node:** ContextCanon Framework Development  
 **Context version:** `0.1.0-draft`
 
 ## Rules from ContextCanon Foundation
@@ -74,7 +74,7 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are us
 
 Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
 
-## Local Development Rules
+## Local Framework Development Rules
 
 ### Compiler architecture
 
@@ -91,6 +91,12 @@ Validate ContextCanon through concrete repository use cases before hardening abs
 #### `CCI-003` — Repository documentation is the design record
 
 Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
+
+### Node library
+
+#### `CCI-004` — Keep library Nodes on Foundation
+
+Every reusable Node published in the ContextCanon Node Library must compose ContextCanon Foundation directly or transitively.
 
 ## Topics
 

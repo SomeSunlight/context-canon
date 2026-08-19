@@ -1,4 +1,4 @@
-# GENERATED ContextCanon machine state for the repository Gateway node.
+# GENERATED ContextCanon machine state for the repository Gateway Node.
 # The Gateway is intentionally minimal; humans normally need only CONTEXT.md.
 
 schema: contextcanon-poc/v1
@@ -30,12 +30,12 @@ official:
   rule_ids: []
   topic_ids: [CCG-TOPIC-DEVELOPMENT]
 
-# This Topic navigates to another local Context Node; it does not compose that node as a Source.
+# This Topic navigates to another local Context Node; it does not compose that Node as a Source.
 targets:
   - topic: CCG-TOPIC-DEVELOPMENT
     intent: required
     kind: context-node
-    locator: nodes/development
+    locator: nodes/internal/framework-development
 
 resources: []
 

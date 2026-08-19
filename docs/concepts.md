@@ -6,17 +6,33 @@ ContextCanon manages reusable project context as versioned, composable knowledge
 
 A **Context Node** is an independently addressable and versioned unit that publishes an Official Context Package.
 
-Node identity is logical rather than tied to a Git repository or physical directory. One repository may contain several nodes, and a node may move without changing identity.
+### The node-root directory
 
-A node may be large or extremely small. ContextCanon Gateway in this repository has no Sources and no Rules; one Topic is enough to make it useful.
+Physically, every Context Node has exactly one **node-root directory**. That directory is where its ContextCanon files live:
+
+```text
+<node-root>/
+├── CONTEXT.src.md
+├── CONTEXT.md
+├── CONTEXT/          optional deeper generated resources
+└── .context/         generated machine state
+```
+
+The repository root may itself be a node-root directory. ContextCanon Gateway in this repository is an example.
+
+A directory that merely groups Nodes is not automatically a Context Node. For example, `nodes/library/` and `nodes/internal/` organize this repository but contain no context of their own.
+
+Node identity is logical rather than path-based. A Node may be renamed or moved to another directory without changing its stable identity. The path tells humans and tools where the Node currently lives; it is not the Node's identity.
+
+A node may be large or extremely small. ContextCanon Gateway has no Sources and no Rules; one Topic is enough to make it useful.
 
 ## Context Source
 
 A **Context Source** is the published Official Context Package of another node accepted at a specific immutable version/revision/package identity.
 
-A node may compose zero, one, or several sources. Sources may represent orthogonal concerns such as company governance, Python or Java development practice, security requirements, personal coding style, or a shared framework foundation.
+A node may compose zero, one, or several Sources. Sources may represent orthogonal concerns such as company governance, Python or Java development practice, security requirements, personal coding style, or a shared framework foundation.
 
-Source order is not precedence.
+Source order is not precedence. Filesystem nesting does not imply Source composition.
 
 ## Local Context
 
@@ -47,15 +63,17 @@ A target may be a package resource or another Context Node entry. The latter is 
 
 This pattern may repeat recursively: summary first, then deeper links.
 
-## Gateway, Foundation and Development
+## Gateway, Foundation and Framework Development
 
-This repository uses three ordinary nodes to demonstrate three different jobs:
+This repository uses three ordinary Nodes to demonstrate three different jobs:
 
-- **ContextCanon Gateway** — the minimal root entry; routes development tasks onward.
-- **ContextCanon Foundation** — reusable baseline context with no parent Sources.
-- **ContextCanon Development** — composes Foundation and adds only the framework-development delta.
+- **ContextCanon Gateway** — the minimal repository-root Node; routes framework-development tasks onward.
+- **ContextCanon Foundation** — `nodes/library/foundation/`; the reusable baseline of the ContextCanon Node Library.
+- **ContextCanon Framework Development** — `nodes/internal/framework-development/`; composes Foundation and adds only the context needed to design and implement ContextCanon itself.
 
-Gateway → Development is Topic navigation. Foundation → Development is Source composition.
+Gateway → Framework Development is Topic navigation. Foundation → Framework Development is Source composition.
+
+The directories `nodes/library/` and `nodes/internal/` are organizational categories used by this repository, not framework-mandated paths.
 
 ## Schema versus Node
 

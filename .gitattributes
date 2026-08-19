@@ -1,3 +1,4 @@
 .context/** linguist-generated
-nodes/*/.context/** linguist-generated
-nodes/*/CONTEXT/** linguist-generated
+CONTEXT/** linguist-generated
+nodes/**/.context/** linguist-generated
+nodes/**/CONTEXT/** linguist-generated

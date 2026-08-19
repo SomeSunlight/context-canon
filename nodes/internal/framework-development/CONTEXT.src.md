@@ -1,12 +1,12 @@
-# ContextCanon Development — Local Context Source
+# ContextCanon Framework Development — Local Context Source
 
 > [!IMPORTANT]
-> **Edit this file to change the context for developing ContextCanon itself.**
+> **Edit this file to change the context for designing and implementing ContextCanon itself.**
 > `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted Context Sources.
 >
-> This node composes [ContextCanon Foundation](../foundation/CONTEXT.md) and adds only the Development delta.
+> This node composes [ContextCanon Foundation](../../library/foundation/CONTEXT.md) and adds only the framework-development delta.
 >
-> Full format documentation: [../../docs/source-format.md](../../docs/source-format.md)
+> Full format documentation: [../../../docs/source-format.md](../../../docs/source-format.md)
 
 <!--
 ContextCanon authoring templates — compiler-managed help, safe to copy.
@@ -33,7 +33,7 @@ OVERRIDE IMPORTED RULE
 
 ## Sources
 
-- [ContextCanon Foundation](../foundation/CONTEXT.md) — `0.1.0-draft`
+- [ContextCanon Foundation](../../library/foundation/CONTEXT.md) — `0.1.0-draft`
   <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.1.0-draft" revision="POC-UNPINNED" -->
 
 ## Rules
@@ -54,6 +54,12 @@ OVERRIDE IMPORTED RULE
   Why: ContextCanon itself should demonstrate durable, reviewable project context.
   <!-- ctx:rule id="CCI-003" -->
 
+### Node library
+
+- Every reusable Node published in the ContextCanon Node Library must compose ContextCanon Foundation directly or transitively.
+  Why: The library needs one common baseline while specialized Nodes should still contain only their own additional context.
+  <!-- ctx:rule id="CCI-004" -->
+
 ## Topics
 
 ### Framework architecture
@@ -61,11 +67,11 @@ OVERRIDE IMPORTED RULE
 When changing the compiler boundary, package model, node structure, deterministic/semantic split, or generated artifacts:
 
 Required:
-- `../../docs/architecture.md`
-- `../../docs/use-case-walkthrough.md`
+- `../../../docs/architecture.md`
+- `../../../docs/use-case-walkthrough.md`
 
 Optional:
-- `../../docs/concepts.md`
+- `../../../docs/concepts.md`
 <!-- ctx:topic id="CCI-TOPIC-ARCHITECTURE" -->
 
 ### Source and official formats
@@ -73,9 +79,9 @@ Optional:
 When changing authoring syntax, IDs, Topics, official entry views, or machine representation:
 
 Required:
-- `../../docs/source-format.md`
-- `../../docs/official-context.md`
-- `../../docs/topics.md`
+- `../../../docs/source-format.md`
+- `../../../docs/official-context.md`
+- `../../../docs/topics.md`
 <!-- ctx:topic id="CCI-TOPIC-FORMATS" -->
 
 ### Composition
@@ -83,8 +89,8 @@ Required:
 When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-node repositories:
 
 Required:
-- `../../docs/composition.md`
-- `../../docs/use-case-walkthrough.md`
+- `../../../docs/composition.md`
+- `../../../docs/use-case-walkthrough.md`
 <!-- ctx:topic id="CCI-TOPIC-COMPOSITION" -->
 
 ### Harness integration
@@ -92,7 +98,7 @@ Required:
 When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 Required:
-- `../../docs/harnesses.md`
+- `../../../docs/harnesses.md`
 <!-- ctx:topic id="CCI-TOPIC-HARNESSES" -->
 
 ### State and planning
@@ -100,5 +106,5 @@ Required:
 When deciding whether information belongs in current state, planning, governance, or history:
 
 Required:
-- `../../docs/state.md`
+- `../../../docs/state.md`
 <!-- ctx:topic id="CCI-TOPIC-STATE" -->

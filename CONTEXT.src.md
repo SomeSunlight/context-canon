@@ -4,14 +4,14 @@
 > **Edit this file to change the repository Gateway context.**
 > `CONTEXT.md` is generated from this source.
 >
-> This node is intentionally minimal: it has no Sources, no Rules and no materialized package resources.
+> This Node is intentionally minimal: it has no Sources, no Rules and no materialized package resources.
 
 ## Topics
 
-### ContextCanon development
+### ContextCanon framework development
 
 When changing ContextCanon's specification, documentation, Context Nodes, compiler, examples, harness integration, or project tooling:
 
 Required:
-- `nodes/development/CONTEXT.md`
+- `nodes/internal/framework-development/CONTEXT.md`
 <!-- ctx:topic id="CCG-TOPIC-DEVELOPMENT" -->

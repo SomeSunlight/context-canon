@@ -10,7 +10,7 @@
 > - `Why:` records human rationale.
 > - `<!-- ctx:... -->` comments contain compiler-managed stable IDs. Do not edit them manually.
 >
-> Full format documentation: [../../docs/source-format.md](../../docs/source-format.md)
+> Full format documentation: [../../../docs/source-format.md](../../../docs/source-format.md)
 
 ## Rules
 
@@ -83,9 +83,9 @@
 When editing ContextCanon source, IDs, generated views, package resources, or Topics:
 
 Required:
-- `../../docs/source-format.md`
-- `../../docs/official-context.md`
-- `../../docs/topics.md`
+- `../../../docs/source-format.md`
+- `../../../docs/official-context.md`
+- `../../../docs/topics.md`
 <!-- ctx:topic id="CC-TOPIC-AUTHORING" -->
 
 ### Context composition
@@ -93,7 +93,7 @@ Required:
 When adding Sources or changing inherited Rules:
 
 Required:
-- `../../docs/composition.md`
+- `../../../docs/composition.md`
 <!-- ctx:topic id="CC-TOPIC-COMPOSITION" -->
 
 ### Harness adapters
@@ -101,5 +101,5 @@ Required:
 When adding or changing a harness-specific entry file:
 
 Required:
-- `../../docs/harnesses.md`
+- `../../../docs/harnesses.md`
 <!-- ctx:topic id="CC-TOPIC-HARNESSES" -->

@@ -24,11 +24,31 @@ Context windows are valuable working memory. They should be spent on the current
 ContextCanon therefore starts with four ideas:
 
 1. **Load less.** Keep the always-read entry small and use Topics to point to deeper Required or Optional context.
-2. **Repeat less.** Compose reusable Context Nodes and describe only the local delta at each node.
+2. **Repeat less.** Compose reusable Context Nodes and describe only the local delta at each Node.
 3. **Calculate what can be calculated.** Parsing, IDs, dependency resolution, changes, provenance, diffs and package construction belong to a deterministic compiler; LLMs handle genuinely semantic work.
 4. **Keep project knowledge portable.** Canonical context must not depend on Codex, Claude, goose, Copilot, or a particular model. Harness files stay thin adapters at the edge.
 
-The larger goal is **context integration**: documentation, rules, terminology, examples, structured data, PDFs, diagrams, skills and hard-won operational experience should all be discoverable through the same model without all being loaded at once.
+The larger goal is **context integration**: documentation, Rules, terminology, examples, structured data, PDFs, diagrams, skills and hard-won operational experience should all be discoverable through the same model without all being loaded at once.
+
+## One simple physical rule: a Node has its own directory
+
+A **Context Node lives in exactly one node-root directory**.
+
+That directory contains the files belonging to that Node:
+
+```text
+<node-root>/
+├── CONTEXT.src.md       human-edited local context
+├── CONTEXT.md           generated compact official entry
+├── CONTEXT/             optional deeper generated resources
+└── .context/            generated machine state
+```
+
+The node-root may be the root of a Git repository or a directory deeper inside it. A repository can therefore contain several Nodes.
+
+The directory path is **location, not identity**. A Node keeps its stable ID when it is renamed or moved. Likewise, a directory that merely groups Nodes is not itself a Node unless it has its own ContextCanon files.
+
+That distinction is important in this repository: `nodes/library/` and `nodes/internal/` are organizational categories; the actual Nodes are directories below them.
 
 ## The core model
 
@@ -49,11 +69,11 @@ CONTEXT.md              compact entry; read first
 CONTEXT/                optional deeper compiled/materialized context
 ```
 
-`CONTEXT/` exists only when deeper resources are actually needed. `.context/` is separate machine territory for identities, accepted sources, provenance, mappings, hashes and package metadata.
+`CONTEXT/` exists only when deeper resources are actually needed. `.context/` is separate machine territory for identities, accepted Sources, provenance, mappings, hashes and package metadata.
 
 The editable `CONTEXT.src.md` answers a deliberately narrower question:
 
-> What does this node add or change compared with its Sources?
+> What does this Node add or change compared with its Sources?
 
 The generated `CONTEXT.md` answers:
 
@@ -63,26 +83,28 @@ The generated `CONTEXT.md` answers:
 
 This repository does not explain ContextCanon from outside and then switch it on later.
 
-**The repository root is already one of the smallest useful ContextCanon nodes.**
+**The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources, no Rules and no deep package directory. Its only job is to recognize ContextCanon development work and direct that work to the deeper Development node.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources, no Rules and no deep package directory. Its only job is to recognize ContextCanon framework-development work and direct that work to the deeper internal Node.
 
 ```text
-ContextCanon Gateway  ── Topic: development ──>  ContextCanon Development
-                                                       ▲
-                                                       │ Source
-                                              ContextCanon Foundation
+ContextCanon Gateway  ── Topic ──>  ContextCanon Framework Development
+                                          ▲
+                                          │ Source
+                                 ContextCanon Foundation
 ```
 
-That gives this repository three real nodes with three different jobs:
+That gives this repository three real Nodes with three different jobs:
 
 - **[ContextCanon Gateway](CONTEXT.md)** — the almost-empty repository entry. It demonstrates progressive disclosure at the smallest useful scale.
-- **[ContextCanon Foundation](nodes/foundation/CONTEXT.md)** — the reusable baseline: rules and Topics that other ContextCanon-managed nodes may compose.
-- **[ContextCanon Development](nodes/development/CONTEXT.md)** — Foundation plus only the additional context needed to design and implement ContextCanon itself.
+- **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the common reusable baseline of the ContextCanon Node Library.
+- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus only the additional context needed to design and implement ContextCanon itself.
 
-The first arrow above is **navigation**: Gateway does not inherit Development; a Topic sends a relevant task there. The second arrow is **composition**: Development accepts Foundation as a Source and adds a local delta.
+The first arrow is **navigation**: Gateway does not inherit Framework Development; a Topic sends a relevant task there. The second arrow is **composition**: Framework Development accepts Foundation as a Source and adds a local delta.
 
-Nothing special was invented for bootstrapping this repository. Gateway is an ordinary Context Node. That is intentional: if ContextCanon cannot represent "almost no context" cleanly, it has failed one of its own most important design goals.
+Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway is not a library module; it is the deliberately tiny entry Node for this repository.
+
+Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly, it has failed one of its own most important design goals.
 
 ## ContextCanon is also for humans
 
@@ -106,29 +128,42 @@ context-canon/
 ├── STATE.md
 ├── PLAN.md
 │
-├── CONTEXT.src.md       # tiny Gateway source
-├── CONTEXT.md           # tiny generated Gateway entry
-├── AGENTS.md            # generated root harness adapter
-├── .goosehints          # generated root goose adapter
-├── .context/            # Gateway machine state
+├── CONTEXT.src.md       # ContextCanon Gateway node root = repository root
+├── CONTEXT.md
+├── AGENTS.md
+├── .goosehints
+├── .context/
 │
-├── nodes/
+├── nodes/               # organizes additional Nodes; not itself a Node
 │   ├── README.md
-│   ├── foundation/      # reusable ContextCanon Foundation node
-│   │   ├── CONTEXT.src.md
-│   │   ├── CONTEXT.md
-│   │   ├── CONTEXT/
-│   │   └── .context/
-│   └── development/     # Foundation + ContextCanon development delta
-│       ├── CONTEXT.src.md
-│       ├── CONTEXT.md
-│       ├── CONTEXT/
-│       └── .context/
+│   ├── library/         # reusable Nodes distributed with ContextCanon
+│   │   ├── README.md
+│   │   └── foundation/  # ContextCanon Foundation node root
+│   │       ├── CONTEXT.src.md
+│   │       ├── CONTEXT.md
+│   │       ├── CONTEXT/
+│   │       └── .context/
+│   │
+│   └── internal/        # Nodes used only to build/maintain ContextCanon
+│       ├── README.md
+│       └── framework-development/   # framework-development node root
+│           ├── CONTEXT.src.md
+│           ├── CONTEXT.md
+│           ├── CONTEXT/
+│           └── .context/
 │
 └── docs/                # human-edited specification and design documentation
 ```
 
-Later the repository may publish more reusable Nodes under `nodes/`. They should be added because a real reusable context has emerged, not to fill a taxonomy in advance.
+### Where contributors add Nodes
+
+The tree should answer this without guesswork:
+
+- a **reusable Node intended to ship with ContextCanon** goes in `nodes/library/<node-name>/` and composes Foundation directly or transitively;
+- a **ContextCanon-internal Node** goes in `nodes/internal/<node-name>/`;
+- an **example or experiment** does not enter the library merely because it uses ContextCanon.
+
+These category names are conventions of this repository. ContextCanon does not require other projects to use `library/` or `internal/`; it only requires each Node to have a clear node root.
 
 ## Why the package can contain more than Markdown
 
@@ -149,11 +184,11 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
-- [Concepts](docs/concepts.md) — the vocabulary and mental model.
+- [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
 - [Official context](docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
 - [Topics and context integration](docs/topics.md) — how deeper context is selected.
-- [Architecture](docs/architecture.md) — deterministic compiler boundary and node/package structure.
+- [Architecture](docs/architecture.md) — deterministic compiler boundary and Node/package structure.
 - [Use-case walkthrough](docs/use-case-walkthrough.md) — where the design has already been stress-tested.
 
 See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the next experiments.
@@ -165,7 +200,7 @@ ContextCanon grew from experimenting with the filesystem-oriented progressive-di
 - Paper: https://arxiv.org/abs/2603.16021
 - ICM repository: https://github.com/RinDig/Interpretable-Context-Methodology
 
-ContextCanon is not an implementation of ICM. It focuses on composable Context Nodes, explicit local deltas, deterministic compilation, versioned source acceptance, self-contained packages and harness-neutral project context.
+ContextCanon is not an implementation of ICM. It focuses on composable Context Nodes, explicit local deltas, deterministic compilation, versioned Source acceptance, self-contained packages and harness-neutral project context.
 
 ## Project status
 

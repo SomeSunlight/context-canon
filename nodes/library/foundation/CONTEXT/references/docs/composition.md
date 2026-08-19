@@ -1,6 +1,6 @@
 # Context Composition
 
-ContextCanon combines independent context sources instead of relying on a single inheritance tree.
+ContextCanon combines independent context Sources instead of relying on a single inheritance tree.
 
 ```text
 Business Context ──────┐
@@ -9,7 +9,7 @@ Personal Style ─────────┼──> Local Delta ──> Officia
 Security Context ───────┘
 ```
 
-A Source is an accepted published package from another Context Node. Sources may live in the same Git repository, another repository, or eventually another package location. Repository containment does not define context inheritance.
+A Source is an accepted published package from another Context Node. Sources may live in the same Git repository, another repository, or eventually another package location. Filesystem containment does not create inheritance.
 
 ## No implicit precedence
 
@@ -19,7 +19,7 @@ Different Sources can therefore contribute independent elements without an artif
 
 ## Dependency graph
 
-Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
+Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted Source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
 
 ## Semantic conflicts
 
@@ -44,22 +44,32 @@ The intended workflow is: detect a newer package, compute a deterministic diff, 
 A Topic may direct an agent to deeper information or even to another Context Node when a task needs it. That is progressive disclosure, not inheritance.
 
 ```text
-ContextCanon Gateway ──Topic──> ContextCanon Development
+ContextCanon Gateway ──Topic──> ContextCanon Framework Development
                                       ▲
                                       │ Source
                            ContextCanon Foundation
 ```
 
-The Gateway does not inherit Development. It merely sends development work there. Development does inherit Foundation as an accepted Source and then adds its local delta.
+The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development does inherit Foundation as an accepted Source and then adds its local delta.
 
 Keeping these relationships distinct prevents navigation choices from silently changing which Rules a node publishes.
 
-## Multi-node repositories
+## Node directories do not define composition
 
-A Git repository may publish several independently addressable Context Nodes. This repository contains three real nodes with different jobs:
+Every Context Node is physically rooted in its own directory, but that directory is only its location. A parent directory, nested directory, Git repository, or sibling directory does not become a Source automatically.
 
-- the repository root is **ContextCanon Gateway**, a deliberately tiny entry node,
-- `nodes/foundation/` publishes **ContextCanon Foundation**, the reusable baseline,
-- `nodes/development/` publishes **ContextCanon Development**, which composes Foundation and adds framework-development context.
+This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships.
 
-The exact external locator syntax for selecting a node inside a repository remains intentionally open until the next vertical POC.
+## ContextCanon's own node organization
+
+This repository contains three real Nodes:
+
+- the repository root is **ContextCanon Gateway**,
+- `nodes/library/foundation/` is **ContextCanon Foundation**,
+- `nodes/internal/framework-development/` is **ContextCanon Framework Development**.
+
+The intermediate directories `nodes/`, `nodes/library/`, and `nodes/internal/` are organizational containers, not Context Nodes.
+
+Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance rule for unrelated projects using ContextCanon.
+
+The exact external locator syntax for selecting a Node inside a repository remains intentionally open until the next vertical POC.

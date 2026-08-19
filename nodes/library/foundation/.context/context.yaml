@@ -38,11 +38,11 @@ official:
   topic_ids: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
 
 resources:
-  - {source: ../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
-  - {source: ../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
-  - {source: ../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
-  - {source: ../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
-  - {source: ../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
+  - {source: ../../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
+  - {source: ../../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
+  - {source: ../../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
+  - {source: ../../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
+  - {source: ../../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
 
 provenance:
   note: All current Foundation Rules and Topics are defined locally by this node.

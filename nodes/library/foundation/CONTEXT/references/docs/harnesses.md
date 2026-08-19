@@ -14,7 +14,7 @@ Do not copy the full project context into every harness-specific file. An adapte
 
 A harness adapter should enter the Context Node that applies at its filesystem scope. It should not bypass a minimal Gateway merely because a deeper node contains more information.
 
-In this repository the root adapters enter **ContextCanon Gateway**. The Gateway then uses ordinary Topic semantics to require `nodes/development/CONTEXT.md` when a task concerns ContextCanon development.
+In this repository the root adapters enter **ContextCanon Gateway**. The Gateway then uses ordinary Topic semantics to require `nodes/internal/framework-development/CONTEXT.md` when a task concerns ContextCanon framework development.
 
 This keeps harness behavior mechanical and lets ContextCanon itself decide how much context a task needs.
 
