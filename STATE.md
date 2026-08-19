@@ -1,12 +1,13 @@
 # Current State
 
-ContextCanon has completed two repository-based architecture/UX prototype rounds and a first systematic mental walkthrough of critical use cases.
+ContextCanon has completed two repository-based architecture/UX prototype rounds and repeated mental walkthroughs of critical use cases.
 
-The design baseline is now:
+The current design baseline is:
 
 - `CONTEXT.src.md` is the human-editable local delta.
-- The **Official Context** is a complete compiled package, not one giant always-loaded file.
 - `CONTEXT.md` is the generated compact official entry view.
+- `CONTEXT/` contains deeper compiled/materialized context resources.
+- Together, `CONTEXT.md` and `CONTEXT/` form the human/agent-facing **Official Context Package**.
 - Topics provide progressive disclosure and distinguish **Required** from **Optional** deeper material.
 - A node may compose multiple independent context sources without implicit source precedence.
 - Stable IDs are mandatory for addressable elements; published parent contexts expose IDs visibly.
@@ -14,31 +15,30 @@ The design baseline is now:
 - Harness/model-specific files are adapters only.
 - Deterministic operations form the framework skeleton; LLMs assist where semantic interpretation is actually needed.
 
-## ContextCanon now dogfoods two nodes
+## ContextCanon dogfoods two nodes
 
-- `contexts/standard/` is **ContextCanon Standard**, the public baseline intended for managed client nodes.
-- the repository root is **ContextCanon Development**, which composes the Standard and adds design/compiler rules.
+- `contexts/public/` is **ContextCanon Public (`t`)**, the public baseline intended for ordinary client nodes.
+- the repository root is **ContextCanon Development (`t-intern`)**, which composes `t` and adds design/compiler rules.
 
-This validates the architectural rule that node boundaries are independent from Git repository boundaries.
+The ContextCanon schema/specification defines the structural interface implemented by both nodes. A separate interface node is not currently needed because an interface describes structure, while a Context Node publishes actual context content.
 
-## Use-case walkthrough result
+## Current POC refinement
 
-The walkthrough found no need to replace the composition model, but identified bounded questions to settle before compiler V1 is frozen:
+The latest refinement makes the package boundary physical rather than merely conceptual:
 
-- exact package/entry-view boundary,
-- Topic syntax for Required/Optional and recursive loading,
-- source locators and immutable package identity,
-- ID generation/preservation,
-- dangling change diagnostics,
-- addressing multiple nodes in one repository,
-- non-versioned authoring-help preferences.
+```text
+CONTEXT.md
+CONTEXT/
+```
 
-See [docs/use-case-walkthrough.md](docs/use-case-walkthrough.md) for the scenarios and findings.
+Source material may stay in natural repository locations such as `docs/`. The future compiler will materialize resources needed by the published package into `CONTEXT/` and rewrite generated links accordingly.
 
-No production compiler exists yet. Current generated files are manually modeled POC output.
+`docs/topics.md` now treats Topics as a general context-integration mechanism that can later include glossaries, code examples, structured data, PDFs, images, skills, and operational experience without loading all of it eagerly.
+
+No production compiler exists yet. Current generated files and package copies are manually modeled POC output.
 
 ## Current focus
 
-Run the next vertical POC against real example repositories using ContextCanon Standard, Required/Optional Topics, local deltas, and at least one source-update scenario before freezing the V1 parser/model.
+Run the next vertical POC against real example repositories using the public `t` node, self-contained `CONTEXT/` resources, Required/Optional Topics, local deltas, and at least one source-update scenario before freezing the V1 parser/model.
 
 See [PLAN.md](PLAN.md) for the active checklist.
