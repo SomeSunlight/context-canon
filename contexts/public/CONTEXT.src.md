@@ -1,12 +1,14 @@
-# ContextCanon Standard — Local Context Source
+# ContextCanon Public (`t`) — Local Context Source
 
 > [!IMPORTANT]
-> **Edit this file to change the public ContextCanon baseline.**
-> `CONTEXT.md` is generated and is the published context that managed client nodes may compose.
+> **Edit this file to change the public ContextCanon context.**
+> `CONTEXT.md` and `CONTEXT/` are generated from this source and form the published context consumed by ordinary client nodes.
+>
+> This node is the public `t` in the `t` / `t-intern` relation. The repository root is the internal Development node (`t-intern`) and composes this node.
 >
 > **Source syntax**
-> - `## Rules` defines local Standard rules.
-> - `## Topics` points to deeper framework information loaded only when relevant.
+> - `## Rules` defines local public rules.
+> - `## Topics` points to deeper information loaded only when relevant.
 > - `Why:` records human rationale.
 > - `<!-- ctx:... -->` comments contain compiler-managed stable IDs. Do not edit them manually.
 >
@@ -38,7 +40,7 @@ Optional:
   Why: A node must not operate under one context while publishing a different truth to descendants.
   <!-- ctx:rule id="CC-001" -->
 
-- Human context changes are authored in `CONTEXT.src.md`; generated context views, machine state, and harness adapters are not edited directly.
+- Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.
   Why: One editable source prevents drift between equivalent outputs.
   <!-- ctx:rule id="CC-002" -->
 
@@ -87,6 +89,12 @@ Optional:
 - Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
   Why: Explicit standard documents make repository intent and history easier to discover.
   <!-- ctx:rule id="CC-010" -->
+
+### Documentation style
+
+- Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
+  Why: Context should reduce cognitive load for humans and models rather than require prior knowledge of the discussion that produced it.
+  <!-- ctx:rule id="CC-011" -->
 
 ## Topics
 
