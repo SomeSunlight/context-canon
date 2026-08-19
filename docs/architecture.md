@@ -1,75 +1,79 @@
 # Architecture
 
-ContextCanon separates a small human-facing surface from a deterministic machine core.
+ContextCanon separates a small human-facing authoring surface, a self-contained published context package, and deterministic machine bookkeeping.
 
-## Official package pipeline
+## Compilation pipeline
 
 ```text
 CONTEXT.src.md
        +
 accepted source packages
+       +
+referenced source material
        |
        v
     compiler
        |
-       +--> Official Context Package
-               |
-               +--> CONTEXT.md       compact official entry
-               +--> Topic material   required/optional deeper context
-               +--> references       materialized where needed
-               +--> skills/resources
-               +--> .context/        normalized machine/package state
-       |
-       +--> AGENTS.md / .goosehints / other harness adapters
+       +--> CONTEXT.md        compact official entry
+       +--> CONTEXT/          materialized deeper context
+       +--> .context/         machine state and package metadata
+       +--> harness adapters  AGENTS.md, .goosehints, ...
 ```
 
-The package is canonical. Human/agent Markdown and machine YAML are generated views of the same result.
+`CONTEXT.md` plus `CONTEXT/` is the human/agent-facing Official Context Package. `.context/` is compiler-owned state about that package and its sources.
 
 ## Token economy is architectural
 
 ContextCanon must not solve discoverability by eagerly loading everything.
 
-The entry context contains broadly required information and a precise Topic map. Topic material is loaded only when relevant, with explicit Required versus Optional references. Deeper material may repeat this summary-first/link-onward pattern.
+The entry context contains broadly required information and a precise Topic map. Topic material is loaded only when relevant, with explicit Required versus Optional references. A deeper document may repeat the same pattern: summary first, links onward.
 
-Progressive disclosure is therefore part of the package model, not merely a documentation style preference.
+Progressive disclosure is therefore part of the architecture, not merely a writing preference.
+
+## Natural source files, generated package files
+
+Project documentation should stay where it makes sense to authors. The compiler materializes context resources into `CONTEXT/` when building the published package.
+
+This creates a useful separation:
+
+```text
+docs/architecture.md                 human-edited source
+CONTEXT/references/docs/architecture.md  generated package copy
+```
+
+Consumers can use the package without knowing the source repository layout.
 
 ## `.context/`
 
-`.context/` is intentionally analogous to `.git/` in spirit: important infrastructure that normally stays out of the user's way.
+`.context/` is analogous to `.git/` in one important respect: it contains infrastructure that matters but should not dominate normal work.
 
-The directory is versioned where reproducibility requires it, but ordinary humans and agents should not need to browse it.
+The current POC uses one primary `.context/context.yaml` per node. It records node identity, accepted source packages, normalized element identities, provenance, resource mapping, and future hashes/digests.
 
-The POC collapses the primary machine bookkeeping into one `context.yaml` per node. Generated YAML may contain explanatory comments because occasional human inspection is useful, but it remains machine-owned.
+Generated YAML may contain explanatory comments because occasional human inspection is useful, but it remains machine-owned.
 
 ## Nodes are not repositories
 
-A ContextCanon node is an independently addressable/versioned context unit, not a Git repository.
+A ContextCanon node is an independently addressable and versioned context unit, not a Git repository.
 
-A repository may contain several nodes. ContextCanon itself dogfoods this:
+This repository dogfoods two nodes:
 
 ```text
-contexts/standard/   public reusable ContextCanon Standard node
-repository root      ContextCanon Development node
-                     -> composes Standard + local development delta
+contexts/public/    ContextCanon Public (`t`)
+repository root     ContextCanon Development (`t-intern`)
+                    -> composes Public + local development delta
 ```
 
-Likewise, a node may consume sources from other repositories, local paths, or future package registries. Published/accepted packages rather than filesystem containment define composition.
+The public node is what ordinary client projects should consume. The internal node adds only the rules and Topics needed to design and implement ContextCanon itself.
 
-## Machine model
+A repository may contain several nodes; a node may also consume sources from other repositories or future package locations.
 
-Internally, the compiler may have rich structures for:
+## The schema is the interface
 
-- node identity and version,
-- accepted source packages,
-- normalized rules and future element types,
-- explicit change operations,
-- Topics and load intent,
-- provenance events,
-- dependency graph,
-- file/resource hashes,
-- package and normalized-context digests.
+ContextCanon does not currently need a third "interface node" analogous to a Java interface.
 
-These structures do not need one user-facing file each.
+The structural contract — what a Node, Source, Rule, Topic, Change, package, and identifier must contain — belongs to the ContextCanon schema/specification. That schema is the interface implemented by every node.
+
+A Context Node contains actual context content. We should create another base node only when there is reusable **content** that genuinely belongs neither to the public node nor to the internal one.
 
 ## Deterministic skeleton, semantic assistance at the edges
 
@@ -78,17 +82,17 @@ The compiler should deterministically handle what machines can prove:
 - syntax and schema validation,
 - stable IDs,
 - dependency resolution,
-- cycle/version errors,
+- cycle and version errors,
 - explicit remove/override/exception operations,
 - dangling operation detection,
 - provenance,
-- materialization,
+- package materialization,
 - exact diffs and hashes,
-- generated views.
+- generated views and adapters.
 
-LLMs may assist with inherently semantic work:
+LLMs may assist with work that genuinely requires interpretation:
 
-- bootstrapping context from existing repositories,
+- bootstrapping context from an existing repository,
 - detecting likely natural-language conflicts,
 - explaining the impact of source updates,
 - suggesting where a conflict is best resolved,
@@ -98,6 +102,6 @@ LLM judgments never replace deterministic package identity or explicit durable r
 
 ## Versioned accepted composition
 
-A source update does not immediately change consumers. Each child accepts an exact published source version/revision/package and rebuilds deliberately.
+A source update does not immediately change consumers. Each consumer accepts an exact published source package and rebuilds deliberately.
 
 This keeps independent projects on independent lifecycles while still allowing shared context to improve over time.
