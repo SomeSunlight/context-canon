@@ -35,6 +35,8 @@ The intended information split is:
 - `CHANGELOG.md` — notable completed/released changes,
 - `STATE.md` — what is true about the project right now,
 - planning system — intended future work,
-- `CONTEXT.md` — official reusable project context.
+- `CONTEXT.src.md` — local editable context delta,
+- `CONTEXT.md` — compact generated official entry,
+- `CONTEXT/` — deeper generated/materialized package resources.
 
-README and other standard documents may point into ContextCanon-managed information instead of becoming accidental storage for every kind of project knowledge.
+State and planning are deliberately outside the inherited Official Context Package unless a project explicitly references some stable document as context material.
