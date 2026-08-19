@@ -35,8 +35,8 @@ The intended information split is:
 - `CHANGELOG.md` — notable completed/released changes,
 - `STATE.md` — what is true about the project right now,
 - planning system — intended future work,
-- `CONTEXT.src.md` — local editable context delta,
-- `CONTEXT.md` — compact generated official entry,
-- `CONTEXT/` — deeper generated/materialized package resources.
+- `CONTEXT.src.md` — editable local ContextCanon source,
+- `CONTEXT.md` — compact generated entry for the applicable Context Node,
+- `CONTEXT/` — optional deeper generated package resources.
 
-State and planning are deliberately outside the inherited Official Context Package unless a project explicitly references some stable document as context material.
+README and other standard documents remain useful even when a repository uses ContextCanon. The framework should complement familiar project navigation rather than replace it.

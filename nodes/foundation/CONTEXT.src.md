@@ -1,36 +1,16 @@
-# ContextCanon Public (`t`) — Local Context Source
+# ContextCanon Foundation — Local Context Source
 
 > [!IMPORTANT]
-> **Edit this file to change the public ContextCanon context.**
-> `CONTEXT.md` and `CONTEXT/` are generated from this source and form the published context consumed by ordinary client nodes.
->
-> This node is the public `t` in the `t` / `t-intern` relation. The repository root is the internal Development node (`t-intern`) and composes this node.
+> **Edit this file to change the reusable ContextCanon baseline.**
+> `CONTEXT.md` and `CONTEXT/` are generated from this source and its referenced material.
 >
 > **Source syntax**
-> - `## Rules` defines local public rules.
-> - `## Topics` points to deeper information loaded only when relevant.
+> - `## Rules` defines local Foundation rules.
+> - `## Topics` points to deeper framework information loaded only when relevant.
 > - `Why:` records human rationale.
 > - `<!-- ctx:... -->` comments contain compiler-managed stable IDs. Do not edit them manually.
 >
 > Full format documentation: [../../docs/source-format.md](../../docs/source-format.md)
-
-<!--
-ContextCanon authoring templates — compiler-managed help.
-
-NEW RULE
-### Group
-- Rule statement.
-  Why: Reason.
-  [compiler inserts stable ctx:rule ID]
-
-TOPIC
-### Topic name
-When this topic applies...
-Required:
-- `path/to/must-read.md`
-Optional:
-- `path/to/deeper-reference.md`
--->
 
 ## Rules
 
@@ -52,7 +32,7 @@ Optional:
 
 ### Composition
 
-- Context sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than source order.
+- Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
   Why: Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain.
   <!-- ctx:rule id="CC-004" -->
 
@@ -62,13 +42,13 @@ Optional:
   Why: Children must be able to remove, override, trace, or debug inherited elements even after human wording changes.
   <!-- ctx:rule id="CC-005" -->
 
-- Published official contexts expose stable IDs for rules and other elements that child nodes may reference.
+- Published official contexts expose stable IDs for Rules and other elements that child nodes may reference.
   Why: Users must be able to discover the correct target without searching hidden comments or machine YAML.
   <!-- ctx:rule id="CC-006" -->
 
 ### Progressive disclosure
 
-- Keep the official entry context compact and use Topics to load deeper context only when needed; Topic references distinguish required from optional material.
+- Keep the official entry context compact and use Topics to load deeper context only when needed; Topic targets distinguish Required from Optional material.
   Why: Context is scarce working memory and should be spent on information relevant to the current task.
   <!-- ctx:rule id="CC-007" -->
 
@@ -86,21 +66,21 @@ Optional:
 
 ### Repository conventions
 
-- Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
-  Why: Explicit standard documents make repository intent and history easier to discover.
+- Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.
+  Why: ContextCanon should complement familiar project navigation rather than replace it.
   <!-- ctx:rule id="CC-010" -->
 
 ### Documentation style
 
 - Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
-  Why: Context should reduce cognitive load for humans and models rather than require prior knowledge of the discussion that produced it.
+  Why: Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier.
   <!-- ctx:rule id="CC-011" -->
 
 ## Topics
 
 ### Context authoring
 
-When editing ContextCanon source, IDs, generated views, or Topics:
+When editing ContextCanon source, IDs, generated views, package resources, or Topics:
 
 Required:
 - `../../docs/source-format.md`
@@ -110,7 +90,7 @@ Required:
 
 ### Context composition
 
-When adding sources or changing inherited rules:
+When adding Sources or changing inherited Rules:
 
 Required:
 - `../../docs/composition.md`

@@ -8,9 +8,11 @@ All notable ContextCanon changes will be documented here.
 
 - Initial public ContextCanon specification.
 - Human-editable `CONTEXT.src.md` local-delta model.
-- Generated `CONTEXT.md` compact official entry view.
-- Generated `CONTEXT/` directory for materialized deeper package resources.
-- Public `t` and internal `t-intern` ContextCanon nodes in one repository.
+- Generated compact `CONTEXT.md` entry view and optional `CONTEXT/` package resources.
+- **ContextCanon Gateway** as a minimal root node that routes development work through normal Topic semantics.
+- **ContextCanon Foundation** as the reusable baseline node.
+- **ContextCanon Development** as Foundation plus a local framework-development delta.
+- Explicit distinction between Topic navigation and Source composition.
 - Multi-source context composition without implicit precedence.
 - Stable IDs for addressable context elements, visible in published contexts.
 - Topics with Required and Optional progressive-disclosure semantics.

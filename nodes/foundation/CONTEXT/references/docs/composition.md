@@ -68,13 +68,29 @@ The intended workflow is:
 6. explicitly accept the new source package,
 7. rebuild the node's Official Context Package.
 
+## Navigation is not composition
+
+A Topic may direct an agent to deeper information or even to another Context Node when a task needs it. That is progressive disclosure, not inheritance.
+
+ContextCanon itself demonstrates both relationships:
+
+```text
+ContextCanon Gateway ──Topic──> ContextCanon Development
+                                      ▲
+                                      │ Source
+                           ContextCanon Foundation
+```
+
+The Gateway does not inherit Development. It merely sends development work there. Development does inherit Foundation as an accepted source and then adds its local delta.
+
+Keeping these relationships distinct prevents navigation choices from silently changing which rules a node publishes.
+
 ## Multi-node repositories
 
-A Git repository may publish several independently addressable Context Nodes.
+A Git repository may publish several independently addressable Context Nodes. This repository contains three real nodes with different jobs:
 
-ContextCanon itself is the first dogfood case:
+- the repository root is **ContextCanon Gateway**, a deliberately tiny entry node,
+- `nodes/foundation/` publishes **ContextCanon Foundation**, the reusable baseline,
+- `nodes/development/` publishes **ContextCanon Development**, which composes Foundation and adds framework-development context.
 
-- `contexts/public/` publishes **ContextCanon Public (`t`)**,
-- the repository root publishes **ContextCanon Development (`t-intern`)** and composes `t`.
-
-The exact locator syntax for selecting a node inside a repository remains intentionally open until the next vertical POC.
+The exact external locator syntax for selecting a node inside a repository remains intentionally open until the next vertical POC.

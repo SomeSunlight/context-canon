@@ -10,20 +10,20 @@ A child node may compose exactly that same published result. There is no separat
 
 ## Concrete package layout
 
-The human- and agent-facing package has a simple physical shape:
+Every node has a generated `CONTEXT.md` entry. Deeper package material exists only when the node actually needs it:
 
 ```text
-CONTEXT.md              compact official entry
-CONTEXT/                deeper compiled/package-local material
+CONTEXT.md              compact official entry; always present
+CONTEXT/                optional deeper compiled/package-local material
 ├── references/
-├── topics/             optional generated topic material
+├── topics/
 ├── glossaries/         future
 ├── examples/           future
 ├── skills/             future
 └── ...
 ```
 
-Together, `CONTEXT.md` and `CONTEXT/` are the **Official Context Package**.
+When `CONTEXT/` exists, `CONTEXT.md` plus that directory form the human/agent-facing **Official Context Package**. A tiny node with no materialized resources may legitimately consist of `CONTEXT.md` alone on the human/agent side.
 
 `.context/` is different. It contains compiler bookkeeping, accepted source snapshots, provenance, hashes, package metadata, and other machine state. Humans normally do not need it to understand what applies.
 
@@ -31,9 +31,15 @@ Together, `CONTEXT.md` and `CONTEXT/` are the **Official Context Package**.
 
 Because completeness and prompt size are different concerns.
 
-`CONTEXT.md` should contain the small amount of context that is broadly useful plus a precise Topic map. When a Topic applies, Required material is loaded from the package. Optional material remains available if more depth is useful.
+`CONTEXT.md` should contain the small amount of context that is broadly useful plus a precise Topic map. When a Topic applies, Required material is loaded from the package or another explicitly named target. Optional material remains available if more depth is useful.
 
 This lets a package be complete without forcing every document, glossary, example, and historical note into every LLM turn.
+
+## The minimal case matters
+
+ContextCanon Gateway, at the root of this repository, deliberately has no Sources, no Rules and no materialized `CONTEXT/` resources. Its `CONTEXT.md` only tells an agent when to enter the deeper Development node.
+
+This is not a special bootstrap mode. It is an ordinary Context Node and demonstrates that ContextCanon must remain useful even when the useful context is almost nothing.
 
 ## Natural source locations, self-contained published package
 
@@ -48,7 +54,7 @@ examples/client.py
 
 `CONTEXT.src.md` may reference those source files directly.
 
-During compilation, ContextCanon materializes the resources that belong to the published context under `CONTEXT/` and rewrites generated `CONTEXT.md` links to the package-local copies.
+During compilation, ContextCanon materializes resources that belong inside the published package under `CONTEXT/` and rewrites generated `CONTEXT.md` links to package-local copies.
 
 For example:
 
@@ -57,7 +63,7 @@ source:     docs/architecture.md
 published:  CONTEXT/references/docs/architecture.md
 ```
 
-A published node can therefore be consumed without depending on the original repository layout or live access to its sources.
+A published node can therefore be consumed without depending on the original repository layout for its packaged resources.
 
 ## What belongs in `CONTEXT.md`?
 
@@ -85,6 +91,6 @@ The title and wording are presentation. The stable ID is contract identity.
 
 ## Generated output
 
-`CONTEXT.md` and `CONTEXT/` are generated and should not be edited directly. Human changes belong in `CONTEXT.src.md` and in the referenced source material.
+`CONTEXT.md` and, when present, `CONTEXT/` are generated and should not be edited directly. Human changes belong in `CONTEXT.src.md` and in referenced source material.
 
 The generated header should identify the node and version, point to `CONTEXT.src.md`, and make the package boundary clear.

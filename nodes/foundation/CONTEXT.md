@@ -1,16 +1,16 @@
-# ContextCanon Public (`t`) — Official Context
+# ContextCanon Foundation — Official Context
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
-> This is the compact official entry view of the public ContextCanon node.
-> Together with the generated `CONTEXT/` directory it forms the human/agent-facing Official Context Package.
+> This is the compact official entry for the reusable ContextCanon Foundation node.
+> Together with `CONTEXT/` it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
-**Node:** ContextCanon Public (`t`)  
+**Node:** ContextCanon Foundation  
 **Context version:** `0.1.0-draft`
 
-The IDs shown with rules are stable contract identifiers. Child nodes use them for removes, overrides, exceptions, tracing, and diagnostics.
+The IDs shown with Rules are stable contract identifiers. Descendants use them for explicit changes, tracing, and diagnostics.
 
 ## Rules
 
@@ -32,9 +32,9 @@ Framework bookkeeping belongs under `.context/` and should not be required readi
 
 ### Composition
 
-#### `CC-004` — No implicit source precedence
+#### `CC-004` — No implicit Source precedence
 
-Context sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than source order.
+Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
 
 ### Identity
 
@@ -44,13 +44,13 @@ Every addressable context element has a stable ID independent of its title, word
 
 #### `CC-006` — Publish IDs that children may reference
 
-Published official contexts expose stable IDs for rules and other elements that child nodes may reference.
+Published official contexts expose stable IDs for Rules and other elements that child nodes may reference.
 
 ### Progressive disclosure
 
 #### `CC-007` — Keep entry context small
 
-Keep the official entry context compact and use Topics to load deeper context only when needed; Topic references distinguish required from optional material.
+Keep the official entry context compact and use Topics to load deeper context only when needed; Topic targets distinguish Required from Optional material.
 
 ### Project state
 
@@ -66,9 +66,9 @@ Project code and canonical project context must not depend on a particular LLM o
 
 ### Repository conventions
 
-#### `CC-010` — Keep standard repository documents explicit
+#### `CC-010` — Keep familiar repository documents useful
 
-Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present even when one is intentionally short.
+Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.
 
 ### Documentation style
 
@@ -80,7 +80,7 @@ Write technical documentation in precise, plain prose for intelligent readers; i
 
 ### Context authoring
 
-When editing ContextCanon source, IDs, generated views, or Topics:
+When editing ContextCanon source, IDs, generated views, package resources, or Topics:
 
 **Required**
 - [`CONTEXT/references/docs/source-format.md`](CONTEXT/references/docs/source-format.md)
@@ -89,7 +89,7 @@ When editing ContextCanon source, IDs, generated views, or Topics:
 
 ### Context composition
 
-When adding sources or changing inherited rules:
+When adding Sources or changing inherited Rules:
 
 **Required**
 - [`CONTEXT/references/docs/composition.md`](CONTEXT/references/docs/composition.md)

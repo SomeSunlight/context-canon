@@ -1,68 +1,43 @@
-# GENERATED ContextCanon machine state for the repository's internal Development node (`t-intern`).
-# Humans normally read CONTEXT.src.md (local delta) or CONTEXT.md (official entry) instead.
+# GENERATED ContextCanon machine state for the repository Gateway node.
+# The Gateway is intentionally minimal; humans normally need only CONTEXT.md.
 
 schema: contextcanon-poc/v1
 
 node:
-  id: 8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a
-  name: ContextCanon Development
-  alias: t-intern
+  id: a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11
+  name: ContextCanon Gateway
   version: 0.1.0-draft
 
 human_files:
   source: CONTEXT.src.md
   official_entry: CONTEXT.md
-  official_resources: CONTEXT/
+  official_resources: null
   state: STATE.md
   agent_entry: AGENTS.md
   goose_entry: .goosehints
 
-# Accepted reusable packages. Order is not precedence.
-sources:
-  - id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
-    name: ContextCanon Public
-    alias: t
-    version: 0.1.0-draft
-    revision: POC-UNPINNED
-    locator: contexts/public
+sources: []
 
-# Only the t-intern delta lives here; CC-* rules remain owned by the public t node.
 local:
-  rules:
-    - {id: CCI-001, title: Deterministic skeleton, semantic intelligence on top, group: Compiler architecture}
-    - {id: CCI-002, title: Validate vertically before hardening, group: Development method}
-    - {id: CCI-003, title: Repository documentation is the design record, group: Development method}
+  rules: []
   changes: []
   topics:
-    - CCI-TOPIC-ARCHITECTURE
-    - CCI-TOPIC-FORMATS
-    - CCI-TOPIC-COMPOSITION
-    - CCI-TOPIC-HARNESSES
-    - CCI-TOPIC-STATE
+    - CCG-TOPIC-DEVELOPMENT
 
-# The official package is accepted source package(s) plus local delta after deterministic changes.
 official:
   entry: CONTEXT.md
-  resource_root: CONTEXT/
-  inherited_rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
-  local_rule_ids: [CCI-001, CCI-002, CCI-003]
-  topic_ids: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+  resource_root: null
+  rule_ids: []
+  topic_ids: [CCG-TOPIC-DEVELOPMENT]
 
-# Source material remains editable under docs/; published copies are materialized below CONTEXT/.
-resources:
-  - {source: docs/architecture.md, published: CONTEXT/references/docs/architecture.md}
-  - {source: docs/use-case-walkthrough.md, published: CONTEXT/references/docs/use-case-walkthrough.md}
-  - {source: docs/concepts.md, published: CONTEXT/references/docs/concepts.md}
-  - {source: docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
-  - {source: docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
-  - {source: docs/topics.md, published: CONTEXT/references/docs/topics.md}
-  - {source: docs/composition.md, published: CONTEXT/references/docs/composition.md}
-  - {source: docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
-  - {source: docs/state.md, published: CONTEXT/references/docs/state.md}
+# This Topic navigates to another local Context Node; it does not compose that node as a Source.
+targets:
+  - topic: CCG-TOPIC-DEVELOPMENT
+    intent: required
+    kind: context-node
+    locator: nodes/development
 
-# Later compilers record exact define/inherit/remove/override/exception events here.
-provenance:
-  note: CC-* comes from ContextCanon Public; CCI-* is defined by ContextCanon Development.
+resources: []
 
 package:
   revision: POC-UNPINNED

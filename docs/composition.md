@@ -9,72 +9,57 @@ Personal Style ─────────┼──> Local Delta ──> Officia
 Security Context ───────┘
 ```
 
-A source is an accepted published package from another Context Node. Sources may live in the same Git repository, another repository, or eventually another package location. Repository containment does not define context inheritance.
+A Source is an accepted published package from another Context Node. Sources may live in the same Git repository, another repository, or eventually another package location. Repository containment does not define context inheritance.
 
 ## No implicit precedence
 
 Source order does not mean priority. ContextCanon must never silently apply "first source wins" or "last source wins" semantics.
 
-Different sources can therefore contribute independent elements without an artificial method-resolution order.
+Different Sources can therefore contribute independent elements without an artificial method-resolution order.
 
 ## Dependency graph
 
-Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as:
-
-- dependency cycles,
-- the same source required at incompatible accepted versions/packages,
-- invalid or missing referenced IDs,
-- dangling local change operations,
-- illegal operations on protected elements.
-
-Identical source/package dependencies can be deduplicated.
+Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
 
 ## Semantic conflicts
 
-Two different source elements may contradict each other even though their IDs are unrelated:
-
-```text
-Source A: Use spaces for indentation.
-Source B: Use tabs for indentation.
-```
-
-A deterministic compiler cannot reliably prove that these natural-language rules conflict. It preserves both unless an explicit local resolution exists.
+Two different Source elements may contradict each other even though their IDs are unrelated. A deterministic compiler cannot reliably prove every natural-language conflict. It preserves both unless an explicit local resolution exists.
 
 An optional LLM reviewer may flag likely conflicts, explain them, and suggest where to resolve them. The durable decision remains explicit in source.
 
 ## Local changes
 
-A node can resolve inherited context through explicit operations such as:
+A node can resolve inherited context through explicit operations such as **Remove**, **Override**, or **Use Exception** for an authorized exception to a protected Rule.
 
-- **Remove** an inherited ordinary element,
-- **Override** an inherited ordinary element while preserving its global identity,
-- **Use Exception** when a protected element defines an authorized exception for this node.
-
-Operations target stable published IDs, never titles or current wording. The current title should still appear beside the ID for human orientation.
-
-If a later accepted source package removes an element that a local operation still targets, the compiler reports a deterministic dangling-operation diagnostic rather than silently dropping the operation.
+Operations target stable published IDs, never titles or current wording. If a later accepted Source package removes an element that a local operation still targets, the compiler reports a deterministic dangling-operation diagnostic rather than silently dropping it.
 
 ## Source updates are change requests
 
-Consumers remain pinned to an accepted source package. A newly published source version is an update candidate, not live inheritance.
+Consumers remain pinned to an accepted Source package. A newly published Source version is an update candidate, not live inheritance.
 
-The intended workflow is:
+The intended workflow is: detect a newer package, compute a deterministic diff, identify structural consequences, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
 
-1. detect a newer source package,
-2. compute a complete deterministic diff,
-3. identify structural consequences such as dangling operations,
-4. optionally use an LLM to highlight likely semantic impact,
-5. review and resolve changes,
-6. explicitly accept the new source package,
-7. rebuild the node's Official Context Package.
+## Navigation is not composition
+
+A Topic may direct an agent to deeper information or even to another Context Node when a task needs it. That is progressive disclosure, not inheritance.
+
+```text
+ContextCanon Gateway ──Topic──> ContextCanon Development
+                                      ▲
+                                      │ Source
+                           ContextCanon Foundation
+```
+
+The Gateway does not inherit Development. It merely sends development work there. Development does inherit Foundation as an accepted Source and then adds its local delta.
+
+Keeping these relationships distinct prevents navigation choices from silently changing which Rules a node publishes.
 
 ## Multi-node repositories
 
-A Git repository may publish several independently addressable Context Nodes.
+A Git repository may publish several independently addressable Context Nodes. This repository contains three real nodes with different jobs:
 
-ContextCanon itself is the first dogfood case:
+- the repository root is **ContextCanon Gateway**, a deliberately tiny entry node,
+- `nodes/foundation/` publishes **ContextCanon Foundation**, the reusable baseline,
+- `nodes/development/` publishes **ContextCanon Development**, which composes Foundation and adds framework-development context.
 
-- `contexts/public/` publishes **ContextCanon Public (`t`)**,
-- the repository root publishes **ContextCanon Development (`t-intern`)** and composes `t`.
-
-The exact locator syntax for selecting a node inside a repository remains intentionally open until the next vertical POC.
+The exact external locator syntax for selecting a node inside a repository remains intentionally open until the next vertical POC.

@@ -2,7 +2,24 @@
 
 This document stress-tests ContextCanon before the compiler implementation is frozen. The purpose is to find cases where a simple user action would become surprising, ambiguous, or disproportionately difficult.
 
-## 1. Start a small project
+## 1. Enter a repository through an almost-empty Gateway
+
+An agent opens the ContextCanon repository.
+
+The root Context Node contains:
+
+- no Sources,
+- no Rules,
+- one Topic,
+- no materialized `CONTEXT/` directory.
+
+For an ordinary orientation task, nothing deeper is loaded. When the task concerns ContextCanon's specification, documentation, nodes, compiler, examples, or tooling, the Topic requires `nodes/development/CONTEXT.md`.
+
+**Finding:** a useful Context Node can be extremely small. This needs no special bootstrap mode; the normal Topic mechanism is sufficient.
+
+**Open detail:** a Topic target may point to another Context Node rather than a package resource. V1 should represent that target explicitly enough for validation, diagnostics, and future package/location handling.
+
+## 2. Start a small project
 
 A newly initialized node should require almost no framework knowledge.
 
@@ -10,13 +27,13 @@ Expected authoring flow:
 
 1. `CONTEXT.src.md` is created with a short visible syntax guide.
 2. A compiler-managed hidden template block shows copyable examples for a new rule, a source change, and a Topic.
-3. The node composes ContextCanon Public (`t`) plus any useful domain sources.
+3. The node composes ContextCanon Foundation plus any useful domain sources.
 4. The human adds only the local delta.
-5. The compiler creates `CONTEXT.md`, `CONTEXT/`, machine state, and harness adapters.
+5. The compiler creates `CONTEXT.md`, optional `CONTEXT/`, machine state, and harness adapters.
 
-**Finding:** the common path must not require hand-written YAML, UUIDs, provenance, or package metadata.
+**Finding:** the common path must not require hand-written YAML, UUIDs, provenance, package metadata, or empty package directories.
 
-## 2. Work on an ordinary task without wasting context
+## 3. Work on an ordinary task without wasting context
 
 A developer asks an agent to change a small function unrelated to logging, releases, security architecture, or database design.
 
@@ -30,7 +47,7 @@ It should not preload every linked architecture document merely because it exist
 
 **Finding:** completeness belongs to the package; prompt size belongs to the current task.
 
-## 3. Work on a task that needs deeper context
+## 4. Work on a task that needs deeper context
 
 A task changes logging.
 
@@ -45,7 +62,7 @@ A deeper document may itself begin with a short summary and link onward, like a 
 
 **Finding:** Topic references need at least two load intentions: `required` and `optional`. Progressive disclosure may be recursive.
 
-## 4. Keep source documents natural while publishing a self-contained package
+## 5. Keep source documents natural while publishing a self-contained package
 
 A project maintains architecture documentation at `docs/architecture.md` because that is where developers expect to edit it.
 
@@ -60,11 +77,11 @@ Generated `CONTEXT.md` points to the package-local copy.
 
 **Finding:** authors should not reorganize repositories for the framework, while consumers should not depend on the author's repository layout.
 
-## 5. Compose several independent sources
+## 6. Compose several independent sources
 
 A project composes:
 
-- ContextCanon Public (`t`),
+- ContextCanon Foundation,
 - Python Development,
 - Windows & PowerShell,
 - Company Security,
@@ -77,7 +94,7 @@ Different source rules may still contradict each other semantically. The compile
 
 **Finding:** composition remains tractable without a language-style method-resolution order.
 
-## 6. Change an imported rule
+## 7. Change an imported rule
 
 A child wants to remove an inherited rule.
 
@@ -89,7 +106,7 @@ If the parent later renames or rewrites the rule while preserving its identity, 
 
 **Finding:** stable IDs must be visible in published official contexts, while local source IDs can remain compiler-managed HTML comments.
 
-## 7. A source removes a rule that a child still changes
+## 8. A source removes a rule that a child still changes
 
 A child has an override for `PY-017`. A later accepted Python source version removes `PY-017`.
 
@@ -97,7 +114,7 @@ The compiler can prove that the child's operation now targets a missing element.
 
 **Finding:** dangling remove/override/exception targets are deterministic diagnostics and must not be silently ignored. The update workflow should show them before acceptance.
 
-## 8. Accept a source update
+## 9. Accept a source update
 
 A reusable source publishes a new immutable package.
 
@@ -112,7 +129,7 @@ The update workflow can produce:
 
 **Finding:** deterministic diff first, semantic review second.
 
-## 9. Clone a child without source repositories
+## 10. Clone a child without source repositories
 
 A child repository is cloned onto a machine that cannot reach its parent/source repositories.
 
@@ -122,30 +139,34 @@ The child remains understandable and reproducible.
 
 **Finding:** published packages, not live repository traversal, are the composition boundary.
 
-## 10. Put several nodes in one Git repository
+## 11. Put several nodes in one Git repository
 
-ContextCanon itself needs two contexts:
+ContextCanon itself needs three contexts with three jobs:
 
-- **ContextCanon Public (`t`)**: the public baseline intended for ordinary client nodes.
-- **ContextCanon Development (`t-intern`)**: the repository's own development context; it composes `t` and adds design/compiler rules.
+- **ContextCanon Gateway**: the minimal repository entry; routes development tasks onward.
+- **ContextCanon Foundation**: the reusable baseline intended for other managed nodes.
+- **ContextCanon Development**: composes Foundation and adds design/compiler rules.
 
-The repository root is `t-intern` because that is what agents working on ContextCanon itself need. The public node lives under `contexts/public/`.
+```text
+Gateway ──Topic──> Development
+                     ▲
+                     │ Source
+                  Foundation
+```
 
-The structural contract implemented by both nodes is defined by the ContextCanon schema/specification. A third interface node would be justified only if it carried reusable context content, not merely structure.
+The structural contract implemented by all three nodes is defined by the ContextCanon schema/specification. A separate interface node would be justified only if it carried reusable context content, not merely structure.
 
-**Finding:** node identity and lifecycle cannot be equated with Git repository boundaries, and schema/interface is a different concern from context content.
+**Finding:** node identity and lifecycle cannot be equated with Git repository boundaries. Topic navigation and Source composition are distinct relationships.
 
-## 11. Use different agent harnesses
+## 12. Use different agent harnesses
 
 Codex, goose, another agent, and a human work on the same repository.
 
-They may enter through different adapter files, but all adapters point to the same official entry context and package meaning.
+They may enter through different adapter files, but the adapters first enter the applicable Context Node. In this repository that is the minimal Gateway; the adapters do not hard-code Development.
 
-No authored project rule or application code needs to know which harness is consuming it.
+**Finding:** harness/model details stay at the adapter edge, while ContextCanon controls progressive disclosure.
 
-**Finding:** harness/model details stay at the adapter edge.
-
-## 12. Edit `CONTEXT.src.md` without memorizing syntax
+## 13. Edit `CONTEXT.src.md` without memorizing syntax
 
 The source file contains a hidden compiler-maintained authoring template block. In raw Markdown it provides immediately copyable examples; rendered Markdown remains clean.
 
@@ -155,7 +176,7 @@ Generating a full template for every imported rule by default would make large s
 
 **Finding:** authoring help is a presentation/tooling preference, not inherited project governance.
 
-## 13. Grow from Topics into broader context integration
+## 14. Grow from Topics into broader context integration
 
 A Topic initially links a task to Markdown documentation. The same mechanism can later integrate other context resources when they become relevant:
 
@@ -173,13 +194,14 @@ A Topic initially links a task to Markdown documentation. The same mechanism can
 
 The walkthrough found no reason to abandon the architecture, but several implementation contracts still need a vertical POC:
 
-1. Freeze Topic syntax for `required` versus `optional` references and recursive loading.
-2. Define source locators and immutable package identity for local paths, Git repositories, and releases.
-3. Define stable ID generation, preservation, and duplicate detection.
-4. Define deterministic diagnostics for dangling change operations after source updates.
-5. Define how multiple nodes in one repository are addressed and published.
-6. Define exact source-to-`CONTEXT/` resource mapping and collision handling.
-7. Decide where non-versioned authoring preferences such as template verbosity live.
-8. Keep protected rules and authorized exceptions deterministic and explicit.
+1. Freeze Topic syntax for `required` versus `optional` targets and recursive loading.
+2. Define typed Topic targets, including links to another Context Node.
+3. Define source locators and immutable package identity for local paths, Git repositories, and releases.
+4. Define stable ID generation, preservation, and duplicate detection.
+5. Define deterministic diagnostics for dangling change operations after source updates.
+6. Define how multiple nodes in one repository are addressed and published.
+7. Define exact source-to-`CONTEXT/` resource mapping and collision handling.
+8. Decide where non-versioned authoring preferences such as template verbosity live.
+9. Keep protected rules and authorized exceptions deterministic and explicit.
 
 These are bounded design questions. None currently requires replacing the core composition model.

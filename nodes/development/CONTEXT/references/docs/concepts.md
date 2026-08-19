@@ -8,7 +8,7 @@ A **Context Node** is an independently addressable and versioned unit that publi
 
 Node identity is logical rather than tied to a Git repository or physical directory. One repository may contain several nodes, and a node may move without changing identity.
 
-Every published node has a stable opaque identity that survives ordinary renames or moves.
+A node may be large or extremely small. ContextCanon Gateway in this repository has no Sources and no Rules; one Topic is enough to make it useful.
 
 ## Context Source
 
@@ -20,7 +20,7 @@ A node may compose zero, one, or several sources. Sources may represent orthogon
 - Python or Java development practice,
 - security requirements,
 - personal coding style,
-- a shared framework or parent project.
+- a shared framework foundation.
 
 Source order is not precedence.
 
@@ -42,19 +42,11 @@ It is the one canonical result that:
 
 1. applies to the current node,
 2. is published for child nodes to compose,
-3. is exposed to humans and agents through `CONTEXT.md` plus `CONTEXT/`.
+3. is exposed to humans and agents through `CONTEXT.md` and, when needed, `CONTEXT/`.
 
-There is intentionally no separate "context used by this parent" and "context exported to children."
+`CONTEXT.md` is always the compact generated entry. `CONTEXT/` exists only when the node has deeper resources to materialize.
 
 `.context/` is related machine state about the package, not the human/agent context surface itself.
-
-## `CONTEXT.md` and `CONTEXT/`
-
-`CONTEXT.md` is the compact generated official **entry view**. `CONTEXT/` holds deeper package-local resources.
-
-The entry should contain broadly required context and a precise Topic map, not every piece of material available in the package.
-
-This distinction allows the package to remain complete while protecting the LLM context window from unrelated information.
 
 ## Topics
 
@@ -62,18 +54,28 @@ A **Topic** describes when deeper context becomes relevant.
 
 Topic material distinguishes:
 
-- **Required** material that must be loaded when the Topic applies,
-- **Optional** material that remains discoverable for deeper exploration.
+- **Required** targets that must be loaded when the Topic applies,
+- **Optional** targets that remain discoverable for deeper exploration.
+
+A target may be a package resource or another Context Node entry. The latter is useful for Gateway nodes that route a task into a more specific context without inheriting that context themselves.
 
 This pattern may repeat recursively: summary first, then deeper links.
 
-Topics are also the first general context-integration mechanism: they can later connect tasks not only to Markdown, but also to glossaries, example code, structured data, PDFs, images, skills, and experience.
+## Gateway, Foundation and Development
+
+This repository uses three ordinary nodes to demonstrate three different jobs:
+
+- **ContextCanon Gateway** — the minimal root entry; routes development tasks onward.
+- **ContextCanon Foundation** — reusable baseline context with no parent Sources.
+- **ContextCanon Development** — composes Foundation and adds only the framework-development delta.
+
+Gateway → Development is Topic navigation. Foundation → Development is Source composition.
 
 ## Schema versus Node
 
 The ContextCanon schema/specification defines what a valid Node, Source, Rule, Topic, Change, identifier, and package look like. In object-oriented terms, this is the structural interface.
 
-A Context Node contains actual context content. A separate "interface node" is therefore unnecessary unless there is reusable context content that deserves its own lifecycle.
+A Context Node contains actual context content. A separate "interface node" is unnecessary unless there is reusable context content that deserves its own lifecycle.
 
 ## Context is broader than rules
 
