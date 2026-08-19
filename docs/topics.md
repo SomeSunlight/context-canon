@@ -1,17 +1,17 @@
 # Topics
 
-Topics are ContextCanon's primary progressive-disclosure mechanism.
+A Topic answers a practical question:
 
-The official entry context should contain only broadly useful rules and a concise map to deeper information. Detailed architecture, logging, release, security, database, domain, glossary, examples, or experience can remain focused and be loaded when relevant.
+> When this kind of work is being done, what additional context should be read?
 
-## Required and optional material
+`CONTEXT.md` should stay small. It contains the rules that are broadly relevant and a concise list of Topics. Each Topic describes when it matters and points to the deeper information needed for that work.
 
-A Topic has:
+## Required and optional information
 
-- a human name,
-- a natural-language description of when it matters,
-- **Required** references that must be loaded when the Topic applies,
-- **Optional** references that remain available when deeper exploration is useful.
+A Topic contains two kinds of references:
+
+- **Required** — must be read when the Topic applies.
+- **Optional** — useful for deeper understanding, troubleshooting, history, or unusual cases.
 
 Example:
 
@@ -28,26 +28,41 @@ Optional:
 - `docs/troubleshooting.md`
 ```
 
-The exact V1 syntax is not yet frozen, but the semantic distinction is now required by the design.
+The distinction is important. A model should not have to guess whether a linked document is mandatory, and it should not load every optional document merely because it exists.
 
-## Recursive progressive disclosure
+## Progressive disclosure can repeat
 
-A required document should itself put the most important information first and may link to deeper detail.
+A required document should again put the most important information first. It may then point to more detailed material.
 
-This makes ContextCanon behave more like a well-designed website than a giant prompt file: orientation first, mandatory next steps explicit, optional depth available on demand.
+The result resembles a well-designed website: the first page gives orientation, important next steps are explicit, and deeper information remains one link away instead of being placed on the first page.
 
-## Why "Topics"?
+## Topics are also context integration
 
-"Routing" describes an implementation mechanism. "Topics" describes what humans actually think about: Logging, Architecture, Security, Releases, and so on.
+At first, a Topic may simply connect a task with a Markdown document. The mechanism is more general than that.
 
-## References stay where they naturally belong
+A Topic is a structured way to integrate additional information into the working context when it becomes relevant. Over time this may include:
 
-A Topic may point to existing project documentation such as `SECURITY.md`, `CONTRIBUTING.md`, or `docs/architecture.md`. ContextCanon should not duplicate content merely to move it into a framework-specific folder.
+- architecture and design documents,
+- glossaries and domain terminology,
+- coding patterns and example code,
+- CSV files, schemas, tables, and other structured data,
+- PDFs, images, and diagrams,
+- skills and executable workflows,
+- test fixtures and examples,
+- operational experience, known pitfalls, and troubleshooting knowledge.
 
-When a node is published for standalone reuse, normative referenced material can be materialized into the published package so children do not depend on live access to the original source repository.
+This is one of ContextCanon's larger opportunities: the same transparent mechanism can bring many kinds of project knowledge into an agent's context without making all of it permanently resident in the prompt.
 
-## Loading is not compilation
+## Source location and published location
 
-The compiler deterministically preserves Topic structure and package resources. Deciding that a natural-language task matches a Topic may be performed by an agent/harness unless a future deterministic trigger is available.
+Authors should keep information where it naturally belongs. A security document may remain `SECURITY.md`; architecture documentation may remain under `docs/`; a glossary may live beside the domain model.
 
-Once a Topic applies, the distinction between Required and Optional is explicit rather than left to hidden harness behavior.
+When ContextCanon builds an Official Context Package, referenced material that must travel with the node is materialized under `CONTEXT/`. The generated `CONTEXT.md` links to those package-local copies.
+
+This gives authors a natural repository layout while giving consumers a self-contained published package.
+
+## What decides that a Topic applies?
+
+The compiler preserves Topic definitions deterministically. A harness or agent may decide that a natural-language task matches a Topic, because that decision can require semantic interpretation.
+
+Once a Topic applies, however, Required versus Optional is explicit. The harness should not invent its own meaning for those references.
