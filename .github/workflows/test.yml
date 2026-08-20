@@ -2,6 +2,8 @@ name: tests
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -22,7 +24,7 @@ jobs:
           if ! contextcanon check --all .; then
             echo "::group::Generated drift diff"
             contextcanon build --all .
-            git diff -- .context/context.yaml 'nodes/**/.context/context.yaml'
+            git diff
             echo "::endgroup::"
             exit 1
           fi
