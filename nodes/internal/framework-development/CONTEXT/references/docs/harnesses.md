@@ -2,11 +2,13 @@
 
 ContextCanon is harness- and model-independent.
 
-`CONTEXT.md` is the compact official entry view into a node's Official Context Package. Harness-specific files are generated adapters that direct a particular tool to that entry view and, where the harness permits, to the Topic-loading behavior.
+`CONTEXT.md` is the compact official entry view into a node's Official Context Package. Harness-specific files are generated adapters that direct a particular tool to that entry view.
+
+`CONTEXT.md` is deliberately self-describing: it states that Rules apply to every task in the Node and explains how to evaluate Topics and load Required versus Optional targets. Adapters therefore stay small and do not need to duplicate those semantics.
 
 ## Design rule
 
-Canonical project context and project code must not depend on Codex, goose, Claude, Copilot, or another particular harness.
+Canonical project context and project code must not depend on Codex, goose, Copilot, Claude, or another particular harness.
 
 Do not copy the full project context into every harness-specific file. An adapter should be as small as the harness allows and contain only the mechanics needed to enter ContextCanon correctly.
 
@@ -22,7 +24,7 @@ This keeps harness behavior mechanical and lets ContextCanon itself decide how m
 
 ContextCanon can generate `AGENTS.md` as an entry point for harnesses that support it.
 
-OpenAI documents `AGENTS.md` as persistent repository guidance for Codex, including hierarchical files scoped by directory. A generated adapter should point Codex to the applicable `CONTEXT.md`, tell it to follow Required Topic targets when a Topic applies, and avoid duplicating the complete package.
+OpenAI documents `AGENTS.md` as persistent repository guidance for Codex, including hierarchical files scoped by directory. A generated adapter points Codex to the applicable `CONTEXT.md` rather than duplicating the complete package.
 
 OpenAI references:
 - https://openai.com/index/introducing-codex/
@@ -36,6 +38,18 @@ ContextCanon therefore generates a small `.goosehints` adapter that points to th
 
 goose reference:
 - https://github.com/block/goose/blob/main/documentation/docs/guides/environment-variables.md
+
+## GitHub Copilot
+
+GitHub Copilot Chat in JetBrains IDEs supports repository-wide custom instructions through `.github/copilot-instructions.md`. GitHub states that these instructions are automatically added to requests made in the repository context.
+
+ContextCanon therefore generates `.github/copilot-instructions.md` for the `copilot` adapter. The file points Copilot to the root `CONTEXT.md`; it does not reproduce project Rules or Topic content.
+
+For the JetBrains IDE workflow, ContextCanon does not rely on `AGENTS.md` being consumed by Copilot Chat. GitHub's current support matrix distinguishes repository-wide Copilot instructions from agent-instruction files used by other Copilot agent surfaces.
+
+GitHub references:
+- https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide
+- https://docs.github.com/en/copilot/reference/custom-instructions-support
 
 ## Other harnesses
 
