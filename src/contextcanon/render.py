@@ -27,6 +27,16 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         "",
     ])
 
+    if compiled.inherited_rules or compiled.local_rules or compiled.local_topics:
+        lines.extend(["## How to use this context", ""])
+        if compiled.inherited_rules or compiled.local_rules:
+            lines.extend(["Apply all Rules below to every task in this Node.", ""])
+        if compiled.local_topics:
+            lines.extend([
+                "For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.",
+                "",
+            ])
+
     for source in compiled.source_nodes:
         rules = [rule for rule in compiled.inherited_rules if rule.origin_node_id == source.metadata.id]
         if rules:
@@ -86,20 +96,27 @@ def render_adapters(compiled: CompiledNode) -> dict[str, str]:
             "# ContextCanon Agent Entry Point\n\n"
             "> **GENERATED FILE — DO NOT EDIT.**\n"
             "> Managed by ContextCanon.\n\n"
-            "Read and follow [CONTEXT.md](CONTEXT.md) first. "
-            "When a Topic applies, load every **Required** target before continuing; "
-            "load **Optional** targets only when deeper context is useful."
+            "Read and follow [CONTEXT.md](CONTEXT.md) before answering, analyzing, or editing files. "
+            "It defines the applicable Rules and Topic-loading instructions."
             f"{state_line}\n"
         )
     if "goose" in compiled.metadata.adapters:
         state_line = " Read STATE.md when current project state or planning matters." if (compiled.parsed.root / "STATE.md").exists() else ""
         result[".goosehints"] = (
             "# GENERATED FILE — DO NOT EDIT. Managed by ContextCanon.\n\n"
-            "Read and follow CONTEXT.md first. When a Topic applies, load every Required target before continuing; "
-            "load Optional targets only when deeper context is useful."
+            "Read and follow CONTEXT.md before answering, analyzing, or editing files. "
+            "It defines the applicable Rules and Topic-loading instructions."
             f"{state_line}\n"
         )
-    unknown = set(compiled.metadata.adapters) - {"agents", "goose"}
+    if "copilot" in compiled.metadata.adapters:
+        state_line = " Read [STATE.md](../STATE.md) when current project state or planning matters." if (compiled.parsed.root / "STATE.md").exists() else ""
+        result[".github/copilot-instructions.md"] = (
+            "# GENERATED FILE — DO NOT EDIT\n\n"
+            "Use [CONTEXT.md](../CONTEXT.md) as this repository's canonical project instructions. "
+            "Read and follow it before answering, analyzing, or editing files."
+            f"{state_line}\n"
+        )
+    unknown = set(compiled.metadata.adapters) - {"agents", "goose", "copilot"}
     if unknown:
         raise ContextCanonError(f"Unsupported adapter(s): {', '.join(sorted(unknown))}")
     return result
