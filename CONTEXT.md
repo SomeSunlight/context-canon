@@ -9,6 +9,10 @@
 **Node:** ContextCanon Gateway  
 **Context version:** `0.1.0-draft`
 
+## How to use this context
+
+For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
+
 This Node defines no Rules.
 
 ## Topics
