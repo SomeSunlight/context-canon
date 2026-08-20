@@ -67,9 +67,11 @@ Unsupported syntax must fail clearly rather than encourage premature complexity.
 
 Use a small real repository first so every relationship between source, generated context, project files, and LLM behavior is obvious.
 
-- [ ] Select a simple existing repository as the first external customer.
-- [ ] Create a dedicated ContextCanon experiment branch; do not alter its main branch.
-- [ ] Bootstrap only human-editable `CONTEXT.src.md` and genuinely useful Topic resources.
+The active experiment is `SomeSunlight/teams-chat-exporter` on branch `agent/contextcanon-hello-world`. It intentionally starts before compilation so the first generated filesystem diff remains visible and reviewable.
+
+- [x] Select a simple existing repository as the first external customer.
+- [x] Create a dedicated ContextCanon experiment branch; do not alter its main branch.
+- [x] Bootstrap only human-editable `CONTEXT.src.md` and genuinely useful Topic resources.
 - [ ] Compile all generated output deterministically.
 - [ ] Enter the project through a real harness using the generated adapter and compact `CONTEXT.md`.
 - [ ] Perform one ordinary project task that needs no deeper Topic material.
