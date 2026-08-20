@@ -10,6 +10,12 @@
 **Node:** ContextCanon Foundation  
 **Context version:** `0.1.0-draft`
 
+## How to use this context
+
+Apply all Rules below to every task in this Node.
+
+For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
+
 ## Rules
 
 ### Canonical context
