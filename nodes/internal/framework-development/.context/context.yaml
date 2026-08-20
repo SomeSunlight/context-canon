@@ -17,7 +17,7 @@ sources:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    package_digest: "2c893bc107fdfdcae0dda1d7e86a715186472b20f02956860e886cfa159486be"
+    package_digest: "d93c510f46a225999f555c3780e9dd8cae75845b0c2b4b8370906aa103d171df"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -112,5 +112,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "046c4b625315bc0dfe1352c0dd85839a4d0715dbe99ec819ceeed1048850990b"
-  package_digest: "b39db70276cc5877816327514c89a11a207804400acd95b079e1accebd5177b8"
+  normalized_digest: "f67f28dc23f1c19f839b70d32b1663597c204cb38db12f750fea8df73ec892a6"
+  package_digest: "9bba8de0695657fdd91797712609aa148f1b7a54cd90ead12ee656455cb16743"
