@@ -17,4 +17,12 @@ jobs:
       - name: Unit and repository consistency tests
         run: python -m unittest discover -s tests -v
       - name: Verify generated ContextCanon output
-        run: contextcanon check --all .
+        shell: bash
+        run: |
+          if ! contextcanon check --all .; then
+            echo "::group::Generated drift diff"
+            contextcanon build --all .
+            git diff -- .context/context.yaml 'nodes/**/.context/context.yaml'
+            echo "::endgroup::"
+            exit 1
+          fi
