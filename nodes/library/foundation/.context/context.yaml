@@ -1,53 +1,88 @@
 # GENERATED ContextCanon machine state for ContextCanon Foundation.
 # Humans normally read CONTEXT.src.md or CONTEXT.md instead.
+# This file is deterministic compiler output and must not be edited manually.
 
-schema: contextcanon-poc/v1
+schema: contextcanon/v0
+compiler_version: "0.1.0"
 
+# Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
-  id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
-  name: ContextCanon Foundation
-  version: 0.1.0-draft
+  id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
+  name: "ContextCanon Foundation"
+  version: "0.1.0-draft"
 
-human_files:
-  source: CONTEXT.src.md
-  official_entry: CONTEXT.md
-  official_resources: CONTEXT/
-
+# Accepted Source Nodes used by this build. package_digest identifies the compiled Source package.
 sources: []
 
+# Elements authored in this Node's CONTEXT.src.md.
 local:
   rules:
-    - {id: CC-001, title: One official package, group: Canonical context}
-    - {id: CC-002, title: Edit source, not generated output, group: Canonical context}
-    - {id: CC-003, title: Keep compiler bookkeeping out of the normal workflow, group: Machine state}
-    - {id: CC-004, title: No implicit Source precedence, group: Composition}
-    - {id: CC-005, title: Stable identity, group: Identity}
-    - {id: CC-006, title: Publish IDs that children may reference, group: Identity}
-    - {id: CC-007, title: Keep entry context small, group: Progressive disclosure}
-    - {id: CC-008, title: State stays local, group: Project state}
-    - {id: CC-009, title: Canonical context is model- and harness-neutral, group: Harness independence}
-    - {id: CC-010, title: Keep familiar repository documents useful, group: Repository conventions}
-    - {id: CC-011, title: Write for intelligent readers, group: Documentation style}
-  changes: []
-  topics: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
+    - {"id": "CC-001", "title": "One official package", "group": "Canonical context"}
+    - {"id": "CC-002", "title": "Edit source, not generated output", "group": "Canonical context"}
+    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "group": "Machine state"}
+    - {"id": "CC-004", "title": "No implicit Source precedence", "group": "Composition"}
+    - {"id": "CC-005", "title": "Stable identity", "group": "Identity"}
+    - {"id": "CC-006", "title": "Publish IDs that children may reference", "group": "Identity"}
+    - {"id": "CC-007", "title": "Keep entry context small", "group": "Progressive disclosure"}
+    - {"id": "CC-008", "title": "State stays local", "group": "Project state"}
+    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "group": "Harness independence"}
+    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "group": "Repository conventions"}
+    - {"id": "CC-011", "title": "Write for intelligent readers", "group": "Documentation style"}
+  topics:
+    - {"id": "CC-TOPIC-AUTHORING", "title": "Context authoring"}
+    - {"id": "CC-TOPIC-COMPOSITION", "title": "Context composition"}
+    - {"id": "CC-TOPIC-HARNESSES", "title": "Harness adapters"}
 
+# Compiled Rule view with provenance plus the local Topic index.
 official:
-  entry: CONTEXT.md
-  resource_root: CONTEXT/
-  rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
-  topic_ids: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
+  rules:
+    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES"]
+  resource_root: "CONTEXT/"
 
+# Topic edges are explicit: kind is resource or context-node; intent is required or optional.
+targets:
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/source-format.md"
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/official-context.md"
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/topics.md"
+  - topic: "CC-TOPIC-COMPOSITION"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/composition.md"
+  - topic: "CC-TOPIC-HARNESSES"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/harnesses.md"
+
+# Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {source: ../../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
-  - {source: ../../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
-  - {source: ../../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
-  - {source: ../../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
-  - {source: ../../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
+  - {"source": "../../../docs/compiler.md", "published": "CONTEXT/references/docs/compiler.md"}
+  - {"source": "../../../docs/composition.md", "published": "CONTEXT/references/docs/composition.md"}
+  - {"source": "../../../docs/harnesses.md", "published": "CONTEXT/references/docs/harnesses.md"}
+  - {"source": "../../../docs/official-context.md", "published": "CONTEXT/references/docs/official-context.md"}
+  - {"source": "../../../docs/source-format.md", "published": "CONTEXT/references/docs/source-format.md"}
+  - {"source": "../../../docs/topics.md", "published": "CONTEXT/references/docs/topics.md"}
 
-provenance:
-  note: All current Foundation Rules and Topics are defined locally by this node.
-
+# Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  revision: POC-UNPINNED
-  normalized_digest: POC-NOT-CALCULATED
-  package_digest: POC-NOT-CALCULATED
+  normalized_digest: "47589620c181c0cd48983b8a61f96a940fb578400d9c5881dc99e08b33f0f053"
+  package_digest: "9ad64daebebbe7559e9efc70595d4f998ae90964e62e21360da93e898c78c90d"

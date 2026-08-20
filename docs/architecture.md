@@ -32,7 +32,7 @@ A repository root may itself be a node root. Nested Nodes are also possible. Fil
 
 Category directories may organize several Nodes without becoming Nodes themselves. In this repository, `nodes/library/` and `nodes/internal/` are such categories.
 
-The exact deterministic rules for discovering node roots and respecting nested-node boundaries remain a V1 item to freeze before compiler implementation.
+The walking-skeleton compiler discovers node roots from `CONTEXT.src.md`. More complex nested-repository boundary behavior will be hardened when a real repository requires it.
 
 ## Token economy is architectural
 
@@ -86,11 +86,13 @@ nodes/internal/framework-development/CONTEXT/references/docs/architecture.md
 
 Consumers of that Node can use the package without reconstructing the author's source layout.
 
+A directly referenced Markdown document can itself point to other local files. The compiler therefore computes a **materialization closure**: Topic Resource targets are seeds, and local relative links are followed recursively into the package. External links remain external.
+
 ## `.context/`
 
 `.context/` is analogous to `.git/` in one important respect: it contains infrastructure that matters but should not dominate normal work.
 
-The current POC uses one primary `.context/context.yaml` per Node. It records Node identity, accepted Source packages, normalized element identities, provenance, Topic targets, resource mapping, and future hashes/digests.
+The walking-skeleton compiler generates one primary `.context/context.yaml` per Node. It records Node identity, accepted local Sources, normalized element identities, Topic targets, resource mapping, and exact digests.
 
 Generated YAML may contain explanatory comments because occasional human inspection is useful, but it remains machine-owned.
 
@@ -124,19 +126,9 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 ## Deterministic skeleton, semantic assistance at the edges
 
-The compiler should deterministically handle what machines can prove:
+The compiler deterministically handles the currently implemented subset of syntax, node-root discovery, stable IDs, local Source resolution, cycle/version errors, Rule composition, Topic targets, resource materialization, exact hashes, generated views, adapters, and drift checks.
 
-- syntax and schema validation,
-- node-root discovery and boundary checks,
-- stable IDs,
-- dependency resolution,
-- cycle and version errors,
-- explicit remove/override/exception operations,
-- dangling operation detection,
-- provenance,
-- package materialization,
-- exact diffs and hashes,
-- generated views and adapters.
+Future deterministic capabilities include Remove/Override/Exception operations, pinned external Source packages, dangling-operation diagnostics, and broader package addressing.
 
 LLMs may assist with work that genuinely requires interpretation:
 
@@ -150,6 +142,6 @@ LLM judgments never replace deterministic package identity or explicit durable r
 
 ## Versioned accepted composition
 
-A Source update does not immediately change consumers. Each consumer accepts an exact published Source package and rebuilds deliberately.
+A Source update does not immediately change consumers. Each consumer will ultimately accept an exact published Source package and rebuild deliberately.
 
-This keeps independent projects on independent lifecycles while still allowing shared context to improve over time.
+Walking Skeleton 1 validates local Source identity and version and records the compiled Source package digest; external package pinning and update acceptance are subsequent hardening steps.

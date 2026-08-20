@@ -1,56 +1,116 @@
 # GENERATED ContextCanon machine state for ContextCanon Framework Development.
 # Humans normally read CONTEXT.src.md or CONTEXT.md instead.
+# This file is deterministic compiler output and must not be edited manually.
 
-schema: contextcanon-poc/v1
+schema: contextcanon/v0
+compiler_version: "0.1.0"
 
+# Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
-  id: 8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a
-  name: ContextCanon Framework Development
-  version: 0.1.0-draft
+  id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
+  name: "ContextCanon Framework Development"
+  version: "0.1.0-draft"
 
-human_files:
-  source: CONTEXT.src.md
-  official_entry: CONTEXT.md
-  official_resources: CONTEXT/
-
+# Accepted Source Nodes used by this build. package_digest identifies the compiled Source package.
 sources:
-  - id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
-    name: ContextCanon Foundation
-    version: 0.1.0-draft
-    revision: POC-UNPINNED
-    locator: ../../library/foundation
+  - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
+    name: "ContextCanon Foundation"
+    version: "0.1.0-draft"
+    locator: "../../library/foundation/"
+    package_digest: "9ad64daebebbe7559e9efc70595d4f998ae90964e62e21360da93e898c78c90d"
 
+# Elements authored in this Node's CONTEXT.src.md.
 local:
   rules:
-    - {id: CCI-001, title: Deterministic skeleton, semantic intelligence on top, group: Compiler architecture}
-    - {id: CCI-002, title: Validate vertically before hardening, group: Development method}
-    - {id: CCI-003, title: Repository documentation is the design record, group: Development method}
-    - {id: CCI-004, title: Keep library Nodes on Foundation, group: Node library}
-  changes: []
-  topics: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+    - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "group": "Compiler architecture"}
+    - {"id": "CCI-002", "title": "Validate vertically before hardening", "group": "Development method"}
+    - {"id": "CCI-003", "title": "Repository documentation is the design record", "group": "Development method"}
+    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "group": "Node library"}
+  topics:
+    - {"id": "CCI-TOPIC-ARCHITECTURE", "title": "Framework architecture"}
+    - {"id": "CCI-TOPIC-FORMATS", "title": "Source and official formats"}
+    - {"id": "CCI-TOPIC-COMPOSITION", "title": "Composition"}
+    - {"id": "CCI-TOPIC-HARNESSES", "title": "Harness integration"}
+    - {"id": "CCI-TOPIC-STATE", "title": "State and planning"}
 
+# Compiled Rule view with provenance plus the local Topic index.
 official:
-  entry: CONTEXT.md
-  resource_root: CONTEXT/
-  inherited_rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
-  local_rule_ids: [CCI-001, CCI-002, CCI-003, CCI-004]
-  topic_ids: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+  rules:
+    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
+    - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
+    - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
+    - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
+    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
+  topic_ids: ["CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  resource_root: "CONTEXT/"
 
+# Topic edges are explicit: kind is resource or context-node; intent is required or optional.
+targets:
+  - topic: "CCI-TOPIC-ARCHITECTURE"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/architecture.md"
+  - topic: "CCI-TOPIC-ARCHITECTURE"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/use-case-walkthrough.md"
+  - topic: "CCI-TOPIC-ARCHITECTURE"
+    intent: "optional"
+    kind: "resource"
+    locator: "../../../docs/concepts.md"
+  - topic: "CCI-TOPIC-FORMATS"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/source-format.md"
+  - topic: "CCI-TOPIC-FORMATS"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/official-context.md"
+  - topic: "CCI-TOPIC-FORMATS"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/topics.md"
+  - topic: "CCI-TOPIC-COMPOSITION"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/composition.md"
+  - topic: "CCI-TOPIC-COMPOSITION"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/use-case-walkthrough.md"
+  - topic: "CCI-TOPIC-HARNESSES"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/harnesses.md"
+  - topic: "CCI-TOPIC-STATE"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/state.md"
+
+# Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {source: ../../../docs/architecture.md, published: CONTEXT/references/docs/architecture.md}
-  - {source: ../../../docs/use-case-walkthrough.md, published: CONTEXT/references/docs/use-case-walkthrough.md}
-  - {source: ../../../docs/concepts.md, published: CONTEXT/references/docs/concepts.md}
-  - {source: ../../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
-  - {source: ../../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
-  - {source: ../../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
-  - {source: ../../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
-  - {source: ../../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
-  - {source: ../../../docs/state.md, published: CONTEXT/references/docs/state.md}
+  - {"source": "../../../docs/architecture.md", "published": "CONTEXT/references/docs/architecture.md"}
+  - {"source": "../../../docs/compiler.md", "published": "CONTEXT/references/docs/compiler.md"}
+  - {"source": "../../../docs/composition.md", "published": "CONTEXT/references/docs/composition.md"}
+  - {"source": "../../../docs/concepts.md", "published": "CONTEXT/references/docs/concepts.md"}
+  - {"source": "../../../docs/harnesses.md", "published": "CONTEXT/references/docs/harnesses.md"}
+  - {"source": "../../../docs/official-context.md", "published": "CONTEXT/references/docs/official-context.md"}
+  - {"source": "../../../docs/source-format.md", "published": "CONTEXT/references/docs/source-format.md"}
+  - {"source": "../../../docs/state.md", "published": "CONTEXT/references/docs/state.md"}
+  - {"source": "../../../docs/topics.md", "published": "CONTEXT/references/docs/topics.md"}
+  - {"source": "../../../docs/use-case-walkthrough.md", "published": "CONTEXT/references/docs/use-case-walkthrough.md"}
 
-provenance:
-  note: CC-* comes from ContextCanon Foundation; CCI-* is defined locally by ContextCanon Framework Development.
-
+# Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  revision: POC-UNPINNED
-  normalized_digest: POC-NOT-CALCULATED
-  package_digest: POC-NOT-CALCULATED
+  normalized_digest: "52502ef930497974601af2bafa544272737d524d4b7d5830e137ebe5542330f9"
+  package_digest: "0a4c8dd890512d79c42e42b54e5c4c8fd6537cdd2a5520a1d41ad80c9d8001d0"

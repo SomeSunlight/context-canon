@@ -1,80 +1,50 @@
 # Source Format
 
-`CONTEXT.src.md` is the primary human-editable ContextCanon source for a node.
+`CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md` or `.context/context.yaml`.
 
-It is intentionally constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
+The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
 
-Every source file should start with a visible header explaining how to edit it and linking to this documentation.
+## Node header
 
-## Compiler-managed authoring help
+A source begins with a human-readable H1 and compiler-managed Node metadata:
 
-The raw Markdown may contain a compiler-managed HTML comment block with copyable templates for common operations.
+```markdown
+# Example Project — Local Context Source
+<!-- ctx:node id="<stable-node-id>" version="0.1.0" -->
+```
 
-Rendered Markdown stays clean, while a first-time editor immediately sees valid examples in the source.
+The stable ID is independent of the Node's directory path or display name. A root Node may additionally declare generated harness adapters, for example `adapters="agents,goose"`.
 
-The default direction is a compact help block with generic templates once per file. A future user preference may support:
+## Sources
 
-- `compact` — generic templates,
-- `expanded` — additional ready-to-edit snippets for imported elements,
-- `none` — minimal source for experienced users.
+`## Sources` lists accepted Context Nodes. The visible link points to the Source node-root directory; the adjacent comment preserves stable identity and accepted version.
 
-Generating one commented template for every imported rule by default would scale poorly and conflicts with progressive disclosure.
+```markdown
+## Sources
 
-Authoring-help verbosity is tooling/presentation preference, not inherited project governance.
+- [ContextCanon Foundation](../foundation/) — `0.1.0`
+  <!-- ctx:source id="<stable-node-id>" version="0.1.0" -->
+```
 
-## Sections
+Source order is not precedence. The walking-skeleton compiler currently supports local filesystem Sources inside the same Git repository.
 
-### Sources
+## Rules
 
-`## Sources` lists accepted reusable ContextCanon nodes.
-
-A future compiler maintains stable source identity/version/revision metadata in hidden comments while leaving the visible source name and version readable.
-
-Source order is not precedence.
-
-### Rules
-
-`## Rules` contains local rules. `###` headings group related rules.
-
-Example:
+`## Rules` contains the Node's local Rules. `###` headings group related Rules. Every Rule has a short visible title, a statement, rationale, and compiler-managed stable ID.
 
 ```markdown
 ### Security
 
-- Never commit secrets.
+- **Never commit secrets:** Credentials and secret values must stay outside version control.
   Why: Version control is not a secret store.
   <!-- ctx:rule id="SEC-001" -->
 ```
 
-The compiler-managed comment contains the stable local ID. The ID is mandatory in the framework data model even though it need not clutter rendered source Markdown.
+The title is part of the human presentation, not identity. Descendants address the stable ID.
 
-### Changes
+## Topics
 
-`## Changes` records explicit operations against accepted sources.
-
-Because titles and wording can change, operations target stable IDs published by the source node. Human-visible source name/title is included for orientation but is not identity.
-
-Conceptual example:
-
-```markdown
-## Changes
-
-### Remove
-
-- `Python Development / PY-017` — Require Python 3.13
-  Why: This project deliberately supports Python 3.12.
-  <!-- ctx:remove target="<stable-node-id>#PY-017" -->
-```
-
-The source's published `CONTEXT.md` must make `PY-017` easy to discover.
-
-If a later accepted source package no longer contains the targeted ID, the compiler reports a dangling change operation rather than silently ignoring it.
-
-### Topics
-
-`## Topics` maps task themes to deeper information.
-
-Current design direction:
+A Topic states when deeper context applies and explicitly types every target.
 
 ```markdown
 ## Topics
@@ -84,16 +54,35 @@ Current design direction:
 When changing logging, diagnostics, or structured events:
 
 Required:
-- `docs/logging-contract.md`
+- Resource: `docs/logging-contract.md`
 
 Optional:
-- `docs/logging-history.md`
+- Resource: `docs/logging-history.md`
 ```
 
-The exact parser syntax remains open until the next vertical POC, but `required` versus `optional` is a semantic requirement.
+A Topic can also navigate to another Context Node without composing it:
 
-## IDs
+```markdown
+Required:
+- Context Node: `nodes/internal/framework-development`
+```
 
-Every addressable ContextCanon element has stable identity independent of title, wording, location, or presentation.
+`Resource` targets are materialized into the generated `CONTEXT/` package. `Context Node` targets point to another node root and remain navigation rather than Source composition.
 
-For local authoring, IDs may live in compiler-managed HTML comments. For published official context, IDs that descendants may reference are displayed visibly.
+Every Topic ends with a compiler-managed stable ID:
+
+```markdown
+<!-- ctx:topic id="LOGGING" -->
+```
+
+## Changes
+
+`## Changes` is reserved for explicit operations such as Remove, Override, and authorized exceptions against inherited elements. The specification keeps these concepts, but the first walking-skeleton compiler intentionally rejects unsupported change syntax until a real end-to-end case requires it.
+
+## Compiler-managed authoring help
+
+Raw Markdown may contain compiler-managed HTML comment blocks with copyable examples. These blocks are authoring help only; they do not carry critical human meaning and disappear from rendered Markdown.
+
+## Current compiler contract
+
+The executable walking skeleton freezes only the syntax needed by Gateway, Foundation, Framework Development, and the first external project. See [compiler.md](compiler.md) for supported behavior and deliberate limitations.

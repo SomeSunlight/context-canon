@@ -2,7 +2,7 @@
 
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
-> This is the compact official entry for the reusable ContextCanon Foundation node.
+> This is the compact official entry for this Context Node.
 > Together with `CONTEXT/` it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
@@ -10,15 +10,13 @@
 **Node:** ContextCanon Foundation  
 **Context version:** `0.1.0-draft`
 
-The IDs shown with Rules are stable contract identifiers. Descendants use them for explicit changes, tracing, and diagnostics.
-
 ## Rules
 
 ### Canonical context
 
 #### `CC-001` — One official package
 
-The compiled Official Context Package is the single canonical context for a node: it applies to the node itself and is the package meaning published to child nodes.
+The compiled Official Context Package is the single canonical context for a Node: it applies to the Node itself and is the package meaning published to child Nodes.
 
 #### `CC-002` — Edit source, not generated output
 
@@ -44,7 +42,7 @@ Every addressable context element has a stable ID independent of its title, word
 
 #### `CC-006` — Publish IDs that children may reference
 
-Published official contexts expose stable IDs for Rules and other elements that child nodes may reference.
+Published official contexts expose stable IDs for Rules and other elements that child Nodes may reference.
 
 ### Progressive disclosure
 
@@ -56,7 +54,7 @@ Keep the official entry context compact and use Topics to load deeper context on
 
 #### `CC-008` — State stays local
 
-`STATE.md` describes the current local project situation and is never inherited as governance by child nodes.
+`STATE.md` describes the current local project situation and is never inherited as governance by child Nodes.
 
 ### Harness independence
 
@@ -83,6 +81,7 @@ Write technical documentation in precise, plain prose for intelligent readers; i
 When editing ContextCanon source, IDs, generated views, package resources, or Topics:
 
 **Required**
+
 - [`CONTEXT/references/docs/source-format.md`](CONTEXT/references/docs/source-format.md)
 - [`CONTEXT/references/docs/official-context.md`](CONTEXT/references/docs/official-context.md)
 - [`CONTEXT/references/docs/topics.md`](CONTEXT/references/docs/topics.md)
@@ -92,6 +91,7 @@ When editing ContextCanon source, IDs, generated views, package resources, or To
 When adding Sources or changing inherited Rules:
 
 **Required**
+
 - [`CONTEXT/references/docs/composition.md`](CONTEXT/references/docs/composition.md)
 
 ### Harness adapters
@@ -99,4 +99,5 @@ When adding Sources or changing inherited Rules:
 When adding or changing a harness-specific entry file:
 
 **Required**
+
 - [`CONTEXT/references/docs/harnesses.md`](CONTEXT/references/docs/harnesses.md)

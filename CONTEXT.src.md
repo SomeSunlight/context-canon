@@ -1,4 +1,5 @@
 # ContextCanon Gateway — Local Context Source
+<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" version="0.1.0-draft" adapters="agents,goose" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the repository Gateway context.**
@@ -13,5 +14,5 @@
 When changing ContextCanon's specification, documentation, Context Nodes, compiler, examples, harness integration, or project tooling:
 
 Required:
-- `nodes/internal/framework-development/CONTEXT.md`
+- Context Node: `nodes/internal/framework-development`
 <!-- ctx:topic id="CCG-TOPIC-DEVELOPMENT" -->
