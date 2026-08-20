@@ -1,0 +1,45 @@
+# GENERATED ContextCanon machine state for the repository Gateway Node.
+# The Gateway is intentionally minimal; humans normally need only CONTEXT.md.
+
+schema: contextcanon-poc/v1
+
+node:
+  id: a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11
+  name: ContextCanon Gateway
+  version: 0.1.0-draft
+
+human_files:
+  source: CONTEXT.src.md
+  official_entry: CONTEXT.md
+  official_resources: null
+  state: STATE.md
+  agent_entry: AGENTS.md
+  goose_entry: .goosehints
+
+sources: []
+
+local:
+  rules: []
+  changes: []
+  topics:
+    - CCG-TOPIC-DEVELOPMENT
+
+official:
+  entry: CONTEXT.md
+  resource_root: null
+  rule_ids: []
+  topic_ids: [CCG-TOPIC-DEVELOPMENT]
+
+# This Topic navigates to another local Context Node; it does not compose that Node as a Source.
+targets:
+  - topic: CCG-TOPIC-DEVELOPMENT
+    intent: required
+    kind: context-node
+    locator: nodes/internal/framework-development
+
+resources: []
+
+package:
+  revision: POC-UNPINNED
+  normalized_digest: POC-NOT-CALCULATED
+  package_digest: POC-NOT-CALCULATED

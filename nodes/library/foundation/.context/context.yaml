@@ -1,0 +1,53 @@
+# GENERATED ContextCanon machine state for ContextCanon Foundation.
+# Humans normally read CONTEXT.src.md or CONTEXT.md instead.
+
+schema: contextcanon-poc/v1
+
+node:
+  id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
+  name: ContextCanon Foundation
+  version: 0.1.0-draft
+
+human_files:
+  source: CONTEXT.src.md
+  official_entry: CONTEXT.md
+  official_resources: CONTEXT/
+
+sources: []
+
+local:
+  rules:
+    - {id: CC-001, title: One official package, group: Canonical context}
+    - {id: CC-002, title: Edit source, not generated output, group: Canonical context}
+    - {id: CC-003, title: Keep compiler bookkeeping out of the normal workflow, group: Machine state}
+    - {id: CC-004, title: No implicit Source precedence, group: Composition}
+    - {id: CC-005, title: Stable identity, group: Identity}
+    - {id: CC-006, title: Publish IDs that children may reference, group: Identity}
+    - {id: CC-007, title: Keep entry context small, group: Progressive disclosure}
+    - {id: CC-008, title: State stays local, group: Project state}
+    - {id: CC-009, title: Canonical context is model- and harness-neutral, group: Harness independence}
+    - {id: CC-010, title: Keep familiar repository documents useful, group: Repository conventions}
+    - {id: CC-011, title: Write for intelligent readers, group: Documentation style}
+  changes: []
+  topics: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
+
+official:
+  entry: CONTEXT.md
+  resource_root: CONTEXT/
+  rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
+  topic_ids: [CC-TOPIC-AUTHORING, CC-TOPIC-COMPOSITION, CC-TOPIC-HARNESSES]
+
+resources:
+  - {source: ../../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
+  - {source: ../../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
+  - {source: ../../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
+  - {source: ../../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
+  - {source: ../../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
+
+provenance:
+  note: All current Foundation Rules and Topics are defined locally by this node.
+
+package:
+  revision: POC-UNPINNED
+  normalized_digest: POC-NOT-CALCULATED
+  package_digest: POC-NOT-CALCULATED

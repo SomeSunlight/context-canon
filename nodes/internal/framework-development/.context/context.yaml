@@ -1,0 +1,56 @@
+# GENERATED ContextCanon machine state for ContextCanon Framework Development.
+# Humans normally read CONTEXT.src.md or CONTEXT.md instead.
+
+schema: contextcanon-poc/v1
+
+node:
+  id: 8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a
+  name: ContextCanon Framework Development
+  version: 0.1.0-draft
+
+human_files:
+  source: CONTEXT.src.md
+  official_entry: CONTEXT.md
+  official_resources: CONTEXT/
+
+sources:
+  - id: 4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001
+    name: ContextCanon Foundation
+    version: 0.1.0-draft
+    revision: POC-UNPINNED
+    locator: ../../library/foundation
+
+local:
+  rules:
+    - {id: CCI-001, title: Deterministic skeleton, semantic intelligence on top, group: Compiler architecture}
+    - {id: CCI-002, title: Validate vertically before hardening, group: Development method}
+    - {id: CCI-003, title: Repository documentation is the design record, group: Development method}
+    - {id: CCI-004, title: Keep library Nodes on Foundation, group: Node library}
+  changes: []
+  topics: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+
+official:
+  entry: CONTEXT.md
+  resource_root: CONTEXT/
+  inherited_rule_ids: [CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011]
+  local_rule_ids: [CCI-001, CCI-002, CCI-003, CCI-004]
+  topic_ids: [CCI-TOPIC-ARCHITECTURE, CCI-TOPIC-FORMATS, CCI-TOPIC-COMPOSITION, CCI-TOPIC-HARNESSES, CCI-TOPIC-STATE]
+
+resources:
+  - {source: ../../../docs/architecture.md, published: CONTEXT/references/docs/architecture.md}
+  - {source: ../../../docs/use-case-walkthrough.md, published: CONTEXT/references/docs/use-case-walkthrough.md}
+  - {source: ../../../docs/concepts.md, published: CONTEXT/references/docs/concepts.md}
+  - {source: ../../../docs/source-format.md, published: CONTEXT/references/docs/source-format.md}
+  - {source: ../../../docs/official-context.md, published: CONTEXT/references/docs/official-context.md}
+  - {source: ../../../docs/topics.md, published: CONTEXT/references/docs/topics.md}
+  - {source: ../../../docs/composition.md, published: CONTEXT/references/docs/composition.md}
+  - {source: ../../../docs/harnesses.md, published: CONTEXT/references/docs/harnesses.md}
+  - {source: ../../../docs/state.md, published: CONTEXT/references/docs/state.md}
+
+provenance:
+  note: CC-* comes from ContextCanon Foundation; CCI-* is defined locally by ContextCanon Framework Development.
+
+package:
+  revision: POC-UNPINNED
+  normalized_digest: POC-NOT-CALCULATED
+  package_digest: POC-NOT-CALCULATED
