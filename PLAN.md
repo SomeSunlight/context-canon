@@ -49,10 +49,14 @@ This is the current semantic hardening block.
 - [x] Add explicit `Remove` operations for inherited ordinary Rules.
 - [x] Add explicit `Override` operations while preserving inherited Rule identity.
 - [x] Carry Override provenance transitively into descendants.
+- [x] Carry Remove provenance transitively so absence remains meaningful in later composition.
 - [x] Reject dangling Changes instead of silently ignoring them.
 - [x] Reject duplicate local Changes against the same inherited Rule identity.
-- [x] Include Changes and override provenance in exact normalized semantics.
-- [x] Add positive, dangling, duplicate, and transitive regression fixtures.
+- [x] Reject diamond graphs where the same stable Rule arrives with incompatible effective definitions/provenance.
+- [x] Reject a diamond where one Source path keeps a Rule and another explicitly removed it.
+- [x] Deduplicate compatible repeated Rule state without inventing Source precedence.
+- [x] Include Changes, override provenance, and removal provenance in exact normalized semantics.
+- [x] Add positive, dangling, duplicate, transitive, and diamond-conflict regression fixtures.
 - [x] Document the compiler pipeline and stage boundaries in `docs/compiler.md` and `CONTRIBUTING.md`.
 - [x] Expose the compiler module architecture directly in Framework Development context.
 - [ ] Regenerate all dogfood packages with compiler 0.2 and finish with green CI.
