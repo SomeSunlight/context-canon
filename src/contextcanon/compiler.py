@@ -6,7 +6,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 
 from .links import local_markdown_targets
-from .model import CompiledNode, Rule, RuleChange, RuleModification
+from .model import CompiledNode, Rule, RuleChange, RuleModification, RuleRemoval
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
@@ -49,10 +49,14 @@ class Compiler:
                     )
                 compiled.source_nodes.append(source_node)
 
-            compiled.inherited_rules = self._compose_inherited_rules(compiled.source_nodes, compiled.metadata.name)
+            compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
+                compiled.source_nodes,
+                compiled.metadata.name,
+            )
             compiled.local_changes = list(parsed.changes)
-            compiled.inherited_rules = self._apply_rule_changes(
+            compiled.inherited_rules, compiled.removed_rules = self._apply_rule_changes(
                 compiled.inherited_rules,
+                compiled.removed_rules,
                 compiled.local_changes,
                 compiled.metadata.id,
                 compiled.metadata.name,
@@ -84,13 +88,25 @@ class Compiler:
             raise ContextCanonError(f"Source locator is not a Context Node root: {locator}")
         return path
 
-    def _compose_inherited_rules(self, source_nodes: list[CompiledNode], node_name: str) -> list[Rule]:
-        result: list[Rule] = []
-        seen_global: dict[tuple[str, str], Rule] = {}
+    def _compose_inherited_rule_state(
+        self,
+        source_nodes: list[CompiledNode],
+        node_name: str,
+    ) -> tuple[list[Rule], list[RuleRemoval]]:
+        rules: list[Rule] = []
+        removals: list[RuleRemoval] = []
+        rules_by_identity: dict[tuple[str, str], Rule] = {}
+        removals_by_identity: dict[tuple[str, str], list[RuleRemoval]] = {}
+
         for source in source_nodes:
             for rule in (*source.inherited_rules, *source.local_rules):
                 identity = (rule.origin_node_id, rule.id)
-                previous = seen_global.get(identity)
+                if identity in removals_by_identity:
+                    raise ContextCanonError(
+                        f"{node_name}: conflicting inherited Rule {rule.origin_node_name} / {rule.id} "
+                        f"({rule.origin_node_id}#{rule.id}) is present through one Source and removed through another"
+                    )
+                previous = rules_by_identity.get(identity)
                 if previous is not None:
                     if previous != rule:
                         raise ContextCanonError(
@@ -99,24 +115,48 @@ class Compiler:
                             "different effective definitions or provenance"
                         )
                     continue
-                seen_global[identity] = rule
-                result.append(rule)
-        return result
+                rules_by_identity[identity] = rule
+                rules.append(rule)
+
+            for removal in source.removed_rules:
+                identity = (removal.origin_node_id, removal.rule_id)
+                if identity in rules_by_identity:
+                    raise ContextCanonError(
+                        f"{node_name}: conflicting inherited Rule {removal.origin_node_name} / {removal.rule_id} "
+                        f"({removal.origin_node_id}#{removal.rule_id}) is present through one Source and removed through another"
+                    )
+                bucket = removals_by_identity.setdefault(identity, [])
+                if removal not in bucket:
+                    bucket.append(removal)
+                    removals.append(removal)
+
+        removals.sort(
+            key=lambda removal: (
+                removal.origin_node_id,
+                removal.rule_id,
+                removal.removed_by_node_id,
+                removal.removed_by_node_name,
+                removal.why,
+            )
+        )
+        return rules, removals
 
     def _apply_rule_changes(
         self,
         inherited_rules: list[Rule],
+        inherited_removals: list[RuleRemoval],
         changes: list[RuleChange],
         node_id: str,
         node_name: str,
-    ) -> list[Rule]:
-        result = list(inherited_rules)
+    ) -> tuple[list[Rule], list[RuleRemoval]]:
+        rules = list(inherited_rules)
+        removals = list(inherited_removals)
         for change in changes:
             identity = (change.target_node_id, change.target_rule_id)
             index = next(
                 (
                     i
-                    for i, rule in enumerate(result)
+                    for i, rule in enumerate(rules)
                     if (rule.origin_node_id, rule.id) == identity
                 ),
                 None,
@@ -127,8 +167,19 @@ class Compiler:
                     f"{change.target_node_name} / {change.target_rule_id} "
                     f"({change.target_node_id}#{change.target_rule_id})"
                 )
+            target = rules[index]
             if change.kind == "remove":
-                result.pop(index)
+                rules.pop(index)
+                removals.append(
+                    RuleRemoval(
+                        origin_node_id=target.origin_node_id,
+                        origin_node_name=target.origin_node_name,
+                        rule_id=target.id,
+                        removed_by_node_id=node_id,
+                        removed_by_node_name=node_name,
+                        why=change.why,
+                    )
+                )
                 continue
 
             if change.statement is None:
@@ -136,14 +187,13 @@ class Compiler:
                     f"{node_name}: Override for {change.target_node_name} / {change.target_rule_id} "
                     "has no replacement statement"
                 )
-            target = result[index]
             modification = RuleModification("override", node_id, node_name, change.why)
-            result[index] = replace(
+            rules[index] = replace(
                 target,
                 statement=change.statement,
                 modifications=(*target.modifications, modification),
             )
-        return result
+        return rules, removals
 
     def _validate_visible_rule_ids(self, compiled: CompiledNode) -> None:
         seen: dict[str, Rule] = {}
@@ -222,6 +272,7 @@ class Compiler:
             ],
             "changes": [asdict(change) for change in compiled.local_changes],
             "rules": [asdict(rule) for rule in (*compiled.inherited_rules, *compiled.local_rules)],
+            "removed_rules": [asdict(removal) for removal in compiled.removed_rules],
             "topics": [asdict(topic) for topic in compiled.local_topics],
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
