@@ -211,6 +211,19 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
             }))
     else:
         lines.append("  rules: []")
+    if compiled.removed_rules:
+        lines.append("  removed_rules:")
+        for removal in compiled.removed_rules:
+            lines.append("    - " + q({
+                "origin_node_id": removal.origin_node_id,
+                "origin_node_name": removal.origin_node_name,
+                "rule_id": removal.rule_id,
+                "removed_by_node_id": removal.removed_by_node_id,
+                "removed_by_node_name": removal.removed_by_node_name,
+                "why": removal.why,
+            }))
+    else:
+        lines.append("  removed_rules: []")
     lines.append("  topic_ids: " + q([topic.id for topic in compiled.local_topics]))
     lines.append("  resource_root: " + (q("CONTEXT/") if compiled.resources else "null"))
 
