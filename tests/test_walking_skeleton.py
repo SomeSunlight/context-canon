@@ -39,6 +39,10 @@ FOUNDATION = '''# Demo Foundation — Local Context Source
   Why: Context should be easy to interpret.
   <!-- ctx:rule id="F-001" -->
 
+- **Keep IDs stable:** Published identities survive wording changes.
+  Why: Descendants must be able to refer to durable elements.
+  <!-- ctx:rule id="F-002" -->
+
 ## Topics
 
 ### Authoring
@@ -79,6 +83,33 @@ Optional:
 <!-- ctx:topic id="D-ARCH" -->
 '''
 
+CHILD = '''# Demo Child — Local Context Source
+<!-- ctx:node id="node-child" version="0.1.0" -->
+
+## Sources
+
+- [Demo Development](../development/) — `0.1.0`
+  <!-- ctx:source id="node-development" version="0.1.0" -->
+'''
+
+CHANGES = '''
+
+## Changes
+
+### Override
+
+- `Demo Foundation / F-001` — Write clearly
+  New rule: Use concise, explicit technical prose.
+  Why: This Node needs a stricter writing contract.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+
+### Remove
+
+- `Demo Foundation / F-002` — Keep IDs stable
+  Why: This fixture deliberately removes one inherited Rule.
+  <!-- ctx:change op="remove" source-id="node-foundation" rule-id="F-002" -->
+'''
+
 
 class WalkingSkeletonTests(unittest.TestCase):
     def make_repo(self) -> Path:
@@ -105,9 +136,8 @@ class WalkingSkeletonTests(unittest.TestCase):
 
     def test_compiles_sources_rules_topics_resources_and_digests(self):
         repo = self.make_repo()
-        compiler = Compiler(repo)
-        node = compiler.compile(repo / "nodes/internal/development")
-        self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001"])
+        node = Compiler(repo).compile(repo / "nodes/internal/development")
+        self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "F-002"])
         self.assertEqual([rule.id for rule in node.local_rules], ["D-001"])
         self.assertEqual([topic.id for topic in node.local_topics], ["D-ARCH"])
         self.assertEqual(
@@ -143,12 +173,80 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("Demo Development", node.official_markdown)
         self.assertFalse((repo / "CONTEXT").exists())
 
-    def test_nonempty_changes_section_fails_clearly(self):
+    def test_remove_and_override_inherited_rules(self):
         repo = self.make_repo()
-        path = repo / "nodes/library/foundation/CONTEXT.src.md"
-        path.write_text(FOUNDATION + "\n## Changes\n\n### Remove\n- something\n", encoding="utf-8")
-        with self.assertRaisesRegex(ContextCanonError, "Changes is reserved"):
-            Compiler(repo).compile(repo / "nodes/library/foundation")
+        path = repo / "nodes/internal/development/CONTEXT.src.md"
+        path.write_text(DEVELOPMENT + CHANGES, encoding="utf-8")
+
+        node = Compiler(repo).compile(repo / "nodes/internal/development")
+        self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001"])
+        rule = node.inherited_rules[0]
+        self.assertEqual(rule.origin_node_id, "node-foundation")
+        self.assertEqual(rule.statement, "Use concise, explicit technical prose.")
+        self.assertEqual([mod.node_id for mod in rule.modifications], ["node-development"])
+        self.assertIn("**Override:** Demo Development", node.official_markdown)
+        self.assertIn("Changes to inherited Rules", node.official_markdown)
+        self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
+        self.assertIn("**Removed** `Demo Foundation / F-002`", node.official_markdown)
+        self.assertIn("compiler_version: \"0.2.0\"", node.machine_yaml)
+        self.assertIn('"kind": "override"', node.machine_yaml)
+        self.assertIn('"kind": "remove"', node.machine_yaml)
+
+    def test_dangling_change_fails_clearly(self):
+        repo = self.make_repo()
+        path = repo / "nodes/internal/development/CONTEXT.src.md"
+        dangling = '''
+
+## Changes
+
+### Remove
+
+- `Demo Foundation / F-999`
+  Why: Exercise dangling-operation diagnostics.
+  <!-- ctx:change op="remove" source-id="node-foundation" rule-id="F-999" -->
+'''
+        path.write_text(DEVELOPMENT + dangling, encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "targets missing inherited Rule"):
+            Compiler(repo).compile(repo / "nodes/internal/development")
+
+    def test_duplicate_change_target_fails(self):
+        repo = self.make_repo()
+        path = repo / "nodes/internal/development/CONTEXT.src.md"
+        duplicate = '''
+
+## Changes
+
+### Override
+
+- `Demo Foundation / F-001`
+  New rule: First replacement.
+  Why: First operation.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+
+- `Demo Foundation / F-001`
+  New rule: Second replacement.
+  Why: Second operation.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+'''
+        path.write_text(DEVELOPMENT + duplicate, encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "duplicate Change target"):
+            Compiler(repo).compile(repo / "nodes/internal/development")
+
+    def test_transitive_rules_and_override_are_rendered(self):
+        repo = self.make_repo()
+        development = repo / "nodes/internal/development/CONTEXT.src.md"
+        development.write_text(DEVELOPMENT + CHANGES, encoding="utf-8")
+        child = repo / "nodes/internal/child"
+        child.mkdir(parents=True)
+        (child / "CONTEXT.src.md").write_text(CHILD, encoding="utf-8")
+
+        node = Compiler(repo).compile(child)
+        self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "D-001"])
+        self.assertIn("## Rules from Demo Foundation", node.official_markdown)
+        self.assertIn("## Rules from Demo Development", node.official_markdown)
+        self.assertIn("Use concise, explicit technical prose.", node.official_markdown)
+        self.assertIn("**Override:** Demo Development", node.official_markdown)
+        self.assertNotIn("F-002", node.official_markdown)
 
     def test_source_id_mismatch_fails(self):
         repo = self.make_repo()
