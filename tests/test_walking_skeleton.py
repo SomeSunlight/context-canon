@@ -138,6 +138,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         repo = self.make_repo()
         node = Compiler(repo).compile(repo / "nodes/internal/development")
         self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "F-002"])
+        self.assertEqual(node.removed_rules, [])
         self.assertEqual([rule.id for rule in node.local_rules], ["D-001"])
         self.assertEqual([topic.id for topic in node.local_topics], ["D-ARCH"])
         self.assertEqual(
@@ -184,6 +185,8 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertEqual(rule.origin_node_id, "node-foundation")
         self.assertEqual(rule.statement, "Use concise, explicit technical prose.")
         self.assertEqual([mod.node_id for mod in rule.modifications], ["node-development"])
+        self.assertEqual([removal.rule_id for removal in node.removed_rules], ["F-002"])
+        self.assertEqual(node.removed_rules[0].removed_by_node_id, "node-development")
         self.assertIn("**Override:** Demo Development", node.official_markdown)
         self.assertIn("Changes to inherited Rules", node.official_markdown)
         self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
@@ -191,6 +194,8 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("compiler_version: \"0.2.0\"", node.machine_yaml)
         self.assertIn('"kind": "override"', node.machine_yaml)
         self.assertIn('"kind": "remove"', node.machine_yaml)
+        self.assertIn("removed_rules:", node.machine_yaml)
+        self.assertIn('"removed_by_node_id": "node-development"', node.machine_yaml)
 
     def test_dangling_change_fails_clearly(self):
         repo = self.make_repo()
@@ -242,6 +247,7 @@ class WalkingSkeletonTests(unittest.TestCase):
 
         node = Compiler(repo).compile(child)
         self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "D-001"])
+        self.assertEqual([removal.rule_id for removal in node.removed_rules], ["F-002"])
         self.assertIn("## Rules from Demo Foundation", node.official_markdown)
         self.assertIn("## Rules from Demo Development", node.official_markdown)
         self.assertIn("Use concise, explicit technical prose.", node.official_markdown)
@@ -325,6 +331,61 @@ class WalkingSkeletonTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ContextCanonError, "conflicting inherited Rule"):
+            Compiler(repo).compile(consumer)
+
+    def test_removed_vs_present_diamond_rule_fails(self):
+        repo = self.make_repo()
+        left = repo / "nodes/internal/left"
+        right = repo / "nodes/internal/right"
+        left.mkdir(parents=True)
+        right.mkdir(parents=True)
+        (left / "CONTEXT.src.md").write_text(
+            '''# Demo Left — Local Context Source
+<!-- ctx:node id="node-left" version="0.1.0" -->
+
+## Sources
+
+- [Demo Foundation](../../library/foundation/) — `0.1.0`
+  <!-- ctx:source id="node-foundation" version="0.1.0" -->
+
+## Changes
+
+### Remove
+
+- `Demo Foundation / F-001`
+  Why: Exercise removal provenance in a diamond graph.
+  <!-- ctx:change op="remove" source-id="node-foundation" rule-id="F-001" -->
+''',
+            encoding="utf-8",
+        )
+        (right / "CONTEXT.src.md").write_text(
+            '''# Demo Right — Local Context Source
+<!-- ctx:node id="node-right" version="0.1.0" -->
+
+## Sources
+
+- [Demo Foundation](../../library/foundation/) — `0.1.0`
+  <!-- ctx:source id="node-foundation" version="0.1.0" -->
+''',
+            encoding="utf-8",
+        )
+        consumer = repo / "nodes/internal/consumer"
+        consumer.mkdir(parents=True)
+        (consumer / "CONTEXT.src.md").write_text(
+            '''# Demo Consumer — Local Context Source
+<!-- ctx:node id="node-consumer" version="0.1.0" -->
+
+## Sources
+
+- [Demo Left](../left/) — `0.1.0`
+  <!-- ctx:source id="node-left" version="0.1.0" -->
+- [Demo Right](../right/) — `0.1.0`
+  <!-- ctx:source id="node-right" version="0.1.0" -->
+''',
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(ContextCanonError, "present through one Source and removed through another"):
             Compiler(repo).compile(consumer)
 
     def test_source_id_mismatch_fails(self):
