@@ -22,14 +22,14 @@ REMOVE IMPORTED RULE
 ### Remove
 - `Source name / RULE-ID` — Current rule title
   Why: Why it does not apply here.
-  [compiler binds the stable source-node ID]
+  <!-- ctx:change op="remove" source-id="<stable-source-node-id>" rule-id="RULE-ID" -->
 
 OVERRIDE IMPORTED RULE
 ### Override
 - `Source name / RULE-ID` — Current rule title
   New rule: Replacement statement.
   Why: Why this Node differs.
-  [compiler binds the stable source-node ID]
+  <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="RULE-ID" -->
 -->
 
 ## Sources
@@ -44,6 +44,10 @@ OVERRIDE IMPORTED RULE
 - **Deterministic skeleton, semantic intelligence on top:** Prefer deterministic mechanisms whenever behavior can be specified and computed exactly; use LLMs only for work that genuinely requires semantic interpretation.
   Why: Deterministic structure provides reproducibility and auditability, while LLM reasoning is most valuable where meaning rather than mechanics must be understood.
   <!-- ctx:rule id="CCI-001" -->
+
+- **Keep compiler stages separated:** Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.
+  Why: Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth.
+  <!-- ctx:rule id="CCI-005" -->
 
 ### Development method
 
@@ -63,6 +67,17 @@ OVERRIDE IMPORTED RULE
 
 ## Topics
 
+### Compiler implementation
+
+When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler tests:
+
+Required:
+- Resource: `../../../docs/compiler.md`
+
+Optional:
+- Resource: `../../../CONTRIBUTING.md`
+<!-- ctx:topic id="CCI-TOPIC-COMPILER" -->
+
 ### Framework architecture
 
 When changing the compiler boundary, package model, Node structure, deterministic/semantic split, or generated artifacts:
@@ -77,7 +92,7 @@ Optional:
 
 ### Source and official formats
 
-When changing authoring syntax, IDs, Topics, official entry views, or machine representation:
+When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:
 
 Required:
 - Resource: `../../../docs/source-format.md`
