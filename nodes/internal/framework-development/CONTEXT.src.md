@@ -73,9 +73,6 @@ When changing, debugging, reviewing, or extending the deterministic compiler imp
 
 Required:
 - Resource: `../../../docs/compiler.md`
-
-Optional:
-- Resource: `../../../CONTRIBUTING.md`
 <!-- ctx:topic id="CCI-TOPIC-COMPILER" -->
 
 ### Framework architecture
