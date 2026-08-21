@@ -248,6 +248,85 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("**Override:** Demo Development", node.official_markdown)
         self.assertNotIn("F-002", node.official_markdown)
 
+    def test_identical_diamond_rule_is_deduplicated(self):
+        repo = self.make_repo()
+        for name in ("left", "right"):
+            node = repo / f"nodes/internal/{name}"
+            node.mkdir(parents=True)
+            (node / "CONTEXT.src.md").write_text(
+                f'''# Demo {name.title()} — Local Context Source
+<!-- ctx:node id="node-{name}" version="0.1.0" -->
+
+## Sources
+
+- [Demo Foundation](../../library/foundation/) — `0.1.0`
+  <!-- ctx:source id="node-foundation" version="0.1.0" -->
+''',
+                encoding="utf-8",
+            )
+        consumer = repo / "nodes/internal/consumer"
+        consumer.mkdir(parents=True)
+        (consumer / "CONTEXT.src.md").write_text(
+            '''# Demo Consumer — Local Context Source
+<!-- ctx:node id="node-consumer" version="0.1.0" -->
+
+## Sources
+
+- [Demo Left](../left/) — `0.1.0`
+  <!-- ctx:source id="node-left" version="0.1.0" -->
+- [Demo Right](../right/) — `0.1.0`
+  <!-- ctx:source id="node-right" version="0.1.0" -->
+''',
+            encoding="utf-8",
+        )
+
+        node = Compiler(repo).compile(consumer)
+        self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "F-002"])
+
+    def test_conflicting_diamond_rule_fails_without_source_precedence(self):
+        repo = self.make_repo()
+        for name, statement in (("left", "Use the left wording."), ("right", "Use the right wording.")):
+            node = repo / f"nodes/internal/{name}"
+            node.mkdir(parents=True)
+            (node / "CONTEXT.src.md").write_text(
+                f'''# Demo {name.title()} — Local Context Source
+<!-- ctx:node id="node-{name}" version="0.1.0" -->
+
+## Sources
+
+- [Demo Foundation](../../library/foundation/) — `0.1.0`
+  <!-- ctx:source id="node-foundation" version="0.1.0" -->
+
+## Changes
+
+### Override
+
+- `Demo Foundation / F-001`
+  New rule: {statement}
+  Why: Exercise conflicting transitive overrides.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+''',
+                encoding="utf-8",
+            )
+        consumer = repo / "nodes/internal/consumer"
+        consumer.mkdir(parents=True)
+        (consumer / "CONTEXT.src.md").write_text(
+            '''# Demo Consumer — Local Context Source
+<!-- ctx:node id="node-consumer" version="0.1.0" -->
+
+## Sources
+
+- [Demo Left](../left/) — `0.1.0`
+  <!-- ctx:source id="node-left" version="0.1.0" -->
+- [Demo Right](../right/) — `0.1.0`
+  <!-- ctx:source id="node-right" version="0.1.0" -->
+''',
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(ContextCanonError, "conflicting inherited Rule"):
+            Compiler(repo).compile(consumer)
+
     def test_source_id_mismatch_fails(self):
         repo = self.make_repo()
         path = repo / "nodes/internal/development/CONTEXT.src.md"
