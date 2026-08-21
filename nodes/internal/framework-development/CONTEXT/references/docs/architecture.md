@@ -22,6 +22,16 @@ referenced source material
 
 `CONTEXT.md` is always present. `CONTEXT/` is generated only when a Node has resources to materialize. `.context/` is compiler-owned state about the Node and its package.
 
+The implementation mirrors that conceptual pipeline with narrow stages:
+
+```text
+parser.py → model.py → compiler.py → render.py → outputs.py
+                                           ↑
+                                        cli.py
+```
+
+Parsing owns authoring grammar, compilation owns semantic truth, rendering projects compiled meaning, and the output layer alone mutates generated files. See [compiler.md](compiler.md) for the module contracts and regression strategy.
+
 ## A Node has one physical root
 
 Every Context Node is organized around one **node-root directory**. That directory contains the Node's editable source, generated official entry, optional package resources, and machine state.
@@ -32,7 +42,7 @@ A repository root may itself be a node root. Nested Nodes are also possible. Fil
 
 Category directories may organize several Nodes without becoming Nodes themselves. In this repository, `nodes/library/` and `nodes/internal/` are such categories.
 
-The walking-skeleton compiler discovers node roots from `CONTEXT.src.md`. More complex nested-repository boundary behavior will be hardened when a real repository requires it.
+The compiler discovers node roots from `CONTEXT.src.md`. More complex nested-repository boundary behavior will be hardened as part of broader package-boundary work.
 
 ## Token economy is architectural
 
@@ -41,6 +51,21 @@ ContextCanon must not solve discoverability by eagerly loading everything.
 The entry context contains only broadly required information and a precise Topic map. Topic material is loaded when relevant, with explicit Required versus Optional targets. A deeper document may repeat the same pattern: summary first, links onward.
 
 Progressive disclosure is therefore part of the architecture, not merely a writing preference.
+
+This also helps smaller and local models. A local agent may have abundant tokens but limited model capability; the architecture should spend those tokens on the relevant problem rather than on repeatedly reconstructing repository assumptions.
+
+## Standardized orientation is architectural
+
+Across projects, ContextCanon gives humans and agents the same conceptual entry points even when the domain changes:
+
+- `CONTEXT.md` — what applies here and where to go deeper,
+- `CONTEXT.src.md` — what this Node adds or changes,
+- Sources — which reusable foundations are accepted,
+- Topics — which deeper knowledge applies to which tasks,
+- `STATE.md` — where the project is now,
+- `PLAN.md` — where it is going.
+
+The content remains project-specific. The orientation workflow becomes reusable.
 
 ## Gateway nodes: almost nothing can be enough
 
@@ -74,6 +99,16 @@ ContextCanon Gateway ──Topic──> ContextCanon Framework Development
 
 The Gateway does not inherit Framework Development. Framework Development does inherit Foundation and adds a local delta.
 
+## Transitive composition preserves identity and state
+
+Source composition is transitive package meaning, not a direct-parent text copy.
+
+If `Foundation → Team Standard → Project`, a Foundation Rule remains identified by the Foundation Node ID plus Rule ID in Project. A Team Standard Override changes the effective statement and adds provenance without changing that identity. A Team Standard Remove makes the Rule absent from active downstream context while preserving a machine-level removal record.
+
+That removal record matters in a DAG: if another Source path still carries the same Rule, the compiler can detect the contradiction instead of inventing Source precedence. Likewise, two different effective Overrides of the same stable Rule are a structural conflict, while equivalent compiled Rule state may be deduplicated.
+
+This identity- and state-preserving model is what makes later exact diffs, dangling-operation checks, Source-update impact analysis, and standalone Source packages possible.
+
 ## Natural source files, generated package files
 
 Project documentation should stay where it makes sense to authors. The compiler materializes context resources into a Node's `CONTEXT/` directory when building a self-contained published package.
@@ -92,7 +127,7 @@ A directly referenced Markdown document can itself point to other local files. T
 
 `.context/` is analogous to `.git/` in one important respect: it contains infrastructure that matters but should not dominate normal work.
 
-The walking-skeleton compiler generates one primary `.context/context.yaml` per Node. It records Node identity, accepted local Sources, normalized element identities, Topic targets, resource mapping, and exact digests.
+The compiler generates one primary `.context/context.yaml` per Node. It records Node identity, accepted local Sources, local Changes, normalized element identities, override provenance, removal provenance, Topic targets, resource mapping, and exact digests.
 
 Generated YAML may contain explanatory comments because occasional human inspection is useful, but it remains machine-owned.
 
@@ -126,9 +161,9 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 ## Deterministic skeleton, semantic assistance at the edges
 
-The compiler deterministically handles the currently implemented subset of syntax, node-root discovery, stable IDs, local Source resolution, cycle/version errors, Rule composition, Topic targets, resource materialization, exact hashes, generated views, adapters, and drift checks.
+Compiler 0.2 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, cycle/version errors, transitive Rule composition, Remove/Override operations, override/removal provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, Topic targets, resource materialization, exact hashes, generated views, adapters, and drift checks.
 
-Future deterministic capabilities include Remove/Override/Exception operations, pinned external Source packages, dangling-operation diagnostics, and broader package addressing.
+Planned deterministic capabilities include exact compiled Context diff, immutable external Source packages and update acceptance, protected Rules and authorized exceptions, and broader package-boundary diagnostics.
 
 LLMs may assist with work that genuinely requires interpretation:
 
@@ -136,6 +171,7 @@ LLMs may assist with work that genuinely requires interpretation:
 - detecting likely natural-language conflicts,
 - explaining the impact of Source updates,
 - suggesting where a conflict is best resolved,
+- mapping exact Context changes to likely affected project files,
 - applying accepted context changes to project code.
 
 LLM judgments never replace deterministic package identity or explicit durable resolutions.
@@ -144,4 +180,4 @@ LLM judgments never replace deterministic package identity or explicit durable r
 
 A Source update does not immediately change consumers. Each consumer will ultimately accept an exact published Source package and rebuild deliberately.
 
-Walking Skeleton 1 validates local Source identity and version and records the compiled Source package digest; external package pinning and update acceptance are subsequent hardening steps.
+Compiler 0.2 validates local Source identity and version and records the compiled Source package digest. Exact Context diff and immutable external package pinning are the next core layers needed to turn that recorded identity into a complete multi-repository update workflow.
