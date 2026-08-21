@@ -37,17 +37,29 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
                 "",
             ])
 
-    for source in compiled.source_nodes:
-        rules = [rule for rule in compiled.inherited_rules if rule.origin_node_id == source.metadata.id]
-        if rules:
-            lines.extend([f"## Rules from {source.metadata.name}", ""])
-            _append_rules(lines, rules)
+    seen_origins: set[str] = set()
+    for rule in compiled.inherited_rules:
+        if rule.origin_node_id in seen_origins:
+            continue
+        seen_origins.add(rule.origin_node_id)
+        rules = [candidate for candidate in compiled.inherited_rules if candidate.origin_node_id == rule.origin_node_id]
+        lines.extend([f"## Rules from {rule.origin_node_name}", ""])
+        _append_rules(lines, rules)
 
     if compiled.local_rules:
         lines.extend(["## Local Rules" if compiled.source_nodes else "## Rules", ""])
         _append_rules(lines, compiled.local_rules)
     elif not compiled.inherited_rules:
         lines.extend(["This Node defines no Rules.", ""])
+
+    if compiled.local_changes:
+        lines.extend(["## Changes to inherited Rules", ""])
+        for change in compiled.local_changes:
+            action = "Removed" if change.kind == "remove" else "Overrode"
+            lines.append(
+                f"- **{action}** `{change.target_node_name} / {change.target_rule_id}` — {change.why}"
+            )
+        lines.append("")
 
     if compiled.local_topics:
         lines.extend(["## Topics", ""])
@@ -71,7 +83,11 @@ def _append_rules(lines: list[str], rules: list[Rule]) -> None:
         if rule.group != current_group:
             lines.extend([f"### {rule.group}", ""])
             current_group = rule.group
-        lines.extend([f"#### `{rule.id}` — {rule.title}", "", rule.statement, ""])
+        lines.extend([f"#### `{rule.id}` — {rule.title}", ""])
+        if rule.modifications:
+            latest = rule.modifications[-1]
+            lines.extend([f"> **Override:** {latest.node_name} — {latest.why}", ""])
+        lines.extend([rule.statement, ""])
 
 
 def _render_target(compiled: CompiledNode, target, repo_root: Path) -> tuple[str, str]:
@@ -152,6 +168,19 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
             lines.append("    - " + q({"id": rule.id, "title": rule.title, "group": rule.group}))
     else:
         lines.append("  rules: []")
+    if compiled.local_changes:
+        lines.append("  changes:")
+        for change in compiled.local_changes:
+            lines.append("    - " + q({
+                "kind": change.kind,
+                "target_node_id": change.target_node_id,
+                "target_node_name": change.target_node_name,
+                "target_rule_id": change.target_rule_id,
+                "statement": change.statement,
+                "why": change.why,
+            }))
+    else:
+        lines.append("  changes: []")
     if compiled.local_topics:
         lines.append("  topics:")
         for topic in compiled.local_topics:
@@ -171,6 +200,14 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
                 "origin_node_id": rule.origin_node_id,
                 "origin_node_name": rule.origin_node_name,
                 "local": (rule.origin_node_id, rule.id) in local_identities,
+                "overrides": [
+                    {
+                        "node_id": modification.node_id,
+                        "node_name": modification.node_name,
+                        "why": modification.why,
+                    }
+                    for modification in rule.modifications
+                ],
             }))
     else:
         lines.append("  rules: []")
