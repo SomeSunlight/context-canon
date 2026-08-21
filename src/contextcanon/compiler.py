@@ -49,7 +49,7 @@ class Compiler:
                     )
                 compiled.source_nodes.append(source_node)
 
-            compiled.inherited_rules = self._compose_inherited_rules(compiled.source_nodes)
+            compiled.inherited_rules = self._compose_inherited_rules(compiled.source_nodes, compiled.metadata.name)
             compiled.local_changes = list(parsed.changes)
             compiled.inherited_rules = self._apply_rule_changes(
                 compiled.inherited_rules,
@@ -84,15 +84,22 @@ class Compiler:
             raise ContextCanonError(f"Source locator is not a Context Node root: {locator}")
         return path
 
-    def _compose_inherited_rules(self, source_nodes: list[CompiledNode]) -> list[Rule]:
+    def _compose_inherited_rules(self, source_nodes: list[CompiledNode], node_name: str) -> list[Rule]:
         result: list[Rule] = []
-        seen_global: set[tuple[str, str]] = set()
+        seen_global: dict[tuple[str, str], Rule] = {}
         for source in source_nodes:
             for rule in (*source.inherited_rules, *source.local_rules):
                 identity = (rule.origin_node_id, rule.id)
-                if identity in seen_global:
+                previous = seen_global.get(identity)
+                if previous is not None:
+                    if previous != rule:
+                        raise ContextCanonError(
+                            f"{node_name}: conflicting inherited Rule {rule.origin_node_name} / {rule.id} "
+                            f"({rule.origin_node_id}#{rule.id}) arrives through multiple Sources with "
+                            "different effective definitions or provenance"
+                        )
                     continue
-                seen_global.add(identity)
+                seen_global[identity] = rule
                 result.append(rule)
         return result
 
@@ -124,8 +131,12 @@ class Compiler:
                 result.pop(index)
                 continue
 
+            if change.statement is None:
+                raise ContextCanonError(
+                    f"{node_name}: Override for {change.target_node_name} / {change.target_rule_id} "
+                    "has no replacement statement"
+                )
             target = result[index]
-            assert change.statement is not None
             modification = RuleModification("override", node_id, node_name, change.why)
             result[index] = replace(
                 target,
