@@ -46,6 +46,16 @@ class Rule:
 
 
 @dataclass(frozen=True)
+class RuleRemoval:
+    origin_node_id: str
+    origin_node_name: str
+    rule_id: str
+    removed_by_node_id: str
+    removed_by_node_name: str
+    why: str
+
+
+@dataclass(frozen=True)
 class RuleChange:
     kind: ChangeKind
     target_node_id: str
@@ -88,6 +98,7 @@ class CompiledNode:
     parsed: ParsedNode
     source_nodes: list["CompiledNode"] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
+    removed_rules: list[RuleRemoval] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)
     local_changes: list[RuleChange] = field(default_factory=list)
     local_topics: list[Topic] = field(default_factory=list)
