@@ -22,13 +22,25 @@ This keeps harness behavior mechanical and lets ContextCanon itself decide how m
 
 ## AGENTS.md
 
-ContextCanon can generate `AGENTS.md` as an entry point for harnesses that support it.
+ContextCanon can generate `AGENTS.md` as a shared entry point for harnesses that support it.
 
-OpenAI documents `AGENTS.md` as persistent repository guidance for Codex, including hierarchical files scoped by directory. A generated adapter points Codex to the applicable `CONTEXT.md` rather than duplicating the complete package.
+A generated adapter points the harness to the applicable `CONTEXT.md` rather than duplicating the complete package. This is the preferred path whenever a harness can attach `AGENTS.md` to its requests.
+
+OpenAI documents `AGENTS.md` as persistent repository guidance for Codex, including hierarchical files scoped by directory.
 
 OpenAI references:
 - https://openai.com/index/introducing-codex/
 - https://openai.com/index/unrolling-the-codex-agent-loop/
+
+## GitHub Copilot in JetBrains
+
+ContextCanon uses the same generated `AGENTS.md` entry point for GitHub Copilot in JetBrains instead of generating a second Copilot-specific instruction file.
+
+In JetBrains, verify under **Tools → GitHub Copilot → Customizations** that **Use AGENTS.md file** is enabled. In the tested Copilot configuration this setting states that instructions from `AGENTS.md` are attached to all chat requests.
+
+ContextCanon therefore relies on this harness configuration for Copilot. If a Copilot installation does not consume `AGENTS.md`, configure the harness to do so rather than duplicating the canonical entry instructions in another repository file.
+
+This keeps the integration simple: one generated agent entry file points to one self-describing `CONTEXT.md`.
 
 ## goose
 
@@ -39,20 +51,8 @@ ContextCanon therefore generates a small `.goosehints` adapter that points to th
 goose reference:
 - https://github.com/block/goose/blob/main/documentation/docs/guides/environment-variables.md
 
-## GitHub Copilot
-
-GitHub Copilot Chat in JetBrains IDEs supports repository-wide custom instructions through `.github/copilot-instructions.md`. GitHub states that these instructions are automatically added to requests made in the repository context.
-
-ContextCanon therefore generates `.github/copilot-instructions.md` for the `copilot` adapter. The file points Copilot to the root `CONTEXT.md`; it does not reproduce project Rules or Topic content.
-
-For the JetBrains IDE workflow, ContextCanon does not rely on `AGENTS.md` being consumed by Copilot Chat. GitHub's current support matrix distinguishes repository-wide Copilot instructions from agent-instruction files used by other Copilot agent surfaces.
-
-GitHub references:
-- https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide
-- https://docs.github.com/en/copilot/reference/custom-instructions-support
-
 ## Other harnesses
 
-Additional adapters should be added only after verifying the harness's current official behavior.
+Additional adapters should be added only after verifying the harness's current behavior and configuration.
 
 Harness configuration changes faster than the ContextCanon semantic model. Compatibility therefore belongs in this dedicated adapter layer rather than in project governance, canonical context semantics, or project code.
