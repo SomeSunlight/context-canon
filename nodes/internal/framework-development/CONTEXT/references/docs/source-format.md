@@ -26,7 +26,7 @@ The stable ID is independent of the Node's directory path or display name. A roo
   <!-- ctx:source id="<stable-node-id>" version="0.1.0" -->
 ```
 
-Source order is not precedence. The walking-skeleton compiler currently supports local filesystem Sources inside the same Git repository.
+Source order is not precedence. Compiler 0.2 supports local filesystem Sources inside the same Git repository.
 
 ## Rules
 
@@ -41,6 +41,49 @@ Source order is not precedence. The walking-skeleton compiler currently supports
 ```
 
 The title is part of the human presentation, not identity. Descendants address the stable ID.
+
+## Changes
+
+`## Changes` contains explicit local operations on inherited ordinary Rules.
+
+Compiler 0.2 supports **Remove** and **Override**. Both operations bind the inherited Rule's stable identity: origin Node ID plus Rule ID. Visible Source names and Rule titles help humans but do not define identity.
+
+### Remove
+
+```markdown
+## Changes
+
+### Remove
+
+- `Company Security / SEC-014` — Require legacy audit header
+  Why: This project uses the replacement audit protocol instead.
+  <!-- ctx:change op="remove" source-id="<stable-source-node-id>" rule-id="SEC-014" -->
+```
+
+A Remove deletes that inherited Rule from this Node's official Rule set. Descendants inherit the already-removed result.
+
+If the targeted identity is not inherited, compilation fails with a dangling-Change diagnostic. Remove cannot silently become a no-op.
+
+### Override
+
+```markdown
+## Changes
+
+### Override
+
+- `Python Development / PY-007` — Supported Python version
+  New rule: Production code must support Python 3.12 or newer.
+  Why: This project has standardized on the 3.12 runtime baseline.
+  <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="PY-007" -->
+```
+
+An Override preserves the inherited Rule's identity, title, group, and origin, but replaces its effective statement for this Node. The compiler records the overriding Node and rationale as provenance. Descendants inherit that overridden meaning unless they explicitly change it again.
+
+Only the statement is overridable in compiler 0.2. Renaming or regrouping an inherited Rule is deliberately not disguised as an Override.
+
+A Node may define at most one local Change for a given inherited Rule identity.
+
+Protected Rules and authorized exceptions are a later semantic layer. They will constrain which Changes are legal rather than changing the basic identity model.
 
 ## Topics
 
@@ -75,14 +118,21 @@ Every Topic ends with a compiler-managed stable ID:
 <!-- ctx:topic id="LOGGING" -->
 ```
 
-## Changes
-
-`## Changes` is reserved for explicit operations such as Remove, Override, and authorized exceptions against inherited elements. The specification keeps these concepts, but the first walking-skeleton compiler intentionally rejects unsupported change syntax until a real end-to-end case requires it.
-
 ## Compiler-managed authoring help
 
 Raw Markdown may contain compiler-managed HTML comment blocks with copyable examples. These blocks are authoring help only; they do not carry critical human meaning and disappear from rendered Markdown.
 
+A useful Change template is:
+
+```markdown
+### Override
+
+- `Source name / RULE-ID` — Current rule title
+  New rule: Replacement statement.
+  Why: Why this Node differs.
+  <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="RULE-ID" -->
+```
+
 ## Current compiler contract
 
-The executable walking skeleton freezes only the syntax needed by Gateway, Foundation, Framework Development, and the first external project. See [compiler.md](compiler.md) for supported behavior and deliberate limitations.
+The executable compiler intentionally supports a narrower language than the complete future specification. See [compiler.md](compiler.md) for implemented behavior and deliberate limitations.
