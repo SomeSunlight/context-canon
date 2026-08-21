@@ -6,6 +6,7 @@ from typing import Literal
 
 TargetKind = Literal["resource", "context-node"]
 TargetIntent = Literal["required", "optional"]
+ChangeKind = Literal["remove", "override"]
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,14 @@ class SourceRef:
 
 
 @dataclass(frozen=True)
+class RuleModification:
+    kind: Literal["override"]
+    node_id: str
+    node_name: str
+    why: str
+
+
+@dataclass(frozen=True)
 class Rule:
     id: str
     title: str
@@ -33,6 +42,17 @@ class Rule:
     group: str
     origin_node_id: str
     origin_node_name: str
+    modifications: tuple[RuleModification, ...] = ()
+
+
+@dataclass(frozen=True)
+class RuleChange:
+    kind: ChangeKind
+    target_node_id: str
+    target_node_name: str
+    target_rule_id: str
+    statement: str | None
+    why: str
 
 
 @dataclass(frozen=True)
@@ -60,6 +80,7 @@ class ParsedNode:
     sources: tuple[SourceRef, ...]
     rules: tuple[Rule, ...]
     topics: tuple[Topic, ...]
+    changes: tuple[RuleChange, ...] = ()
 
 
 @dataclass
@@ -68,6 +89,7 @@ class CompiledNode:
     source_nodes: list["CompiledNode"] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)
+    local_changes: list[RuleChange] = field(default_factory=list)
     local_topics: list[Topic] = field(default_factory=list)
     resources: dict[str, bytes] = field(default_factory=dict)
     normalized_digest: str = ""
