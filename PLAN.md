@@ -1,131 +1,148 @@
 # Plan
 
-## Completed product validation
+## Completed validation
 
-- [x] Review the repository as the first self-hosted ContextCanon specification.
-- [x] Perform mental walkthroughs of small-project initialization, multi-source composition, inherited changes, Source updates, conflicts, standalone children, harness adapters, and multi-node repositories.
-- [x] Define `CONTEXT.md` as the compact entry and `CONTEXT/` as optional deeper package-local material.
-- [x] Establish visible published IDs and hidden compiler-managed local IDs.
-- [x] Establish Required versus Optional Topic targets.
-- [x] Establish ContextCanon Foundation and ContextCanon Framework Development with Framework Development composing Foundation.
-- [x] Add ContextCanon Gateway as a normal minimal root Node.
-- [x] Distinguish Topic navigation from Source composition.
-- [x] Establish one node-root directory per Context Node while keeping stable identity independent of path.
-- [x] Separate reusable ContextCanon Nodes under `nodes/library/` from ContextCanon-internal Nodes under `nodes/internal/`.
-- [x] Define the ContextCanon schema/specification as the structural interface rather than introducing an interface Node.
+ContextCanon has passed both self-hosted and external validation.
 
-See [docs/use-case-walkthrough.md](docs/use-case-walkthrough.md).
+- [x] Establish Gateway, Foundation, and Framework Development as real dogfood Nodes.
+- [x] Build the first deterministic compiler and run it against the repository itself.
+- [x] Apply ContextCanon to `SomeSunlight/teams-chat-exporter` on a dedicated experiment branch.
+- [x] Generate the Official Context Package deterministically in that external project.
+- [x] Enter the project through a real GitHub Copilot harness using generated `AGENTS.md`.
+- [x] Run an ordinary task that required no deeper Topic material.
+- [x] Run a Teams-selector task that required the Topic's deeper resources.
+- [x] Confirm that the model used the project context to distinguish configuration changes from Python behavior changes.
+- [x] Confirm that the structure is useful to a human reviewer as an architectural orientation interface, not only as LLM prompt machinery.
+- [x] Confirm that progressive disclosure is useful even with a low-cost model, strengthening the case for smaller and local LLMs.
 
-## Strategy: executable walking skeleton
+The conclusion is now strong enough to change development strategy: **stop proving that ContextCanon is useful and complete the deterministic core needed for broad daily use.**
 
-Prefer the smallest end-to-end implementation that can run on real repositories. Freeze only contracts required by the next executable slice. Use mental walkthroughs selectively when implementation exposes a concrete ambiguity.
+## Strategy: harden the reusable compiler core
+
+ContextCanon should soon be usable across many real projects without repeatedly hitting known missing fundamentals.
+
+That does not mean implementing everything at once. Each compiler step remains a coherent deterministic layer with explicit source syntax, positive and negative regression fixtures, repository dogfood, and CI drift checking.
 
 ```text
-real repository
-      ↓
-CONTEXT.src.md
-      ↓
-deterministic compiler
-      ↓
-Official Context Package + exact diagnostics/diff
-      ↓
-LLM uses compiled context or interprets a Context change
-      ↓
-real project work
-      ↓
-feedback into ContextCanon
+human-authored Context
+        ↓
+parse exact syntax
+        ↓
+resolve + compose exact semantics
+        ↓
+validate identities and operations
+        ↓
+render deterministic Official Context Package
+        ↓
+exact diff / package identity
+        ↓
+optional LLM interpretation or project work
 ```
 
-Every compiler change should remain testable deterministically without invoking an LLM.
+No LLM belongs inside deterministic compiler truth.
 
-## Walking Skeleton 1 — deterministic compiler
+## Compiler 0.2 — inherited Rule changes
 
-The first compiler slice is now executable and dogfooded by this repository.
+This is the current semantic hardening block.
 
-- [x] Use a small dependency-free Python CLI that is easy to run locally and in CI.
-- [x] Define the minimum source grammar needed by Gateway, Foundation, and Framework Development.
-- [x] Make Topic targets explicitly distinguish Resource from Context Node.
-- [x] Discover and validate Nodes from their node-root directories.
-- [x] Parse Node metadata, Sources, local Rules, Topics, stable IDs, titles, and rationale.
-- [x] Resolve local-path Sources and validate stable Node identity and accepted version.
-- [x] Detect local Source dependency cycles.
-- [x] Compose inherited and local Rules deterministically without Source precedence.
-- [x] Generate `CONTEXT.md`.
-- [x] Materialize Topic Resource targets into optional `CONTEXT/` output.
-- [x] Compute recursive materialization closure for local links from materialized Markdown resources.
-- [x] Generate `.context/context.yaml` with provenance and exact SHA-256 digests.
-- [x] Generate thin `AGENTS.md` and `.goosehints` adapters when requested by Node metadata.
-- [x] Add `check` mode to detect missing, changed, or extra generated output.
-- [x] Turn Gateway, Foundation, and Framework Development into deterministic compiler fixtures.
-- [x] Add CI that runs unit tests and `contextcanon check --all .`.
-- [ ] Run the compiler against one deliberately simple external Hello-World-style repository.
-- [ ] Confirm that the first external project can be rebuilt and checked without depending on the ContextCanon repository layout.
+- [x] Fix rendering so transitively inherited Rules remain visible by their true origin Node.
+- [x] Add explicit `Remove` operations for inherited ordinary Rules.
+- [x] Add explicit `Override` operations while preserving inherited Rule identity.
+- [x] Carry Override provenance transitively into descendants.
+- [x] Reject dangling Changes instead of silently ignoring them.
+- [x] Reject duplicate local Changes against the same inherited Rule identity.
+- [x] Include Changes and override provenance in exact normalized semantics.
+- [x] Add positive, dangling, duplicate, and transitive regression fixtures.
+- [x] Document the compiler pipeline and stage boundaries in `docs/compiler.md` and `CONTRIBUTING.md`.
+- [x] Expose the compiler module architecture directly in Framework Development context.
+- [ ] Regenerate all dogfood packages with compiler 0.2 and finish with green CI.
 
-Unsupported syntax must fail clearly rather than encourage premature complexity.
+## Next: deterministic Context diff
 
-## Walking Skeleton 2 — first external project with an LLM
-
-Use a small real repository first so every relationship between source, generated context, project files, and LLM behavior is obvious.
-
-The active experiment is `SomeSunlight/teams-chat-exporter` on branch `agent/contextcanon-hello-world`. It intentionally starts before compilation so the first generated filesystem diff remains visible and reviewable.
-
-- [x] Select a simple existing repository as the first external customer.
-- [x] Create a dedicated ContextCanon experiment branch; do not alter its main branch.
-- [x] Bootstrap only human-editable `CONTEXT.src.md` and genuinely useful Topic resources.
-- [ ] Compile all generated output deterministically.
-- [ ] Enter the project through a real harness using the generated adapter and compact `CONTEXT.md`.
-- [ ] Perform one ordinary project task that needs no deeper Topic material.
-- [ ] Perform one task that must load a Required Topic resource.
-- [ ] Observe what the LLM actually loads, what it misses, what feels redundant, and what is confusing to a human reviewer.
-- [ ] Compare the experience with the same project without ContextCanon.
-
-## Walking Skeleton 3 — Context change to code impact
-
-Make the first higher-level LLM workflow a direct test of ContextCanon's value.
+The next compiler layer should make Context change itself a first-class exact artifact.
 
 ```text
 old compiled Context
         +
 new compiled Context
         ↓
-deterministic Context diff
+exact deterministic change set
+        ↓
+Rule IDs / Topic IDs / Sources / package changes
+        ↓
+optional LLM impact review
+```
+
+- [ ] Define a normalized machine-readable diff model based on stable identity and provenance.
+- [ ] Detect added, removed, and changed Rules without relying on titles or textual file diffs.
+- [ ] Distinguish inherited semantic changes from local source changes where provenance permits.
+- [ ] Include Source package/version changes and Topic changes.
+- [ ] Produce a compact human-readable summary from the same deterministic diff.
+- [ ] Add CLI support without coupling the diff to a particular harness.
+- [ ] Test unchanged, additive, removed, overridden, and transitive cases.
+
+This diff becomes the exact input to later semantic impact analysis.
+
+## Next: immutable external Sources and update acceptance
+
+Broad use across independent projects requires reusable Sources without live dependency on another checkout.
+
+- [ ] Define an immutable external Source/package locator contract.
+- [ ] Pin exact Source identity, version, and package digest.
+- [ ] Keep accepted packages usable without a live Source repository.
+- [ ] Detect newer Source packages as candidates rather than silently inheriting them.
+- [ ] Compare accepted and candidate packages using the deterministic Context diff.
+- [ ] Require explicit acceptance before rebuilding a consumer against a new Source package.
+- [ ] Surface dangling local Changes caused by accepted Source updates.
+- [ ] Support addressing Nodes inside repositories containing multiple Context Nodes.
+
+Transport/cache mechanics should remain separate from semantic composition.
+
+## Then: protected Rules and authorized exceptions
+
+- [ ] Mark selected Rules as protected in their owning Node.
+- [ ] Reject ordinary Remove/Override against protected Rules.
+- [ ] Let the owner define stable authorized exceptions.
+- [ ] Add explicit `Use Exception` syntax in consumers.
+- [ ] Preserve exception provenance transitively.
+- [ ] Add deterministic invalid/dangling exception diagnostics.
+
+Governance validation is not a security boundary; it makes declared policy mechanically checkable.
+
+## Broader compiler hardening
+
+After those central layers:
+
+- [ ] Multiple orthogonal Sources with broader structural conflict diagnostics.
+- [ ] Resource collision rules across composed packages.
+- [ ] Topic composition/materialization across Source package boundaries.
+- [ ] Nested Git repository boundary behavior.
+- [ ] Safe compiler-owned generated-file manifest if automatic stale adapter cleanup is later needed.
+- [ ] Authoring assistance for Node initialization, stable IDs, and compact templates.
+
+## Semantic layer above the compiler
+
+Once deterministic diff exists, implement the first high-level workflow:
+
+```text
+exact Context diff
         ↓
 LLM impact review
         ↓
-Rule ID → affected files / code / docs → reason → proposed action
+Rule ID → affected files / code / config / tests / docs
+        ↓
+reason → proposed action
 ```
 
-- [ ] Produce an exact deterministic diff between two compiled Context states using stable IDs and provenance.
-- [ ] Emit a compact machine-readable change set plus a human-readable summary suitable for LLM input.
-- [ ] Keep LLM impact analysis outside the deterministic compiler core.
-- [ ] Ask the LLM to map each changed Rule to likely affected code, configuration, tests, and documentation in a real repository.
-- [ ] Require a reason for each suggested location.
-- [ ] Treat the impact map as semantic advice, not compiler truth.
-- [ ] Let a human approve or reject suggested project changes.
-- [ ] Later test whether an agent can implement an approved impact set while following the newly compiled Context.
-
-The semantic workflow must remain harness-neutral: Codex, goose, Hermes, a local model, or another agent should consume the same deterministic change set.
-
-## Harden from observed failures
-
-Implement broader semantics only when a real scenario needs them, then preserve the discovered case as a deterministic regression fixture.
-
-Likely next capabilities include:
-
-- [ ] Topic inheritance/materialization across Source package boundaries.
-- [ ] Remove and Override inherited Rules.
-- [ ] Protected Rules and authorized exceptions.
-- [ ] Multiple orthogonal Sources and broader structural conflict diagnostics.
-- [ ] Source update detection, candidate diff, explicit acceptance, and pinned package identity.
-- [ ] Dangling change diagnostics after Source updates.
-- [ ] External Git/package Source locators and multi-node repository addressing.
-- [ ] Resource collision rules and self-contained package guarantees.
-- [ ] Nested Git repository boundary behavior.
-- [ ] Authoring assistance such as compact templates and optional richer scaffolding.
+- [ ] Keep impact analysis outside deterministic compiler truth.
+- [ ] Require a reason for each suggested affected location.
+- [ ] Let a human approve/reject the impact set.
+- [ ] Let an agent implement approved changes while following the new Official Context.
+- [ ] Keep the workflow harness-neutral so local models, goose, Copilot, Codex, Hermes, and others can consume the same exact change set.
 
 ## Context integration roadmap
 
-Add new context types only when a concrete end-to-end use case needs them. Reuse the same composition, provenance, package, and progressive-disclosure mechanisms rather than building parallel systems.
+Add context types through the same progressive-disclosure and package mechanisms rather than parallel systems:
 
 - [ ] Glossaries and domain terminology.
 - [ ] Coding patterns and example code.
@@ -137,6 +154,6 @@ Add new context types only when a concrete end-to-end use case needs them. Reuse
 
 ## Working rule
 
-**Do not wait for theoretical completeness before the next executable slice.**
+**Build central deterministic semantics deliberately, then use them aggressively.**
 
-Prefer: implement one deterministic capability, run it across all fixtures, use it in a real project, observe the failure modes, then refine the specification and compiler together.
+The external proof has been made. The quality bar now is that ContextCanon should become boring infrastructure: predictable enough to place under many projects and stop thinking about unless the context itself changes.
