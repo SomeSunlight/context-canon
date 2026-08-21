@@ -108,15 +108,7 @@ def render_adapters(compiled: CompiledNode) -> dict[str, str]:
             "It defines the applicable Rules and Topic-loading instructions."
             f"{state_line}\n"
         )
-    if "copilot" in compiled.metadata.adapters:
-        state_line = " Read [STATE.md](../STATE.md) when current project state or planning matters." if (compiled.parsed.root / "STATE.md").exists() else ""
-        result[".github/copilot-instructions.md"] = (
-            "# GENERATED FILE — DO NOT EDIT\n\n"
-            "Use [CONTEXT.md](../CONTEXT.md) as this repository's canonical project instructions. "
-            "Read and follow it before answering, analyzing, or editing files."
-            f"{state_line}\n"
-        )
-    unknown = set(compiled.metadata.adapters) - {"agents", "goose", "copilot"}
+    unknown = set(compiled.metadata.adapters) - {"agents", "goose"}
     if unknown:
         raise ContextCanonError(f"Unsupported adapter(s): {', '.join(sorted(unknown))}")
     return result
