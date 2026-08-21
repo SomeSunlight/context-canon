@@ -15,7 +15,7 @@ from contextcanon.parser import ContextCanonError
 
 
 GATEWAY = '''# Demo Gateway — Local Context Source
-<!-- ctx:node id="node-gateway" version="0.1.0" adapters="agents,goose,copilot" -->
+<!-- ctx:node id="node-gateway" version="0.1.0" adapters="agents,goose" -->
 
 ## Topics
 
@@ -161,11 +161,11 @@ class WalkingSkeletonTests(unittest.TestCase):
         repo = self.make_repo()
         self.assertEqual(main(["build", "--all", str(repo)]), 0)
         self.assertEqual(main(["check", "--all", str(repo)]), 0)
-        self.assertTrue((repo / "AGENTS.md").is_file())
+        agents = repo / "AGENTS.md"
+        self.assertTrue(agents.is_file())
+        self.assertIn("[CONTEXT.md](CONTEXT.md)", agents.read_text(encoding="utf-8"))
         self.assertTrue((repo / ".goosehints").is_file())
-        copilot = repo / ".github/copilot-instructions.md"
-        self.assertTrue(copilot.is_file())
-        self.assertIn("[CONTEXT.md](../CONTEXT.md)", copilot.read_text(encoding="utf-8"))
+        self.assertFalse((repo / ".github/copilot-instructions.md").exists())
 
 
 if __name__ == "__main__":
