@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 from .links import local_markdown_targets
-from .model import CompiledNode, Rule
+from .model import CompiledNode, Rule, RuleChange, RuleModification
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.1.0"
+COMPILER_VERSION = "0.2.0"
 
 
 class Compiler:
@@ -50,11 +50,18 @@ class Compiler:
                 compiled.source_nodes.append(source_node)
 
             compiled.inherited_rules = self._compose_inherited_rules(compiled.source_nodes)
+            compiled.local_changes = list(parsed.changes)
+            compiled.inherited_rules = self._apply_rule_changes(
+                compiled.inherited_rules,
+                compiled.local_changes,
+                compiled.metadata.id,
+                compiled.metadata.name,
+            )
             compiled.local_rules = list(parsed.rules)
             self._validate_visible_rule_ids(compiled)
-            # Walking Skeleton 1 deliberately keeps Topics local. Inheriting Topic
-            # payloads across published Source package boundaries needs a package
-            # locator/materialization contract and is hardened after the first real project.
+            # Topics remain local for now. Inheriting Topic payloads across
+            # published Source package boundaries needs an explicit package
+            # locator/materialization contract.
             compiled.local_topics = list(parsed.topics)
             compiled.resources = self._collect_resources(compiled)
             compiled.normalized_digest = self._semantic_digest(compiled)
@@ -87,6 +94,44 @@ class Compiler:
                     continue
                 seen_global.add(identity)
                 result.append(rule)
+        return result
+
+    def _apply_rule_changes(
+        self,
+        inherited_rules: list[Rule],
+        changes: list[RuleChange],
+        node_id: str,
+        node_name: str,
+    ) -> list[Rule]:
+        result = list(inherited_rules)
+        for change in changes:
+            identity = (change.target_node_id, change.target_rule_id)
+            index = next(
+                (
+                    i
+                    for i, rule in enumerate(result)
+                    if (rule.origin_node_id, rule.id) == identity
+                ),
+                None,
+            )
+            if index is None:
+                raise ContextCanonError(
+                    f"{node_name}: {change.kind.title()} targets missing inherited Rule "
+                    f"{change.target_node_name} / {change.target_rule_id} "
+                    f"({change.target_node_id}#{change.target_rule_id})"
+                )
+            if change.kind == "remove":
+                result.pop(index)
+                continue
+
+            target = result[index]
+            assert change.statement is not None
+            modification = RuleModification("override", node_id, node_name, change.why)
+            result[index] = replace(
+                target,
+                statement=change.statement,
+                modifications=(*target.modifications, modification),
+            )
         return result
 
     def _validate_visible_rule_ids(self, compiled: CompiledNode) -> None:
@@ -164,6 +209,7 @@ class Compiler:
                 }
                 for source in compiled.source_nodes
             ],
+            "changes": [asdict(change) for change in compiled.local_changes],
             "rules": [asdict(rule) for rule in (*compiled.inherited_rules, *compiled.local_rules)],
             "topics": [asdict(topic) for topic in compiled.local_topics],
         }
