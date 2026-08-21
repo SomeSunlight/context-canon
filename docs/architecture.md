@@ -99,13 +99,15 @@ ContextCanon Gateway ──Topic──> ContextCanon Framework Development
 
 The Gateway does not inherit Framework Development. Framework Development does inherit Foundation and adds a local delta.
 
-## Transitive composition preserves identity
+## Transitive composition preserves identity and state
 
 Source composition is transitive package meaning, not a direct-parent text copy.
 
-If `Foundation → Team Standard → Project`, a Foundation Rule remains identified by the Foundation Node ID plus Rule ID in Project. A Team Standard Override changes the effective statement and adds provenance without changing that identity. A Team Standard Remove makes the Rule absent from downstream effective packages.
+If `Foundation → Team Standard → Project`, a Foundation Rule remains identified by the Foundation Node ID plus Rule ID in Project. A Team Standard Override changes the effective statement and adds provenance without changing that identity. A Team Standard Remove makes the Rule absent from active downstream context while preserving a machine-level removal record.
 
-This identity-preserving model is what makes later exact diffs, dangling-operation checks, and Source-update impact analysis possible.
+That removal record matters in a DAG: if another Source path still carries the same Rule, the compiler can detect the contradiction instead of inventing Source precedence. Likewise, two different effective Overrides of the same stable Rule are a structural conflict, while equivalent compiled Rule state may be deduplicated.
+
+This identity- and state-preserving model is what makes later exact diffs, dangling-operation checks, Source-update impact analysis, and standalone Source packages possible.
 
 ## Natural source files, generated package files
 
@@ -125,7 +127,7 @@ A directly referenced Markdown document can itself point to other local files. T
 
 `.context/` is analogous to `.git/` in one important respect: it contains infrastructure that matters but should not dominate normal work.
 
-The compiler generates one primary `.context/context.yaml` per Node. It records Node identity, accepted local Sources, local Changes, normalized element identities, override provenance, Topic targets, resource mapping, and exact digests.
+The compiler generates one primary `.context/context.yaml` per Node. It records Node identity, accepted local Sources, local Changes, normalized element identities, override provenance, removal provenance, Topic targets, resource mapping, and exact digests.
 
 Generated YAML may contain explanatory comments because occasional human inspection is useful, but it remains machine-owned.
 
@@ -159,7 +161,7 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 ## Deterministic skeleton, semantic assistance at the edges
 
-Compiler 0.2 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, cycle/version errors, transitive Rule composition, Remove/Override operations, dangling Change diagnostics, Topic targets, resource materialization, exact hashes, generated views, adapters, and drift checks.
+Compiler 0.2 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, cycle/version errors, transitive Rule composition, Remove/Override operations, override/removal provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, Topic targets, resource materialization, exact hashes, generated views, adapters, and drift checks.
 
 Planned deterministic capabilities include exact compiled Context diff, immutable external Source packages and update acceptance, protected Rules and authorized exceptions, and broader package-boundary diagnostics.
 
