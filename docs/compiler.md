@@ -77,6 +77,8 @@ Compiler 0.2 implements:
 - explicit `Remove` and `Override` operations on inherited Rules,
 - dangling and duplicate Change diagnostics,
 - override provenance while preserving the inherited Rule identity,
+- transitive removal provenance for removed Rules,
+- deterministic diamond-graph conflict detection when the same Rule arrives with different definitions/provenance or is present on one path and removed on another,
 - Required and Optional Topic targets,
 - explicit `Resource` versus `Context Node` targets,
 - validation that targets stay inside the repository,
@@ -96,6 +98,8 @@ A child Node can now change an inherited ordinary Rule explicitly.
 
 `Remove` removes the targeted inherited Rule from the child's official Rule set. `Override` keeps the Rule's stable identity and presentation metadata but replaces its effective statement for the child package. Override provenance is carried transitively so descendants inherit the already-overridden meaning.
 
+A Remove also leaves a machine-level removal record carrying the Rule identity, removing Node, and rationale. This record is not shown as an active Rule in `CONTEXT.md`; it exists so downstream composition can distinguish "this Source never contained the Rule" from "this Source explicitly removed the Rule".
+
 Every Change binds the stable origin Node ID and Rule ID. If that identity is no longer inherited, compilation fails as a dangling Change rather than silently doing nothing.
 
 A Node may define only one local Change for a given inherited Rule. Protected Rules and authorized exceptions are a later semantic layer and will constrain which operations are legal.
@@ -110,7 +114,9 @@ For example:
 Foundation ──> Development ──> Project
 ```
 
-A Foundation Rule overridden by Development is still a Foundation Rule in Project, with Development recorded as the override provenance. A Foundation Rule removed by Development no longer appears in Project.
+A Foundation Rule overridden by Development is still a Foundation Rule in Project, with Development recorded as the override provenance. A Foundation Rule removed by Development no longer appears in Project, but its removal provenance continues through the compiled semantic state.
+
+Diamond graphs are handled without inventing Source precedence. If the same stable Rule reaches a consumer through several paths with byte-for-byte equivalent compiled meaning and provenance, the duplicate is collapsed. If the paths carry different effective definitions/provenance, compilation fails. If one path says the Rule is present and another carries a removal record for it, compilation also fails instead of silently choosing one path.
 
 This property matters for stable references, deterministic diffs, and future Source-update diagnostics.
 
@@ -129,13 +135,13 @@ The compiler calculates two exact hashes:
 
 Generated machine state is excluded from `package_digest` so the digest does not contain itself.
 
-Changes are part of the normalized semantic model. A Remove changes the effective Rule set; an Override changes both the effective Rule statement and its provenance.
+Changes are part of the normalized semantic model. A Remove changes the effective Rule set and contributes removal provenance; an Override changes both the effective Rule statement and its provenance.
 
 ## Test strategy
 
 Compiler tests use temporary repository fixtures and standard-library `unittest`. They require no network, external service, or model.
 
-Tests cover successful compilation and failure behavior. The current suite exercises Source graphs, transitive inheritance, Remove/Override semantics, dangling Changes, duplicate Change targets, materialization closure, harness adapters, deterministic rebuilds, and generated drift.
+Tests cover successful compilation and failure behavior. The current suite exercises Source graphs, transitive inheritance, Remove/Override semantics, removal provenance, dangling Changes, duplicate Change targets, compatible and conflicting diamond composition, materialization closure, harness adapters, deterministic rebuilds, and generated drift.
 
 A separate repository-consistency test checks local Markdown links.
 
