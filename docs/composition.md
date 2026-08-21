@@ -21,7 +21,25 @@ Different Sources can therefore contribute independent elements without an artif
 
 Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted Source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
 
-Compiler 0.2 implements cycle detection, Source Node ID/version validation for local-path Sources, transitive Rule composition, and dangling Remove/Override diagnostics.
+Compiler 0.2 implements cycle detection, Source Node ID/version validation for local-path Sources, transitive Rule composition, dangling Remove/Override diagnostics, and deterministic conflicts for incompatible transitive states of the same stable Rule.
+
+## Structural Rule conflicts
+
+A stable Rule identity can reach a consumer through several Source paths. The compiler never uses Source order to choose between those paths.
+
+Equivalent compiled Rules with the same effective definition and provenance are deduplicated. If the same stable Rule arrives with different effective definitions or override provenance, compilation fails.
+
+Remove is also carried as machine-level provenance rather than being forgotten as mere absence. Therefore a diamond such as this is detectable:
+
+```text
+              ┌─ Source A: removes Rule X ─┐
+Foundation ───┤                            ├─> Consumer: conflict
+              └─ Source B: keeps Rule X ──┘
+```
+
+The consumer cannot silently keep or drop Rule X. It must resolve the Source relationship explicitly.
+
+Two paths may both carry compatible removal provenance; the resulting Rule remains absent while the machine state preserves the removals needed for later composition and diagnostics.
 
 ## Semantic conflicts
 
@@ -45,6 +63,8 @@ Visible names, titles, wording, and filesystem paths are not identity.
 
 Remove makes the inherited Rule no longer part of this Node's official Rule set. Descendants inherit the already-removed result.
 
+The compiler keeps a removal record containing the Rule identity, removing Node, and rationale. This is machine semantics, not an active Rule shown to normal readers.
+
 ### Override
 
 Override keeps the inherited Rule identity and origin but replaces its effective statement. The overriding Node and its rationale become provenance on the compiled Rule. If another descendant overrides it again, identity remains stable while the effective meaning and override provenance advance.
@@ -65,9 +85,9 @@ Composition is package meaning, not just direct-parent text.
 Foundation ──> Team Standard ──> Project
 ```
 
-If Team Standard overrides a Foundation Rule, Project inherits that overridden Rule with Foundation identity and Team Standard override provenance. If Team Standard removes the Rule, Project never sees it.
+If Team Standard overrides a Foundation Rule, Project inherits that overridden Rule with Foundation identity and Team Standard override provenance. If Team Standard removes the Rule, Project does not expose it as active context but still carries the removal provenance needed for downstream composition.
 
-This is why the compiler renders inherited Rules by their actual origin Node rather than only by the consumer's direct Source list.
+This is why the compiler renders inherited Rules by their actual origin Node rather than only by the consumer's direct Source list, and why the machine representation contains more state than the human-facing active Rule list.
 
 ## Source updates are change requests
 
