@@ -25,10 +25,17 @@ class SourceRef:
     locator: str
     normalized_digest: str | None = None
     package_digest: str | None = None
+    transport: str | None = None
+    transport_ref: str | None = None
+    node_path: str | None = None
 
     @property
     def is_pinned(self) -> bool:
         return self.normalized_digest is not None and self.package_digest is not None
+
+    @property
+    def has_transport(self) -> bool:
+        return self.transport is not None
 
 
 @dataclass(frozen=True)
@@ -156,11 +163,6 @@ class CompiledNode:
 
     @property
     def source_nodes(self) -> list[CompiledPackage]:
-        """Temporary compatibility view for 0.3 render/diff code.
-
-        It intentionally returns a copy so legacy callers cannot mutate the
-        package-only Source boundary. These callers are migrated before 0.4 is
-        accepted.
-        """
+        """Temporary compatibility view while Compiler's old append is removed."""
 
         return list(self.source_packages)
