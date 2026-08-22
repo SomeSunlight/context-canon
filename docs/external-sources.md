@@ -20,16 +20,7 @@ CONTEXT/              optional
 
 `CONTEXT.md` and optional `CONTEXT/` are the human/agent-facing Official Context Package. `.context/package.json` is the portable machine manifest needed to reconstruct the Source's compiled semantic state without reparsing `CONTEXT.src.md`.
 
-The manifest carries, among other things:
-
-- stable Node ID, name, and version;
-- accepted transitive Source identities;
-- effective Rules including statement, rationale, group, stable origin, and Override provenance;
-- removal provenance;
-- local Changes and Topics;
-- exact package-file hashes;
-- `normalized_digest` for canonical compiled semantics;
-- `package_digest` for the exact human/agent package bytes.
+The manifest carries stable Node metadata, accepted transitive Source identities, complete effective Rules and provenance, removal provenance, local Changes and Topics, exact package-file hashes, `normalized_digest`, and `package_digest`.
 
 The loader verifies both semantic identity and every declared package file before composition.
 
@@ -37,21 +28,13 @@ The loader verifies both semantic identity and every declared package file befor
 
 They answer different questions.
 
-`normalized_digest` answers:
+`normalized_digest` asks whether this is the same canonical compiled meaning. Collections whose order has no semantic meaning are canonicalized before that digest is calculated.
 
-> Is this the same canonical compiled meaning?
+`package_digest` asks whether these are exactly the same published `CONTEXT.md` and `CONTEXT/` bytes.
 
-Collections whose order has no semantic meaning are canonicalized before this digest is calculated.
+A presentation-only change can therefore change `package_digest` without changing `normalized_digest`. Accepted external Sources pin both rather than collapsing the two identities into one ambiguous hash.
 
-`package_digest` answers:
-
-> Are these exactly the same published `CONTEXT.md` and `CONTEXT/` bytes?
-
-A presentation-only change can therefore change `package_digest` without changing `normalized_digest`.
-
-Accepted external Sources pin both. ContextCanon does not collapse these two identities into one ambiguous hash.
-
-## Consumer-local accepted package store
+## Accepted package store
 
 An accepted external package is stored under the consumer Node:
 
@@ -62,9 +45,17 @@ An accepted external package is stored under the consumer Node:
 └── CONTEXT/              optional
 ```
 
-This store belongs to the consumer's machine state. It records the exact artifact that the consumer has accepted rather than acting as a live view of an external repository.
+This directory is **accepted reproducible project state**, not a live cache of the Source repository. It should be retained/versioned with the consumer wherever a clone is expected to build offline without contacting external Sources.
 
 A package is content-addressed by `package_digest`; its manifest is then independently checked against the Source's expected Node ID, version, `normalized_digest`, and `package_digest`.
+
+Temporary update candidates live separately under:
+
+```text
+<consumer-node>/.context/candidates/<package-digest>/
+```
+
+Candidates are not inheritance. Merely fetching one cannot change a normal build.
 
 ## Pinned authoring syntax
 
@@ -78,15 +69,68 @@ A local development Source may remain unpinned:
 An accepted immutable Source adds both exact digests:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes/python-development) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
-The pair is all-or-nothing. Supplying only one digest is invalid.
+The digest pair is all-or-nothing. For a pinned Source, the visible link is provenance/update location. **Normal build does not dereference it.**
 
-For a pinned Source, the visible link is provenance and an update/discovery location. **Normal build does not dereference it.** Build resolves only the accepted local artifact whose `package-digest` is pinned in source.
+## Git transport and multi-Node repositories
 
-This means an offline build remains deterministic and a broken or unreachable external locator does not invalidate already accepted context.
+Compiler 0.4 provides a generic Git candidate transport. It is not GitHub-specific and uses the system `git` executable.
+
+A Git-backed Source adds three transport fields:
+
+```markdown
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+  <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
+```
+
+The fields mean:
+
+- `transport="git"` — use generic Git for candidate retrieval;
+- `ref="main"` — branch/tag/ref used for candidate discovery;
+- `node-path="..."` — location of this Context Node inside the retrieved repository snapshot. Use `.` for a repository-root Node.
+
+All three transport fields are required together. `node-path` is location only; the stable Node ID remains identity. Absolute paths, backslashes, and `..` traversal are rejected.
+
+Transport metadata is currently used for **updates of an already accepted pinned Source**. Initial selection/addition of reusable Sources will also be exercised by the reviewed project-onboarding workflow; it must not bypass review merely because a transport locator is available.
+
+## Fetch, review, accept
+
+Source updates are deliberately three explicit operations:
+
+```text
+contextcanon source fetch <source-node-id> --node <consumer-node>
+contextcanon source review <source-node-id> <candidate-package> --node <consumer-node>
+contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
+```
+
+### Fetch
+
+`source fetch` clones the declared Git ref into a temporary checkout, enters `node-path`, loads and fully verifies the immutable package already published there, then copies only that immutable artifact to `.context/candidates/<package-digest>/`.
+
+It does **not** modify `CONTEXT.src.md` or `.context/sources/`.
+
+### Review
+
+`source review` compares the currently accepted package with the candidate using the deterministic Context diff. It also substitutes the candidate into the consumer's actual Source composition in memory and checks structural consequences, including dangling local Changes and Rule collisions.
+
+A successful review writes a deterministic receipt under:
+
+```text
+.context/source-reviews/<candidate-package-digest>.json
+```
+
+The receipt is bound to the exact current `CONTEXT.src.md`, the currently accepted Source state, the candidate package identity, the deterministic diff, and successful structural validation.
+
+### Accept
+
+`source accept` requires the matching review receipt. It revalidates the candidate and structural composition, rejects the operation if `CONTEXT.src.md` or the accepted Source state changed since review, installs the candidate into `.context/sources/<package-digest>/`, and then updates the visible Source version plus exact digest pins in `CONTEXT.src.md`.
+
+Git transport metadata is preserved when the pin is updated.
+
+This cannot force a human to read a review, but it prevents the supported acceptance path from skipping the deterministic review step entirely.
 
 ## One semantic composition path
 
@@ -98,55 +142,48 @@ local Source Node ──compile──> CompiledPackage ─┐
 accepted external artifact ──load/verify───────> CompiledPackage ─┘
 ```
 
-Remove/Override behavior, diamond-conflict detection, provenance, and downstream normalized semantics therefore do not have separate "remote Source" implementations.
-
-This boundary is deliberate. Transport bugs must not create a second composition language.
+Remove/Override behavior, diamond-conflict detection, provenance, and downstream normalized semantics therefore do not have separate remote implementations. Transport bugs cannot silently create a second composition language.
 
 ## Presentation order versus canonical semantics
 
 The immutable artifact preserves effective Rule and Topic presentation order so a descendant built from a local Source and a descendant built from the same accepted offline package can render equivalent official context.
 
-Canonical semantic hashing remains independently order-insensitive where order has no defined meaning. The manifest must not use hash-normalization sorting as a replacement for package presentation order.
+Canonical semantic hashing remains independently order-insensitive where order has no defined meaning. Hash-normalization sorting is not reused as package presentation order.
 
 ## Failure behavior
 
-Normal build fails rather than fetching or guessing when:
+Normal build fails rather than fetching or guessing when the pinned accepted package is absent, malformed, has wrong files/digests, or disagrees with the Source ID/version/pins.
 
-- the pinned package is absent from `.context/sources/<package-digest>/`;
-- the package manifest is malformed;
-- semantic content does not match `normalized_digest`;
-- published files do not match their exact hashes/package digest;
-- Node ID or version differs from the Source reference;
-- the Source pin is incomplete.
+Git candidate fetch fails on unsupported/incomplete transport metadata, an unavailable ref, an invalid/missing `node-path`, a missing Git executable, an invalid immutable package, or a candidate with the wrong stable Node ID.
 
-A missing accepted package is not permission to contact the Source locator automatically.
+A missing accepted package is never permission for normal `build` to contact the Source locator automatically.
 
-## Candidate updates and explicit acceptance
+## Candidate updates are change requests
 
-Candidate discovery is a separate workflow from build.
-
-The intended update path is:
+The complete update model is:
 
 ```text
 accepted package
       +
-new candidate package
+Git-fetched candidate package
       ↓
 deterministic Context diff
       ↓
-structural diagnostics
+consumer structural validation
       ↓
-optional semantic impact review
+review receipt
+      ↓
+optional semantic/LLM impact review
       ↓
 explicit acceptance
       ↓
-new local accepted package + new exact pin
+new accepted package + new exact pin
 ```
 
-A newer package is therefore a change request, not live inheritance.
-
-The transport used to obtain a candidate may initially be Git/repository based, but transport remains outside the semantic compiler boundary. Multi-Node repository addressing also belongs to locator/transport metadata rather than Node identity.
+A newer package is therefore a change request, not live inheritance. The deterministic review result is also the natural exact input to later LLM impact analysis.
 
 ## Current implementation boundary
 
-Compiler 0.4 currently implements the immutable manifest, full verification, consumer-local package store lookup, exact Source pins, and offline composition. Candidate discovery, explicit acceptance tooling, multi-Node external locator syntax, and practical Git transport are the remaining parts of this compiler block.
+Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, and generic Git candidate retrieval.
+
+The remaining work in this compiler block is repository dogfood regeneration, final documentation/CI synchronization, and merge hardening. The next validation block then exercises reviewed LLM-assisted onboarding of a larger pre-existing project, including the decision whether extracted rules stay local or should use/become reusable generic Nodes.
