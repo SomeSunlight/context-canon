@@ -37,6 +37,7 @@ jobs:
         with:
           name: generated-drift
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 1
           path: |
             .context/
