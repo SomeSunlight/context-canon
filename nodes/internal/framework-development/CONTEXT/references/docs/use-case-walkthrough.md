@@ -50,18 +50,18 @@ A project may edit `docs/architecture.md` in its natural location while the comp
 
 A project may compose ContextCanon Foundation, Python Development, Company Security, Personal Coding Style and a small local delta. Source order is not precedence. Structural conflicts are deterministic errors; natural-language conflicts may need semantic review and explicit local resolution.
 
-**Finding:** the compiler implements local Source identity/version checks, cycle detection, transitive Rule composition, and duplicate visible Rule-ID diagnostics. Broader external multi-Source use remains future hardening, not a conceptual blocker.
+**Finding:** the compiler implements local Source identity/version checks, duplicate direct Source rejection, cycle detection, transitive Rule composition, and duplicate visible Rule-ID diagnostics. Source order is canonicalized in normalized semantics so declaration order cannot become accidental meaning. Broader external multi-Source use remains future hardening, not a conceptual blocker.
 
 ## 8. Change an imported Rule
 
 A child references the stable visible ID published by its ancestor plus the ancestor Node's stable ID. Renaming or rewriting the Rule without changing identity does not retarget the operation.
 
-Compiler 0.2 supports:
+Compiler 0.2 introduced:
 
 - `Remove` — delete an inherited ordinary Rule from the child's effective Rule set;
 - `Override` — preserve inherited identity while replacing the effective statement and recording override provenance.
 
-**Finding:** explicit local changes now make Source composition useful beyond purely additive inheritance.
+**Finding:** explicit local changes make Source composition useful beyond purely additive inheritance.
 
 ## 9. Carry changes through another generation
 
@@ -73,7 +73,7 @@ Foundation ──> Team Standard ──> Project
 
 Team Standard overrides one Foundation Rule and removes another. Project should inherit the overridden statement with Foundation identity plus Team Standard provenance, while the removed Rule should remain absent.
 
-**Finding:** regression tests now cover this transitive behavior. During implementation they exposed and fixed a renderer defect where grandparent Rules could be semantically inherited but omitted from a deeper `CONTEXT.md`.
+**Finding:** regression tests cover this transitive behavior. During implementation they exposed and fixed a renderer defect where grandparent Rules could be semantically inherited but omitted from a deeper `CONTEXT.md`.
 
 ## 10. A Source removes a Rule that a child still changes
 
@@ -81,37 +81,62 @@ A child Change targets `<origin-node-id>#<rule-id>`. If the effective inherited 
 
 **Finding:** dangling Change diagnostics are implemented for current local Sources. This becomes especially important when external Source update acceptance arrives.
 
-## 11. Accept a Source update
+## 11. Compare two compiled Context versions
+
+A project needs to know exactly what changed before asking either a human or an LLM to reason about impact.
+
+Compiler 0.3 compares two snapshots of the same stable Node with:
+
+```text
+contextcanon diff <before-node-root> <after-node-root>
+contextcanon diff <before-node-root> <after-node-root> --json
+```
+
+The diff uses stable identities and compiled state rather than Markdown line positions. It can report Node metadata, Source package state, local Changes, effective Rules, Topics, and materialized Resource content.
+
+An inherited Rule that changes from active to removed is one state transition on the same `<origin-node-id>#<rule-id>`. An Override keeps the original Rule identity while exposing its effective statement and provenance changes. Transitive Overrides therefore remain traceable to the Foundation Rule rather than becoming unrelated child Rules.
+
+**Finding:** Context change is now a first-class deterministic artifact suitable as exact input to later Source-update review and code-impact analysis.
+
+## 12. Reorder things that have no semantic order
+
+Two authors reorder independent Sources or Topic targets without changing their meaning.
+
+The human package may change presentation order, but Source order must not become precedence and Topic-target ordering has no current semantic meaning.
+
+**Finding:** compiler 0.3 canonicalizes semantically unordered collections for `normalized_digest` and diff comparison. Package bytes may still differ when presentation changes, which is reported separately rather than mislabeled as a semantic change.
+
+## 13. Accept a Source update
 
 Consumers should remain pinned until they explicitly review and accept a newer immutable Source package. Deterministic diff comes first; optional semantic interpretation comes second.
 
-**Finding:** the compiler records Source version and package digest. Exact Context diff plus immutable external package pinning are the next central layers.
+**Finding:** the compiler now records Source version/package digest and provides the deterministic Context diff. Immutable external package pinning, candidate discovery, and acceptance are the next central layer.
 
-## 12. Clone a child without Source repositories
+## 14. Clone a child without Source repositories
 
 Accepted Source packages and required materialized resources must eventually be available locally enough for the child to remain understandable and reproducible.
 
 **Finding:** local-path Sources are sufficient for current dogfood, but broad multi-repository adoption requires immutable external package transport/cache semantics.
 
-## 13. Put several Nodes in one Git repository
+## 15. Put several Nodes in one Git repository
 
 ContextCanon itself uses Gateway, Foundation, and Framework Development in one repository. Intermediate category directories are not Nodes.
 
 **Finding:** the compiler discovers all three and can build/check them in one command.
 
-## 14. Move and rename a Node without changing identity
+## 16. Move and rename a Node without changing identity
 
 Framework Development previously moved and retained its stable Node ID.
 
 **Finding:** stable Node ID is identity; path is location.
 
-## 15. Contribute a reusable ContextCanon Node
+## 17. Contribute a reusable ContextCanon Node
 
 A reusable Node that ships with ContextCanon belongs under `nodes/library/<node-name>/` and composes Foundation directly or transitively.
 
 **Finding:** repository placement is governance, not a generic ContextCanon filesystem requirement.
 
-## 16. Use different agent harnesses
+## 18. Use different agent harnesses
 
 Codex, GitHub Copilot, goose, another agent, and a human may enter through different harness mechanics, but each enters the same canonical Context Node.
 
@@ -119,13 +144,13 @@ For GitHub Copilot in the tested JetBrains setup, ContextCanon relies on generat
 
 **Finding:** harness semantics belong at the edge; canonical context remains model/harness-neutral.
 
-## 17. Use smaller and local models
+## 19. Use smaller and local models
 
 The external experiment also produced a strong answer from a low-cost model once the task was well framed by project context.
 
 **Finding:** ContextCanon is not only about reducing paid prompt tokens. Better context management can make smaller and local models more useful by spending their capability on the actual task instead of rediscovering project assumptions.
 
-## 18. Standardize orientation across projects
+## 20. Standardize orientation across projects
 
 A human or agent moving between ContextCanon projects should know where to look for:
 
@@ -138,7 +163,7 @@ A human or agent moving between ContextCanon projects should know where to look 
 
 **Finding:** standardizing the shape of project context is itself useful architectural infrastructure, independently of token savings.
 
-## 19. Grow from Topics into broader context integration
+## 21. Grow from Topics into broader context integration
 
 The same mechanism can later integrate glossaries, patterns, code examples, structured data, PDFs, diagrams, skills, test fixtures, and operational experience.
 
@@ -146,12 +171,11 @@ The same mechanism can later integrate glossaries, patterns, code examples, stru
 
 ## Questions deliberately left for later compiler layers
 
-1. Exact deterministic compiled Context diff.
-2. Immutable external Git/package Source locators and explicit update acceptance.
-3. Protected Rules and authorized exceptions.
-4. Topic composition/materialization across Source package boundaries.
-5. Resource collisions across composed packages.
-6. Nested Git repository and more complex Node-boundary behavior.
-7. Richer authoring/scaffolding and safe compiler-owned generated-file manifests.
+1. Immutable external Git/package Source locators, caching, candidate discovery, and explicit update acceptance.
+2. Protected Rules and authorized exceptions.
+3. Topic composition/materialization across Source package boundaries.
+4. Resource collisions across composed packages.
+5. Nested Git repository and more complex Node-boundary behavior.
+6. Richer authoring/scaffolding and safe compiler-owned generated-file manifests.
 
-These are now ordered implementation work, not unresolved proof-of-concept questions.
+These are ordered implementation work, not unresolved proof-of-concept questions.
