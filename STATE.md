@@ -1,6 +1,6 @@
 # Current State
 
-ContextCanon has moved beyond architecture-only prototyping and beyond its first external proof. The framework now has a deterministic compiler, successful self-hosting, and a successful real-project/harness validation.
+ContextCanon has moved beyond architecture-only prototyping and beyond its first external proof. The framework now has a deterministic compiler, successful self-hosting, a successful real-project/harness validation, inherited Rule changes, and an exact compiled Context diff.
 
 ## What has been validated
 
@@ -33,16 +33,19 @@ The practical conclusion is that ContextCanon should now be hardened for broad d
 - Deterministic operations form the framework skeleton; LLMs assist only where semantic interpretation is actually needed.
 - Standardizing this structure across projects is itself a feature: humans and agents can use the same orientation path even when project domains differ.
 
-## Executable compiler 0.2
+## Executable compiler 0.3
 
-The dependency-free Python CLI remains:
+The dependency-free Python CLI now has three core operations:
 
 ```text
 contextcanon build --all .
 contextcanon check --all .
+contextcanon diff <before-node-root> <after-node-root>
 ```
 
-Compiler 0.2 handles:
+`diff` also supports `--json` for deterministic machine-readable output.
+
+Compiler 0.3 handles:
 
 - node-root discovery,
 - stable Node identity and version metadata,
@@ -51,14 +54,17 @@ Compiler 0.2 handles:
 - transitive inherited Rule composition,
 - `Remove` and `Override` operations on inherited ordinary Rules,
 - dangling and duplicate Change diagnostics,
-- transitive Override provenance while preserving original Rule identity,
+- transitive Override and Remove provenance while preserving original Rule identity,
+- deterministic diamond-graph conflict handling without Source precedence,
 - Required/Optional Topic targets,
 - explicit Resource/Context Node target types,
 - `CONTEXT.md` generation,
 - optional `CONTEXT/` materialization,
 - recursive materialization closure for local Markdown links,
 - `.context/context.yaml` generation,
-- exact normalized and package SHA-256 digests,
+- canonical semantic normalization and exact normalized/package SHA-256 digests,
+- deterministic Context diff by stable identities for Nodes, Sources, Changes, Rules, Topics, and Resources,
+- human-readable and JSON diff output,
 - thin AGENTS/goose adapters,
 - deterministic drift checking.
 
@@ -66,19 +72,23 @@ The implementation is intentionally layered:
 
 ```text
 parser.py → model.py → compiler.py → render.py → outputs.py
+                         │
+                         └────────────→ diff.py
                                            ↑
                                         cli.py
 ```
 
-`parser.py` owns authoring grammar, `compiler.py` semantic truth, `render.py` deterministic projection, `outputs.py` filesystem comparison/writes, and `cli.py` orchestration. See [docs/compiler.md](docs/compiler.md).
+`parser.py` owns authoring grammar, `compiler.py` semantic truth, `render.py` deterministic projection, `outputs.py` filesystem comparison/writes, `diff.py` exact comparison of compiled states, and `cli.py` orchestration. See [docs/compiler.md](docs/compiler.md).
 
-## Important compiler quality finding
+## Compiler quality findings
 
-While adding Rule changes, a transitive rendering defect was found before broad rollout: the old renderer grouped inherited Rules only by direct Sources, so a grandparent Rule could be semantically present but omitted from a deeper descendant's `CONTEXT.md`.
+Compiler hardening has already exposed defects that were not obvious from the architecture alone:
 
-Compiler 0.2 renders inherited Rules by their true origin Node instead. Regression tests now cover this transitive case together with Override propagation and Remove propagation.
+- while adding Rule changes, a transitive rendering defect was found: a grandparent Rule could be semantically inherited but omitted from a deeper descendant's `CONTEXT.md`;
+- diamond tests showed that Remove needs explicit transitive removal provenance rather than disappearing as simple absence;
+- diff work exposed that `normalized_digest` must canonicalize semantically unordered collections such as Source order and Topic-target presentation order.
 
-This reinforces the development policy: central compiler semantics receive deterministic positive and negative fixtures before being trusted across many projects.
+Regression tests now cover these cases. This reinforces the development policy: central compiler semantics receive deterministic positive and negative fixtures before being trusted across many projects.
 
 ## ContextCanon dogfoods three Nodes
 
@@ -89,12 +99,14 @@ ContextCanon Gateway ──Topic──> ContextCanon Framework Development
                            ContextCanon Foundation
 ```
 
-The compiler builds and checks all three from their `CONTEXT.src.md` files. Framework Development now includes a concise always-on Rule describing the compiler stage boundaries and a dedicated Compiler Implementation Topic pointing to the detailed compiler contract.
+The compiler builds and checks all three from their `CONTEXT.src.md` files. Framework Development includes an always-on compiler-stage Rule and a dedicated Compiler Implementation Topic pointing to the detailed compiler contract.
 
 ## Current focus
 
-The active block is completing compiler 0.2 and regenerating all dogfood output with green CI.
+Compiler 0.3 is in its release-completion phase: documentation, dogfood outputs, and final CI are being synchronized on `agent/compiler-walking-skeleton`.
 
-After that, the next planned core layer is an **exact deterministic Context diff** based on stable identities and provenance. That diff will then support immutable external Source update review and later LLM-assisted code-impact analysis without putting semantic guesswork inside the compiler.
+Once that branch is fully green, PR #2 will be updated to describe the actual accepted baseline and squash-merged to `main`. `main` will then represent the last accepted, fully reproducible ContextCanon stage.
 
-See [PLAN.md](PLAN.md) for the ordered core-hardening roadmap.
+The next core block — **immutable external Sources and explicit update acceptance** — will start from that new `main` on a fresh branch. It will use the deterministic diff as the exact review input for Source package updates rather than silently changing consumers.
+
+See [PLAN.md](PLAN.md) for the ordered core-hardening roadmap and branch/merge cadence.
