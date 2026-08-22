@@ -132,6 +132,16 @@ Git transport metadata is preserved when the pin is updated.
 
 This cannot force a human to read a review, but it prevents the supported acceptance path from skipping the deterministic review step entirely.
 
+## Atomic publication and interrupted operations
+
+Candidate and accepted packages are never published directly into their final content-addressed directories. ContextCanon copies them into a sibling staging directory, loads and verifies the staged package, and only then atomically replaces the final directory entry.
+
+The canonical Source pin in `CONTEXT.src.md` follows the same principle: updated text is written to a sibling temporary file, flushed and `fsync`ed, then published with an atomic replace. A failure before the final replace leaves the previous Source file intact.
+
+This creates a deliberate recovery boundary. If acceptance installs the new immutable package successfully but the final pin swap fails, the new package may remain in `.context/sources/` as **unreferenced immutable state**, while `CONTEXT.src.md` still points to the previous accepted package. A normal build therefore continues to use the old accepted Source rather than observing a half-applied update.
+
+Regression coverage simulates failure exactly at that final replace and verifies that the original `CONTEXT.src.md` bytes remain unchanged, no temporary file remains, and the consumer still compiles against the old pin.
+
 ## One semantic composition path
 
 Local and external Sources converge before Rule composition:
@@ -184,6 +194,6 @@ A newer package is therefore a change request, not live inheritance. The determi
 
 ## Current implementation boundary
 
-Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, and generic Git candidate retrieval.
+Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, and atomic canonical-pin replacement.
 
-The remaining work in this compiler block is repository dogfood regeneration, final documentation/CI synchronization, and merge hardening. The next validation block then exercises reviewed LLM-assisted onboarding of a larger pre-existing project, including the decision whether extracted rules stay local or should use/become reusable generic Nodes.
+The implementation block is complete once its regenerated repository dogfood and final exact-head CI are synchronized. The next validation block then exercises reviewed LLM-assisted onboarding of a larger pre-existing project, including the decision whether extracted rules stay local or should use/become reusable generic Nodes.
