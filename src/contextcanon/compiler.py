@@ -10,7 +10,7 @@ from .model import CompiledNode, Rule, RuleChange, RuleModification, RuleRemoval
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.2.0"
+COMPILER_VERSION = "0.3.0"
 
 
 class Compiler:
