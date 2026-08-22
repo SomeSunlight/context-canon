@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
+from .git_transport import fetch_git_candidate
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -47,8 +48,12 @@ def main(argv: list[str] | None = None) -> int:
     diff_parser.add_argument("after", help="Node root for the later repository snapshot")
     diff_parser.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
 
-    source_parser = sub.add_parser("source", help="review and explicitly accept immutable Source packages")
+    source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
+
+    source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate through its declared transport")
+    source_fetch.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_fetch.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
 
     source_review = source_sub.add_parser("review", help="diff and structurally validate a Source candidate")
     source_review.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
@@ -72,6 +77,19 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "source":
             node_root = _node_root(Path(args.node))
+            if args.source_command == "fetch":
+                candidate, location = fetch_git_candidate(node_root, args.source_id)
+                try:
+                    label = location.relative_to(node_root).as_posix()
+                except ValueError:
+                    label = str(location)
+                print(
+                    f"fetched candidate {candidate.metadata.name} {candidate.metadata.version} "
+                    f"({candidate.package_digest})"
+                )
+                print(f"Candidate package: {label}")
+                return 0
+
             candidate = Path(args.candidate).resolve()
             if args.source_command == "review":
                 result, receipt = review_source_candidate(node_root, args.source_id, candidate)
