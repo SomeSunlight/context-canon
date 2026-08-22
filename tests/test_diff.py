@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
-from contextcanon.diff import diff_compiled
+from contextcanon.diff import diff_compiled, render_diff
 from contextcanon.parser import ContextCanonError
 
 
@@ -59,6 +59,52 @@ REMOVE = '''
   <!-- ctx:change op="remove" source-id="node-foundation" rule-id="F-001" -->
 '''
 
+OVERRIDE = '''
+
+## Changes
+
+### Override
+
+- `Demo Foundation / F-001` — Keep behavior stable
+  New rule: Preserve the project-specific behavior.
+  Why: This project needs a narrower contract.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+'''
+
+ADDED_RULE = '''
+
+- **Document compatibility:** Record compatibility expectations explicitly.
+  Why: Consumers need a second stable contract.
+  <!-- ctx:rule id="F-002" -->
+'''
+
+TEAM_TEMPLATE = '''# Demo Team — Local Context Source
+<!-- ctx:node id="node-team" version="1.0.0" -->
+
+## Sources
+
+- [Demo Foundation](../foundation/) — `1.0.0`
+  <!-- ctx:source id="node-foundation" version="1.0.0" -->
+
+## Changes
+
+### Override
+
+- `Demo Foundation / F-001` — Keep behavior stable
+  New rule: {statement}
+  Why: The team standard refines Foundation.
+  <!-- ctx:change op="override" source-id="node-foundation" rule-id="F-001" -->
+'''
+
+TRANSITIVE_PROJECT = '''# Demo Project — Local Context Source
+<!-- ctx:node id="node-project" version="1.0.0" -->
+
+## Sources
+
+- [Demo Team](nodes/team/) — `1.0.0`
+  <!-- ctx:source id="node-team" version="1.0.0" -->
+'''
+
 
 class ContextDiffTests(unittest.TestCase):
     def make_repo(
@@ -67,15 +113,32 @@ class ContextDiffTests(unittest.TestCase):
         project: str = PROJECT,
         foundation: str = FOUNDATION,
         guide: str = "# Guide\n\nOriginal guidance.\n",
+        extra: str = "# Extra\n\nExtra guidance.\n",
     ) -> Path:
         root = Path(tempfile.mkdtemp())
         (root / ".git").mkdir()
         (root / "docs").mkdir()
         (root / "docs/guide.md").write_text(guide, encoding="utf-8")
+        (root / "docs/extra.md").write_text(extra, encoding="utf-8")
         (root / "CONTEXT.src.md").write_text(project, encoding="utf-8")
         source = root / "nodes/foundation"
         source.mkdir(parents=True)
         (source / "CONTEXT.src.md").write_text(foundation, encoding="utf-8")
+        return root
+
+    def make_transitive_repo(self, statement: str) -> Path:
+        root = Path(tempfile.mkdtemp())
+        (root / ".git").mkdir()
+        (root / "CONTEXT.src.md").write_text(TRANSITIVE_PROJECT, encoding="utf-8")
+        foundation = root / "nodes/foundation"
+        team = root / "nodes/team"
+        foundation.mkdir(parents=True)
+        team.mkdir(parents=True)
+        (foundation / "CONTEXT.src.md").write_text(FOUNDATION, encoding="utf-8")
+        (team / "CONTEXT.src.md").write_text(
+            TEAM_TEMPLATE.format(statement=statement),
+            encoding="utf-8",
+        )
         return root
 
     def compile(self, root: Path):
@@ -136,6 +199,34 @@ class ContextDiffTests(unittest.TestCase):
         self.assertIn(("resource", resource_key), entries)
         self.assertIn("sha256", entries[("resource", resource_key)].changed_fields)
 
+    def test_added_rule_is_reported_by_stable_identity(self):
+        before_root = self.make_repo()
+        after_root = self.make_repo(foundation=FOUNDATION + ADDED_RULE)
+
+        result = diff_compiled(self.compile(before_root), self.compile(after_root))
+        added = [
+            entry
+            for entry in result.entries
+            if entry.category == "rule" and entry.change == "added"
+        ]
+
+        self.assertEqual([entry.identity for entry in added], ["node-foundation#F-002"])
+
+    def test_local_override_reports_change_and_effective_rule_provenance(self):
+        before_root = self.make_repo()
+        after_root = self.make_repo(project=PROJECT + OVERRIDE)
+
+        result = diff_compiled(self.compile(before_root), self.compile(after_root))
+        entries = {(entry.category, entry.identity): entry for entry in result.entries}
+        identity = "node-foundation#F-001"
+
+        self.assertEqual(entries[("change", identity)].change, "added")
+        rule = entries[("rule", identity)]
+        self.assertEqual(rule.change, "modified")
+        self.assertIn("statement", rule.changed_fields)
+        self.assertIn("modifications", rule.changed_fields)
+        self.assertEqual(rule.after["modifications"][0]["node_id"], "node-project")
+
     def test_active_rule_to_removed_rule_is_one_state_transition(self):
         before_root = self.make_repo()
         after_root = self.make_repo(project=PROJECT + REMOVE)
@@ -155,6 +246,42 @@ class ContextDiffTests(unittest.TestCase):
         self.assertEqual(len(change_entries), 1)
         self.assertEqual(change_entries[0].change, "added")
         self.assertEqual(change_entries[0].identity, "node-foundation#F-001")
+
+    def test_transitive_override_change_keeps_foundation_rule_identity(self):
+        before_root = self.make_transitive_repo("Preserve team behavior A.")
+        after_root = self.make_transitive_repo("Preserve team behavior B.")
+
+        result = diff_compiled(self.compile(before_root), self.compile(after_root))
+        entries = {(entry.category, entry.identity): entry for entry in result.entries}
+        identity = "node-foundation#F-001"
+
+        self.assertIn(("source", "node-team"), entries)
+        self.assertIn(("rule", identity), entries)
+        rule = entries[("rule", identity)]
+        self.assertEqual(rule.before["origin_node_id"], "node-foundation")
+        self.assertEqual(rule.after["origin_node_id"], "node-foundation")
+        self.assertEqual(rule.after["modifications"][0]["node_id"], "node-team")
+        self.assertIn("statement", rule.changed_fields)
+
+    def test_target_order_is_package_presentation_not_semantic_change(self):
+        first_targets = PROJECT.replace(
+            '- Resource: `docs/guide.md`',
+            '- Resource: `docs/guide.md`\n- Resource: `docs/extra.md`',
+        )
+        second_targets = PROJECT.replace(
+            '- Resource: `docs/guide.md`',
+            '- Resource: `docs/extra.md`\n- Resource: `docs/guide.md`',
+        )
+        before_root = self.make_repo(project=first_targets)
+        after_root = self.make_repo(project=second_targets)
+
+        result = diff_compiled(self.compile(before_root), self.compile(after_root))
+
+        self.assertEqual(result.before_normalized_digest, result.after_normalized_digest)
+        self.assertNotEqual(result.before_package_digest, result.after_package_digest)
+        self.assertEqual(result.entries, ())
+        self.assertFalse(result.is_empty)
+        self.assertIn("Package presentation changed", render_diff(result))
 
     def test_different_node_ids_fail_clearly(self):
         before_root = self.make_repo()
