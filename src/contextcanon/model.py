@@ -160,9 +160,3 @@ class CompiledNode:
     @property
     def metadata(self) -> NodeMetadata:
         return self.parsed.metadata
-
-    @property
-    def source_nodes(self) -> list[CompiledPackage]:
-        """Temporary compatibility view while Compiler's old append is removed."""
-
-        return list(self.source_packages)
