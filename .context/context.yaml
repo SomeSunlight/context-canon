@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.3.0"
+compiler_version: "0.4.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -11,7 +11,7 @@ node:
   name: "ContextCanon Gateway"
   version: "0.1.0-draft"
 
-# Accepted Source Nodes used by this build. package_digest identifies the compiled Source package.
+# Accepted Source packages used by this build. Both digests are exact pins.
 sources: []
 
 # Elements authored in this Node's CONTEXT.src.md.
