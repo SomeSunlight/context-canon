@@ -36,7 +36,13 @@ class Compiler:
             self._node_ids[parsed.metadata.id] = node_root
 
             compiled = CompiledNode(parsed=parsed)
+            seen_source_ids: set[str] = set()
             for source in parsed.sources:
+                if source.id in seen_source_ids:
+                    raise ContextCanonError(
+                        f"{node_root}: duplicate Source Node ID {source.id}; each Source may be composed only once"
+                    )
+                seen_source_ids.add(source.id)
                 source_root = self._resolve_source_root(node_root, source.locator)
                 source_node = self.compile(source_root)
                 if source_node.metadata.id != source.id:
@@ -256,24 +262,56 @@ class Compiler:
             )
 
     def _semantic_digest(self, compiled: CompiledNode) -> str:
-        payload = {
-            "node": {
-                "id": compiled.metadata.id,
-                "name": compiled.metadata.name,
-                "version": compiled.metadata.version,
-            },
-            "sources": [
+        sources = sorted(
+            (
                 {
                     "id": source.metadata.id,
                     "version": source.metadata.version,
                     "package_digest": source.package_digest,
                 }
                 for source in compiled.source_nodes
-            ],
-            "changes": [asdict(change) for change in compiled.local_changes],
-            "rules": [asdict(rule) for rule in (*compiled.inherited_rules, *compiled.local_rules)],
-            "removed_rules": [asdict(removal) for removal in compiled.removed_rules],
-            "topics": [asdict(topic) for topic in compiled.local_topics],
+            ),
+            key=lambda item: (item["id"], item["version"], item["package_digest"]),
+        )
+        changes = sorted(
+            (asdict(change) for change in compiled.local_changes),
+            key=lambda item: (item["target_node_id"], item["target_rule_id"], item["kind"]),
+        )
+        rules = sorted(
+            (asdict(rule) for rule in (*compiled.inherited_rules, *compiled.local_rules)),
+            key=lambda item: (item["origin_node_id"], item["id"]),
+        )
+        removed_rules = sorted(
+            (asdict(removal) for removal in compiled.removed_rules),
+            key=lambda item: (
+                item["origin_node_id"],
+                item["rule_id"],
+                item["removed_by_node_id"],
+                item["removed_by_node_name"],
+                item["why"],
+            ),
+        )
+        topics: list[dict] = []
+        for topic in compiled.local_topics:
+            item = asdict(topic)
+            item["targets"] = sorted(
+                item["targets"],
+                key=lambda target: (target["intent"], target["kind"], target["locator"]),
+            )
+            topics.append(item)
+        topics.sort(key=lambda item: (item["origin_node_id"], item["id"]))
+
+        payload = {
+            "node": {
+                "id": compiled.metadata.id,
+                "name": compiled.metadata.name,
+                "version": compiled.metadata.version,
+            },
+            "sources": sources,
+            "changes": changes,
+            "rules": rules,
+            "removed_rules": removed_rules,
+            "topics": topics,
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
         return hashlib.sha256(encoded).hexdigest()
