@@ -1,0 +1,40 @@
+{
+  "changes": [],
+  "compiler_version": "0.4.0",
+  "digests": {
+    "normalized": "83bba4d36e17bde87c22521abf3d8fc7979b2e13fa5e7122e64c02302daa748b",
+    "package": "36b40eeae3b15bc7fea5097790245aabeaa5781551b7fa45d6bea944daab96f4"
+  },
+  "files": [
+    {
+      "path": "CONTEXT.md",
+      "sha256": "6928bb65412aca3deb474bc5b0d94af64ae1efc81a7b1bb5c8de175109b6398f",
+      "size": 789
+    }
+  ],
+  "node": {
+    "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+    "name": "ContextCanon Gateway",
+    "version": "0.1.0-draft"
+  },
+  "removed_rules": [],
+  "rules": [],
+  "schema": "contextcanon/package/v0",
+  "sources": [],
+  "topics": [
+    {
+      "condition": "When changing ContextCanon's specification, documentation, Context Nodes, compiler, examples, harness integration, or project tooling:",
+      "id": "CCG-TOPIC-DEVELOPMENT",
+      "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "origin_node_name": "ContextCanon Gateway",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "context-node",
+          "locator": "nodes/internal/framework-development"
+        }
+      ],
+      "title": "ContextCanon framework development"
+    }
+  ]
+}
