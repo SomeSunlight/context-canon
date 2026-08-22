@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -149,6 +150,32 @@ class SourceAcceptanceTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ContextCanonError, "targets missing inherited Rule"):
             review_source_candidate(consumer, "node-python", candidate)
+
+    def test_failed_atomic_pin_replace_preserves_old_source_and_old_build(self):
+        _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")
+        _, v2, candidate = self.make_provider("2.0.0", "Prefer explicit Python v2.")
+        consumer = self.make_consumer(v1)
+        review_source_candidate(consumer, "node-python", candidate)
+
+        # Preinstall the candidate so the simulated os.replace failure below
+        # exercises only publication of the canonical Source pin. A failed pin
+        # swap may leave an unreferenced immutable package, but must never
+        # damage or partially update CONTEXT.src.md.
+        self.install_package(consumer, v2)
+        source_path = consumer / "CONTEXT.src.md"
+        original = source_path.read_bytes()
+
+        with patch("contextcanon.sources.os.replace", side_effect=OSError("simulated replace failure")):
+            with self.assertRaisesRegex(ContextCanonError, "Could not atomically write"):
+                accept_source_candidate(consumer, "node-python", candidate)
+
+        self.assertEqual(source_path.read_bytes(), original)
+        self.assertEqual(list(consumer.glob(".CONTEXT.src.md.*.tmp")), [])
+
+        compiled = Compiler(consumer).compile(consumer)
+        self.assertEqual(compiled.source_packages[0].metadata.version, "1.0.0")
+        self.assertEqual(compiled.source_packages[0].package_digest, v1.package_digest)
+        self.assertTrue((consumer / ".context/sources" / v2.package_digest).is_dir())
 
 
 if __name__ == "__main__":
