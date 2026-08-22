@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.2.0"
+compiler_version: "0.3.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -17,7 +17,7 @@ sources:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    package_digest: "663c3e5086cc0be83a248c032562aae910fdd9821e816d04dde59c8414f01738"
+    package_digest: "fd6b071c0494504687ab0d7642658bbaa97b3be532f672911a74ac56bb4a6a8d"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -121,5 +121,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "cc567916fbde5958f8fb8f626d2d98938964979c38246343b97ef795121b5d77"
-  package_digest: "6102f9c826ae5ec313023128c0ac5cf2c18cf0018f719e210750056536edd0a9"
+  normalized_digest: "f21ca34729231c7689a28739a73fc709186312753c4fda70d0f731f745c3371c"
+  package_digest: "2270bc4d51a14f3c08b8e0afc59d162b441e14e4dab3d24036b1741beadf42e1"
