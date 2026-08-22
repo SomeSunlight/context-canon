@@ -48,7 +48,7 @@ No LLM belongs inside deterministic compiler truth.
 The current `agent/compiler-walking-skeleton` branch accumulated more work than ideal because implementation continued directly after the successful first end-to-end validation. Do not rewrite that history merely to manufacture an earlier boundary. Instead:
 
 - [x] Finish Compiler 0.3 on the current branch, including documentation, regenerated dogfood packages, and completely green CI.
-- [ ] Update PR #2 so its title/body describe the actual accepted compiler baseline rather than only the original walking skeleton.
+- [x] Update PR #2 so its title/body describe the actual accepted compiler baseline rather than only the original walking skeleton.
 - [ ] Squash-merge that accepted 0.3 baseline into `main`.
 - [ ] Start the immutable external Sources/update-acceptance block on a fresh branch from the new `main`.
 - [ ] Use a fresh branch and PR for each subsequent coherent core block unless a very small follow-up clearly belongs to the block just merged.
