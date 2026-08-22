@@ -47,7 +47,7 @@ No LLM belongs inside deterministic compiler truth.
 
 The current `agent/compiler-walking-skeleton` branch accumulated more work than ideal because implementation continued directly after the successful first end-to-end validation. Do not rewrite that history merely to manufacture an earlier boundary. Instead:
 
-- [ ] Finish Compiler 0.3 on the current branch, including documentation, regenerated dogfood packages, and completely green CI.
+- [x] Finish Compiler 0.3 on the current branch, including documentation, regenerated dogfood packages, and completely green CI.
 - [ ] Update PR #2 so its title/body describe the actual accepted compiler baseline rather than only the original walking skeleton.
 - [ ] Squash-merge that accepted 0.3 baseline into `main`.
 - [ ] Start the immutable external Sources/update-acceptance block on a fresh branch from the new `main`.
@@ -79,7 +79,7 @@ Compiler 0.2 is complete.
 
 ## Compiler 0.3 — deterministic Context diff
 
-The active compiler layer makes Context change itself a first-class exact artifact.
+Compiler 0.3 is complete and awaiting merge into `main`.
 
 ```text
 old compiled Context
@@ -103,9 +103,9 @@ optional LLM impact review
 - [x] Make semantic normalization insensitive to Source ordering and Topic-target presentation ordering where order has no meaning.
 - [x] Reject duplicate direct Source identities instead of allowing order-dependent ambiguity.
 - [x] Test unchanged, additive, removed, local Override, transitive Override, Resource, Topic, Source, and presentation-only cases.
-- [ ] Document the 0.3 diff contract and semantic-normalization guarantees.
-- [ ] Regenerate all dogfood machine state with compiler 0.3.
-- [ ] Finish the block with completely green tests and generated-output drift checking.
+- [x] Document the 0.3 diff contract and semantic-normalization guarantees.
+- [x] Regenerate all dogfood machine state with compiler 0.3.
+- [x] Finish the block with completely green tests and generated-output drift checking.
 
 This diff becomes the exact input to later Source-update review and semantic impact analysis.
 
