@@ -4,9 +4,10 @@ from dataclasses import replace
 from pathlib import Path
 
 from .links import local_markdown_targets
-from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval
+from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef
 from .package import (
     compiled_package,
+    load_package,
     package_content_files,
     package_digest,
     render_package_manifest,
@@ -48,6 +49,11 @@ class Compiler:
                         f"{node_root}: duplicate Source Node ID {source.id}; each Source may be composed only once"
                     )
                 seen_source_ids.add(source.id)
+
+                if source.is_pinned:
+                    compiled.source_packages.append(self._load_pinned_source(node_root, source))
+                    continue
+
                 source_root = self._resolve_source_root(node_root, source.locator)
                 source_node = self.compile(source_root)
                 if source_node.metadata.id != source.id:
@@ -90,6 +96,38 @@ class Compiler:
             return compiled
         finally:
             self._active.pop()
+
+    def _load_pinned_source(self, node_root: Path, source: SourceRef) -> CompiledPackage:
+        if source.normalized_digest is None or source.package_digest is None:
+            raise ContextCanonError(f"{node_root}: internal error: pinned Source {source.name} has incomplete digests")
+
+        package_root = node_root / ".context" / "sources" / source.package_digest
+        if not package_root.is_dir():
+            raise ContextCanonError(
+                f"{node_root}: accepted Source package {source.name} is not available locally at "
+                f".context/sources/{source.package_digest}; build does not fetch Source packages"
+            )
+
+        package = load_package(package_root)
+        if package.metadata.id != source.id:
+            raise ContextCanonError(
+                f"{node_root}: Source {source.name} expects Node ID {source.id}, got {package.metadata.id}"
+            )
+        if package.metadata.version != source.version:
+            raise ContextCanonError(
+                f"{node_root}: Source {source.name} expects version {source.version}, got {package.metadata.version}"
+            )
+        if package.normalized_digest != source.normalized_digest:
+            raise ContextCanonError(
+                f"{node_root}: Source {source.name} normalized digest mismatch: "
+                f"expected {source.normalized_digest}, got {package.normalized_digest}"
+            )
+        if package.package_digest != source.package_digest:
+            raise ContextCanonError(
+                f"{node_root}: Source {source.name} package digest mismatch: "
+                f"expected {source.package_digest}, got {package.package_digest}"
+            )
+        return package
 
     def _resolve_source_root(self, node_root: Path, locator: str) -> Path:
         path = (node_root / locator).resolve()
