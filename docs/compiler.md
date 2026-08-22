@@ -1,6 +1,6 @@
 # Compiler
 
-ContextCanon has an executable deterministic core. The compiler deliberately separates authoring syntax, semantic composition, rendering, and filesystem mutation so each layer stays testable without an LLM.
+ContextCanon has an executable deterministic core. The compiler deliberately separates authoring syntax, semantic composition, rendering, exact comparison, and filesystem mutation so each layer stays testable without an LLM.
 
 ## Commands
 
@@ -10,13 +10,17 @@ For local development:
 python -m pip install -e .
 contextcanon build --all .
 contextcanon check --all .
+contextcanon diff <before-node-root> <after-node-root>
+contextcanon diff <before-node-root> <after-node-root> --json
 ```
 
 `build` parses and validates source, resolves local Sources, applies inherited Rule changes, generates official entries and machine state, materializes Topic resources, and creates configured harness adapters.
 
 `check` performs the same deterministic compilation in memory and exits non-zero when committed generated output has drifted.
 
-Both commands also accept a single node-root directory instead of `--all`.
+`diff` compiles two snapshots of the same stable Context Node and compares their compiled states. Human output summarizes the exact identities that changed; `--json` emits the same change set as deterministic machine-readable data.
+
+`build` and `check` also accept a single node-root directory instead of `--all`. `diff` deliberately compares one Node at a time because stable Node identity is the comparison boundary.
 
 ## Compiler structure
 
@@ -30,47 +34,51 @@ parser.py        syntax → ParsedNode
 model.py         typed deterministic data structures
       ↓
 compiler.py      resolve Sources → compose → change → validate → collect resources → digest
+      ├──────────────────────────────→ diff.py      compare compiled states
       ↓
 render.py        CompiledNode → deterministic text outputs
       ↓
 outputs.py       expected output set → check or write filesystem
-      ↓
+      ↑
 cli.py           command-line orchestration only
 ```
 
 The modules have deliberately narrow responsibilities:
 
-- `model.py` defines the data exchanged between compiler stages. It contains no parsing, rendering, or filesystem policy.
+- `model.py` defines the data exchanged between compiler stages. It contains no parsing, rendering, diff presentation, or filesystem policy.
 - `parser.py` turns constrained human-authored Markdown into typed structures and rejects ambiguous or unsupported syntax. It never writes generated output.
-- `compiler.py` owns semantic resolution: Source graphs, Rule composition, Remove/Override operations, target validation, resource closure, provenance, and exact digests.
+- `compiler.py` owns semantic resolution: Source graphs, Rule composition, Remove/Override operations, target validation, resource closure, provenance, canonical semantic normalization, and exact digests.
+- `diff.py` compares two already compiled Nodes by stable identities and deterministic snapshots. It does not parse source, resolve Sources, mutate files, or ask an LLM what changed.
 - `render.py` turns an already compiled model into `CONTEXT.md`, `.context/context.yaml`, and thin harness adapters. It must not invent semantic decisions.
 - `links.py` contains the narrow Markdown-link discovery used by materialization closure.
 - `outputs.py` knows which files the compiler owns inside the generated package and compares or writes exact expected bytes. It does not decide context semantics.
-- `cli.py` resolves command arguments and calls the compiler/output layers. Business rules should not accumulate there.
+- `cli.py` resolves command arguments and calls the compiler, diff, and output layers. Business rules should not accumulate there.
 
-This separation is architectural, not cosmetic. It lets parser grammar, semantic composition, rendering, and filesystem behavior be tested independently and makes generated output reproducible.
+This separation is architectural, not cosmetic. It lets parser grammar, semantic composition, comparison, rendering, and filesystem behavior be tested independently and makes generated output reproducible.
 
 ## Compiler invariants
 
 Changes to the implementation should preserve these properties:
 
-1. **One-way data flow.** Later stages consume earlier-stage structures; rendering and output code do not reconstruct source semantics.
-2. **No LLM in deterministic truth.** Node identity, Source resolution, composition, changes, validation, package construction, and hashes must remain exactly reproducible.
+1. **One-way data flow.** Later stages consume earlier-stage structures; rendering, diff, and output code do not reconstruct source semantics.
+2. **No LLM in deterministic truth.** Node identity, Source resolution, composition, changes, validation, comparison, package construction, and hashes must remain exactly reproducible.
 3. **No silent approximation.** Invalid, ambiguous, dangling, or unsupported source must fail with a useful diagnostic.
-4. **Stable identity before presentation.** Rule operations bind `<origin-node-id>#<rule-id>`, not titles, wording, or paths.
+4. **Stable identity before presentation.** Rule operations and diffs bind stable identities such as `<origin-node-id>#<rule-id>`, not titles, wording, or paths.
 5. **No implicit Source precedence.** Composition cannot depend on Source list order to resolve conflicts.
-6. **Generated bytes are deterministic.** Equal authored inputs and accepted Sources produce equal official output and digests.
-7. **Filesystem mutation is isolated.** Compilation can run entirely in memory; only the output layer writes files.
-8. **Regression before expansion.** Every new deterministic semantic should include a fixture that proves both its intended behavior and important failure modes.
+6. **Semantic normalization ignores meaningless order.** Reordering collections that have no defined semantic order must not change `normalized_digest` or create a semantic diff.
+7. **Generated bytes are deterministic.** Equal authored inputs and accepted Sources produce equal official output and digests.
+8. **Filesystem mutation is isolated.** Compilation and diff can run entirely in memory; only the output layer writes files.
+9. **Regression before expansion.** Every new deterministic semantic should include a fixture that proves both its intended behavior and important failure modes.
 
 ## What is deterministic now
 
-Compiler 0.2 implements:
+Compiler 0.3 implements:
 
 - node-root discovery from `CONTEXT.src.md`,
 - stable Node IDs and versions,
 - local filesystem Sources inside one repository,
 - Source ID/version validation,
+- duplicate direct Source identity rejection,
 - dependency-cycle detection,
 - local Rules with stable IDs, titles, groups, and rationale,
 - transitive Rule composition without Source precedence,
@@ -86,7 +94,9 @@ Compiler 0.2 implements:
 - optional `CONTEXT/` resource materialization,
 - recursive local Markdown-link materialization closure,
 - `.context/context.yaml` generation,
-- exact normalized and package SHA-256 digests,
+- canonical semantic normalization plus exact normalized and package SHA-256 digests,
+- exact compiled Context diff for Node metadata, direct Sources, local Changes, effective Rules, local Topics, and materialized Resources,
+- human-readable and deterministic JSON diff rendering,
 - thin `AGENTS.md` and `.goosehints` generation when requested by Node metadata,
 - deterministic drift detection.
 
@@ -94,7 +104,7 @@ No LLM is involved in any of these operations.
 
 ## Rule changes
 
-A child Node can now change an inherited ordinary Rule explicitly.
+A child Node can change an inherited ordinary Rule explicitly.
 
 `Remove` removes the targeted inherited Rule from the child's official Rule set. `Override` keeps the Rule's stable identity and presentation metadata but replaces its effective statement for the child package. Override provenance is carried transitively so descendants inherit the already-overridden meaning.
 
@@ -116,9 +126,49 @@ Foundation ──> Development ──> Project
 
 A Foundation Rule overridden by Development is still a Foundation Rule in Project, with Development recorded as the override provenance. A Foundation Rule removed by Development no longer appears in Project, but its removal provenance continues through the compiled semantic state.
 
-Diamond graphs are handled without inventing Source precedence. If the same stable Rule reaches a consumer through several paths with byte-for-byte equivalent compiled meaning and provenance, the duplicate is collapsed. If the paths carry different effective definitions/provenance, compilation fails. If one path says the Rule is present and another carries a removal record for it, compilation also fails instead of silently choosing one path.
+Diamond graphs are handled without inventing Source precedence. If the same stable Rule reaches a consumer through several paths with equivalent compiled meaning and provenance, the duplicate is collapsed. If the paths carry different effective definitions/provenance, compilation fails. If one path says the Rule is present and another carries a removal record for it, compilation also fails instead of silently choosing one path.
 
-This property matters for stable references, deterministic diffs, and future Source-update diagnostics.
+This property matters for stable references, deterministic diffs, and Source-update diagnostics.
+
+## Deterministic Context diff
+
+`contextcanon diff` compares two compiled snapshots of the **same stable Node ID**. Different Node IDs are rejected instead of being treated as an arbitrary text comparison.
+
+The diff model currently has entries for:
+
+- Node metadata,
+- direct Source package identity/version state,
+- local Change operations,
+- effective active or removed Rules,
+- local Topics and their targets,
+- materialized Resource content.
+
+A Rule is compared by `<origin-node-id>#<rule-id>`. If an active inherited Rule becomes removed, the diff reports one state transition for that stable Rule identity rather than unrelated delete/add events. Overrides keep the original Rule identity while exposing changes to the effective statement and modification provenance.
+
+Resources are compared by published path plus SHA-256 and size. The diff therefore detects content changes without attempting semantic interpretation of arbitrary file formats.
+
+Human-readable output and JSON are two renderings of the same deterministic `ContextDiff`. The JSON schema is currently `contextcanon/diff/v0` and is intended as exact input to later Source-update review and LLM impact analysis.
+
+CLI exit codes are deliberate:
+
+- `0` — no compiled or package change,
+- `1` — a difference exists,
+- `2` — compilation/comparison failed.
+
+A package may change only in presentation while normalized semantics remain identical. For example, reordering Topic targets changes generated `CONTEXT.md` bytes but not their set-valued semantic meaning. The diff reports this as package presentation change without inventing semantic entries.
+
+## Semantic normalization and digests
+
+The compiler calculates two exact hashes:
+
+- `normalized_digest` identifies the canonical compiled semantic model used by the current Node.
+- `package_digest` identifies the generated human/agent package: `CONTEXT.md` plus any materialized `CONTEXT/` resources.
+
+Generated machine state is excluded from `package_digest` so the digest does not contain itself.
+
+The normalized model canonicalizes collections where order is not semantic. Source declaration order therefore cannot become accidental precedence, and reordering Topic targets does not change semantic identity merely because presentation changed.
+
+Changes are part of the normalized semantic model. A Remove changes the effective Rule set and contributes removal provenance; an Override changes both the effective Rule statement and its provenance.
 
 ## Materialization closure
 
@@ -126,22 +176,13 @@ A Resource target is only the seed of a self-contained package. If a materialize
 
 This behavior was discovered by running the compiler against ContextCanon itself: directly copying `docs/source-format.md` would have left its link to `compiler.md` broken inside the published package.
 
-## Digests
-
-The compiler calculates two exact hashes:
-
-- `normalized_digest` identifies the normalized compiled semantic model used by the current Node.
-- `package_digest` identifies the generated human/agent package: `CONTEXT.md` plus any materialized `CONTEXT/` resources.
-
-Generated machine state is excluded from `package_digest` so the digest does not contain itself.
-
-Changes are part of the normalized semantic model. A Remove changes the effective Rule set and contributes removal provenance; an Override changes both the effective Rule statement and its provenance.
-
 ## Test strategy
 
 Compiler tests use temporary repository fixtures and standard-library `unittest`. They require no network, external service, or model.
 
-Tests cover successful compilation and failure behavior. The current suite exercises Source graphs, transitive inheritance, Remove/Override semantics, removal provenance, dangling Changes, duplicate Change targets, compatible and conflicting diamond composition, materialization closure, harness adapters, deterministic rebuilds, and generated drift.
+Tests cover successful compilation and failure behavior. The current suite exercises Source graphs, transitive inheritance, Remove/Override semantics, removal provenance, dangling Changes, duplicate Change targets, compatible and conflicting diamond composition, materialization closure, harness adapters, deterministic rebuilds, generated drift, Source-order normalization, duplicate Source identities, and deterministic Context diff behavior.
+
+Diff regression cases include unchanged snapshots, added Rules, local Overrides, active-to-removed transitions, transitive Overrides, Node/Source/Topic/Resource changes, presentation-only target reorderings, deterministic JSON, and mismatched Node identities.
 
 A separate repository-consistency test checks local Markdown links.
 
@@ -151,7 +192,7 @@ The repository's own Gateway, Foundation, and Framework Development Nodes are th
 
 The compiler does not yet implement the whole specification. In particular:
 
-- Sources are local filesystem Nodes; immutable Git/package locators come later.
+- Sources are local filesystem Nodes; immutable external Git/package locators come next.
 - Topic inheritance across Source package boundaries is not yet implemented.
 - Protected Rules and authorized exceptions are not yet implemented.
 - Source update discovery and explicit package acceptance are not yet implemented.
@@ -161,13 +202,12 @@ These are planned deterministic layers, not reasons to weaken current validation
 
 ## Next compiler layers
 
-After the successful first external-project validation, development is shifting from proving usefulness to completing the reusable compiler core.
+After compiler 0.3, the next high-value layers are:
 
-The next high-value layers are:
+1. immutable external Source packages and explicit update acceptance,
+2. protected Rules and authorized exceptions,
+3. broader multi-Source conflict and package-boundary diagnostics.
 
-1. exact deterministic compiled-context diff,
-2. immutable external Source packages and explicit update acceptance,
-3. protected Rules and authorized exceptions,
-4. broader multi-Source conflict and package-boundary diagnostics.
+The deterministic diff is now available as the exact substrate for those workflows.
 
-LLM workflows sit above those exact artifacts. In particular, a future impact workflow will consume an exact Context diff and map changed Rule identities to likely affected code, configuration, tests, and documentation without becoming part of compiler truth.
+LLM workflows sit above exact compiler artifacts. In particular, a future impact workflow will consume an exact Context diff and map changed Rule identities to likely affected code, configuration, tests, and documentation without becoming part of compiler truth.
