@@ -64,7 +64,6 @@ class Compiler:
                     raise ContextCanonError(
                         f"{node_root}: Source {source.name} expects version {source.version}, got {source_node.metadata.version}"
                     )
-                compiled.source_nodes.append(source_node)
                 compiled.source_packages.append(compiled_package(source_node))
 
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
