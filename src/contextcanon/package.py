@@ -36,7 +36,7 @@ def package_dependencies(compiled: CompiledNode) -> tuple[PackageDependency, ...
                     normalized_digest=source.normalized_digest,
                     package_digest=source.package_digest,
                 )
-                for source in compiled.source_nodes
+                for source in compiled.source_packages
             ),
             key=lambda source: (source.id, source.version, source.normalized_digest, source.package_digest),
         )
@@ -158,10 +158,9 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
         metadata=NodeMetadata(compiled.metadata.id, compiled.metadata.name, compiled.metadata.version),
         sources=package_dependencies(compiled),
         changes=tuple(compiled.local_changes),
-        rules=tuple(sorted(
-            (*compiled.inherited_rules, *compiled.local_rules),
-            key=lambda rule: (rule.origin_node_id, rule.id),
-        )),
+        # Preserve effective presentation order. semantic_digest canonicalizes
+        # Rule order independently where order has no semantic meaning.
+        rules=tuple((*compiled.inherited_rules, *compiled.local_rules)),
         removed_rules=tuple(sorted(
             compiled.removed_rules,
             key=lambda removal: (
@@ -172,7 +171,7 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
                 removal.why,
             ),
         )),
-        topics=tuple(sorted(compiled.local_topics, key=lambda topic: (topic.origin_node_id, topic.id))),
+        topics=tuple(compiled.local_topics),
         files=package_file_metadata(files),
         normalized_digest=compiled.normalized_digest,
         package_digest=compiled.package_digest,
@@ -267,8 +266,10 @@ def load_package(package_root: Path) -> CompiledPackage:
     return CompiledPackage(
         metadata=metadata,
         sources=tuple(sorted(sources, key=lambda source: (source.id, source.version, source.normalized_digest, source.package_digest))),
-        changes=tuple(sorted(changes, key=lambda change: (change.target_node_id, change.target_rule_id, change.kind))),
-        rules=tuple(sorted(rules, key=lambda rule: (rule.origin_node_id, rule.id))),
+        changes=tuple(changes),
+        # Preserve manifest order for presentation-equivalent downstream
+        # composition. Semantic verification above remains order-insensitive.
+        rules=tuple(rules),
         removed_rules=tuple(sorted(
             removed_rules,
             key=lambda removal: (
@@ -279,7 +280,7 @@ def load_package(package_root: Path) -> CompiledPackage:
                 removal.why,
             ),
         )),
-        topics=tuple(sorted(topics, key=lambda topic: (topic.origin_node_id, topic.id))),
+        topics=tuple(topics),
         files=tuple(sorted(files, key=lambda file: file.path)),
         normalized_digest=normalized_digest,
         package_digest=expected_package_digest,
