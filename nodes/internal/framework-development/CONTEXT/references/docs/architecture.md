@@ -67,6 +67,14 @@ Across projects, ContextCanon gives humans and agents the same conceptual entry 
 
 The content remains project-specific. The orientation workflow becomes reusable.
 
+## Harness integration is explicit and minimal
+
+Harness adapters are compatibility edges, not competing sources of project context. A harness should have one deliberate entry path into the canonical `CONTEXT.md`; ContextCanon should not generate redundant instruction files for the same harness unless observed behavior requires them.
+
+For the tested GitHub Copilot setup in JetBrains, ContextCanon deliberately uses generated `AGENTS.md` as that entry point. JetBrains must have **Tools → GitHub Copilot → Customizations → Use AGENTS.md file** enabled. ContextCanon does **not** generate a separate `.github/copilot-instructions.md` for this setup.
+
+This is an explicit architecture decision rather than an inference from whichever files a harness happens to notice. Revisit it only if a real Copilot/harness behavior change demonstrates that `AGENTS.md` is no longer sufficient. See [harnesses.md](harnesses.md) for current adapter details.
+
 ## Gateway nodes: almost nothing can be enough
 
 A valid Context Node may have zero Sources, zero Rules and zero materialized resources.
