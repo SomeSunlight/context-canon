@@ -88,6 +88,10 @@ Write technical documentation in precise, plain prose for intelligent readers; i
 
 Prefer deterministic mechanisms whenever behavior can be specified and computed exactly; use LLMs only for work that genuinely requires semantic interpretation.
 
+#### `CCI-005` — Keep compiler stages separated
+
+Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.
+
 ### Development method
 
 #### `CCI-002` — Validate vertically before hardening
@@ -106,6 +110,14 @@ Every reusable Node published in the ContextCanon Node Library must compose Cont
 
 ## Topics
 
+### Compiler implementation
+
+When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler tests:
+
+**Required**
+
+- [`CONTEXT/references/docs/compiler.md`](CONTEXT/references/docs/compiler.md)
+
 ### Framework architecture
 
 When changing the compiler boundary, package model, Node structure, deterministic/semantic split, or generated artifacts:
@@ -121,7 +133,7 @@ When changing the compiler boundary, package model, Node structure, deterministi
 
 ### Source and official formats
 
-When changing authoring syntax, IDs, Topics, official entry views, or machine representation:
+When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:
 
 **Required**
 
