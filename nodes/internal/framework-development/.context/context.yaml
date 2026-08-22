@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.1.0"
+compiler_version: "0.2.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -17,16 +17,19 @@ sources:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    package_digest: "485bd07af096a6ce9e90ca07109b300aa3d9e523cf9d116dbe4629bc5fb3c68b"
+    package_digest: "663c3e5086cc0be83a248c032562aae910fdd9821e816d04dde59c8414f01738"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
   rules:
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "group": "Compiler architecture"}
+    - {"id": "CCI-005", "title": "Keep compiler stages separated", "group": "Compiler architecture"}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "group": "Development method"}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "group": "Development method"}
     - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "group": "Node library"}
+  changes: []
   topics:
+    - {"id": "CCI-TOPIC-COMPILER", "title": "Compiler implementation"}
     - {"id": "CCI-TOPIC-ARCHITECTURE", "title": "Framework architecture"}
     - {"id": "CCI-TOPIC-FORMATS", "title": "Source and official formats"}
     - {"id": "CCI-TOPIC-COMPOSITION", "title": "Composition"}
@@ -36,26 +39,32 @@ local:
 # Compiled Rule view with provenance plus the local Topic index.
 official:
   rules:
-    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false}
-    - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
-    - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
-    - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
-    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true}
-  topic_ids: ["CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-005", "title": "Keep compiler stages separated", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+  removed_rules: []
+  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
 targets:
+  - topic: "CCI-TOPIC-COMPILER"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/compiler.md"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
@@ -112,5 +121,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "854d794498516f835590b29d9df223eddc2bbee9a6a66ffafbfd395523fb9462"
-  package_digest: "83ddb69d705744d053f3cb94e5fa8fc8bca821cb46ffb71628f84f84ae1e39ee"
+  normalized_digest: "cc567916fbde5958f8fb8f626d2d98938964979c38246343b97ef795121b5d77"
+  package_digest: "6102f9c826ae5ec313023128c0ac5cf2c18cf0018f719e210750056536edd0a9"
