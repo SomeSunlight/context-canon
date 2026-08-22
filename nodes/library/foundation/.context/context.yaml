@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.1.0"
+compiler_version: "0.2.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -28,6 +28,7 @@ local:
     - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "group": "Harness independence"}
     - {"id": "CC-010", "title": "Keep familiar repository documents useful", "group": "Repository conventions"}
     - {"id": "CC-011", "title": "Write for intelligent readers", "group": "Documentation style"}
+  changes: []
   topics:
     - {"id": "CC-TOPIC-AUTHORING", "title": "Context authoring"}
     - {"id": "CC-TOPIC-COMPOSITION", "title": "Context composition"}
@@ -36,17 +37,18 @@ local:
 # Compiled Rule view with provenance plus the local Topic index.
 official:
   rules:
-    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
-    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true}
+    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-007", "title": "Keep entry context small", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-008", "title": "State stays local", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+  removed_rules: []
   topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES"]
   resource_root: "CONTEXT/"
 
@@ -84,5 +86,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "47589620c181c0cd48983b8a61f96a940fb578400d9c5881dc99e08b33f0f053"
-  package_digest: "485bd07af096a6ce9e90ca07109b300aa3d9e523cf9d116dbe4629bc5fb3c68b"
+  normalized_digest: "dc1b354b973f65ddb7252d81113b69cee57763d5e734ea880241bc6321dc8acc"
+  package_digest: "663c3e5086cc0be83a248c032562aae910fdd9821e816d04dde59c8414f01738"
