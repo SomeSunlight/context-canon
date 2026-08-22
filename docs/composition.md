@@ -17,9 +17,31 @@ Source order does not mean priority. ContextCanon must never silently apply "fir
 
 Different Sources can therefore contribute independent elements without an artificial method-resolution order.
 
+Compiler 0.3 also canonicalizes direct Source order in normalized semantics. Reordering two otherwise identical Sources therefore cannot accidentally change `normalized_digest` or masquerade as semantic precedence.
+
 ## Dependency graph
 
 Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted Source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
+
+Compiler 0.3 implements cycle detection, duplicate direct Source identity rejection, Source Node ID/version validation for local-path Sources, transitive Rule composition, dangling Remove/Override diagnostics, and deterministic conflicts for incompatible transitive states of the same stable Rule.
+
+## Structural Rule conflicts
+
+A stable Rule identity can reach a consumer through several Source paths. The compiler never uses Source order to choose between those paths.
+
+Equivalent compiled Rules with the same effective definition and provenance are deduplicated. If the same stable Rule arrives with different effective definitions or override provenance, compilation fails.
+
+Remove is also carried as machine-level provenance rather than being forgotten as mere absence. Therefore a diamond such as this is detectable:
+
+```text
+              ┌─ Source A: removes Rule X ─┐
+Foundation ───┤                            ├─> Consumer: conflict
+              └─ Source B: keeps Rule X ──┘
+```
+
+The consumer cannot silently keep or drop Rule X. It must resolve the Source relationship explicitly.
+
+Two paths may both carry compatible removal provenance; the resulting Rule remains absent while the machine state preserves the removals needed for later composition and diagnostics.
 
 ## Semantic conflicts
 
@@ -29,15 +51,71 @@ An optional LLM reviewer may flag likely conflicts, explain them, and suggest wh
 
 ## Local changes
 
-A node can resolve inherited context through explicit operations such as **Remove**, **Override**, or **Use Exception** for an authorized exception to a protected Rule.
+A Node can resolve inherited ordinary Rules through explicit **Remove** and **Override** operations.
 
-Operations target stable published IDs, never titles or current wording. If a later accepted Source package removes an element that a local operation still targets, the compiler reports a deterministic dangling-operation diagnostic rather than silently dropping it.
+A Change addresses a Rule by stable identity:
+
+```text
+<origin-node-id>#<rule-id>
+```
+
+Visible names, titles, wording, and filesystem paths are not identity.
+
+### Remove
+
+Remove makes the inherited Rule no longer part of this Node's official Rule set. Descendants inherit the already-removed result.
+
+The compiler keeps a removal record containing the Rule identity, removing Node, and rationale. This is machine semantics, not an active Rule shown to normal readers.
+
+### Override
+
+Override keeps the inherited Rule identity and origin but replaces its effective statement. The overriding Node and its rationale become provenance on the compiled Rule. If another descendant overrides it again, identity remains stable while the effective meaning and override provenance advance.
+
+### Dangling operations
+
+If the target Rule is not inherited, compilation fails. This matters especially after Source updates: a parent removing or replacing an element cannot silently leave a child operation pointing at nothing.
+
+A Node may define only one local Change against the same inherited Rule identity.
+
+Protected Rules and **Use Exception** remain a later semantic layer. Protected Rules will prohibit ordinary Remove/Override and expose only explicitly authorized exceptions.
+
+## Transitive composition
+
+Composition is package meaning, not just direct-parent text.
+
+```text
+Foundation ──> Team Standard ──> Project
+```
+
+If Team Standard overrides a Foundation Rule, Project inherits that overridden Rule with Foundation identity and Team Standard override provenance. If Team Standard removes the Rule, Project does not expose it as active context but still carries the removal provenance needed for downstream composition.
+
+This is why the compiler renders inherited Rules by their actual origin Node rather than only by the consumer's direct Source list, and why the machine representation contains more state than the human-facing active Rule list.
+
+## Deterministic diff is the update boundary
+
+Compiler 0.3 can compare two compiled snapshots of the same stable Context Node before any semantic reviewer or consumer code is involved:
+
+```text
+accepted Source package
+        +
+candidate Source package
+        ↓
+contextcanon diff
+        ↓
+exact identity-based change set
+```
+
+The diff reports Source package/version changes, effective Rule changes including active/removed transitions and override provenance, local Change differences, Topic changes, and materialized Resource content changes. Human-readable and JSON output come from the same deterministic change model.
+
+This means later Source-update workflows do not need to infer change from prose or Git file layout. The exact compiled difference exists first; semantic impact analysis is an optional layer above it.
 
 ## Source updates are change requests
 
-Consumers remain pinned to an accepted Source package. A newly published Source version is an update candidate, not live inheritance.
+Consumers ultimately remain pinned to an accepted Source package. A newly published Source version is an update candidate, not live inheritance.
 
-The intended workflow is: detect a newer package, compute a deterministic diff, identify structural consequences, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
+The intended workflow is: detect a newer immutable package, compute the deterministic Context diff, identify structural consequences such as dangling Changes, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
+
+Compiler 0.3 already provides the deterministic diff and records local Source version plus compiled Source package digest. Immutable external package resolution, candidate discovery, caching, and explicit acceptance are the next core block.
 
 ## Navigation is not composition
 
@@ -50,9 +128,9 @@ ContextCanon Gateway ──Topic──> ContextCanon Framework Development
                            ContextCanon Foundation
 ```
 
-The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development does inherit Foundation as an accepted Source and then adds its local delta.
+The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development does inherit Foundation as a Source and then adds its local delta.
 
-Keeping these relationships distinct prevents navigation choices from silently changing which Rules a node publishes.
+Keeping these relationships distinct prevents navigation choices from silently changing which Rules a Node publishes.
 
 ## Node directories do not define composition
 
@@ -60,7 +138,7 @@ Every Context Node is physically rooted in its own directory, but that directory
 
 This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships.
 
-## ContextCanon's own node organization
+## ContextCanon's own Node organization
 
 This repository contains three real Nodes:
 
@@ -68,8 +146,8 @@ This repository contains three real Nodes:
 - `nodes/library/foundation/` is **ContextCanon Foundation**,
 - `nodes/internal/framework-development/` is **ContextCanon Framework Development**.
 
-The intermediate directories `nodes/`, `nodes/library/`, and `nodes/internal/` are organizational containers, not Context Nodes.
+The intermediate `nodes/`, `nodes/library/`, and `nodes/internal/` directories are organizational containers, not Context Nodes.
 
-Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance rule for unrelated projects using ContextCanon.
+Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance Rule for unrelated projects using ContextCanon.
 
-The exact external locator syntax for selecting a Node inside a repository remains intentionally open until the next vertical POC.
+Compiler 0.3 supports local node-root locators. Immutable external repository/package locators remain the next planned core step.

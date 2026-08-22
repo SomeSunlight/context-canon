@@ -4,16 +4,16 @@ A Topic answers a practical question:
 
 > When this kind of work is being done, what additional context should be read?
 
-`CONTEXT.md` should stay small. It contains the rules that are broadly relevant and a concise list of Topics. Each Topic describes when it matters and points to the deeper information needed for that work.
+`CONTEXT.md` should stay small. It contains the Rules that are broadly relevant and a concise list of Topics. Each Topic describes when it matters and points to the deeper information needed for that work.
 
-## Required and optional information
+## Required and Optional information
 
-A Topic contains two kinds of references:
+A Topic contains two load intentions:
 
 - **Required** — must be read when the Topic applies.
 - **Optional** — useful for deeper understanding, troubleshooting, history, or unusual cases.
 
-Example:
+The source syntax also distinguishes target kind explicitly:
 
 ```markdown
 ### Logging
@@ -21,14 +21,20 @@ Example:
 When changing logging, diagnostics, structured events, rotation, or troubleshooting:
 
 Required:
-- `docs/logging-contract.md`
+- Resource: `docs/logging-contract.md`
 
 Optional:
-- `docs/logging-history.md`
-- `docs/troubleshooting.md`
+- Resource: `docs/logging-history.md`
 ```
 
-The distinction is important. A model should not have to guess whether a linked document is mandatory, and it should not load every optional document merely because it exists.
+A Gateway can navigate to another Node without composing it:
+
+```markdown
+Required:
+- Context Node: `nodes/internal/framework-development`
+```
+
+The distinction matters. A model should not guess whether a target is mandatory, and the compiler should not guess whether a filesystem path means package material or another Node.
 
 ## Progressive disclosure can repeat
 
@@ -57,12 +63,16 @@ This is one of ContextCanon's larger opportunities: the same transparent mechani
 
 Authors should keep information where it naturally belongs. A security document may remain `SECURITY.md`; architecture documentation may remain under `docs/`; a glossary may live beside the domain model.
 
-When ContextCanon builds an Official Context Package, referenced material that must travel with the node is materialized under `CONTEXT/`. The generated `CONTEXT.md` links to those package-local copies.
+When ContextCanon builds an Official Context Package, Resource targets are seeds for materialization under `CONTEXT/`. If a materialized Markdown file links to another local file, that target is recursively included so the package remains internally navigable. External links remain external.
 
-This gives authors a natural repository layout while giving consumers a self-contained published package.
+The generated `CONTEXT.md` links to the package-local seed resources; deeper links continue from there.
 
 ## What decides that a Topic applies?
 
 The compiler preserves Topic definitions deterministically. A harness or agent may decide that a natural-language task matches a Topic, because that decision can require semantic interpretation.
 
-Once a Topic applies, however, Required versus Optional is explicit. The harness should not invent its own meaning for those references.
+Once a Topic applies, however, Required versus Optional and Resource versus Context Node are explicit. The harness should not invent its own meaning for those targets.
+
+## Walking Skeleton 1 limitation
+
+The first compiler composes inherited Rules but keeps Topic navigation local to the consuming Node. Topic inheritance across Source package boundaries is deliberately deferred until external package location and materialization behavior is exercised end to end.

@@ -1,128 +1,176 @@
 # Plan
 
-## Completed product validation
+## Completed validation
 
-- [x] Review the repository as the first self-hosted ContextCanon specification.
-- [x] Perform mental walkthroughs of small-project initialization, multi-source composition, inherited changes, Source updates, conflicts, standalone children, harness adapters, and multi-node repositories.
-- [x] Define `CONTEXT.md` as the compact entry and `CONTEXT/` as optional deeper package-local material.
-- [x] Establish visible published IDs and hidden compiler-managed local IDs.
-- [x] Establish `Required` versus `Optional` Topic targets as a design requirement.
-- [x] Establish **ContextCanon Foundation** and **ContextCanon Framework Development** with Framework Development composing Foundation.
-- [x] Add **ContextCanon Gateway** as a normal minimal root Node with no Sources, Rules, or materialized resources.
-- [x] Distinguish Topic navigation from Source composition using the repository's own Node graph.
-- [x] Establish the physical rule that every Context Node has one node-root directory while its stable identity remains independent of that path.
-- [x] Separate reusable ContextCanon Nodes under `nodes/library/` from ContextCanon-internal Nodes under `nodes/internal/`.
-- [x] Require every reusable Node in the ContextCanon Node Library to compose Foundation directly or transitively.
-- [x] Demonstrate a Node move/rename while preserving the stable Node ID.
-- [x] Define the ContextCanon schema/specification as the structural interface rather than introducing an interface Node.
-- [x] Add a public documentation-style Rule for clear, precise technical prose.
+ContextCanon has passed both self-hosted and external validation.
 
-See [docs/use-case-walkthrough.md](docs/use-case-walkthrough.md).
+- [x] Establish Gateway, Foundation, and Framework Development as real dogfood Nodes.
+- [x] Build the first deterministic compiler and run it against the repository itself.
+- [x] Apply ContextCanon to `SomeSunlight/teams-chat-exporter` on a dedicated experiment branch.
+- [x] Generate the Official Context Package deterministically in that external project.
+- [x] Enter the project through a real GitHub Copilot harness using generated `AGENTS.md`.
+- [x] Run an ordinary task that required no deeper Topic material.
+- [x] Run a Teams-selector task that required the Topic's deeper resources.
+- [x] Confirm that the model used the project context to distinguish configuration changes from Python behavior changes.
+- [x] Confirm that the structure is useful to a human reviewer as an architectural orientation interface, not only as LLM prompt machinery.
+- [x] Confirm that progressive disclosure is useful even with a low-cost model, strengthening the case for smaller and local LLMs.
 
-## Strategy now: build the walking skeleton
+The conclusion is now strong enough to change development strategy: **stop proving that ContextCanon is useful and complete the deterministic core needed for broad daily use.**
 
-The architecture is coherent enough to stop trying to exhaustively validate it in advance.
+## Strategy: harden the reusable compiler core
 
-From this point, prefer the smallest end-to-end implementation that can run on real repositories. Freeze only contracts required by the next executable slice. Use additional mental walkthroughs narrowly when an implementation decision exposes a concrete ambiguity.
+ContextCanon should soon be usable across many real projects without repeatedly hitting known missing fundamentals.
 
-The target feedback loop is:
+That does not mean implementing everything at once. Each compiler step remains a coherent deterministic layer with explicit source syntax, positive and negative regression fixtures, repository dogfood, and CI drift checking.
 
 ```text
-real repository
-      ↓
-CONTEXT.src.md
-      ↓
-deterministic compiler
-      ↓
-Official Context Package + exact diagnostics/diff
-      ↓
-LLM uses the compiled context or interprets a Context change
-      ↓
-real project work
-      ↓
-feedback into ContextCanon
+human-authored Context
+        ↓
+parse exact syntax
+        ↓
+resolve + compose exact semantics
+        ↓
+validate identities and operations
+        ↓
+render deterministic Official Context Package
+        ↓
+exact diff / package identity
+        ↓
+optional LLM interpretation or project work
 ```
 
-Every compiler change should be testable deterministically across fixture repositories without invoking an LLM.
+No LLM belongs inside deterministic compiler truth.
 
-## Walking Skeleton 1 — minimal deterministic compiler
+## Branch and merge cadence
 
-Build only enough compiler to compile the ContextCanon repository itself and one ordinary example project.
+`main` is the last accepted, fully reproducible ContextCanon stage. Working branches may contain incomplete experiments; `main` should not.
 
-- [ ] Choose the smallest implementation/CLI shape that is easy to run locally and automate in tests.
-- [ ] Define only the minimum source grammar needed by Gateway, Foundation, Framework Development, and the first example project.
-- [ ] Make Topic targets explicitly distinguish a package resource from another Context Node so Gateway navigation is deterministic.
-- [ ] Discover and validate a Node from its node-root directory.
-- [ ] Parse local Rules, Topics, Sources, stable IDs, and rationale needed by the current POC.
-- [ ] Resolve at least local-path Sources and preserve stable Node identity independently of path.
-- [ ] Compose accepted Sources plus Local Context deterministically.
-- [ ] Generate `CONTEXT.md`.
-- [ ] Materialize referenced resources into optional `CONTEXT/` output.
-- [ ] Generate `.context/context.yaml` from compiler state rather than maintaining it manually.
-- [ ] Generate thin `AGENTS.md` and `.goosehints` adapters where applicable.
-- [ ] Add a deterministic `check` mode that rebuilds/validates generated output and reports drift without an LLM.
-- [ ] Turn Gateway, Foundation, and Framework Development into compiler fixtures so every change exercises the current dogfood graph.
+The current `agent/compiler-walking-skeleton` branch accumulated more work than ideal because implementation continued directly after the successful first end-to-end validation. Do not rewrite that history merely to manufacture an earlier boundary. Instead:
 
-The first compiler does **not** need to implement every documented future operation. Unsupported syntax should fail clearly rather than encourage premature complexity.
+- [x] Finish Compiler 0.3 on the current branch, including documentation, regenerated dogfood packages, and completely green CI.
+- [x] Update PR #2 so its title/body describe the actual accepted compiler baseline rather than only the original walking skeleton.
+- [ ] Squash-merge that accepted 0.3 baseline into `main`.
+- [ ] Start the immutable external Sources/update-acceptance block on a fresh branch from the new `main`.
+- [ ] Use a fresh branch and PR for each subsequent coherent core block unless a very small follow-up clearly belongs to the block just merged.
 
-## Walking Skeleton 2 — first real project with an LLM
+A core block is ready to merge only when its deterministic positive and negative tests pass, repository dogfood is regenerated by the compiler itself, generated-output drift is clean, and the relevant documentation plus `STATE.md`/`PLAN.md` describe the implemented behavior.
 
-- [ ] Select one real existing project as the first external customer of ContextCanon.
-- [ ] Use an LLM to inspect that repository and propose only the human-editable ContextCanon source and useful Topic links; generated output remains the compiler's job.
-- [ ] Validate and compile the proposal deterministically.
-- [ ] Enter the project through a real harness using the generated adapter and compact `CONTEXT.md`.
-- [ ] Perform at least one ordinary project task that does not need deeper context.
-- [ ] Perform at least one task that triggers Required deeper context.
-- [ ] Observe what the LLM actually loads, what it misses, what feels redundant, and where the human model becomes confusing.
-- [ ] Compare the experience with the same project before ContextCanon rather than optimizing only synthetic metrics.
+This cadence deliberately creates frequent stable recovery points. Do not continue directly into an unrelated planned block merely because the previous work finished successfully.
 
-## Walking Skeleton 3 — Context change to code impact
+## Compiler 0.2 — inherited Rule changes
 
-Make the first higher-level LLM workflow a direct test of ContextCanon's value.
+Compiler 0.2 is complete.
 
-When a Rule or other authoritative context changes:
+- [x] Fix rendering so transitively inherited Rules remain visible by their true origin Node.
+- [x] Add explicit `Remove` operations for inherited ordinary Rules.
+- [x] Add explicit `Override` operations while preserving inherited Rule identity.
+- [x] Carry Override provenance transitively into descendants.
+- [x] Carry Remove provenance transitively so absence remains meaningful in later composition.
+- [x] Reject dangling Changes instead of silently ignoring them.
+- [x] Reject duplicate local Changes against the same inherited Rule identity.
+- [x] Reject diamond graphs where the same stable Rule arrives with incompatible effective definitions/provenance.
+- [x] Reject a diamond where one Source path keeps a Rule and another explicitly removed it.
+- [x] Deduplicate compatible repeated Rule state without inventing Source precedence.
+- [x] Include Changes, override provenance, and removal provenance in exact normalized semantics.
+- [x] Add positive, dangling, duplicate, transitive, and diamond-conflict regression fixtures.
+- [x] Document the compiler pipeline and stage boundaries in `docs/compiler.md` and `CONTRIBUTING.md`.
+- [x] Expose the compiler module architecture directly in Framework Development context.
+- [x] Regenerate all dogfood packages with compiler 0.2 and finish with green CI.
+
+## Compiler 0.3 — deterministic Context diff
+
+Compiler 0.3 is complete and awaiting merge into `main`.
 
 ```text
-old compiled context
+old compiled Context
         +
-new compiled context
+new compiled Context
         ↓
-deterministic Context diff
+exact deterministic change set
+        ↓
+Rule IDs / Topic IDs / Sources / package changes
+        ↓
+optional LLM impact review
+```
+
+- [x] Define a normalized machine-readable diff model based on stable identity and provenance.
+- [x] Detect added, removed, and changed Rules without relying on titles or textual file diffs.
+- [x] Distinguish inherited semantic changes from local Changes where provenance permits.
+- [x] Include Source package/version changes, Topic changes, and materialized Resource changes.
+- [x] Represent active-to-removed Rule transitions as changes to one stable Rule identity.
+- [x] Produce a compact human-readable summary from the same deterministic diff.
+- [x] Add deterministic JSON output and CLI support without coupling the diff to a particular harness.
+- [x] Make semantic normalization insensitive to Source ordering and Topic-target presentation ordering where order has no meaning.
+- [x] Reject duplicate direct Source identities instead of allowing order-dependent ambiguity.
+- [x] Test unchanged, additive, removed, local Override, transitive Override, Resource, Topic, Source, and presentation-only cases.
+- [x] Document the 0.3 diff contract and semantic-normalization guarantees.
+- [x] Regenerate all dogfood machine state with compiler 0.3.
+- [x] Finish the block with completely green tests and generated-output drift checking.
+
+This diff becomes the exact input to later Source-update review and semantic impact analysis.
+
+## Next: immutable external Sources and update acceptance
+
+Broad use across independent projects requires reusable Sources without live dependency on another checkout.
+
+This block starts on a **fresh branch from the accepted 0.3 `main` baseline**.
+
+- [ ] Define an immutable external Source/package locator contract.
+- [ ] Pin exact Source identity, version, and package digest.
+- [ ] Keep accepted packages usable without a live Source repository.
+- [ ] Detect newer Source packages as candidates rather than silently inheriting them.
+- [ ] Compare accepted and candidate packages using the deterministic Context diff.
+- [ ] Require explicit acceptance before rebuilding a consumer against a new Source package.
+- [ ] Surface dangling local Changes caused by accepted Source updates.
+- [ ] Support addressing Nodes inside repositories containing multiple Context Nodes.
+
+Transport/cache mechanics should remain separate from semantic composition.
+
+## Then: protected Rules and authorized exceptions
+
+- [ ] Mark selected Rules as protected in their owning Node.
+- [ ] Reject ordinary Remove/Override against protected Rules.
+- [ ] Let the owner define stable authorized exceptions.
+- [ ] Add explicit `Use Exception` syntax in consumers.
+- [ ] Preserve exception provenance transitively.
+- [ ] Add deterministic invalid/dangling exception diagnostics.
+
+Governance validation is not a security boundary; it makes declared policy mechanically checkable.
+
+## Broader compiler hardening
+
+After those central layers:
+
+- [ ] Multiple orthogonal Sources with broader structural conflict diagnostics.
+- [ ] Resource collision rules across composed packages.
+- [ ] Topic composition/materialization across Source package boundaries.
+- [ ] Nested Git repository boundary behavior.
+- [ ] Safe compiler-owned generated-file manifest if automatic stale adapter cleanup is later needed.
+- [ ] Authoring assistance for Node initialization, stable IDs, and compact templates.
+
+## Semantic layer above the compiler
+
+Once deterministic diff and Source-update acceptance exist, implement the first high-level workflow:
+
+```text
+exact Context diff
         ↓
 LLM impact review
         ↓
-Rule ID → affected files / code / docs → reason → proposed action
+Rule ID → affected files / code / config / tests / docs
+        ↓
+reason → proposed action
 ```
 
-- [ ] Produce an exact deterministic diff between two compiled Context states using stable IDs and provenance.
-- [ ] Emit a compact machine-readable change set plus a human-readable summary suitable for an LLM input.
-- [ ] Keep LLM impact analysis outside the deterministic compiler core.
-- [ ] Ask the LLM to map each changed Rule to likely affected code, configuration, tests, and documentation in a real repository.
-- [ ] Require the LLM to explain why each location is relevant rather than merely listing files.
-- [ ] Treat the impact map as semantic advice, not compiler truth.
-- [ ] Let a human approve or reject suggested project changes.
-- [ ] Later test whether an agent can implement an approved impact set while following the newly compiled Context.
-
-This workflow should remain harness-neutral: Codex, goose, Hermes, a local model, or another agent can consume the same deterministic change set.
-
-## Harden from observed failures
-
-Implement broader semantics when a real scenario requires them, then add deterministic regression fixtures for the discovered case.
-
-Likely next capabilities include:
-
-- [ ] Remove and Override inherited Rules.
-- [ ] Protected Rules and authorized exceptions.
-- [ ] Multiple orthogonal Sources and dependency-cycle diagnostics.
-- [ ] Source update detection, candidate diff, explicit acceptance, and pinned package identity.
-- [ ] Dangling change diagnostics after Source updates.
-- [ ] External Git/package Source locators and multi-node repository addressing.
-- [ ] Resource collision rules and self-contained package guarantees.
-- [ ] Authoring assistance such as compact templates and optional richer scaffolding.
+- [ ] Keep impact analysis outside deterministic compiler truth.
+- [ ] Require a reason for each suggested affected location.
+- [ ] Let a human approve/reject the impact set.
+- [ ] Let an agent implement approved changes while following the new Official Context.
+- [ ] Keep the workflow harness-neutral so local models, goose, Copilot, Codex, Hermes, and others can consume the same exact change set.
 
 ## Context integration roadmap
 
-Add new context types only when a concrete end-to-end use case needs them. Reuse the same composition, provenance, package, and progressive-disclosure mechanisms rather than building parallel systems.
+Add context types through the same progressive-disclosure and package mechanisms rather than parallel systems:
 
 - [ ] Glossaries and domain terminology.
 - [ ] Coding patterns and example code.
@@ -131,10 +179,9 @@ Add new context types only when a concrete end-to-end use case needs them. Reuse
 - [ ] Skills and executable workflows.
 - [ ] Test fixtures and worked examples.
 - [ ] Operational experience, known pitfalls, and troubleshooting knowledge.
-- [ ] Decide which new element types require stable IDs or special diff behavior only after using them.
 
 ## Working rule
 
-**Do not wait for theoretical completeness before the next executable slice.**
+**Build central deterministic semantics deliberately, merge coherent stable points, then use them aggressively.**
 
-Prefer: implement one deterministic capability, run it across all fixtures, use it in a real project, observe the failure modes, then refine the specification and compiler together.
+The external proof has been made. The quality bar now is that ContextCanon should become boring infrastructure: predictable enough to place under many projects and stop thinking about unless the context itself changes.

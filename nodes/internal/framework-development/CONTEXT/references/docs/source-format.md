@@ -1,80 +1,93 @@
 # Source Format
 
-`CONTEXT.src.md` is the primary human-editable ContextCanon source for a node.
+`CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md` or `.context/context.yaml`.
 
-It is intentionally constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
+The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
 
-Every source file should start with a visible header explaining how to edit it and linking to this documentation.
+## Node header
 
-## Compiler-managed authoring help
+A source begins with a human-readable H1 and compiler-managed Node metadata:
 
-The raw Markdown may contain a compiler-managed HTML comment block with copyable templates for common operations.
+```markdown
+# Example Project — Local Context Source
+<!-- ctx:node id="<stable-node-id>" version="0.1.0" -->
+```
 
-Rendered Markdown stays clean, while a first-time editor immediately sees valid examples in the source.
+The stable ID is independent of the Node's directory path or display name. A root Node may additionally declare generated harness adapters, for example `adapters="agents,goose"`.
 
-The default direction is a compact help block with generic templates once per file. A future user preference may support:
+## Sources
 
-- `compact` — generic templates,
-- `expanded` — additional ready-to-edit snippets for imported elements,
-- `none` — minimal source for experienced users.
+`## Sources` lists accepted Context Nodes. The visible link points to the Source node-root directory; the adjacent comment preserves stable identity and accepted version.
 
-Generating one commented template for every imported rule by default would scale poorly and conflicts with progressive disclosure.
+```markdown
+## Sources
 
-Authoring-help verbosity is tooling/presentation preference, not inherited project governance.
+- [ContextCanon Foundation](../foundation/) — `0.1.0`
+  <!-- ctx:source id="<stable-node-id>" version="0.1.0" -->
+```
 
-## Sections
+Source order is not precedence. Compiler 0.2 supports local filesystem Sources inside the same Git repository.
 
-### Sources
+## Rules
 
-`## Sources` lists accepted reusable ContextCanon nodes.
-
-A future compiler maintains stable source identity/version/revision metadata in hidden comments while leaving the visible source name and version readable.
-
-Source order is not precedence.
-
-### Rules
-
-`## Rules` contains local rules. `###` headings group related rules.
-
-Example:
+`## Rules` contains the Node's local Rules. `###` headings group related Rules. Every Rule has a short visible title, a statement, rationale, and compiler-managed stable ID.
 
 ```markdown
 ### Security
 
-- Never commit secrets.
+- **Never commit secrets:** Credentials and secret values must stay outside version control.
   Why: Version control is not a secret store.
   <!-- ctx:rule id="SEC-001" -->
 ```
 
-The compiler-managed comment contains the stable local ID. The ID is mandatory in the framework data model even though it need not clutter rendered source Markdown.
+The title is part of the human presentation, not identity. Descendants address the stable ID.
 
-### Changes
+## Changes
 
-`## Changes` records explicit operations against accepted sources.
+`## Changes` contains explicit local operations on inherited ordinary Rules.
 
-Because titles and wording can change, operations target stable IDs published by the source node. Human-visible source name/title is included for orientation but is not identity.
+Compiler 0.2 supports **Remove** and **Override**. Both operations bind the inherited Rule's stable identity: origin Node ID plus Rule ID. Visible Source names and Rule titles help humans but do not define identity.
 
-Conceptual example:
+### Remove
 
 ```markdown
 ## Changes
 
 ### Remove
 
-- `Python Development / PY-017` — Require Python 3.13
-  Why: This project deliberately supports Python 3.12.
-  <!-- ctx:remove target="<stable-node-id>#PY-017" -->
+- `Company Security / SEC-014` — Require legacy audit header
+  Why: This project uses the replacement audit protocol instead.
+  <!-- ctx:change op="remove" source-id="<stable-source-node-id>" rule-id="SEC-014" -->
 ```
 
-The source's published `CONTEXT.md` must make `PY-017` easy to discover.
+A Remove deletes that inherited Rule from this Node's official Rule set. Descendants inherit the already-removed result.
 
-If a later accepted source package no longer contains the targeted ID, the compiler reports a dangling change operation rather than silently ignoring it.
+If the targeted identity is not inherited, compilation fails with a dangling-Change diagnostic. Remove cannot silently become a no-op.
 
-### Topics
+### Override
 
-`## Topics` maps task themes to deeper information.
+```markdown
+## Changes
 
-Current design direction:
+### Override
+
+- `Python Development / PY-007` — Supported Python version
+  New rule: Production code must support Python 3.12 or newer.
+  Why: This project has standardized on the 3.12 runtime baseline.
+  <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="PY-007" -->
+```
+
+An Override preserves the inherited Rule's identity, title, group, and origin, but replaces its effective statement for this Node. The compiler records the overriding Node and rationale as provenance. Descendants inherit that overridden meaning unless they explicitly change it again.
+
+Only the statement is overridable in compiler 0.2. Renaming or regrouping an inherited Rule is deliberately not disguised as an Override.
+
+A Node may define at most one local Change for a given inherited Rule identity.
+
+Protected Rules and authorized exceptions are a later semantic layer. They will constrain which Changes are legal rather than changing the basic identity model.
+
+## Topics
+
+A Topic states when deeper context applies and explicitly types every target.
 
 ```markdown
 ## Topics
@@ -84,16 +97,42 @@ Current design direction:
 When changing logging, diagnostics, or structured events:
 
 Required:
-- `docs/logging-contract.md`
+- Resource: `docs/logging-contract.md`
 
 Optional:
-- `docs/logging-history.md`
+- Resource: `docs/logging-history.md`
 ```
 
-The exact parser syntax remains open until the next vertical POC, but `required` versus `optional` is a semantic requirement.
+A Topic can also navigate to another Context Node without composing it:
 
-## IDs
+```markdown
+Required:
+- Context Node: `nodes/internal/framework-development`
+```
 
-Every addressable ContextCanon element has stable identity independent of title, wording, location, or presentation.
+`Resource` targets are materialized into the generated `CONTEXT/` package. `Context Node` targets point to another node root and remain navigation rather than Source composition.
 
-For local authoring, IDs may live in compiler-managed HTML comments. For published official context, IDs that descendants may reference are displayed visibly.
+Every Topic ends with a compiler-managed stable ID:
+
+```markdown
+<!-- ctx:topic id="LOGGING" -->
+```
+
+## Compiler-managed authoring help
+
+Raw Markdown may contain compiler-managed HTML comment blocks with copyable examples. These blocks are authoring help only; they do not carry critical human meaning and disappear from rendered Markdown.
+
+A useful Change template is:
+
+```markdown
+### Override
+
+- `Source name / RULE-ID` — Current rule title
+  New rule: Replacement statement.
+  Why: Why this Node differs.
+  <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="RULE-ID" -->
+```
+
+## Current compiler contract
+
+The executable compiler intentionally supports a narrower language than the complete future specification. See [compiler.md](compiler.md) for implemented behavior and deliberate limitations.

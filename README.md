@@ -17,16 +17,25 @@ small CONTEXT.md ────┼─ logging task ──────────�
 
 A project keeps a compact entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. The result stays readable for humans, cheap for LLM context windows, and precise enough for deterministic tooling.
 
+That matters especially for **smaller, cheaper and local models**. ContextCanon cannot turn a weak model into a strong one, but it can avoid wasting model capability on reconstructing project structure and conventions from scratch. A well-scoped task with the right project knowledge gives smaller models a better chance to do useful work reliably.
+
+For local agentic workflows this changes the economics. Tokens are abundant rather than individually billed, so harnesses can inspect, iterate and run repeatedly without every autonomous step accumulating API cost. ContextCanon aims to make those plentiful local tokens more effective by feeding the model the right context instead of simply more context.
+
+There is a second benefit once ContextCanon is used across many projects: **the project context itself becomes standardized**. A human, sparring partner, or task agent can enter an unfamiliar repository and ask the same questions in the same places: What applies here? Which reusable foundations were accepted? What is special about this project? What is the current state? Where is it going? Which deeper references matter for this task? What changed, and which stable identities are affected?
+
+The answers still belong to each project, but the way they are organized no longer has to be rediscovered every time. ContextCanon therefore aims to reduce not only model context cost but also the repeated architectural orientation cost paid by humans and agents moving between repositories.
+
 ## What ContextCanon is trying to fix
 
 Context windows are valuable working memory. They should be spent on the current problem, not on every architecture note, coding convention, troubleshooting guide, glossary, example, and harness-specific instruction a project has ever accumulated.
 
-ContextCanon therefore starts with four ideas:
+ContextCanon therefore starts with five ideas:
 
 1. **Load less.** Keep the always-read entry small and use Topics to point to deeper Required or Optional context.
 2. **Repeat less.** Compose reusable Context Nodes and describe only the local delta at each Node.
 3. **Calculate what can be calculated.** Parsing, IDs, dependency resolution, changes, provenance, diffs and package construction belong to a deterministic compiler; LLMs handle genuinely semantic work.
 4. **Keep project knowledge portable.** Canonical context must not depend on Codex, Claude, goose, Copilot, or a particular model. Harness files stay thin adapters at the edge.
+5. **Use model capability efficiently.** Good context should help smaller, cheaper and local models solve well-bounded project tasks without requiring a frontier model for every step.
 
 The larger goal is **context integration**: documentation, Rules, terminology, examples, structured data, PDFs, diagrams, skills and hard-won operational experience should all be discoverable through the same model without all being loaded at once.
 
@@ -115,8 +124,11 @@ The same structure that saves model tokens makes a project easier to inspect:
 - `CONTEXT.md` shows the compiled result without forcing the reader through inheritance archaeology.
 - visible stable IDs make inherited changes explicit and traceable.
 - Topics keep the main view short while preserving a clear route to depth.
+- `STATE.md` and `PLAN.md` give a familiar route to where the project is now and where it is going.
 
 The framework deliberately uses constrained Markdown for human authoring and a boring machine representation underneath. Humans should not have to read YAML to understand the project; machines should not have to infer structure that can be represented exactly.
+
+Across repositories, that consistency becomes a lightweight architectural interface: the domain changes, but the orientation workflow does not.
 
 ## Repository layout
 
@@ -189,9 +201,10 @@ If the five-second idea above is enough, the best next reads are:
 - [Official context](docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
 - [Topics and context integration](docs/topics.md) — how deeper context is selected.
 - [Architecture](docs/architecture.md) — deterministic compiler boundary and Node/package structure.
+- [Compiler](docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
 - [Use-case walkthrough](docs/use-case-walkthrough.md) — where the design has already been stress-tested.
 
-See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the next experiments.
+See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the next compiler layers.
 
 ## Influence
 
@@ -204,6 +217,6 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-ContextCanon is still a specification and prototype project. The architecture is being shaped deliberately through working repository POCs before the compiler is hardened.
+The first external-project experiment validated the basic workflow end to end: a real harness entered through generated instructions, used the compact official context, followed task-specific Topics, and produced better project-specific answers without eagerly loading everything.
 
-That is also why the repository already uses the model it is defining: concrete use exposes ambiguity much faster than designing the whole system in the abstract.
+ContextCanon is therefore moving from proving basic usefulness to **hardening the reusable compiler core**. New compiler semantics are added in coherent deterministic layers with positive and negative regression tests, then rebuilt across the repository's own dogfood Nodes before moving on.

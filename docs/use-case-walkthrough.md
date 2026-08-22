@@ -1,22 +1,20 @@
 # Use-case walkthrough
 
-This document stress-tests ContextCanon before the compiler implementation is frozen. The purpose is to find cases where a simple user action would become surprising, ambiguous, or disproportionately difficult.
+This document stress-tests ContextCanon as the implementation grows. The initial usefulness question has now been answered by a real external project; walkthroughs remain useful for compiler semantics and regression reasoning rather than as a gate before implementation.
 
 ## 1. Enter a repository through an almost-empty Gateway
 
 An agent opens the ContextCanon repository. The root Node has no Sources, no Rules, one Topic, and no `CONTEXT/` directory.
 
-For an ordinary orientation task, nothing deeper is loaded. When the task concerns ContextCanon's specification, documentation, Nodes, compiler, examples, or tooling, the Topic requires `nodes/internal/framework-development/CONTEXT.md`.
+For an ordinary orientation task, nothing deeper is loaded. When the task concerns ContextCanon's specification, documentation, Nodes, compiler, examples, or tooling, the Topic requires the Framework Development Node.
 
-**Finding:** a useful Context Node can be extremely small. This needs no special bootstrap mode; normal Topic semantics are sufficient.
-
-**Open detail:** a Topic target may point to another Context Node rather than a package resource. V1 should represent that target explicitly enough for validation, diagnostics, and future package/location handling.
+**Finding:** a useful Context Node can be extremely small. The compiler validates the typed Context Node target deterministically.
 
 ## 2. Start a small project
 
-A newly initialized Node should require almost no framework knowledge. It can compose ContextCanon Foundation plus useful domain Sources, add only a local delta, and generate only the outputs it actually needs.
+A newly initialized Node should require almost no framework knowledge. It can compose useful Sources, add only a local delta, and generate only the outputs it actually needs.
 
-**Finding:** the common path must not require hand-written YAML, UUIDs, provenance, package metadata, or empty package directories.
+**Finding:** the common path must not require hand-written YAML, provenance, package metadata, or empty package directories. Unrelated projects do not need to inherit ContextCanon Foundation merely because they use ContextCanon.
 
 ## 3. Recognize a Node in the filesystem
 
@@ -24,7 +22,7 @@ A contributor browses an unfamiliar repository containing several ContextCanon N
 
 Each actual Node has its own node-root directory containing `CONTEXT.src.md`, generated `CONTEXT.md`, optional `CONTEXT/`, and `.context/`. Directories that only group Nodes do not become Nodes merely because they sit under `nodes/`.
 
-**Finding:** the physical organization must be obvious before a reader understands composition. Node-root discovery and nested-node boundaries must therefore become deterministic V1 behavior.
+**Finding:** Node roots are discovered deterministically from `CONTEXT.src.md` while path remains separate from stable Node identity.
 
 ## 4. Work on an ordinary task without wasting context
 
@@ -32,118 +30,152 @@ A developer asks an agent to change a small function unrelated to logging, relea
 
 **Finding:** completeness belongs to the package; prompt size belongs to the current task.
 
+The external `teams-chat-exporter` experiment confirmed this behavior with GitHub Copilot.
+
 ## 5. Work on a task that needs deeper context
 
-A Logging Topic can require the logging contract and optionally expose troubleshooting history. A deeper document may itself summarize first and link onward.
+A Teams selector-maintenance Topic required a dedicated selector guide and the current dated selector configuration while leaving broader contribution material optional.
 
-**Finding:** Topic targets need at least Required and Optional load intentions. Progressive disclosure may be recursive.
+The agent used those resources to distinguish a Teams DOM/configuration change from a genuine Python behavior change.
+
+**Finding:** Required/Optional progressive disclosure works in a real harness and improves task framing.
 
 ## 6. Keep source documents natural while publishing a self-contained package
 
 A project may edit `docs/architecture.md` in its natural location while the compiler materializes it into `CONTEXT/references/docs/architecture.md` for publication.
 
-**Finding:** authors should not reorganize repositories for the framework, while consumers should not depend on the author's source layout.
+**Finding:** local Resource targets are materialized and generated drift is detected. If materialized Markdown links to another local file, that file is recursively included as part of the materialization closure.
 
 ## 7. Compose several independent Sources
 
 A project may compose ContextCanon Foundation, Python Development, Company Security, Personal Coding Style and a small local delta. Source order is not precedence. Structural conflicts are deterministic errors; natural-language conflicts may need semantic review and explicit local resolution.
 
-**Finding:** composition remains tractable without a language-style method-resolution order.
+**Finding:** the compiler implements local Source identity/version checks, duplicate direct Source rejection, cycle detection, transitive Rule composition, and duplicate visible Rule-ID diagnostics. Source order is canonicalized in normalized semantics so declaration order cannot become accidental meaning. Broader external multi-Source use remains future hardening, not a conceptual blocker.
 
 ## 8. Change an imported Rule
 
-A child references the stable visible ID published by its parent. Renaming or rewriting the Rule without changing identity does not break the operation.
+A child references the stable visible ID published by its ancestor plus the ancestor Node's stable ID. Renaming or rewriting the Rule without changing identity does not retarget the operation.
 
-**Finding:** stable IDs must be visible in published official contexts, while local source IDs can remain compiler-managed comments.
+Compiler 0.2 introduced:
 
-## 9. A Source removes a Rule that a child still changes
+- `Remove` — delete an inherited ordinary Rule from the child's effective Rule set;
+- `Override` — preserve inherited identity while replacing the effective statement and recording override provenance.
 
-The compiler can prove that an override now targets a missing element.
+**Finding:** explicit local changes make Source composition useful beyond purely additive inheritance.
 
-**Finding:** dangling changes are deterministic diagnostics and must not be silently ignored.
+## 9. Carry changes through another generation
 
-## 10. Accept a Source update
-
-Consumers remain pinned until they explicitly review and accept a newer immutable Source package. Deterministic diff comes first; optional semantic interpretation comes second.
-
-## 11. Clone a child without Source repositories
-
-Accepted Source packages and required materialized resources must be available locally enough for the child to remain understandable and reproducible.
-
-**Finding:** published packages, not live repository traversal, are the composition boundary.
-
-## 12. Put several Nodes in one Git repository
-
-ContextCanon itself needs three contexts with three jobs:
+Consider:
 
 ```text
-Gateway ──Topic──> Framework Development
-                         ▲
-                         │ Source
-                      Foundation
+Foundation ──> Team Standard ──> Project
 ```
 
-Their physical organization is deliberately explicit:
+Team Standard overrides one Foundation Rule and removes another. Project should inherit the overridden statement with Foundation identity plus Team Standard provenance, while the removed Rule should remain absent.
+
+**Finding:** regression tests cover this transitive behavior. During implementation they exposed and fixed a renderer defect where grandparent Rules could be semantically inherited but omitted from a deeper `CONTEXT.md`.
+
+## 10. A Source removes a Rule that a child still changes
+
+A child Change targets `<origin-node-id>#<rule-id>`. If the effective inherited package no longer contains that identity, compilation must fail.
+
+**Finding:** dangling Change diagnostics are implemented for current local Sources. This becomes especially important when external Source update acceptance arrives.
+
+## 11. Compare two compiled Context versions
+
+A project needs to know exactly what changed before asking either a human or an LLM to reason about impact.
+
+Compiler 0.3 compares two snapshots of the same stable Node with:
 
 ```text
-repository root                    Gateway
-nodes/library/foundation/          Foundation
-nodes/internal/framework-development/  Framework Development
+contextcanon diff <before-node-root> <after-node-root>
+contextcanon diff <before-node-root> <after-node-root> --json
 ```
 
-The intermediate `nodes/library/` and `nodes/internal/` directories are categories, not Nodes.
+The diff uses stable identities and compiled state rather than Markdown line positions. It can report Node metadata, Source package state, local Changes, effective Rules, Topics, and materialized Resource content.
 
-**Finding:** Node identity is not repository identity, and a clean filesystem taxonomy can aid humans without defining composition semantics.
+An inherited Rule that changes from active to removed is one state transition on the same `<origin-node-id>#<rule-id>`. An Override keeps the original Rule identity while exposing its effective statement and provenance changes. Transitive Overrides therefore remain traceable to the Foundation Rule rather than becoming unrelated child Rules.
 
-## 13. Move and rename a Node without changing identity
+**Finding:** Context change is now a first-class deterministic artifact suitable as exact input to later Source-update review and code-impact analysis.
 
-During this POC, the framework-development Node moved from `nodes/development/` to `nodes/internal/framework-development/` and received a more descriptive name. Its stable Node ID remains unchanged.
+## 12. Reorder things that have no semantic order
 
-Local filesystem locators and Topic targets must be updated, but the Node does not become a different logical entity merely because its path or display name changed.
+Two authors reorder independent Sources or Topic targets without changing their meaning.
 
-**Finding:** a Node needs a physical directory, but the directory path must never be its identity.
+The human package may change presentation order, but Source order must not become precedence and Topic-target ordering has no current semantic meaning.
 
-## 14. Contribute a reusable ContextCanon Node
+**Finding:** compiler 0.3 canonicalizes semantically unordered collections for `normalized_digest` and diff comparison. Package bytes may still differ when presentation changes, which is reported separately rather than mislabeled as a semantic change.
 
-A contributor wants to add a reusable Node that should ship with ContextCanon.
+## 13. Accept a Source update
 
-It belongs in its own directory under:
+Consumers should remain pinned until they explicitly review and accept a newer immutable Source package. Deterministic diff comes first; optional semantic interpretation comes second.
 
-```text
-nodes/library/<node-name>/
-```
+**Finding:** the compiler now records Source version/package digest and provides the deterministic Context diff. Immutable external package pinning, candidate discovery, and acceptance are the next central layer.
 
-Every Node in this library must compose ContextCanon Foundation directly or transitively. A ContextCanon-specific implementation context instead belongs under `nodes/internal/`. An example or experiment should not enter the library merely because it uses ContextCanon.
+## 14. Clone a child without Source repositories
 
-**Finding:** repository categories must make contribution placement obvious. `library/` and `internal/` are repository conventions, not framework-mandated paths.
+Accepted Source packages and required materialized resources must eventually be available locally enough for the child to remain understandable and reproducible.
 
-## 15. Use different agent harnesses
+**Finding:** local-path Sources are sufficient for current dogfood, but broad multi-repository adoption requires immutable external package transport/cache semantics.
 
-Codex, goose, another agent, and a human may enter through different adapters, but the adapters first enter the applicable Context Node. In this repository they enter Gateway rather than hard-coding Framework Development.
+## 15. Put several Nodes in one Git repository
 
-**Finding:** harness details stay at the adapter edge while ContextCanon controls progressive disclosure.
+ContextCanon itself uses Gateway, Foundation, and Framework Development in one repository. Intermediate category directories are not Nodes.
 
-## 16. Edit `CONTEXT.src.md` without memorizing syntax
+**Finding:** the compiler discovers all three and can build/check them in one command.
 
-Compiler-managed hidden template blocks can provide copyable examples in raw Markdown while rendered Markdown remains clean. Help verbosity is a tooling preference rather than inherited governance.
+## 16. Move and rename a Node without changing identity
 
-## 17. Grow from Topics into broader context integration
+Framework Development previously moved and retained its stable Node ID.
+
+**Finding:** stable Node ID is identity; path is location.
+
+## 17. Contribute a reusable ContextCanon Node
+
+A reusable Node that ships with ContextCanon belongs under `nodes/library/<node-name>/` and composes Foundation directly or transitively.
+
+**Finding:** repository placement is governance, not a generic ContextCanon filesystem requirement.
+
+## 18. Use different agent harnesses
+
+Codex, GitHub Copilot, goose, another agent, and a human may enter through different harness mechanics, but each enters the same canonical Context Node.
+
+For GitHub Copilot in the tested JetBrains setup, ContextCanon relies on generated `AGENTS.md` with the harness configured to attach it to chat requests. goose continues to use `.goosehints`.
+
+**Finding:** harness semantics belong at the edge; canonical context remains model/harness-neutral.
+
+## 19. Use smaller and local models
+
+The external experiment also produced a strong answer from a low-cost model once the task was well framed by project context.
+
+**Finding:** ContextCanon is not only about reducing paid prompt tokens. Better context management can make smaller and local models more useful by spending their capability on the actual task instead of rediscovering project assumptions.
+
+## 20. Standardize orientation across projects
+
+A human or agent moving between ContextCanon projects should know where to look for:
+
+- what applies now (`CONTEXT.md`),
+- what is special here (`CONTEXT.src.md`),
+- reusable foundations (Sources),
+- deeper task-specific knowledge (Topics),
+- current situation (`STATE.md`),
+- next direction (`PLAN.md`).
+
+**Finding:** standardizing the shape of project context is itself useful architectural infrastructure, independently of token savings.
+
+## 21. Grow from Topics into broader context integration
 
 The same mechanism can later integrate glossaries, patterns, code examples, structured data, PDFs, diagrams, skills, test fixtures, and operational experience.
 
-**Finding:** new context types should reuse package materialization, composition, provenance, and progressive disclosure rather than creating separate ad-hoc systems.
+**Finding:** new context types should reuse the same identity, package, provenance, and progressive-disclosure mechanisms rather than becoming parallel context systems.
 
-## Conceptual issues to resolve before freezing compiler V1
+## Questions deliberately left for later compiler layers
 
-1. Freeze Topic syntax for Required versus Optional targets and recursive loading.
-2. Define typed Topic targets, including links to another Context Node.
-3. Define deterministic node-root discovery and nested-node boundary rules.
-4. Define Source locators and immutable package identity, including moves without identity changes.
-5. Define stable ID generation, preservation, and duplicate detection.
-6. Define deterministic diagnostics for dangling changes.
-7. Define how multiple Nodes in one repository are addressed and published.
-8. Define exact source-to-`CONTEXT/` resource mapping and collision handling.
-9. Decide where non-versioned authoring preferences such as template verbosity live.
-10. Keep protected Rules and authorized exceptions deterministic and explicit.
+1. Immutable external Git/package Source locators, caching, candidate discovery, and explicit update acceptance.
+2. Protected Rules and authorized exceptions.
+3. Topic composition/materialization across Source package boundaries.
+4. Resource collisions across composed packages.
+5. Nested Git repository and more complex Node-boundary behavior.
+6. Richer authoring/scaffolding and safe compiler-owned generated-file manifests.
 
-These are bounded design questions. None currently requires replacing the core composition model.
+These are ordered implementation work, not unresolved proof-of-concept questions.
