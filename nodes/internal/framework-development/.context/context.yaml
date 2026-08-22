@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.3.0"
+compiler_version: "0.4.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -11,13 +11,14 @@ node:
   name: "ContextCanon Framework Development"
   version: "0.1.0-draft"
 
-# Accepted Source Nodes used by this build. package_digest identifies the compiled Source package.
+# Accepted Source packages used by this build. Both digests are exact pins.
 sources:
   - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    package_digest: "fd6b071c0494504687ab0d7642658bbaa97b3be532f672911a74ac56bb4a6a8d"
+    normalized_digest: "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb"
+    package_digest: "584e726d85d0c51ea193dc00b01de383a649bbe53ae16f9d031e14938c76c5f6"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -112,6 +113,7 @@ resources:
   - {"source": "../../../docs/compiler.md", "published": "CONTEXT/references/docs/compiler.md"}
   - {"source": "../../../docs/composition.md", "published": "CONTEXT/references/docs/composition.md"}
   - {"source": "../../../docs/concepts.md", "published": "CONTEXT/references/docs/concepts.md"}
+  - {"source": "../../../docs/external-sources.md", "published": "CONTEXT/references/docs/external-sources.md"}
   - {"source": "../../../docs/harnesses.md", "published": "CONTEXT/references/docs/harnesses.md"}
   - {"source": "../../../docs/official-context.md", "published": "CONTEXT/references/docs/official-context.md"}
   - {"source": "../../../docs/source-format.md", "published": "CONTEXT/references/docs/source-format.md"}
@@ -121,5 +123,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "f21ca34729231c7689a28739a73fc709186312753c4fda70d0f731f745c3371c"
-  package_digest: "2270bc4d51a14f3c08b8e0afc59d162b441e14e4dab3d24036b1741beadf42e1"
+  normalized_digest: "33db4e2f4aa371836520399b0c5a13f6bc5817d97c4fc4b74258aa295df4d8b7"
+  package_digest: "771e5c6e224f76e8943915f13a3536dbd662c27a41d94f6ee074212f848cc2c8"
