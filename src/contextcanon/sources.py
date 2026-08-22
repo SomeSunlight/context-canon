@@ -71,7 +71,7 @@ def review_source_candidate(
     }
     path = _review_path(node_root, candidate.package_digest)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
 
 
@@ -274,4 +274,28 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
 
     if found != 1:
         raise ContextCanonError(f"Could not find exactly one Source Node ID {source_id} in {path}")
-    path.write_text("".join(lines), encoding="utf-8")
+    _atomic_write_text(path, "".join(lines))
+
+
+def _atomic_write_text(path: Path, content: str) -> None:
+    """Replace one text file atomically from a sibling temporary file.
+
+    A failed final replace leaves the previous canonical file intact. The
+    temporary file is flushed and fsynced before publication and removed on
+    every failed path.
+    """
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except OSError as exc:
+        raise ContextCanonError(f"Could not atomically write {path}: {exc}") from exc
+    finally:
+        if temporary.exists():
+            temporary.unlink()
