@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from .model import CompiledNode
+from .package import PACKAGE_MANIFEST_PATH
 
 
 def expected_outputs(compiled: CompiledNode) -> dict[str, bytes]:
     outputs: dict[str, bytes] = {
         "CONTEXT.md": compiled.official_markdown.encode("utf-8"),
         ".context/context.yaml": compiled.machine_yaml.encode("utf-8"),
+        PACKAGE_MANIFEST_PATH: compiled.package_manifest.encode("utf-8"),
     }
     outputs.update({path: content for path, content in compiled.resources.items()})
     outputs.update({path: content.encode("utf-8") for path, content in compiled.adapters.items()})
