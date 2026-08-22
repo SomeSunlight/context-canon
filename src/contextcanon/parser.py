@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .model import NodeMetadata, ParsedNode, Rule, RuleChange, SourceRef, Topic, TopicTarget
 
@@ -127,6 +127,28 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
             if not DIGEST_RE.fullmatch(package_digest or ""):
                 raise ContextCanonError(f"{source_path}:{i+1}: invalid Source package-digest")
 
+        transport_keys = {"transport", "ref", "node-path"}
+        present_transport_keys = transport_keys.intersection(attrs)
+        if present_transport_keys and present_transport_keys != transport_keys:
+            missing = ", ".join(sorted(transport_keys - present_transport_keys))
+            raise ContextCanonError(
+                f"{source_path}:{i+1}: Source transport metadata is incomplete; missing {missing}"
+            )
+
+        transport = attrs.get("transport")
+        transport_ref = attrs.get("ref")
+        node_path = attrs.get("node-path")
+        if transport is not None:
+            if not has_normalized:
+                raise ContextCanonError(
+                    f"{source_path}:{i+1}: transported Source must pin normalized-digest and package-digest"
+                )
+            if transport != "git":
+                raise ContextCanonError(f"{source_path}:{i+1}: unsupported Source transport: {transport}")
+            if not transport_ref:
+                raise ContextCanonError(f"{source_path}:{i+1}: Git Source ref must not be empty")
+            _validate_node_path(node_path or "", source_path, i + 1)
+
         result.append(
             SourceRef(
                 attrs["id"],
@@ -135,10 +157,21 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 match.group("path"),
                 normalized_digest,
                 package_digest,
+                transport,
+                transport_ref,
+                node_path,
             )
         )
         i += 1
     return result
+
+
+def _validate_node_path(value: str, source_path: Path, line_number: int) -> None:
+    if not value or "\\" in value:
+        raise ContextCanonError(f"{source_path}:{line_number}: invalid Git Source node-path")
+    path = PurePosixPath(value)
+    if path.is_absolute() or ".." in path.parts:
+        raise ContextCanonError(f"{source_path}:{line_number}: invalid Git Source node-path: {value}")
 
 
 def _parse_rules(lines: list[str], section: tuple[int, int] | None, source_path: Path, metadata: NodeMetadata) -> list[Rule]:
