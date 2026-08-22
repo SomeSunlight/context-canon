@@ -133,10 +133,9 @@ class ParsedNode:
 @dataclass
 class CompiledNode:
     parsed: ParsedNode
-    # source_nodes retains live local compiler graph information while
-    # source_packages is the semantic boundary used by composition. External
-    # Sources populate source_packages without needing a CompiledNode.
-    source_nodes: list["CompiledNode"] = field(default_factory=list)
+    # All composition semantics consume immutable compiled packages. Local
+    # Source Nodes are compiled first and immediately projected to this same
+    # boundary; pinned external Sources are loaded directly into it.
     source_packages: list[CompiledPackage] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     removed_rules: list[RuleRemoval] = field(default_factory=list)
@@ -154,3 +153,13 @@ class CompiledNode:
     @property
     def metadata(self) -> NodeMetadata:
         return self.parsed.metadata
+
+    @property
+    def source_nodes(self) -> list[CompiledPackage]:
+        """Temporary read-only compatibility view for 0.3 render/diff code.
+
+        The semantic Source collection is source_packages. Callers must not
+        depend on a live Source checkout through this alias.
+        """
+
+        return self.source_packages
