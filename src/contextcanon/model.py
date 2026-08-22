@@ -83,6 +83,37 @@ class Topic:
 
 
 @dataclass(frozen=True)
+class PackageDependency:
+    id: str
+    name: str
+    version: str
+    normalized_digest: str
+    package_digest: str
+
+
+@dataclass(frozen=True)
+class PackageFile:
+    path: str
+    sha256: str
+    size: int
+
+
+@dataclass(frozen=True)
+class CompiledPackage:
+    """Portable, immutable compiled Context state used across repository boundaries."""
+
+    metadata: NodeMetadata
+    sources: tuple[PackageDependency, ...]
+    changes: tuple[RuleChange, ...]
+    rules: tuple[Rule, ...]
+    removed_rules: tuple[RuleRemoval, ...]
+    topics: tuple[Topic, ...]
+    files: tuple[PackageFile, ...]
+    normalized_digest: str
+    package_digest: str
+
+
+@dataclass(frozen=True)
 class ParsedNode:
     root: Path
     repo_root: Path
@@ -106,6 +137,7 @@ class CompiledNode:
     normalized_digest: str = ""
     package_digest: str = ""
     official_markdown: str = ""
+    package_manifest: str = ""
     machine_yaml: str = ""
     adapters: dict[str, str] = field(default_factory=dict)
 
