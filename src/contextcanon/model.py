@@ -156,10 +156,11 @@ class CompiledNode:
 
     @property
     def source_nodes(self) -> list[CompiledPackage]:
-        """Temporary read-only compatibility view for 0.3 render/diff code.
+        """Temporary compatibility view for 0.3 render/diff code.
 
-        The semantic Source collection is source_packages. Callers must not
-        depend on a live Source checkout through this alias.
+        It intentionally returns a copy so legacy callers cannot mutate the
+        package-only Source boundary. These callers are migrated before 0.4 is
+        accepted.
         """
 
-        return self.source_packages
+        return list(self.source_packages)
