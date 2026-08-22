@@ -23,6 +23,12 @@ class SourceRef:
     name: str
     version: str
     locator: str
+    normalized_digest: str | None = None
+    package_digest: str | None = None
+
+    @property
+    def is_pinned(self) -> bool:
+        return self.normalized_digest is not None and self.package_digest is not None
 
 
 @dataclass(frozen=True)
@@ -129,7 +135,7 @@ class CompiledNode:
     parsed: ParsedNode
     # source_nodes retains live local compiler graph information while
     # source_packages is the semantic boundary used by composition. External
-    # Sources will populate source_packages without needing a CompiledNode.
+    # Sources populate source_packages without needing a CompiledNode.
     source_nodes: list["CompiledNode"] = field(default_factory=list)
     source_packages: list[CompiledPackage] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
