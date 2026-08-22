@@ -39,7 +39,7 @@ An accepted external Source additionally pins both canonical semantics and exact
 ```markdown
 ## Sources
 
-- [Python Development](https://example.org/context-nodes/python-development) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
   <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
@@ -49,7 +49,24 @@ For a pinned Source, the visible link is provenance/update location rather than 
 
 This keeps normal builds offline and prevents a Source repository update from silently changing a consumer.
 
-Source order is not precedence. See [Immutable external Sources](external-sources.md) for the package/store/update boundary.
+### Git update transport
+
+A pinned Source may additionally describe how candidate updates are retrieved:
+
+```markdown
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+  <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
+```
+
+`transport`, `ref`, and `node-path` are an all-or-nothing set. Compiler 0.4 supports `transport="git"`.
+
+`ref` names the branch/tag/ref from which `contextcanon source fetch` retrieves a candidate. It is deliberately **not** the accepted identity; the accepted state remains pinned by version plus both digests.
+
+`node-path` locates the Source Node inside the retrieved repository snapshot. Use `.` for a repository-root Node. It is location only and may not be absolute, contain `..`, or use backslashes.
+
+Transport metadata is only for candidate discovery. Normal `build` never uses it.
+
+Source order is not precedence. See [Immutable external Sources](external-sources.md) for package storage and the fetch/review/accept workflow.
 
 ## Rules
 
