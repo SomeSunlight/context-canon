@@ -10,7 +10,7 @@ ContextCanon has passed both self-hosted and external validation.
 - [x] Generate the Official Context Package deterministically in that external project.
 - [x] Enter the project through a real GitHub Copilot harness using generated `AGENTS.md`.
 - [x] Run an ordinary task that required no deeper Topic material.
-- [x] Run a Teams-selector task that required the Topic's deeper resources.
+- [x] Run a Teams selector task that required the Topic's deeper resources.
 - [x] Confirm that the model used the project context to distinguish configuration changes from Python behavior changes.
 - [x] Confirm that the structure is useful to a human reviewer as an architectural orientation interface, not only as LLM prompt machinery.
 - [x] Confirm that progressive disclosure is useful even with a low-cost model, strengthening the case for smaller and local LLMs.
@@ -101,26 +101,32 @@ This block is developed on `agent/immutable-external-sources` from the accepted 
 
 Do this before choosing transport syntax.
 
-- [ ] Identify exactly which compiled semantic state a downstream consumer needs for composition without `CONTEXT.src.md` or the Source repository.
-- [ ] Define a deterministic, versioned published machine manifest for that state.
-- [ ] Define which human/agent package files accompany the machine manifest.
-- [ ] Make the artifact self-verifying with stable Node ID, Node version, normalized digest, and package digest.
-- [ ] Round-trip test: compile a Source normally, export its immutable artifact, then compile a consumer using only that artifact.
-- [ ] Preserve transitive Rule identity, Override provenance, and Remove provenance through the standalone artifact.
+- [x] Identify the compiled semantic state a downstream consumer needs without `CONTEXT.src.md` or the Source repository.
+- [x] Define a deterministic versioned machine manifest at `.context/package.json`.
+- [x] Keep `CONTEXT.md` plus optional `CONTEXT/` as the accompanying human/agent package.
+- [x] Make the artifact self-verifying with stable Node ID, Node version, normalized digest, exact file hashes, and package digest.
+- [x] Round-trip a Source after deleting its source repository entirely.
+- [x] Preserve Rule statements/rationales/groups, transitive identity, Override provenance, Remove provenance, Topics, and Source dependency state.
+- [x] Reject semantic tampering, package-file tampering, missing files, and path escape.
+- [x] Preserve presentation order independently from canonical semantic ordering.
 
 ### 2. Separate accepted package storage from transport
 
-- [ ] Define a compiler-owned local accepted-package/cache layout.
-- [ ] Let normal `build` resolve accepted external Sources entirely offline from that immutable local artifact.
-- [ ] Fail clearly when an accepted package is missing or its digest/identity/version does not match the pin.
-- [ ] Keep package retrieval logic outside semantic composition.
+- [x] Define the consumer-local content-addressed layout `.context/sources/<package-digest>/`.
+- [x] Let normal `build` resolve a pinned Source entirely offline from that immutable local artifact.
+- [x] Fail clearly when the accepted package is missing or its normalized digest/identity/version does not match the pin.
+- [x] Prove that normal build does not dereference the Source locator by testing an intentionally unusable locator with the Source checkout deleted.
+- [x] Route local and external Sources through the same `CompiledPackage` semantic composition boundary.
+- [ ] Remove the temporary 0.3 `source_nodes` compatibility view after renderer/diff migration.
 
 ### 3. Extend human-authored Source references with an exact pin
 
-- [ ] Define compact Markdown syntax that remains understandable without reading YAML.
-- [ ] Pin Source Node ID, version, and exact accepted package digest.
-- [ ] Support addressing a Node inside a repository that contains several Context Nodes.
-- [ ] Preserve local-path Sources as the simple development case rather than forcing all Sources through remote syntax.
+- [x] Keep the existing visible Markdown Source link/name/version syntax.
+- [x] Add compiler-managed `normalized-digest` and `package-digest` pins as an all-or-nothing pair.
+- [x] Preserve unpinned local-path Sources as the simple development case.
+- [x] Treat the visible locator of a pinned Source as provenance/update location, not something ordinary `build` may dereference.
+- [ ] Support addressing a Node inside a repository that contains several Context Nodes as part of transport metadata.
+- [ ] Document the exact pinned Source authoring contract.
 
 ### 4. Candidate discovery and explicit acceptance
 
@@ -140,6 +146,67 @@ Do this before choosing transport syntax.
 - [ ] Regenerate repository dogfood and finish the block with completely green CI before merge.
 
 Transport/cache mechanics remain separate from semantic composition. The accepted immutable artifact is the boundary between them.
+
+## Next validation block: reviewed LLM-assisted project onboarding
+
+The next 1:1 validation should use a materially larger existing project and must **not** rely on a human or this conversation manually designing its ContextCanon files from prior knowledge.
+
+Onboarding is a semantic workflow before normal compilation, not hidden compiler behavior and not a special inheritance relationship.
+
+```text
+existing project
+      ↓
+deterministic inventory
+      ↓
+harness-neutral LLM onboarding instruction
+      ↓
+reviewable proposal
+      ↓
+mandatory human review
+      ↓
+explicit acceptance
+      ↓
+CONTEXT.src.md + Sources + Topics + Resources
+      ↓
+normal deterministic compiler
+```
+
+### Bootstrap/inventory
+
+- [ ] Add a deterministic `contextcanon onboard prepare <project>` step that inventories likely context-bearing material without interpreting it semantically.
+- [ ] Include familiar project material such as `README.md`, `CONTRIBUTING.md`, architecture/development docs, existing agent instructions, configuration, and other explicitly selected sources.
+- [ ] Preserve provenance so an onboarding proposal can point back to the project material from which each proposed context item came.
+- [ ] Do not require the target project to have a Context Node before this workflow begins.
+
+### Harness-neutral LLM instruction
+
+- [ ] Ship the onboarding instruction as part of ContextCanon rather than relying on the operator to invent a prompt.
+- [ ] Require the LLM to extract and reorganize only information supported by the inspected project; uncertain or contradictory material must be surfaced rather than silently resolved.
+- [ ] Require every proposal item to state its source/provenance and rationale.
+- [ ] Require classification into at least: project-local Rule, existing reusable Source, candidate reusable/generic Node, Topic/Resource, project state/planning, ordinary documentation that should remain ordinary documentation, or unresolved question.
+- [ ] Explicitly test common reusable candidates such as Python-development conventions, testing rules, writing/user-guidance style, language conventions, and other cross-project practices.
+- [ ] Let the LLM compare extracted generic candidates with the available ContextCanon Node catalog before duplicating them locally.
+- [ ] Never let the LLM silently publish a new generic Node merely because a rule looks reusable; that is a separate reviewed proposal.
+- [ ] Preserve useful README/CONTRIBUTING content instead of treating onboarding as a destructive document migration.
+
+### Reviewable proposal and acceptance
+
+- [ ] Define a proposal format separate from Official Context; onboarding output is never accepted merely because an LLM produced it.
+- [ ] Make proposed file additions/changes and Source choices reviewable before they become canonical context.
+- [ ] Require an explicit `accept` step after human review before creating/replacing canonical `CONTEXT.src.md` and related authored context files.
+- [ ] Let deterministic compiler validation run on the accepted result immediately afterward.
+- [ ] Keep reusable-Node proposals separate enough that they can receive their own review/versioning lifecycle.
+
+### Larger 1:1 test
+
+- [ ] Choose a larger existing project with meaningful README/CONTRIBUTING/docs and no pre-curated ContextCanon files.
+- [ ] Run the framework-generated onboarding instruction through an LLM that has repository access.
+- [ ] Do not manually author the proposed context structure from conversation memory before the LLM run.
+- [ ] Review the proposal against its cited project sources, especially the split between local context and reusable generic Nodes.
+- [ ] Accept the reviewed proposal, build it with ContextCanon, and then test ordinary and Topic-specific tasks through a real harness.
+- [ ] Record which parts the LLM classified well, where human correction was needed, and whether generic-Node extraction reduced local duplication.
+
+This is intentionally an LLM-assisted layer **above** deterministic compiler truth. The compiler validates and publishes an accepted proposal; it does not decide what a pre-existing project's prose means.
 
 ## Then: protected Rules and authorized exceptions
 
@@ -161,7 +228,7 @@ After those central layers:
 - [ ] Topic composition/materialization across Source package boundaries.
 - [ ] Nested Git repository boundary behavior.
 - [ ] Safe compiler-owned generated-file manifest if automatic stale adapter cleanup is later needed.
-- [ ] Authoring assistance for Node initialization, stable IDs, and compact templates.
+- [ ] Authoring assistance for stable IDs and compact templates beyond the reviewed onboarding workflow.
 
 ## Semantic layer above the compiler
 
