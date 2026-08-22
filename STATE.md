@@ -1,72 +1,49 @@
 # Current State
 
-ContextCanon has moved beyond architecture-only prototyping and beyond its first external proof. The framework now has a deterministic compiler, successful self-hosting, a successful real-project/harness validation, inherited Rule changes, and an exact compiled Context diff.
+ContextCanon has moved beyond architecture-only prototyping and beyond its first external proof. Compiler 0.3 is now the accepted baseline on `main`: deterministic self-hosting, real-project/harness validation, inherited Rule changes, canonical semantic normalization, and exact compiled Context diff are all established.
 
-## What has been validated
+## Accepted stable baseline
 
-The first external experiment used `SomeSunlight/teams-chat-exporter` on a dedicated branch.
+PR #2 was squash-merged to `main` as commit `c2e3f1af3e9b80f81d6adb9b6eeb04c297bee910`.
 
-The result was positive end to end:
+The accepted baseline has 26 deterministic regression tests plus repository dogfood drift checking. The compiler remains dependency-free and no LLM participates in deterministic compiler truth.
 
-- the generated files made the project's assumptions and structure easier to understand for a human reviewer;
-- GitHub Copilot entered through generated `AGENTS.md` and used the compiled project context;
+The first external experiment used `SomeSunlight/teams-chat-exporter` and validated the intended runtime path end to end:
+
+- generated files improved architectural orientation for a human reviewer;
+- GitHub Copilot entered through generated `AGENTS.md` and used `CONTEXT.md`;
 - an ordinary task stayed small;
-- a Teams selector-maintenance task followed its Topic and used the required deeper resources;
+- a Teams selector-maintenance task followed its Topic and loaded the Required deeper resources;
 - the model correctly preferred dated selector configuration over unnecessary Python changes;
 - a low-cost model produced a strong project-specific answer when given the structured ContextCanon path.
 
-The practical conclusion is that ContextCanon should now be hardened for broad daily use rather than subjected to more artificial proof-of-value tests.
+The practical conclusion remains: ContextCanon should now be hardened for broad daily use rather than subjected to more artificial proof-of-value tests.
 
 ## Current design baseline
 
-- Every Context Node has one physical node-root directory; the directory path is location, not identity.
+- Every Context Node has one physical node-root directory; path is location, not identity.
 - `CONTEXT.src.md` is the human-editable source of truth.
 - `CONTEXT.md` is the generated compact official entry view.
-- `CONTEXT/` is optional and contains deeper compiled/materialized resources only when a Node needs them.
-- Topics provide progressive disclosure with Required and Optional targets.
-- Topic targets explicitly distinguish a Resource from another Context Node.
-- Topic navigation does not imply Source composition.
-- A Node may compose multiple independent Sources without implicit Source precedence.
-- Stable IDs are mandatory for addressable elements; inherited Rule changes bind stable origin Node ID plus Rule ID.
+- `CONTEXT/` is optional deeper compiled/materialized context.
 - `.context/` is generated machine state and normally ignored by humans.
-- Harness/model-specific files are thin generated adapters only.
+- Topics provide Required/Optional progressive disclosure.
+- Topic navigation does not imply Source composition.
+- Source composition is a DAG with no implicit Source precedence.
+- Stable IDs address context elements independently of titles, wording, and paths.
+- Inherited Rule `Remove`/`Override` preserve exact identity and provenance transitively.
+- `normalized_digest` identifies canonical semantic state; `package_digest` identifies exact human/agent package bytes.
+- `contextcanon diff` compares two compiled snapshots of the same stable Node by identity and provenance.
+- Harness-specific files remain thin generated adapters; the tested JetBrains Copilot setup uses `AGENTS.md`.
 - Deterministic operations form the framework skeleton; LLMs assist only where semantic interpretation is actually needed.
-- Standardizing this structure across projects is itself a feature: humans and agents can use the same orientation path even when project domains differ.
 
 ## Executable compiler 0.3
-
-The dependency-free Python CLI now has three core operations:
 
 ```text
 contextcanon build --all .
 contextcanon check --all .
 contextcanon diff <before-node-root> <after-node-root>
+contextcanon diff <before-node-root> <after-node-root> --json
 ```
-
-`diff` also supports `--json` for deterministic machine-readable output.
-
-Compiler 0.3 handles:
-
-- node-root discovery,
-- stable Node identity and version metadata,
-- local filesystem Sources,
-- Source identity/version validation and cycle detection,
-- transitive inherited Rule composition,
-- `Remove` and `Override` operations on inherited ordinary Rules,
-- dangling and duplicate Change diagnostics,
-- transitive Override and Remove provenance while preserving original Rule identity,
-- deterministic diamond-graph conflict handling without Source precedence,
-- Required/Optional Topic targets,
-- explicit Resource/Context Node target types,
-- `CONTEXT.md` generation,
-- optional `CONTEXT/` materialization,
-- recursive materialization closure for local Markdown links,
-- `.context/context.yaml` generation,
-- canonical semantic normalization and exact normalized/package SHA-256 digests,
-- deterministic Context diff by stable identities for Nodes, Sources, Changes, Rules, Topics, and Resources,
-- human-readable and JSON diff output,
-- thin AGENTS/goose adapters,
-- deterministic drift checking.
 
 The implementation is intentionally layered:
 
@@ -78,35 +55,34 @@ parser.py → model.py → compiler.py → render.py → outputs.py
                                         cli.py
 ```
 
-`parser.py` owns authoring grammar, `compiler.py` semantic truth, `render.py` deterministic projection, `outputs.py` filesystem comparison/writes, `diff.py` exact comparison of compiled states, and `cli.py` orchestration. See [docs/compiler.md](docs/compiler.md).
+See [docs/compiler.md](docs/compiler.md) for the current compiler contract.
 
-## Compiler quality findings
+## Active block: immutable external Sources and update acceptance
 
-Compiler hardening has already exposed defects that were not obvious from the architecture alone:
+Development now continues on fresh branch `agent/immutable-external-sources`, created directly from the accepted 0.3 `main` commit.
 
-- while adding Rule changes, a transitive rendering defect was found: a grandparent Rule could be semantically inherited but omitted from a deeper descendant's `CONTEXT.md`;
-- diamond tests showed that Remove needs explicit transitive removal provenance rather than disappearing as simple absence;
-- diff work exposed that `normalized_digest` must canonicalize semantically unordered collections such as Source order and Topic-target presentation order.
+The purpose of this block is to let a consumer compose a reusable Source **without requiring the Source repository to be live or checked out during normal deterministic builds**.
 
-Regression tests now cover these cases. This reinforces the development policy: central compiler semantics receive deterministic positive and negative fixtures before being trusted across many projects.
+The key architecture question comes before transport syntax: define the smallest immutable compiled Source artifact that contains enough semantic state for downstream composition and enough human/agent material for inspection. Transport, cache, candidate discovery, and explicit acceptance must remain separate from semantic composition.
 
-## ContextCanon dogfoods three Nodes
+The intended update model is:
 
 ```text
-ContextCanon Gateway ──Topic──> ContextCanon Framework Development
-                                      ▲
-                                      │ Source
-                           ContextCanon Foundation
+accepted immutable Source package
+          ↓
+offline deterministic consumer build
+
+newer candidate package
+          ↓
+exact Context diff
+          ↓
+optional semantic impact review
+          ↓
+explicit acceptance
+          ↓
+new deterministic consumer build
 ```
 
-The compiler builds and checks all three from their `CONTEXT.src.md` files. Framework Development includes an always-on compiler-stage Rule and a dedicated Compiler Implementation Topic pointing to the detailed compiler contract.
+A normal `build` must never silently fetch or switch a consumer to a newer Source package.
 
-## Current focus
-
-Compiler 0.3 is in its release-completion phase: documentation, dogfood outputs, and final CI are being synchronized on `agent/compiler-walking-skeleton`.
-
-Once that branch is fully green, PR #2 will be updated to describe the actual accepted baseline and squash-merged to `main`. `main` will then represent the last accepted, fully reproducible ContextCanon stage.
-
-The next core block — **immutable external Sources and explicit update acceptance** — will start from that new `main` on a fresh branch. It will use the deterministic diff as the exact review input for Source package updates rather than silently changing consumers.
-
-See [PLAN.md](PLAN.md) for the ordered core-hardening roadmap and branch/merge cadence.
+See [PLAN.md](PLAN.md) for the ordered implementation steps and merge cadence.
