@@ -17,11 +17,13 @@ Source order does not mean priority. ContextCanon must never silently apply "fir
 
 Different Sources can therefore contribute independent elements without an artificial method-resolution order.
 
+Compiler 0.3 also canonicalizes direct Source order in normalized semantics. Reordering two otherwise identical Sources therefore cannot accidentally change `normalized_digest` or masquerade as semantic precedence.
+
 ## Dependency graph
 
 Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted Source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
 
-Compiler 0.2 implements cycle detection, Source Node ID/version validation for local-path Sources, transitive Rule composition, dangling Remove/Override diagnostics, and deterministic conflicts for incompatible transitive states of the same stable Rule.
+Compiler 0.3 implements cycle detection, duplicate direct Source identity rejection, Source Node ID/version validation for local-path Sources, transitive Rule composition, dangling Remove/Override diagnostics, and deterministic conflicts for incompatible transitive states of the same stable Rule.
 
 ## Structural Rule conflicts
 
@@ -49,7 +51,7 @@ An optional LLM reviewer may flag likely conflicts, explain them, and suggest wh
 
 ## Local changes
 
-A Node can now resolve inherited ordinary Rules through explicit **Remove** and **Override** operations.
+A Node can resolve inherited ordinary Rules through explicit **Remove** and **Override** operations.
 
 A Change addresses a Rule by stable identity:
 
@@ -71,7 +73,7 @@ Override keeps the inherited Rule identity and origin but replaces its effective
 
 ### Dangling operations
 
-If the target Rule is not inherited, compilation fails. This matters especially after future Source updates: a parent removing or replacing an element cannot silently leave a child operation pointing at nothing.
+If the target Rule is not inherited, compilation fails. This matters especially after Source updates: a parent removing or replacing an element cannot silently leave a child operation pointing at nothing.
 
 A Node may define only one local Change against the same inherited Rule identity.
 
@@ -89,13 +91,31 @@ If Team Standard overrides a Foundation Rule, Project inherits that overridden R
 
 This is why the compiler renders inherited Rules by their actual origin Node rather than only by the consumer's direct Source list, and why the machine representation contains more state than the human-facing active Rule list.
 
+## Deterministic diff is the update boundary
+
+Compiler 0.3 can compare two compiled snapshots of the same stable Context Node before any semantic reviewer or consumer code is involved:
+
+```text
+accepted Source package
+        +
+candidate Source package
+        ↓
+contextcanon diff
+        ↓
+exact identity-based change set
+```
+
+The diff reports Source package/version changes, effective Rule changes including active/removed transitions and override provenance, local Change differences, Topic changes, and materialized Resource content changes. Human-readable and JSON output come from the same deterministic change model.
+
+This means later Source-update workflows do not need to infer change from prose or Git file layout. The exact compiled difference exists first; semantic impact analysis is an optional layer above it.
+
 ## Source updates are change requests
 
 Consumers ultimately remain pinned to an accepted Source package. A newly published Source version is an update candidate, not live inheritance.
 
-The intended workflow is: detect a newer package, compute a deterministic diff, identify structural consequences such as dangling Changes, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
+The intended workflow is: detect a newer immutable package, compute the deterministic Context diff, identify structural consequences such as dangling Changes, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
 
-Compiler 0.2 records local Source version plus compiled Source package digest, but immutable external package resolution and acceptance are not yet implemented.
+Compiler 0.3 already provides the deterministic diff and records local Source version plus compiled Source package digest. Immutable external package resolution, candidate discovery, caching, and explicit acceptance are the next core block.
 
 ## Navigation is not composition
 
@@ -130,4 +150,4 @@ The intermediate `nodes/`, `nodes/library/`, and `nodes/internal/` directories a
 
 Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance Rule for unrelated projects using ContextCanon.
 
-Compiler 0.2 supports local node-root locators. Immutable external repository/package locators remain a planned core step.
+Compiler 0.3 supports local node-root locators. Immutable external repository/package locators remain the next planned core step.
