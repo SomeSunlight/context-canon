@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.1.0"
+compiler_version: "0.2.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -17,12 +17,14 @@ sources: []
 # Elements authored in this Node's CONTEXT.src.md.
 local:
   rules: []
+  changes: []
   topics:
     - {"id": "CCG-TOPIC-DEVELOPMENT", "title": "ContextCanon framework development"}
 
 # Compiled Rule view with provenance plus the local Topic index.
 official:
   rules: []
+  removed_rules: []
   topic_ids: ["CCG-TOPIC-DEVELOPMENT"]
   resource_root: null
 
@@ -38,5 +40,5 @@ resources: []
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "1c43d124935aae7be49f9899c5172cfbd8e54f0188c02475649e0d470f7f9eef"
+  normalized_digest: "83bba4d36e17bde87c22521abf3d8fc7979b2e13fa5e7122e64c02302daa748b"
   package_digest: "36b40eeae3b15bc7fea5097790245aabeaa5781551b7fa45d6bea944daab96f4"
