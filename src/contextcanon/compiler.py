@@ -4,8 +4,14 @@ from dataclasses import replace
 from pathlib import Path
 
 from .links import local_markdown_targets
-from .model import CompiledNode, Rule, RuleChange, RuleModification, RuleRemoval
-from .package import package_content_files, package_digest, render_package_manifest, semantic_digest_for_node
+from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval
+from .package import (
+    compiled_package,
+    package_content_files,
+    package_digest,
+    render_package_manifest,
+    semantic_digest_for_node,
+)
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
@@ -53,9 +59,10 @@ class Compiler:
                         f"{node_root}: Source {source.name} expects version {source.version}, got {source_node.metadata.version}"
                     )
                 compiled.source_nodes.append(source_node)
+                compiled.source_packages.append(compiled_package(source_node))
 
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
-                compiled.source_nodes,
+                compiled.source_packages,
                 compiled.metadata.name,
             )
             compiled.local_changes = list(parsed.changes)
@@ -96,7 +103,7 @@ class Compiler:
 
     def _compose_inherited_rule_state(
         self,
-        source_nodes: list[CompiledNode],
+        source_packages: list[CompiledPackage],
         node_name: str,
     ) -> tuple[list[Rule], list[RuleRemoval]]:
         rules: list[Rule] = []
@@ -104,8 +111,8 @@ class Compiler:
         rules_by_identity: dict[tuple[str, str], Rule] = {}
         removals_by_identity: dict[tuple[str, str], list[RuleRemoval]] = {}
 
-        for source in source_nodes:
-            for rule in (*source.inherited_rules, *source.local_rules):
+        for source in source_packages:
+            for rule in source.rules:
                 identity = (rule.origin_node_id, rule.id)
                 if identity in removals_by_identity:
                     raise ContextCanonError(
