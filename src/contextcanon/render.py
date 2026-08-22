@@ -47,7 +47,7 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         _append_rules(lines, rules)
 
     if compiled.local_rules:
-        lines.extend(["## Local Rules" if compiled.source_nodes else "## Rules", ""])
+        lines.extend(["## Local Rules" if compiled.source_packages else "## Rules", ""])
         _append_rules(lines, compiled.local_rules)
     elif not compiled.inherited_rules:
         lines.extend(["This Node defines no Rules.", ""])
@@ -146,17 +146,18 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
         f"  name: {q(compiled.metadata.name)}",
         f"  version: {q(compiled.metadata.version)}",
         "",
-        "# Accepted Source Nodes used by this build. package_digest identifies the compiled Source package.",
+        "# Accepted Source packages used by this build. Both digests are exact pins.",
     ]
-    if compiled.source_nodes:
+    if compiled.source_packages:
         lines.append("sources:")
-        for source_ref, source_node in zip(compiled.parsed.sources, compiled.source_nodes):
+        for source_ref, source_package in zip(compiled.parsed.sources, compiled.source_packages):
             lines.extend([
-                f"  - id: {q(source_node.metadata.id)}",
-                f"    name: {q(source_node.metadata.name)}",
-                f"    version: {q(source_node.metadata.version)}",
+                f"  - id: {q(source_package.metadata.id)}",
+                f"    name: {q(source_package.metadata.name)}",
+                f"    version: {q(source_package.metadata.version)}",
                 f"    locator: {q(source_ref.locator)}",
-                f"    package_digest: {q(source_node.package_digest)}",
+                f"    normalized_digest: {q(source_package.normalized_digest)}",
+                f"    package_digest: {q(source_package.package_digest)}",
             ])
     else:
         lines.append("sources: []")
