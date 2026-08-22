@@ -16,11 +16,13 @@ Validated foundations include:
 
 The development rule is now: **complete one coherent deterministic core block, regenerate dogfood, make CI fully green, squash-merge to `main`, then start the next block on a fresh branch.**
 
-## Active: Compiler 0.4 — immutable external Sources and explicit acceptance
+## Compiler 0.4 — immutable external Sources and explicit acceptance
 
 Branch: `agent/immutable-external-sources`
 
 Goal: reusable Sources must work across independent repositories without live inheritance or hidden network access during normal build.
+
+The implementation is complete. Only the final PR metadata/merge gate remains before this becomes the accepted `main` baseline.
 
 ### Immutable package boundary
 
@@ -53,6 +55,9 @@ Goal: reusable Sources must work across independent repositories without live in
 - [x] Reject stale acceptance when consumer source, accepted Source state, or candidate changed after review.
 - [x] Install the new immutable accepted package and update only the matching Source version/digest pins.
 - [x] Preserve transport metadata while changing accepted pins.
+- [x] Publish candidate and accepted package directories only after staging and full package verification.
+- [x] Publish review receipts and canonical Source-pin changes atomically from sibling temporary files.
+- [x] Prove that a simulated failure at the final Source-pin replace leaves the old canonical source bytes and old build state intact.
 
 ### Generic Git candidate transport
 
@@ -65,15 +70,17 @@ Goal: reusable Sources must work across independent repositories without live in
 - [x] Test a real local Git repository with a nested reusable Node, v1 accepted, v2 on `main`, fetch, review, accept, and post-accept offline build.
 - [x] Test missing node paths and unknown refs without requiring network access.
 - [x] Keep candidate packages transient; retain accepted packages as reproducible project state.
+- [x] Make interrupted/partial retrieval safe through temporary checkout cleanup plus verified staged publication.
 
 ### 0.4 release completion
 
-- [x] Document immutable package identity, accepted/candidate separation, Git transport, review receipts, and explicit acceptance.
+- [x] Document immutable package identity, accepted/candidate separation, Git transport, review receipts, explicit acceptance, and interrupted-operation recovery.
 - [x] Update compiler/contributor/walkthrough documentation to the `CompiledPackage` architecture.
-- [x] Reach 44 green deterministic regression tests including package, offline Source, acceptance, and local-Git transport cases.
-- [ ] Regenerate all ContextCanon dogfood packages with the final 0.4 documentation.
-- [ ] Finish `contextcanon check --all .` with zero drift.
+- [x] Reach 45 green deterministic regression tests including package, offline Source, acceptance, local-Git transport, and failed-pin-publication cases.
+- [x] Regenerate all ContextCanon dogfood packages from the final 0.4 implementation/documentation.
+- [x] Finish `contextcanon check --all .` with zero drift before the final documentation-only release bookkeeping.
 - [ ] Update PR #3 to describe the completed 0.4 block.
+- [ ] Run the exact final PR head through tests plus zero-drift check.
 - [ ] Squash-merge 0.4 to `main` as the next stable recovery point.
 
 ## Next validation block: reviewed LLM-assisted project onboarding
