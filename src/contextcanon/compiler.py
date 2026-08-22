@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import hashlib
-import json
-from dataclasses import asdict, replace
+from dataclasses import replace
 from pathlib import Path
 
 from .links import local_markdown_targets
 from .model import CompiledNode, Rule, RuleChange, RuleModification, RuleRemoval
+from .package import package_content_files, package_digest, render_package_manifest, semantic_digest_for_node
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.3.0"
+COMPILER_VERSION = "0.4.0"
 
 
 class Compiler:
@@ -74,9 +73,10 @@ class Compiler:
             # locator/materialization contract.
             compiled.local_topics = list(parsed.topics)
             compiled.resources = self._collect_resources(compiled)
-            compiled.normalized_digest = self._semantic_digest(compiled)
+            compiled.normalized_digest = semantic_digest_for_node(compiled)
             compiled.official_markdown = render_official(compiled, self.repo_root)
-            compiled.package_digest = self._package_digest(compiled.official_markdown, compiled.resources)
+            compiled.package_digest = package_digest(package_content_files(compiled))
+            compiled.package_manifest = render_package_manifest(compiled, COMPILER_VERSION)
             compiled.adapters = render_adapters(compiled)
             compiled.machine_yaml = render_machine_yaml(compiled, self.repo_root, COMPILER_VERSION)
             self._cache[node_root] = compiled
@@ -261,77 +261,12 @@ class Compiler:
                 f"{node_name} Topic {topic_id}: missing resource: {locator}"
             )
 
-    def _semantic_digest(self, compiled: CompiledNode) -> str:
-        sources = sorted(
-            (
-                {
-                    "id": source.metadata.id,
-                    "version": source.metadata.version,
-                    "package_digest": source.package_digest,
-                }
-                for source in compiled.source_nodes
-            ),
-            key=lambda item: (item["id"], item["version"], item["package_digest"]),
-        )
-        changes = sorted(
-            (asdict(change) for change in compiled.local_changes),
-            key=lambda item: (item["target_node_id"], item["target_rule_id"], item["kind"]),
-        )
-        rules = sorted(
-            (asdict(rule) for rule in (*compiled.inherited_rules, *compiled.local_rules)),
-            key=lambda item: (item["origin_node_id"], item["id"]),
-        )
-        removed_rules = sorted(
-            (asdict(removal) for removal in compiled.removed_rules),
-            key=lambda item: (
-                item["origin_node_id"],
-                item["rule_id"],
-                item["removed_by_node_id"],
-                item["removed_by_node_name"],
-                item["why"],
-            ),
-        )
-        topics: list[dict] = []
-        for topic in compiled.local_topics:
-            item = asdict(topic)
-            item["targets"] = sorted(
-                item["targets"],
-                key=lambda target: (target["intent"], target["kind"], target["locator"]),
-            )
-            topics.append(item)
-        topics.sort(key=lambda item: (item["origin_node_id"], item["id"]))
-
-        payload = {
-            "node": {
-                "id": compiled.metadata.id,
-                "name": compiled.metadata.name,
-                "version": compiled.metadata.version,
-            },
-            "sources": sources,
-            "changes": changes,
-            "rules": rules,
-            "removed_rules": removed_rules,
-            "topics": topics,
-        }
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-        return hashlib.sha256(encoded).hexdigest()
-
     def _is_within_repo(self, path: Path) -> bool:
         try:
             path.resolve().relative_to(self.repo_root)
             return True
         except ValueError:
             return False
-
-    def _package_digest(self, official: str, resources: dict[str, bytes]) -> str:
-        files: dict[str, bytes] = {"CONTEXT.md": official.encode("utf-8"), **resources}
-        digest = hashlib.sha256()
-        for path, content in sorted(files.items()):
-            digest.update(path.encode("utf-8"))
-            digest.update(b"\0")
-            digest.update(hashlib.sha256(content).digest())
-            digest.update(b"\0")
-        return digest.hexdigest()
 
 
 def discover_nodes(repo_root: Path) -> list[Path]:
