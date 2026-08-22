@@ -18,149 +18,129 @@ Three Context Nodes are currently dogfooded in this repository:
 - Foundation: edit [nodes/library/foundation/CONTEXT.src.md](nodes/library/foundation/CONTEXT.src.md),
 - Framework Development: edit [nodes/internal/framework-development/CONTEXT.src.md](nodes/internal/framework-development/CONTEXT.src.md).
 
-Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, or `.context/context.yaml` files.
+Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, `.context/context.yaml`, or `.context/package.json` files.
 
-After changing ContextCanon source or referenced material, rebuild and verify the generated result:
+After changing ContextCanon source or referenced material:
 
 ```text
 python -m pip install -e .
 contextcanon build --all .
 contextcanon check --all .
+python -m unittest discover -s tests -v
 ```
 
-`build` may add, replace, or remove files **inside compiler-owned generated package locations** so the filesystem matches the expected deterministic result. It must not treat arbitrary repository files as disposable generated output.
-
-`check` performs the same compilation in memory and fails when committed output has drifted.
-
-To compare two snapshots of the same stable Context Node:
-
-```text
-contextcanon diff <before-node-root> <after-node-root>
-contextcanon diff <before-node-root> <after-node-root> --json
-```
-
-The diff is deterministic compiler output, not semantic LLM judgment.
+`build` may replace compiler-owned generated package files. It must not treat arbitrary repository files as disposable output. `check` performs the same compilation in memory and reports drift.
 
 ## Compiler structure
 
-The compiler is intentionally split into narrow layers:
+The implementation is intentionally split into narrow layers:
 
 ```text
 CONTEXT.src.md
       ↓
-parser.py → model.py → compiler.py → render.py → outputs.py
-                        │
-                        └────────────→ diff.py
-                                          ↑
-                                       cli.py
+parser.py → model.py → compiler.py → package.py
+                        │              │
+                        ├──────────────┼→ diff.py / package_diff.py
+                        ↓              ↓
+                    render.py       immutable package
+                        ↓
+                    outputs.py
+
+external Source update:
+Git locator → git_transport.py → candidate package
+                              → sources.py review/accept
+                              → accepted package + exact pin
 ```
 
-Use the modules according to their contracts:
+Use modules according to their contracts:
 
-- **`model.py`** — typed data only. Do not put parsing, rendering, diff presentation, or filesystem mutation here.
-- **`parser.py`** — authoring grammar and syntax validation. It produces typed source structures and must never write generated files.
-- **`compiler.py`** — semantic truth: Source graphs, identity validation, Rule composition, Remove/Override, target validation, resource closure, provenance, canonical normalization, and digests.
-- **`diff.py`** — exact comparison of two already-compiled Nodes by stable identity. It must not parse source, invent semantic meaning, or mutate files.
-- **`render.py`** — deterministic projection from compiled structures to human/machine text. Do not hide semantic decisions in rendering.
-- **`links.py`** — narrow local Markdown-link extraction used by materialization closure.
-- **`outputs.py`** — compares and writes the exact generated output set. It should not know composition semantics.
-- **`cli.py`** — command orchestration. Keep business logic out of the CLI.
+- **`model.py`** — typed data only.
+- **`parser.py`** — authoring grammar and syntax validation; no filesystem writes.
+- **`compiler.py`** — semantic truth: Source composition, Rule changes, conflict/target validation, resource closure.
+- **`package.py`** — immutable compiled package boundary, canonical semantic digest, exact package digest, serialization/loading/integrity checks.
+- **`diff.py`** — exact compiled-Node comparison.
+- **`package_diff.py`** — exact immutable Source-package comparison using the same diff model.
+- **`render.py`** — deterministic human/machine projection; no hidden semantic decisions.
+- **`links.py`** — local Markdown-link extraction for materialization closure.
+- **`outputs.py`** — compare/write compiler-owned generated output.
+- **`git_transport.py`** — retrieve candidate bytes only; no composition or acceptance semantics.
+- **`sources.py`** — structural candidate review, deterministic receipt, and explicit acceptance.
+- **`cli.py`** — command orchestration only.
 
-See [docs/compiler.md](docs/compiler.md) for the complete compiler contract.
+See [docs/compiler.md](docs/compiler.md) and [docs/external-sources.md](docs/external-sources.md).
 
 ## Design principles
 
 ### Deterministic truth first
 
-If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not for Node identity, dependency resolution, Rule operations, exact diffs, package contents, provenance, or hashes.
-
-The same authored input plus the same accepted Sources must produce byte-identical official output.
+If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, or hashes.
 
 ### Keep the pipeline one-way
 
-Parsing produces structures; compilation resolves meaning; diff compares compiled meaning; rendering projects meaning; the output layer compares or writes bytes. Later stages must not reconstruct decisions that belong to earlier ones.
-
-This makes bugs local: a grammar failure belongs in the parser, a composition failure in the compiler, a comparison failure in the diff layer, a formatting failure in the renderer, and a drift/write failure in the output layer.
+Authoring is parsed into structures; compilation resolves meaning; immutable packages publish compiled meaning; diffs compare compiled meaning; rendering projects it. Never reconstruct semantic truth from generated Markdown.
 
 ### Stable identity beats wording and path
 
-Rules and other addressable elements are referenced by stable identity. Renaming a Node, moving its directory, or rewording a Rule must not silently retarget operations.
-
-Remove/Override and deterministic Rule diff therefore bind the inherited Rule's origin Node ID plus Rule ID rather than its visible title.
+Rules and Nodes are referenced by stable identity. Renaming a Node, moving its directory, changing a Git `node-path`, or rewording a Rule must not silently retarget operations.
 
 ### Fail rather than guess
 
-Unsupported syntax, dangling Changes, duplicate operations or Source identities, cycles, identity mismatches, invalid targets, or structural ambiguity should produce a clear error. Do not make the compiler "helpful" by guessing semantics.
+Unsupported syntax, incomplete pins/transport metadata, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, or structural ambiguity should fail clearly.
 
-### No implicit precedence
+### No implicit Source precedence
 
-Multiple Sources are independent. Source order must not become a hidden method-resolution order. If two Sources create a structural ambiguity, resolve it explicitly or fail.
+Multiple Sources are independent. Source order must not decide conflicts. Canonical semantic normalization likewise ignores ordering where the model does not assign semantic meaning.
 
-Canonical semantic normalization must likewise ignore order where the model does not define order as meaningful.
+### Distinguish semantics, presentation, and transport
 
-### Distinguish semantics from presentation
+`normalized_digest` identifies canonical compiled meaning. `package_digest` identifies exact human/agent package bytes. Git refs and repository paths are transport/location metadata, not either identity.
 
-`normalized_digest` identifies canonical compiled meaning. `package_digest` identifies exact published package bytes. A presentation-only reorder may change the package without changing semantic identity.
+A candidate fetched from Git is not accepted context. Normal `build` must continue to consume the previously accepted package until explicit acceptance changes the pin.
 
-The deterministic diff should preserve this distinction rather than reporting cosmetic ordering as a semantic Rule or Topic change.
+### Keep accepted state reproducible
+
+Accepted external packages under `.context/sources/<package-digest>/` are part of the consumer's reproducible project state and should be retained with a project that must build without its Source repository. Candidate packages are temporary update state.
 
 ### Keep filesystem mutation narrow
 
-Compilation and diff must be possible entirely in memory. Only the output layer writes files.
+Compilation and diff should be possible in memory. Generated output, candidate retrieval, and Source acceptance each own only their explicit filesystem areas. Never add generic repository cleanup.
 
-Generated cleanup must remain scoped to files/directories that ContextCanon can identify as compiler-owned. Never add a generic "delete everything that is not expected" behavior to a project directory.
+### Preserve human review boundaries
+
+Deterministic tooling can require that `source review` succeeds before `source accept`, but semantic decisions still belong to humans or explicitly invoked LLM workflows. The planned onboarding workflow likewise produces a proposal first; it must never publish Official Context directly from LLM output.
 
 ### Preserve human readability
 
-The source format is constrained Markdown because humans should be able to understand and review the project without a framework-specific editor. Machine state may be boring; human source and official context should remain lucid.
-
-### Optimize the problem before the model
-
-ContextCanon should make the relevant project knowledge obvious and progressively loadable. That helps strong models, but it is especially valuable for smaller, cheaper, and local models that should not spend capability rediscovering architecture and conventions on every task.
-
-### Grow the compiler in coherent semantic blocks
-
-After the successful external proof, ContextCanon no longer needs a new miniature use case before every obviously necessary core feature. It still should not batch unrelated semantics into one risky change.
-
-Prefer one coherent compiler layer, complete its positive and negative regression tests, regenerate all dogfood Nodes, and let CI prove determinism before moving on.
+The canonical authoring format remains constrained Markdown. Machine state can be boring; humans should be able to understand source and official context without a framework-specific editor.
 
 ## Tests
 
-Run the deterministic test suite before publishing compiler changes:
+Every deterministic feature should normally include:
 
-```text
-python -m unittest discover -s tests -v
-```
+- a successful fixture,
+- important invalid/corrupt/dangling cases,
+- transitive/composed cases when inheritance is involved,
+- deterministic ordering/digest assertions where relevant,
+- drift checks when generated output changes.
 
-The tests must not require an LLM, network service, or external repository. Every deterministic feature should normally include:
+Compiler/package tests must not require a network service or an LLM. Git transport tests use local temporary Git repositories so CI remains self-contained.
 
-- at least one successful fixture,
-- important invalid/dangling cases,
-- a transitive/composed case when inheritance is involved,
-- a determinism/drift check when generated output changes.
-
-For diff behavior, add fixtures that prove stable identity, relevant changed fields, deterministic ordering/JSON, and the distinction between semantic and presentation-only changes.
-
-GitHub Actions runs both the unit tests and `contextcanon check --all .`.
-
-A change is not complete merely because unit tests pass: committed dogfood packages must also match current compiler output.
+GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must also match current compiler output.
 
 ## Branch and merge cadence
 
-`main` is the last accepted, fully reproducible ContextCanon stage. Work on a coherent core feature in a dedicated branch, keep that branch until its tests, documentation, dogfood outputs, and CI are complete, then merge it before starting an unrelated core block.
+`main` is the last accepted, fully reproducible ContextCanon stage. Work on one coherent core block per branch/PR, finish tests/docs/dogfood/CI, then squash-merge before starting the next unrelated block.
 
-A core block is ready to merge only when:
+A core block is ready only when:
 
 - deterministic positive and negative tests pass,
-- repository dogfood was regenerated by the compiler itself,
+- dogfood was regenerated by the compiler itself,
 - `contextcanon check --all .` is clean,
-- relevant documentation matches implemented behavior,
+- documentation matches implemented behavior,
 - `STATE.md` and `PLAN.md` describe the resulting stage and next block.
-
-Prefer squash merges for these development blocks so `main` records clear accepted stages rather than every implementation experiment. Start the next major block from the new `main` on a fresh branch.
 
 ## Pull requests
 
-Keep changes conceptually focused. Explain what changed, why it belongs in deterministic compiler truth, and which invariant or practical need it serves.
+Keep changes conceptually focused. Explain what changed, why it belongs in deterministic truth or in an explicit semantic layer above it, and which invariant/practical need it serves.
 
-Separate deterministic compiler facts from LLM-assisted interpretation layered on top. If a new feature weakens reproducibility or makes a compiler stage depend on hidden behavior in another stage, redesign it before merging.
+If a new feature makes compiler semantics depend on hidden transport behavior, generated presentation, or an LLM judgment, redesign the boundary before merging.
