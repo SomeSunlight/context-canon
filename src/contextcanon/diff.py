@@ -128,7 +128,7 @@ def render_diff(diff: ContextDiff) -> str:
         return "\n".join(lines) + "\n"
 
     if not diff.entries:
-        lines.append("Package/compiler output changed without a semantic or Resource entry change.")
+        lines.append("Package presentation changed without semantic or Resource content changes.")
         return "\n".join(lines) + "\n"
 
     current_category = None
@@ -231,10 +231,15 @@ def _rule_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
 
 
 def _topic_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
-    return {
-        f"{topic.origin_node_id}#{topic.id}": asdict(topic)
-        for topic in compiled.local_topics
-    }
+    result: dict[str, dict[str, Any]] = {}
+    for topic in compiled.local_topics:
+        item = asdict(topic)
+        item["targets"] = sorted(
+            item["targets"],
+            key=lambda target: (target["intent"], target["kind"], target["locator"]),
+        )
+        result[f"{topic.origin_node_id}#{topic.id}"] = item
+    return result
 
 
 def _resource_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
