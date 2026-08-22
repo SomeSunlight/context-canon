@@ -11,6 +11,7 @@ TOPIC_COMMENT_RE = re.compile(r'<!--\s*ctx:topic\s+(?P<attrs>.*?)\s*-->')
 SOURCE_COMMENT_RE = re.compile(r'<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->')
 CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
+DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
 H1_RE = re.compile(r'^#\s+(.+?)\s+—\s+Local Context Source\s*$')
 SOURCE_RE = re.compile(r'^- \[(?P<name>[^]]+)\]\((?P<path>[^)]+)\)\s+—\s+`(?P<version>[^`]+)`\s*$')
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
@@ -111,7 +112,31 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
             raise ContextCanonError(f"{source_path}:{i+1}: Source needs ctx:source id/version metadata")
         if attrs["version"] != match.group("version"):
             raise ContextCanonError(f"{source_path}:{i+1}: Source display version and ctx:source version differ")
-        result.append(SourceRef(attrs["id"], match.group("name"), attrs["version"], match.group("path")))
+
+        has_normalized = "normalized-digest" in attrs
+        has_package = "package-digest" in attrs
+        if has_normalized != has_package:
+            raise ContextCanonError(
+                f"{source_path}:{i+1}: immutable Source needs both normalized-digest and package-digest"
+            )
+        normalized_digest = attrs.get("normalized-digest")
+        package_digest = attrs.get("package-digest")
+        if has_normalized:
+            if not DIGEST_RE.fullmatch(normalized_digest or ""):
+                raise ContextCanonError(f"{source_path}:{i+1}: invalid Source normalized-digest")
+            if not DIGEST_RE.fullmatch(package_digest or ""):
+                raise ContextCanonError(f"{source_path}:{i+1}: invalid Source package-digest")
+
+        result.append(
+            SourceRef(
+                attrs["id"],
+                match.group("name"),
+                attrs["version"],
+                match.group("path"),
+                normalized_digest,
+                package_digest,
+            )
+        )
         i += 1
     return result
 
