@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb",
-    "package": "795a75ec97b39e4688c4cf89ec288e6783a19232c93dc0030113c44666bb249e"
+    "package": "889aae6c51494d8b5b9b1d2186c45a009b665bb418bf403cf26c6c7f73a41013"
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/docs/composition.md",
-      "sha256": "daa37ac87b17d4409fa0a1e7f493fb6d81ca7637ef6e8f27b2adefef91b6e002",
-      "size": 8635
+      "sha256": "5b42832109689341198c26986722412f6dee1d163e4ba9bc3e5ef4e292558af2",
+      "size": 10918
     },
     {
       "path": "CONTEXT/references/docs/external-sources.md",
