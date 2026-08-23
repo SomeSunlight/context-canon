@@ -1,20 +1,18 @@
 # Current State
 
-ContextCanon has moved beyond architecture-only prototyping and its first external proof. Compiler 0.3 remains the accepted baseline on `main`; Compiler 0.4 is complete on `agent/immutable-external-sources` and is at the final PR merge gate.
+ContextCanon has moved beyond architecture-only prototyping and its first external proof. **Compiler 0.4 is the accepted stable baseline on `main`** after PR #3 was squash-merged as commit `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`.
 
 ## Accepted baseline on main
 
-PR #2 was squash-merged as `c2e3f1af3e9b80f81d6adb9b6eeb04c297bee910`.
-
-That baseline established deterministic self-hosting, inherited Rule `Remove`/`Override`, transitive provenance and conflict diagnostics, canonical semantic normalization, exact compiled Context diff, real JetBrains Copilot entry through generated `AGENTS.md`, and successful progressive disclosure in `SomeSunlight/teams-chat-exporter` including a low-cost-model run.
+The accepted baseline now includes deterministic self-hosting, real-project/harness validation, inherited Rule `Remove`/`Override`, transitive provenance and conflict diagnostics, canonical semantic normalization, exact compiled Context diff, immutable external Source packages, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery guarantees.
 
 The practical conclusion is settled: ContextCanon is useful enough to build central reusable functionality and then apply it aggressively to larger projects.
 
-## Compiler 0.4 completed on the working branch
+## Compiler 0.4
 
 Compiler 0.4 adds immutable external Sources and reviewed Source-update acceptance while preserving the rule that normal compilation is deterministic and offline with respect to external Sources.
 
-The common semantic boundary is now `CompiledPackage`:
+The common semantic boundary is `CompiledPackage`:
 
 ```text
 local Source Node ──compile──────────┐
@@ -46,7 +44,7 @@ Candidate packages are separate:
 .context/candidates/<package-digest>/
 ```
 
-The implemented update workflow is:
+The accepted update workflow is:
 
 ```text
 contextcanon source fetch <source-id> --node <consumer>
@@ -72,19 +70,19 @@ Candidate and accepted packages are copied into sibling staging directories, ver
 
 Review receipts and the canonical Source pin use sibling temporary files followed by atomic replacement. The Source-pin temporary file is flushed and `fsync`ed before publication.
 
-If the new immutable package is already installed but the final `CONTEXT.src.md` pin swap fails, the previous canonical source bytes remain intact. The new package may remain as harmless unreferenced immutable state, while ordinary compilation continues against the old accepted pin. This failure mode is now covered by a regression test that simulates the final replace failure.
+If the new immutable package is already installed but the final `CONTEXT.src.md` pin swap fails, the previous canonical source bytes remain intact. The new package may remain as harmless unreferenced immutable state, while ordinary compilation continues against the old accepted pin. A regression test simulates this final replace failure.
 
 ## Quality status
 
-The deterministic suite is now **45/45 green**. It covers package round-trip after deleting the Source repository, semantic and byte-level tampering, offline pinned composition, missing/mismatched accepted packages, deterministic review/accept, stale review receipts, dangling consumer Changes, a real local Git repository moving from accepted v1 to candidate v2 without changing build output before explicit acceptance, and atomic recovery from a failed final Source-pin publication.
+The deterministic suite is **45/45 green**. It covers package round-trip after deleting the Source repository, semantic and byte-level tampering, offline pinned composition, missing/mismatched accepted packages, deterministic review/accept, stale review receipts, dangling consumer Changes, a real local Git repository moving from accepted v1 to candidate v2 without changing build output before explicit acceptance, and atomic recovery from a failed final Source-pin publication.
 
-Repository dogfood has been regenerated from the compiler itself. The Gateway, Foundation, and Framework Development Nodes include `.context/package.json`, current 0.4 machine state, and the materialized external-Source documentation. A previous exact-head CI run passed both the full test suite and `contextcanon check --all .`; the final documentation update intentionally requires one last regeneration/check before merge.
+Gateway, Foundation, and Framework Development dogfood packages were regenerated from the final Compiler 0.4 implementation and documentation. The final exact PR head passed the full suite and `contextcanon check --all .` with zero drift before the squash merge.
 
-CI drift diagnostics were also hardened: newly generated files are included in textual drift output and a one-day generated snapshot artifact is uploaded only on failure, including hidden `.context/` state. This lets generated bytes be recovered exactly rather than reconstructed manually.
+CI drift diagnostics include newly generated files in textual drift output and upload a one-day exact generated snapshot only on failure, including hidden `.context/` state. This avoids reconstructing compiler output manually when drift occurs.
 
 No LLM participates in compiler truth, package verification, Source transport state transitions, review receipts, or acceptance.
 
-## Next block after merge: reviewed LLM-assisted onboarding
+## Next active block: reviewed LLM-assisted onboarding
 
 The next larger 1:1 test must no longer rely on this conversation or a human manually curating ContextCanon files first. ContextCanon itself will provide a reproducible onboarding workflow for a pre-existing repository.
 
@@ -114,6 +112,6 @@ Cross-project practices such as Python development conventions, testing policy, 
 
 Onboarding is not destructive migration: useful `README.md`, `CONTRIBUTING.md`, architecture docs, and similar familiar repository documents remain useful in their normal roles.
 
-The next branch should start only after Compiler 0.4 is squash-merged to `main`, following the repository's stable-point cadence.
+The onboarding implementation starts on a fresh branch from the accepted 0.4 `main` baseline.
 
 See [PLAN.md](PLAN.md) for the ordered implementation and validation steps.
