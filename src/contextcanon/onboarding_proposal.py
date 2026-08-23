@@ -7,7 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from .onboarding import EVIDENCE_SCHEMA
+from .onboarding import (
+    EVIDENCE_SCHEMA,
+    MAX_EVIDENCE_FILE_BYTES,
+    MAX_EVIDENCE_TOTAL_BYTES,
+    SELECTION_POLICY,
+)
 from .parser import ContextCanonError
 
 
@@ -28,6 +33,13 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _TOP_LEVEL_KEYS = {"schema", "evidence_digest", "items"}
 _ITEM_KEYS = {"id", "kind", "title", "rationale", "confidence", "evidence", "payload"}
 _EVIDENCE_REF_KEYS = {"path", "sha256", "start_line", "end_line"}
+_EXPECTED_SELECTION = {
+    "accepted_encoding": "utf-8",
+    "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
+    "max_total_bytes": MAX_EVIDENCE_TOTAL_BYTES,
+    "policy": SELECTION_POLICY,
+    "repository_listing": "git ls-files --cached --others --exclude-standard",
+}
 
 _PAYLOAD_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "local-rule": (
@@ -207,6 +219,8 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
         raise ContextCanonError(f"Invalid onboarding evidence manifest ({'; '.join(detail)})")
     if manifest["schema"] != EVIDENCE_SCHEMA:
         raise ContextCanonError(f"Unsupported onboarding evidence schema: {manifest['schema']!r}")
+    if manifest["selection"] != _EXPECTED_SELECTION:
+        raise ContextCanonError("Onboarding evidence manifest does not match the supported v0 selection policy")
 
     digest = manifest["evidence_digest"]
     if not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
@@ -222,6 +236,7 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
     entries: list[SnapshotEvidence] = []
     expected_paths: set[str] = set()
     previous_path: str | None = None
+    total_size = 0
     for index, raw_entry in enumerate(included):
         if not isinstance(raw_entry, dict):
             raise ContextCanonError(f"Onboarding evidence included[{index}] must be an object")
@@ -239,6 +254,11 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
         size = raw_entry["size"]
         if not isinstance(size, int) or isinstance(size, bool) or size < 0:
             raise ContextCanonError(f"Invalid size for onboarding evidence {path}")
+        if size > MAX_EVIDENCE_FILE_BYTES:
+            raise ContextCanonError(f"Onboarding evidence file exceeds supported safety limit: {path}")
+        total_size += size
+        if total_size > MAX_EVIDENCE_TOTAL_BYTES:
+            raise ContextCanonError("Onboarding evidence snapshot exceeds supported total safety limit")
         expected_snapshot = f"evidence/{path}"
         if raw_entry["snapshot"] != expected_snapshot:
             raise ContextCanonError(f"Invalid snapshot path for onboarding evidence {path}")
@@ -380,7 +400,7 @@ def _validate_payload(kind: str, raw: object, item_id: str, snapshot: EvidenceSn
                 payload["why_unresolved"], f"item {item_id} payload.why_unresolved"
             ),
         }
-    else:  # guarded by caller; defensive against future edits
+    else:
         raise _error(f"unsupported item kind: {kind}")
     return normalized
 
