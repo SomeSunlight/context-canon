@@ -91,11 +91,13 @@ Onboarding is a semantic workflow above the deterministic compiler:
 ```text
 existing repository
       ↓
-deterministic inventory
+deterministic inventory + frozen evidence snapshot
       ↓
 framework-supplied LLM onboarding instruction
       ↓
 provenance-rich proposal
+      ↓
+deterministic proposal validation
       ↓
 mandatory human review
       ↓
@@ -108,10 +110,13 @@ normal deterministic compiler
 
 ### Deterministic bootstrap
 
-- [ ] Implement `contextcanon onboard prepare <project>` without requiring an existing Context Node.
-- [ ] Inventory likely context-bearing project material such as README, CONTRIBUTING, architecture/development docs, existing agent instructions, configuration, and explicitly selected files.
-- [ ] Preserve exact provenance for material offered to the semantic onboarding step.
-- [ ] Keep inventory deterministic; do not have the compiler interpret natural-language meaning.
+- [x] Implement `contextcanon onboard prepare <project>` without requiring an existing Context Node.
+- [x] Inventory likely context-bearing project material such as README, CONTRIBUTING, architecture/development docs, existing agent instructions, configuration, and explicitly selected files.
+- [x] Preserve exact provenance through content-addressed evidence snapshots with path, size, SHA-256, selection reason, and copied bytes.
+- [x] Keep inventory deterministic; do not have the compiler interpret natural-language meaning.
+- [x] Respect Git-ignore automatically while permitting explicit safe additions.
+- [x] Bound evidence by secret/path/symlink/UTF-8 checks, 1 MiB per file, and 16 MiB total.
+- [x] Verify and reuse matching snapshots; reject corruption rather than silently repairing it.
 
 ### Framework-supplied LLM instruction
 
@@ -126,8 +131,11 @@ normal deterministic compiler
 
 ### Review and acceptance
 
-- [ ] Define an onboarding proposal format distinct from Official Context.
-- [ ] Make every proposed file/Rule/Topic/Source choice reviewable against its cited project source.
+- [x] Define `contextcanon/onboarding-proposal/v0` as a proposal format distinct from Official Context.
+- [x] Require every proposal item to carry rationale, confidence, and one or more exact evidence hash/line-range references.
+- [x] Implement `contextcanon onboard validate <snapshot> <proposal.json>` with strict kinds, payloads, file-set verification, evidence hashes/ranges, and deterministic `proposal_digest`.
+- [x] Revalidate the Evidence v0 safety policy when consuming a snapshot so a rehashed weakened manifest cannot bypass preparation limits.
+- [ ] Add the human review representation/workflow for a validated proposal.
 - [ ] Require explicit acceptance before canonical `CONTEXT.src.md` or related authored context is created/replaced.
 - [ ] Immediately run deterministic ContextCanon validation/build on the accepted proposal.
 - [ ] Keep generic-Node extraction proposals separately reviewable.

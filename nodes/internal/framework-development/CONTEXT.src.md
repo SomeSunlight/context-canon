@@ -87,6 +87,14 @@ Optional:
 - Resource: `../../../docs/concepts.md`
 <!-- ctx:topic id="CCI-TOPIC-ARCHITECTURE" -->
 
+### Reviewed project onboarding
+
+When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:
+
+Required:
+- Resource: `../../../docs/onboarding.md`
+<!-- ctx:topic id="CCI-TOPIC-ONBOARDING" -->
+
 ### Source and official formats
 
 When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:

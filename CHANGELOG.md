@@ -32,3 +32,7 @@ All notable ContextCanon changes will be documented here.
 - Generic Git candidate transport with explicit ref and multi-Node `node-path` addressing.
 - Atomic staging/publication of candidate and accepted packages, review receipts, and canonical Source-pin updates, including recovery from a failed final pin swap.
 - CI generated-drift diagnostics with exact short-lived snapshots for compiler-owned output.
+- Deterministic `contextcanon onboard prepare` for pre-Context Git repositories, with conservative evidence selection, Git-ignore-aware inventory, explicit safe includes, immutable content-addressed evidence snapshots, and exact provenance.
+- Onboarding evidence safety bounds for sensitive/generated paths, symlinks, UTF-8 text, 1 MiB per file, and 16 MiB total, with policy revalidation when snapshots are consumed later.
+- Strict `contextcanon/onboarding-proposal/v0` review artifacts with typed classifications, rationale/confidence, exact evidence hashes and line ranges, kind-specific payload validation, and deterministic proposal identity.
+- `contextcanon onboard validate` to verify untrusted semantic onboarding proposals against one exact frozen evidence snapshot without accepting or publishing project context.

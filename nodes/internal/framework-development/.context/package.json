@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "33db4e2f4aa371836520399b0c5a13f6bc5817d97c4fc4b74258aa295df4d8b7",
-    "package": "5f8756517d9bdd994f90ad479825483e038cde925895699423c33117cfdbb4eb"
+    "normalized": "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798",
+    "package": "ea00c851fb34bfa018129a198b2ca212f9c77cc184d97228174dd2bc6dd8243e"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "31e4d49d538d6385206bf2de372e8da10056f599972c90418d0a0ad7bf45a47e",
-      "size": 6212
+      "sha256": "6b00e34bc76054a6c573ce2129458746168c3fa057025cfcd131df4b3647b9b3",
+      "size": 6511
     },
     {
       "path": "CONTEXT/references/docs/architecture.md",
@@ -45,6 +45,11 @@
       "path": "CONTEXT/references/docs/official-context.md",
       "sha256": "323e1efaa7b18a150dbac6b08d72e2adc3c32db39581797b5b212322b1d5c6f0",
       "size": 3046
+    },
+    {
+      "path": "CONTEXT/references/docs/onboarding.md",
+      "sha256": "3042d5f75af4c2ebde09c9f0e23a8963ea4c44bc51ac30103e4d7dc2e239a124",
+      "size": 9986
     },
     {
       "path": "CONTEXT/references/docs/source-format.md",
@@ -283,6 +288,20 @@
         }
       ],
       "title": "Framework architecture"
+    },
+    {
+      "condition": "When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:",
+      "id": "CCI-TOPIC-ONBOARDING",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "../../../docs/onboarding.md"
+        }
+      ],
+      "title": "Reviewed project onboarding"
     },
     {
       "condition": "When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:",
