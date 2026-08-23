@@ -2,7 +2,7 @@
 
 ## Accepted baseline
 
-ContextCanon has passed self-hosted and real external-project validation. Compiler 0.3 is accepted on `main` at `c2e3f1af3e9b80f81d6adb9b6eeb04c297bee910`.
+ContextCanon has passed self-hosted and real external-project validation. **Compiler 0.4 is accepted on `main` at `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`** after PR #3 was squash-merged.
 
 Validated foundations include:
 
@@ -13,16 +13,15 @@ Validated foundations include:
 - [x] Ordinary versus Topic-specific progressive disclosure.
 - [x] Inherited Rule `Remove`/`Override`, transitive provenance, and diamond-conflict diagnostics.
 - [x] Compiler 0.3 deterministic Context diff and semantic normalization.
+- [x] Compiler 0.4 immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
 
-The development rule is now: **complete one coherent deterministic core block, regenerate dogfood, make CI fully green, squash-merge to `main`, then start the next block on a fresh branch.**
+The development rule remains: **complete one coherent deterministic core block, regenerate dogfood, make CI fully green, squash-merge to `main`, then start the next block on a fresh branch.**
 
-## Compiler 0.4 — immutable external Sources and explicit acceptance
+## Accepted: Compiler 0.4 — immutable external Sources and explicit acceptance
 
-Branch: `agent/immutable-external-sources`
+Merged from `agent/immutable-external-sources` through PR #3 as `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`.
 
 Goal: reusable Sources must work across independent repositories without live inheritance or hidden network access during normal build.
-
-The implementation is complete. Only the final PR metadata/merge gate remains before this becomes the accepted `main` baseline.
 
 ### Immutable package boundary
 
@@ -78,12 +77,12 @@ The implementation is complete. Only the final PR metadata/merge gate remains be
 - [x] Update compiler/contributor/walkthrough documentation to the `CompiledPackage` architecture.
 - [x] Reach 45 green deterministic regression tests including package, offline Source, acceptance, local-Git transport, and failed-pin-publication cases.
 - [x] Regenerate all ContextCanon dogfood packages from the final 0.4 implementation/documentation.
-- [x] Finish `contextcanon check --all .` with zero drift before the final documentation-only release bookkeeping.
-- [ ] Update PR #3 to describe the completed 0.4 block.
-- [ ] Run the exact final PR head through tests plus zero-drift check.
-- [ ] Squash-merge 0.4 to `main` as the next stable recovery point.
+- [x] Finish the exact final PR head with `contextcanon check --all .` at zero drift.
+- [x] Update PR #3 to describe the completed 0.4 block.
+- [x] Run the exact final PR head through tests plus zero-drift check.
+- [x] Squash-merge 0.4 to `main` as the next stable recovery point.
 
-## Next validation block: reviewed LLM-assisted project onboarding
+## Active next block: reviewed LLM-assisted project onboarding
 
 The next 1:1 validation must use a materially larger existing project and must **not** be manually curated from this conversation's prior knowledge.
 
