@@ -16,6 +16,7 @@ from .parser import ContextCanonError
 EVIDENCE_SCHEMA = "contextcanon/onboarding-evidence/v0"
 SELECTION_POLICY = "contextcanon/onboarding-default/v0"
 MAX_EVIDENCE_FILE_BYTES = 1024 * 1024
+MAX_EVIDENCE_TOTAL_BYTES = 16 * 1024 * 1024
 _TEXT_SUFFIXES = {".md", ".mdx", ".rst", ".txt", ".adoc", ".asciidoc"}
 _ROOT_DOCUMENT_PREFIXES = {
     "ARCHITECTURE",
@@ -307,6 +308,7 @@ def _manifest_payload(
         "selection": {
             "accepted_encoding": "utf-8",
             "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
+            "max_total_bytes": MAX_EVIDENCE_TOTAL_BYTES,
             "policy": SELECTION_POLICY,
             "repository_listing": "git ls-files --cached --others --exclude-standard",
         },
@@ -384,10 +386,18 @@ def prepare_onboarding_evidence(
     included_items: list[EvidenceEntry] = []
     excluded_items: list[ExcludedEvidence] = []
     content: dict[str, bytes] = {}
+    total_bytes = 0
     for path in sorted(selected):
         reason, explicit = selected[path]
         entry, excluded, data = _collect_entry(project_root, path, reason, explicit)
         if entry is not None and data is not None:
+            total_bytes += entry.size
+            if total_bytes > MAX_EVIDENCE_TOTAL_BYTES:
+                raise ContextCanonError(
+                    "Onboarding evidence exceeds total safety limit "
+                    f"of {MAX_EVIDENCE_TOTAL_BYTES} bytes while adding {path}; "
+                    "narrow the automatic evidence set before onboarding"
+                )
             included_items.append(entry)
             content[path] = data
         elif excluded is not None:
