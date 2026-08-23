@@ -1,8 +1,8 @@
 # Current State
 
-ContextCanon has moved beyond architecture-only prototyping and its first external proof. **Compiler 0.4 is the accepted stable baseline on `main`**, including immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
+ContextCanon has moved beyond architecture-only prototyping and its first external proof. **Compiler 0.4 is the accepted compiler baseline**, including immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
 
-The active development branch is `agent/reviewed-onboarding` / draft PR #6. Its purpose is to add a semantic onboarding workflow **above** deterministic compiler truth without letting an LLM directly create accepted project context.
+Reviewed onboarding now has a deterministic evidence-and-proposal substrate above that compiler baseline. It deliberately stops before LLM execution, human acceptance, or canonical context publication.
 
 ## Accepted Compiler 0.4 baseline
 
@@ -26,11 +26,11 @@ source accept  → exact accepted package + updated pin
 
 A normal build never dereferences update transport metadata or repairs missing accepted state through hidden network access.
 
-## Active reviewed-onboarding substrate
+## Deterministic reviewed-onboarding substrate
 
 The first onboarding stable point is intentionally deterministic even though onboarding as a whole is semantic.
 
-The implemented working pipeline is:
+The implemented boundary is:
 
 ```text
 existing Git repository
@@ -39,7 +39,7 @@ contextcanon onboard prepare
       ↓
 content-addressed frozen evidence snapshot
       ↓
-semantic proposal generation (LLM not yet supplied by ContextCanon)
+semantic proposal generation (not yet supplied by ContextCanon)
       ↓
 contextcanon onboard validate
       ↓
@@ -95,25 +95,19 @@ Every proposal item requires:
 
 Supported classifications currently cover local Rule, existing Source, candidate reusable Node, Topic/Resource, state/planning, ordinary documentation, and unresolved question.
 
-`contextcanon onboard validate <snapshot> <proposal.json>` reloads the evidence snapshot and verifies its exact file set, hashes, evidence digest and supported Evidence v0 safety policy before validating the proposal. A rehashed manifest that weakens the preparation policy must still fail on consumption.
+`contextcanon onboard validate <snapshot> <proposal.json>` reloads the evidence snapshot and verifies its exact file set, hashes, evidence digest and supported Evidence v0 safety policy before validating the proposal. A rehashed manifest that weakens the preparation policy fails on consumption.
 
 A valid proposal receives a deterministic `proposal_digest`. That digest identifies one exact review artifact; **validation is not acceptance** and does not claim the semantic interpretation is correct.
 
-## Current quality gate
+## Quality status
 
-Before the final PR #6 merge, the exact branch head must pass:
+The deterministic suite is now **66/66 green** on the completed evidence-and-proposal substrate. The exact verified head also passes `contextcanon check --all .` with zero drift across Gateway, Foundation, and Framework Development.
 
-- the full pre-existing Compiler 0.4 regression suite;
-- onboarding evidence positive/negative cases;
-- proposal schema/provenance/hash/line-range cases;
-- weakened-policy and aggregate-size regression cases;
-- `contextcanon check --all .` with zero dogfood drift.
-
-The previous PR head passed 64 tests plus zero drift. The final hardening adds two regressions, so the expected final suite is **66 tests**. This count is not treated as accepted until the final exact head passes CI.
+The added regression coverage includes conservative and explicit evidence selection, Git-ignore behavior, secret/path/symlink/UTF-8 boundaries, per-file and aggregate evidence limits, immutable snapshot verification, strict proposal schema and payloads, evidence hashes and line ranges, exact proposal identity, and rejection of a rehashed manifest that attempts to weaken the supported Evidence v0 safety policy.
 
 No LLM participates in evidence selection, evidence identity, snapshot verification, proposal structural/provenance validation, proposal identity, compiler truth, package verification, Source transport state transitions, review receipts, or Source acceptance.
 
-## Next slice after this stable point
+## Next slice
 
 The next slice supplies the **framework-owned harness-neutral LLM onboarding instruction** instead of requiring an operator to invent a prompt.
 
