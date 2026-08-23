@@ -9,7 +9,9 @@ Personal Style ─────────┼──> Local Delta ──> Officia
 Security Context ───────┘
 ```
 
-A Source is an accepted published package from another Context Node. Sources may live in the same Git repository, another repository, or eventually another package location. Filesystem containment does not create inheritance.
+A Source is an accepted published package from another Context Node. Sources may live in the same Git repository or in independent repositories. Filesystem containment does not create inheritance.
+
+Local development Sources can be resolved directly from another Node in the same repository. Accepted external Sources are immutable packages pinned by Node/version identity plus exact semantic and package digests.
 
 ## No implicit precedence
 
@@ -17,13 +19,13 @@ Source order does not mean priority. ContextCanon must never silently apply "fir
 
 Different Sources can therefore contribute independent elements without an artificial method-resolution order.
 
-Compiler 0.3 also canonicalizes direct Source order in normalized semantics. Reordering two otherwise identical Sources therefore cannot accidentally change `normalized_digest` or masquerade as semantic precedence.
+The compiler canonicalizes direct Source order in normalized semantics. Reordering two otherwise identical Sources therefore cannot accidentally change `normalized_digest` or masquerade as semantic precedence.
 
 ## Dependency graph
 
-Source relationships form a directed acyclic graph. The compiler can deterministically detect structural problems such as dependency cycles, incompatible accepted Source versions, invalid referenced IDs, dangling changes, and illegal operations on protected elements.
+Source relationships form a directed acyclic graph. The compiler deterministically detects structural problems such as dependency cycles, invalid Source identities/versions, dangling Changes, and incompatible transitive states of the same stable Rule.
 
-Compiler 0.3 implements cycle detection, duplicate direct Source identity rejection, Source Node ID/version validation for local-path Sources, transitive Rule composition, dangling Remove/Override diagnostics, and deterministic conflicts for incompatible transitive states of the same stable Rule.
+Compiler 0.4 supports local unpinned Sources and immutable pinned external Sources. Both become `CompiledPackage` before Rule composition, so the same transitive composition and conflict rules apply regardless of Source transport.
 
 ## Structural Rule conflicts
 
@@ -91,31 +93,81 @@ If Team Standard overrides a Foundation Rule, Project inherits that overridden R
 
 This is why the compiler renders inherited Rules by their actual origin Node rather than only by the consumer's direct Source list, and why the machine representation contains more state than the human-facing active Rule list.
 
+An immutable external package carries this complete effective state in `.context/package.json`; a descendant does not reconstruct it by parsing generated `CONTEXT.md`.
+
 ## Deterministic diff is the update boundary
 
-Compiler 0.3 can compare two compiled snapshots of the same stable Context Node before any semantic reviewer or consumer code is involved:
+ContextCanon compares compiled state before any semantic reviewer or consumer code is involved.
+
+For two snapshots of the same consumer Node:
+
+```text
+contextcanon diff <before-node-root> <after-node-root>
+```
+
+For an accepted external Source and a candidate Source package, `source review` applies the same stable-identity `ContextDiff` model directly to the immutable packages:
 
 ```text
 accepted Source package
         +
 candidate Source package
         ↓
-contextcanon diff
+deterministic package diff
+        +
+consumer structural validation
         ↓
-exact identity-based change set
+review receipt
 ```
 
-The diff reports Source package/version changes, effective Rule changes including active/removed transitions and override provenance, local Change differences, Topic changes, and materialized Resource content changes. Human-readable and JSON output come from the same deterministic change model.
+The diff reports Source package/version changes, effective Rule changes including active/removed transitions and override provenance, local Change differences, Topic changes, and materialized Resource content changes. Human-readable and JSON representations come from the same deterministic change model.
 
-This means later Source-update workflows do not need to infer change from prose or Git file layout. The exact compiled difference exists first; semantic impact analysis is an optional layer above it.
+This means Source-update workflows do not need to infer change from prose or Git file layout. The exact compiled difference exists first; semantic impact analysis is an optional layer above it.
 
 ## Source updates are change requests
 
-Consumers ultimately remain pinned to an accepted Source package. A newly published Source version is an update candidate, not live inheritance.
+Consumers remain pinned to an accepted immutable Source package. A newly published Source version is an update candidate, not live inheritance.
 
-The intended workflow is: detect a newer immutable package, compute the deterministic Context diff, identify structural consequences such as dangling Changes, optionally add semantic LLM review, explicitly accept the update, and rebuild the consumer.
+Compiler 0.4 implements this workflow explicitly:
 
-Compiler 0.3 already provides the deterministic diff and records local Source version plus compiled Source package digest. Immutable external package resolution, candidate discovery, caching, and explicit acceptance are the next core block.
+```text
+contextcanon source fetch <source-node-id> --node <consumer-node>
+        ↓
+verified candidate under .context/candidates/<package-digest>/
+        ↓
+contextcanon source review <source-node-id> <candidate-package> --node <consumer-node>
+        ↓
+exact diff + consumer structural checks + deterministic review receipt
+        ↓
+contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
+        ↓
+accepted immutable package + updated exact Source pin
+        ↓
+normal offline build
+```
+
+`source fetch` uses declared transport metadata only to discover candidate bytes. It cannot change accepted inheritance. `source review` substitutes the candidate into the actual consumer composition in memory so dangling local Changes and visible Rule collisions are detected before acceptance. `source accept` requires the matching non-stale review receipt.
+
+The accepted Source pin records version, `normalized-digest`, and `package-digest`. Git `ref` and `node-path` remain update/location metadata rather than accepted identity.
+
+## Accepted versus candidate state
+
+Accepted external packages live under:
+
+```text
+<consumer>/.context/sources/<package-digest>/
+```
+
+They are reproducible consumer state and allow ordinary builds to remain independent of the Source repository.
+
+Temporary update candidates live separately under:
+
+```text
+<consumer>/.context/candidates/<package-digest>/
+```
+
+A missing or corrupt accepted package is an error. It is never permission for `build` to fetch from the Source locator.
+
+Package installation is staged and verified before atomic publication. Review receipts and Source-pin replacement are also published atomically. If the final canonical pin swap fails, the old `CONTEXT.src.md` and old accepted build state remain intact; a newly installed but unreferenced package is harmless immutable state.
 
 ## Navigation is not composition
 
@@ -138,6 +190,8 @@ Every Context Node is physically rooted in its own directory, but that directory
 
 This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships.
 
+The same principle applies to Git transport. A `node-path` says where the Node is found inside a retrieved repository snapshot; the stable Node ID says which Node it is.
+
 ## ContextCanon's own Node organization
 
 This repository contains three real Nodes:
@@ -150,4 +204,4 @@ The intermediate `nodes/`, `nodes/library/`, and `nodes/internal/` directories a
 
 Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance Rule for unrelated projects using ContextCanon.
 
-Compiler 0.3 supports local node-root locators. Immutable external repository/package locators remain the next planned core step.
+Compiler 0.4 supports both local same-repository Source locations and accepted immutable external Source packages. Generic Git transport retrieves candidates from repositories containing root or nested Nodes without turning repository layout into Source identity.
