@@ -1,112 +1,119 @@
 # Current State
 
-ContextCanon has moved beyond architecture-only prototyping and beyond its first external proof. The framework now has a deterministic compiler, successful self-hosting, a successful real-project/harness validation, inherited Rule changes, and an exact compiled Context diff.
+ContextCanon has moved beyond architecture-only prototyping and its first external proof. Compiler 0.3 remains the accepted baseline on `main`; Compiler 0.4 is complete on `agent/immutable-external-sources` and is at the final PR merge gate.
 
-## What has been validated
+## Accepted baseline on main
 
-The first external experiment used `SomeSunlight/teams-chat-exporter` on a dedicated branch.
+PR #2 was squash-merged as `c2e3f1af3e9b80f81d6adb9b6eeb04c297bee910`.
 
-The result was positive end to end:
+That baseline established deterministic self-hosting, inherited Rule `Remove`/`Override`, transitive provenance and conflict diagnostics, canonical semantic normalization, exact compiled Context diff, real JetBrains Copilot entry through generated `AGENTS.md`, and successful progressive disclosure in `SomeSunlight/teams-chat-exporter` including a low-cost-model run.
 
-- the generated files made the project's assumptions and structure easier to understand for a human reviewer;
-- GitHub Copilot entered through generated `AGENTS.md` and used the compiled project context;
-- an ordinary task stayed small;
-- a Teams selector-maintenance task followed its Topic and used the required deeper resources;
-- the model correctly preferred dated selector configuration over unnecessary Python changes;
-- a low-cost model produced a strong project-specific answer when given the structured ContextCanon path.
+The practical conclusion is settled: ContextCanon is useful enough to build central reusable functionality and then apply it aggressively to larger projects.
 
-The practical conclusion is that ContextCanon should now be hardened for broad daily use rather than subjected to more artificial proof-of-value tests.
+## Compiler 0.4 completed on the working branch
 
-## Current design baseline
+Compiler 0.4 adds immutable external Sources and reviewed Source-update acceptance while preserving the rule that normal compilation is deterministic and offline with respect to external Sources.
 
-- Every Context Node has one physical node-root directory; the directory path is location, not identity.
-- `CONTEXT.src.md` is the human-editable source of truth.
-- `CONTEXT.md` is the generated compact official entry view.
-- `CONTEXT/` is optional and contains deeper compiled/materialized resources only when a Node needs them.
-- Topics provide progressive disclosure with Required and Optional targets.
-- Topic targets explicitly distinguish a Resource from another Context Node.
-- Topic navigation does not imply Source composition.
-- A Node may compose multiple independent Sources without implicit Source precedence.
-- Stable IDs are mandatory for addressable elements; inherited Rule changes bind stable origin Node ID plus Rule ID.
-- `.context/` is generated machine state and normally ignored by humans.
-- Harness/model-specific files are thin generated adapters only.
-- Deterministic operations form the framework skeleton; LLMs assist only where semantic interpretation is actually needed.
-- Standardizing this structure across projects is itself a feature: humans and agents can use the same orientation path even when project domains differ.
-
-## Executable compiler 0.3
-
-The dependency-free Python CLI now has three core operations:
+The common semantic boundary is now `CompiledPackage`:
 
 ```text
-contextcanon build --all .
-contextcanon check --all .
-contextcanon diff <before-node-root> <after-node-root>
+local Source Node ──compile──────────┐
+                                     ├──> CompiledPackage ──> composition
+accepted external package ──verify──┘
 ```
 
-`diff` also supports `--json` for deterministic machine-readable output.
-
-Compiler 0.3 handles:
-
-- node-root discovery,
-- stable Node identity and version metadata,
-- local filesystem Sources,
-- Source identity/version validation and cycle detection,
-- transitive inherited Rule composition,
-- `Remove` and `Override` operations on inherited ordinary Rules,
-- dangling and duplicate Change diagnostics,
-- transitive Override and Remove provenance while preserving original Rule identity,
-- deterministic diamond-graph conflict handling without Source precedence,
-- Required/Optional Topic targets,
-- explicit Resource/Context Node target types,
-- `CONTEXT.md` generation,
-- optional `CONTEXT/` materialization,
-- recursive materialization closure for local Markdown links,
-- `.context/context.yaml` generation,
-- canonical semantic normalization and exact normalized/package SHA-256 digests,
-- deterministic Context diff by stable identities for Nodes, Sources, Changes, Rules, Topics, and Resources,
-- human-readable and JSON diff output,
-- thin AGENTS/goose adapters,
-- deterministic drift checking.
-
-The implementation is intentionally layered:
+A reusable package contains:
 
 ```text
-parser.py → model.py → compiler.py → render.py → outputs.py
-                         │
-                         └────────────→ diff.py
-                                           ↑
-                                        cli.py
+.context/package.json
+CONTEXT.md
+CONTEXT/              optional
 ```
 
-`parser.py` owns authoring grammar, `compiler.py` semantic truth, `render.py` deterministic projection, `outputs.py` filesystem comparison/writes, `diff.py` exact comparison of compiled states, and `cli.py` orchestration. See [docs/compiler.md](docs/compiler.md).
+`.context/package.json` preserves the complete compiled state needed by descendants: effective Rules, statements, rationale, groups, stable origin, Override provenance, Remove provenance, local Changes and Topics, transitive Source dependency identities, file hashes, `normalized_digest`, and `package_digest`. Generated human presentation is never parsed back into semantic truth.
 
-## Compiler quality findings
-
-Compiler hardening has already exposed defects that were not obvious from the architecture alone:
-
-- while adding Rule changes, a transitive rendering defect was found: a grandparent Rule could be semantically inherited but omitted from a deeper descendant's `CONTEXT.md`;
-- diamond tests showed that Remove needs explicit transitive removal provenance rather than disappearing as simple absence;
-- diff work exposed that `normalized_digest` must canonicalize semantically unordered collections such as Source order and Topic-target presentation order.
-
-Regression tests now cover these cases. This reinforces the development policy: central compiler semantics receive deterministic positive and negative fixtures before being trusted across many projects.
-
-## ContextCanon dogfoods three Nodes
+Accepted external packages live under the consumer Node at:
 
 ```text
-ContextCanon Gateway ──Topic──> ContextCanon Framework Development
-                                      ▲
-                                      │ Source
-                           ContextCanon Foundation
+.context/sources/<package-digest>/
 ```
 
-The compiler builds and checks all three from their `CONTEXT.src.md` files. Framework Development includes an always-on compiler-stage Rule and a dedicated Compiler Implementation Topic pointing to the detailed compiler contract.
+This is reproducible accepted project state. A normal `build` uses only this pinned package, verifies Node ID/version/both digests/package files, and never dereferences Source transport metadata. Missing or corrupt accepted state is an error rather than permission to fetch.
 
-## Current focus
+Candidate packages are separate:
 
-Compiler 0.3 is in its release-completion phase: documentation, dogfood outputs, and final CI are being synchronized on `agent/compiler-walking-skeleton`.
+```text
+.context/candidates/<package-digest>/
+```
 
-Once that branch is fully green, PR #2 will be updated to describe the actual accepted baseline and squash-merged to `main`. `main` will then represent the last accepted, fully reproducible ContextCanon stage.
+The implemented update workflow is:
 
-The next core block — **immutable external Sources and explicit update acceptance** — will start from that new `main` on a fresh branch. It will use the deterministic diff as the exact review input for Source package updates rather than silently changing consumers.
+```text
+contextcanon source fetch <source-id> --node <consumer>
+        ↓
+Git candidate only
+        ↓
+contextcanon source review <source-id> <candidate> --node <consumer>
+        ↓
+exact package diff + real consumer structural validation + review receipt
+        ↓
+contextcanon source accept <source-id> <candidate> --node <consumer>
+        ↓
+new accepted package + exact updated pin
+```
 
-See [PLAN.md](PLAN.md) for the ordered core-hardening roadmap and branch/merge cadence.
+Review receipts are bound to the exact consumer `CONTEXT.src.md`, current accepted Source state, candidate identity, deterministic diff, and successful structural validation. Acceptance rejects stale review state.
+
+Git transport is generic rather than GitHub-specific. Pinned Sources may declare `transport="git"`, `ref="..."`, and safe relative `node-path="..."`. `node-path` supports repositories containing several Context Nodes while stable Node ID remains identity.
+
+## Recovery and publication guarantees
+
+Candidate and accepted packages are copied into sibling staging directories, verified there, and only then atomically published to their content-addressed destination.
+
+Review receipts and the canonical Source pin use sibling temporary files followed by atomic replacement. The Source-pin temporary file is flushed and `fsync`ed before publication.
+
+If the new immutable package is already installed but the final `CONTEXT.src.md` pin swap fails, the previous canonical source bytes remain intact. The new package may remain as harmless unreferenced immutable state, while ordinary compilation continues against the old accepted pin. This failure mode is now covered by a regression test that simulates the final replace failure.
+
+## Quality status
+
+The deterministic suite is now **45/45 green**. It covers package round-trip after deleting the Source repository, semantic and byte-level tampering, offline pinned composition, missing/mismatched accepted packages, deterministic review/accept, stale review receipts, dangling consumer Changes, a real local Git repository moving from accepted v1 to candidate v2 without changing build output before explicit acceptance, and atomic recovery from a failed final Source-pin publication.
+
+Repository dogfood has been regenerated from the compiler itself. The Gateway, Foundation, and Framework Development Nodes include `.context/package.json`, current 0.4 machine state, and the materialized external-Source documentation. A previous exact-head CI run passed both the full test suite and `contextcanon check --all .`; the final documentation update intentionally requires one last regeneration/check before merge.
+
+CI drift diagnostics were also hardened: newly generated files are included in textual drift output and a one-day generated snapshot artifact is uploaded only on failure, including hidden `.context/` state. This lets generated bytes be recovered exactly rather than reconstructed manually.
+
+No LLM participates in compiler truth, package verification, Source transport state transitions, review receipts, or acceptance.
+
+## Next block after merge: reviewed LLM-assisted onboarding
+
+The next larger 1:1 test must no longer rely on this conversation or a human manually curating ContextCanon files first. ContextCanon itself will provide a reproducible onboarding workflow for a pre-existing repository.
+
+The intended boundary is:
+
+```text
+existing project
+      ↓
+deterministic inventory
+      ↓
+framework-supplied harness-neutral LLM instruction
+      ↓
+reviewable proposal with provenance
+      ↓
+mandatory human review
+      ↓
+explicit acceptance
+      ↓
+CONTEXT.src.md + Sources + Topics + Resources
+      ↓
+normal deterministic compiler
+```
+
+The inventory step interprets nothing semantically. The LLM proposal must trace each proposed item to inspected repository material, expose uncertainty or contradictions, and classify information rather than dumping everything into one local Node. At minimum it must distinguish project-local Rules, existing reusable Sources, candidate reusable/generic Nodes, Topic/Resource material, state/planning, ordinary documentation, and unresolved questions.
+
+Cross-project practices such as Python development conventions, testing policy, writing/user-guidance style, and language conventions are explicit candidates for reusable Nodes. The LLM should compare such candidates against the available ContextCanon Node catalog before duplicating them locally. A proposed new generic Node is itself reviewable and is never auto-published.
+
+Onboarding is not destructive migration: useful `README.md`, `CONTRIBUTING.md`, architecture docs, and similar familiar repository documents remain useful in their normal roles.
+
+The next branch should start only after Compiler 0.4 is squash-merged to `main`, following the repository's stable-point cadence.
+
+See [PLAN.md](PLAN.md) for the ordered implementation and validation steps.

@@ -1,187 +1,180 @@
 # Plan
 
-## Completed validation
+## Accepted baseline
 
-ContextCanon has passed both self-hosted and external validation.
+ContextCanon has passed self-hosted and real external-project validation. Compiler 0.3 is accepted on `main` at `c2e3f1af3e9b80f81d6adb9b6eeb04c297bee910`.
 
-- [x] Establish Gateway, Foundation, and Framework Development as real dogfood Nodes.
-- [x] Build the first deterministic compiler and run it against the repository itself.
-- [x] Apply ContextCanon to `SomeSunlight/teams-chat-exporter` on a dedicated experiment branch.
-- [x] Generate the Official Context Package deterministically in that external project.
-- [x] Enter the project through a real GitHub Copilot harness using generated `AGENTS.md`.
-- [x] Run an ordinary task that required no deeper Topic material.
-- [x] Run a Teams-selector task that required the Topic's deeper resources.
-- [x] Confirm that the model used the project context to distinguish configuration changes from Python behavior changes.
-- [x] Confirm that the structure is useful to a human reviewer as an architectural orientation interface, not only as LLM prompt machinery.
-- [x] Confirm that progressive disclosure is useful even with a low-cost model, strengthening the case for smaller and local LLMs.
+Validated foundations include:
 
-The conclusion is now strong enough to change development strategy: **stop proving that ContextCanon is useful and complete the deterministic core needed for broad daily use.**
+- [x] Gateway, Foundation, and Framework Development as real dogfood Nodes.
+- [x] Deterministic compiler and generated drift checking.
+- [x] `SomeSunlight/teams-chat-exporter` external experiment.
+- [x] Real GitHub Copilot entry through generated `AGENTS.md`.
+- [x] Ordinary versus Topic-specific progressive disclosure.
+- [x] Inherited Rule `Remove`/`Override`, transitive provenance, and diamond-conflict diagnostics.
+- [x] Compiler 0.3 deterministic Context diff and semantic normalization.
 
-## Strategy: harden the reusable compiler core
+The development rule is now: **complete one coherent deterministic core block, regenerate dogfood, make CI fully green, squash-merge to `main`, then start the next block on a fresh branch.**
 
-ContextCanon should soon be usable across many real projects without repeatedly hitting known missing fundamentals.
+## Compiler 0.4 — immutable external Sources and explicit acceptance
 
-That does not mean implementing everything at once. Each compiler step remains a coherent deterministic layer with explicit source syntax, positive and negative regression fixtures, repository dogfood, and CI drift checking.
+Branch: `agent/immutable-external-sources`
+
+Goal: reusable Sources must work across independent repositories without live inheritance or hidden network access during normal build.
+
+The implementation is complete. Only the final PR metadata/merge gate remains before this becomes the accepted `main` baseline.
+
+### Immutable package boundary
+
+- [x] Define `CompiledPackage` as the common semantic Source boundary.
+- [x] Publish a versioned `.context/package.json` manifest alongside `CONTEXT.md` and optional `CONTEXT/`.
+- [x] Carry complete effective Rules, provenance, removals, local Changes/Topics, dependency identities, file hashes, and both digests.
+- [x] Verify semantic digest, exact package files, path safety, and package digest on load.
+- [x] Round-trip a Source after deleting its original repository.
+- [x] Preserve presentation order independently from canonical semantic ordering.
+- [x] Route local compiled Sources and loaded external Sources through the same Rule-composition algorithm.
+- [x] Remove the temporary `source_nodes` compatibility path.
+
+### Accepted package storage and exact pins
+
+- [x] Store accepted packages under `<consumer>/.context/sources/<package-digest>/`.
+- [x] Treat accepted packages as reproducible consumer state suitable for offline builds.
+- [x] Add all-or-nothing `normalized-digest` + `package-digest` Source pins.
+- [x] Preserve unpinned local Sources as the simple development/dogfood case.
+- [x] Make ordinary `build` resolve pinned Sources only from the accepted local package store.
+- [x] Prove that build does not dereference the Source locator.
+- [x] Fail on missing package, wrong ID/version/digest, corrupt manifest/files, or incomplete pins.
+
+### Candidate review and acceptance
+
+- [x] Diff accepted and candidate immutable packages through the deterministic `ContextDiff` model.
+- [x] Substitute a candidate into the actual consumer composition in memory before acceptance.
+- [x] Surface dangling local Changes and Rule collisions during candidate review.
+- [x] Write a deterministic review receipt bound to the exact consumer `CONTEXT.src.md`, accepted state, and candidate identity.
+- [x] Require that receipt for the supported `source accept` path.
+- [x] Reject stale acceptance when consumer source, accepted Source state, or candidate changed after review.
+- [x] Install the new immutable accepted package and update only the matching Source version/digest pins.
+- [x] Preserve transport metadata while changing accepted pins.
+- [x] Publish candidate and accepted package directories only after staging and full package verification.
+- [x] Publish review receipts and canonical Source-pin changes atomically from sibling temporary files.
+- [x] Prove that a simulated failure at the final Source-pin replace leaves the old canonical source bytes and old build state intact.
+
+### Generic Git candidate transport
+
+- [x] Add explicit `transport="git"`, `ref="..."`, and `node-path="..."` metadata.
+- [x] Keep Node ID as identity and `node-path` as location inside a retrieved repository snapshot.
+- [x] Reject incomplete/unsafe transport metadata.
+- [x] Add `contextcanon source fetch` using the system Git executable rather than GitHub-specific APIs.
+- [x] Clone to a temporary checkout, load only the published immutable package at `node-path`, then persist it under `.context/candidates/<package-digest>/`.
+- [x] Ensure fetching a candidate cannot change normal build output.
+- [x] Test a real local Git repository with a nested reusable Node, v1 accepted, v2 on `main`, fetch, review, accept, and post-accept offline build.
+- [x] Test missing node paths and unknown refs without requiring network access.
+- [x] Keep candidate packages transient; retain accepted packages as reproducible project state.
+- [x] Make interrupted/partial retrieval safe through temporary checkout cleanup plus verified staged publication.
+
+### 0.4 release completion
+
+- [x] Document immutable package identity, accepted/candidate separation, Git transport, review receipts, explicit acceptance, and interrupted-operation recovery.
+- [x] Update compiler/contributor/walkthrough documentation to the `CompiledPackage` architecture.
+- [x] Reach 45 green deterministic regression tests including package, offline Source, acceptance, local-Git transport, and failed-pin-publication cases.
+- [x] Regenerate all ContextCanon dogfood packages from the final 0.4 implementation/documentation.
+- [x] Finish `contextcanon check --all .` with zero drift before the final documentation-only release bookkeeping.
+- [ ] Update PR #3 to describe the completed 0.4 block.
+- [ ] Run the exact final PR head through tests plus zero-drift check.
+- [ ] Squash-merge 0.4 to `main` as the next stable recovery point.
+
+## Next validation block: reviewed LLM-assisted project onboarding
+
+The next 1:1 validation must use a materially larger existing project and must **not** be manually curated from this conversation's prior knowledge.
+
+Onboarding is a semantic workflow above the deterministic compiler:
 
 ```text
-human-authored Context
-        ↓
-parse exact syntax
-        ↓
-resolve + compose exact semantics
-        ↓
-validate identities and operations
-        ↓
-render deterministic Official Context Package
-        ↓
-exact diff / package identity
-        ↓
-optional LLM interpretation or project work
+existing repository
+      ↓
+deterministic inventory
+      ↓
+framework-supplied LLM onboarding instruction
+      ↓
+provenance-rich proposal
+      ↓
+mandatory human review
+      ↓
+explicit acceptance
+      ↓
+CONTEXT.src.md + Sources + Topics + Resources
+      ↓
+normal deterministic compiler
 ```
 
-No LLM belongs inside deterministic compiler truth.
+### Deterministic bootstrap
 
-## Branch and merge cadence
+- [ ] Implement `contextcanon onboard prepare <project>` without requiring an existing Context Node.
+- [ ] Inventory likely context-bearing project material such as README, CONTRIBUTING, architecture/development docs, existing agent instructions, configuration, and explicitly selected files.
+- [ ] Preserve exact provenance for material offered to the semantic onboarding step.
+- [ ] Keep inventory deterministic; do not have the compiler interpret natural-language meaning.
 
-`main` is the last accepted, fully reproducible ContextCanon stage. Working branches may contain incomplete experiments; `main` should not.
+### Framework-supplied LLM instruction
 
-The current `agent/compiler-walking-skeleton` branch accumulated more work than ideal because implementation continued directly after the successful first end-to-end validation. Do not rewrite that history merely to manufacture an earlier boundary. Instead:
+- [ ] Ship the onboarding instruction with ContextCanon instead of requiring the operator to invent a prompt.
+- [ ] Require the LLM to use only inspected project evidence and surface uncertainty or contradictions.
+- [ ] Require provenance and rationale for every proposed item.
+- [ ] Require classification into at least: local Rule, existing reusable Source, candidate reusable/generic Node, Topic/Resource, state/planning, ordinary documentation that should remain ordinary documentation, or unresolved question.
+- [ ] Compare likely generic material against the available ContextCanon Node catalog before copying it locally.
+- [ ] Explicitly exercise common reusable candidates such as Python development, testing, language, writing, and user-guidance conventions.
+- [ ] Never let onboarding silently publish a new generic Node; that remains a separate reviewed/versioned proposal.
+- [ ] Preserve useful README/CONTRIBUTING content rather than treating onboarding as destructive migration.
 
-- [x] Finish Compiler 0.3 on the current branch, including documentation, regenerated dogfood packages, and completely green CI.
-- [x] Update PR #2 so its title/body describe the actual accepted compiler baseline rather than only the original walking skeleton.
-- [ ] Squash-merge that accepted 0.3 baseline into `main`.
-- [ ] Start the immutable external Sources/update-acceptance block on a fresh branch from the new `main`.
-- [ ] Use a fresh branch and PR for each subsequent coherent core block unless a very small follow-up clearly belongs to the block just merged.
+### Review and acceptance
 
-A core block is ready to merge only when its deterministic positive and negative tests pass, repository dogfood is regenerated by the compiler itself, generated-output drift is clean, and the relevant documentation plus `STATE.md`/`PLAN.md` describe the implemented behavior.
+- [ ] Define an onboarding proposal format distinct from Official Context.
+- [ ] Make every proposed file/Rule/Topic/Source choice reviewable against its cited project source.
+- [ ] Require explicit acceptance before canonical `CONTEXT.src.md` or related authored context is created/replaced.
+- [ ] Immediately run deterministic ContextCanon validation/build on the accepted proposal.
+- [ ] Keep generic-Node extraction proposals separately reviewable.
 
-This cadence deliberately creates frequent stable recovery points. Do not continue directly into an unrelated planned block merely because the previous work finished successfully.
+### Larger 1:1 test
 
-## Compiler 0.2 — inherited Rule changes
+- [ ] Choose a larger existing project with meaningful README/CONTRIBUTING/docs and no pre-curated ContextCanon files.
+- [ ] Run the framework-generated onboarding workflow through an LLM with repository access.
+- [ ] Do not pre-author the structure from conversation memory.
+- [ ] Review especially the split between project-local context and reusable generic Nodes.
+- [ ] Accept the corrected proposal, build it, then test ordinary and Topic-specific tasks through a real harness.
+- [ ] Record where the LLM classified correctly, where human correction was required, and whether generic-Node extraction reduced duplication.
 
-Compiler 0.2 is complete.
+## Later deterministic layers
 
-- [x] Fix rendering so transitively inherited Rules remain visible by their true origin Node.
-- [x] Add explicit `Remove` operations for inherited ordinary Rules.
-- [x] Add explicit `Override` operations while preserving inherited Rule identity.
-- [x] Carry Override provenance transitively into descendants.
-- [x] Carry Remove provenance transitively so absence remains meaningful in later composition.
-- [x] Reject dangling Changes instead of silently ignoring them.
-- [x] Reject duplicate local Changes against the same inherited Rule identity.
-- [x] Reject diamond graphs where the same stable Rule arrives with incompatible effective definitions/provenance.
-- [x] Reject a diamond where one Source path keeps a Rule and another explicitly removed it.
-- [x] Deduplicate compatible repeated Rule state without inventing Source precedence.
-- [x] Include Changes, override provenance, and removal provenance in exact normalized semantics.
-- [x] Add positive, dangling, duplicate, transitive, and diamond-conflict regression fixtures.
-- [x] Document the compiler pipeline and stage boundaries in `docs/compiler.md` and `CONTRIBUTING.md`.
-- [x] Expose the compiler module architecture directly in Framework Development context.
-- [x] Regenerate all dogfood packages with compiler 0.2 and finish with green CI.
+### Protected Rules and authorized exceptions
 
-## Compiler 0.3 — deterministic Context diff
-
-Compiler 0.3 is complete and awaiting merge into `main`.
-
-```text
-old compiled Context
-        +
-new compiled Context
-        ↓
-exact deterministic change set
-        ↓
-Rule IDs / Topic IDs / Sources / package changes
-        ↓
-optional LLM impact review
-```
-
-- [x] Define a normalized machine-readable diff model based on stable identity and provenance.
-- [x] Detect added, removed, and changed Rules without relying on titles or textual file diffs.
-- [x] Distinguish inherited semantic changes from local Changes where provenance permits.
-- [x] Include Source package/version changes, Topic changes, and materialized Resource changes.
-- [x] Represent active-to-removed Rule transitions as changes to one stable Rule identity.
-- [x] Produce a compact human-readable summary from the same deterministic diff.
-- [x] Add deterministic JSON output and CLI support without coupling the diff to a particular harness.
-- [x] Make semantic normalization insensitive to Source ordering and Topic-target presentation ordering where order has no meaning.
-- [x] Reject duplicate direct Source identities instead of allowing order-dependent ambiguity.
-- [x] Test unchanged, additive, removed, local Override, transitive Override, Resource, Topic, Source, and presentation-only cases.
-- [x] Document the 0.3 diff contract and semantic-normalization guarantees.
-- [x] Regenerate all dogfood machine state with compiler 0.3.
-- [x] Finish the block with completely green tests and generated-output drift checking.
-
-This diff becomes the exact input to later Source-update review and semantic impact analysis.
-
-## Next: immutable external Sources and update acceptance
-
-Broad use across independent projects requires reusable Sources without live dependency on another checkout.
-
-This block starts on a **fresh branch from the accepted 0.3 `main` baseline**.
-
-- [ ] Define an immutable external Source/package locator contract.
-- [ ] Pin exact Source identity, version, and package digest.
-- [ ] Keep accepted packages usable without a live Source repository.
-- [ ] Detect newer Source packages as candidates rather than silently inheriting them.
-- [ ] Compare accepted and candidate packages using the deterministic Context diff.
-- [ ] Require explicit acceptance before rebuilding a consumer against a new Source package.
-- [ ] Surface dangling local Changes caused by accepted Source updates.
-- [ ] Support addressing Nodes inside repositories containing multiple Context Nodes.
-
-Transport/cache mechanics should remain separate from semantic composition.
-
-## Then: protected Rules and authorized exceptions
-
-- [ ] Mark selected Rules as protected in their owning Node.
+- [ ] Mark selected Rules protected at their owner.
 - [ ] Reject ordinary Remove/Override against protected Rules.
-- [ ] Let the owner define stable authorized exceptions.
-- [ ] Add explicit `Use Exception` syntax in consumers.
-- [ ] Preserve exception provenance transitively.
-- [ ] Add deterministic invalid/dangling exception diagnostics.
+- [ ] Define stable authorized exceptions and explicit `Use Exception` in consumers.
+- [ ] Preserve exception provenance and reject dangling/invalid exception use.
 
-Governance validation is not a security boundary; it makes declared policy mechanically checkable.
+### Broader hardening
 
-## Broader compiler hardening
-
-After those central layers:
-
-- [ ] Multiple orthogonal Sources with broader structural conflict diagnostics.
-- [ ] Resource collision rules across composed packages.
 - [ ] Topic composition/materialization across Source package boundaries.
-- [ ] Nested Git repository boundary behavior.
-- [ ] Safe compiler-owned generated-file manifest if automatic stale adapter cleanup is later needed.
-- [ ] Authoring assistance for Node initialization, stable IDs, and compact templates.
+- [ ] Resource collision policy across composed packages.
+- [ ] Richer nested Git/repository boundary cases.
+- [ ] Safe compiler-owned generated-file manifests where needed.
+- [ ] Authoring assistance beyond the reviewed onboarding workflow.
 
-## Semantic layer above the compiler
+## Semantic layers above exact compiler artifacts
 
-Once deterministic diff and Source-update acceptance exist, implement the first high-level workflow:
+The first high-level impact workflow remains:
 
 ```text
-exact Context diff
+exact Context / Source diff
         ↓
 LLM impact review
         ↓
-Rule ID → affected files / code / config / tests / docs
+Rule ID → affected code / config / tests / docs
         ↓
-reason → proposed action
+reason → proposed action → human approval
 ```
 
-- [ ] Keep impact analysis outside deterministic compiler truth.
-- [ ] Require a reason for each suggested affected location.
-- [ ] Let a human approve/reject the impact set.
-- [ ] Let an agent implement approved changes while following the new Official Context.
-- [ ] Keep the workflow harness-neutral so local models, goose, Copilot, Codex, Hermes, and others can consume the same exact change set.
-
-## Context integration roadmap
-
-Add context types through the same progressive-disclosure and package mechanisms rather than parallel systems:
-
-- [ ] Glossaries and domain terminology.
-- [ ] Coding patterns and example code.
-- [ ] CSV files, schemas, tables, and other structured data.
-- [ ] PDFs, images, diagrams, and other reference media.
-- [ ] Skills and executable workflows.
-- [ ] Test fixtures and worked examples.
-- [ ] Operational experience, known pitfalls, and troubleshooting knowledge.
+This must remain harness-neutral and outside deterministic compiler truth.
 
 ## Working rule
 
 **Build central deterministic semantics deliberately, merge coherent stable points, then use them aggressively.**
-
-The external proof has been made. The quality bar now is that ContextCanon should become boring infrastructure: predictable enough to place under many projects and stop thinking about unless the context itself changes.

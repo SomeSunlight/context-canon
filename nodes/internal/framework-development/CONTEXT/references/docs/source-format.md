@@ -1,6 +1,6 @@
 # Source Format
 
-`CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md` or `.context/context.yaml`.
+`CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md`, `.context/context.yaml`, or `.context/package.json`.
 
 The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
 
@@ -17,7 +17,11 @@ The stable ID is independent of the Node's directory path or display name. A roo
 
 ## Sources
 
-`## Sources` lists accepted Context Nodes. The visible link points to the Source node-root directory; the adjacent comment preserves stable identity and accepted version.
+`## Sources` lists accepted Context Nodes. The visible link names the Source location; the adjacent compiler-managed comment preserves stable identity and accepted version.
+
+### Local development Source
+
+An unpinned Source is resolved as a local node-root path inside the same repository:
 
 ```markdown
 ## Sources
@@ -26,7 +30,43 @@ The stable ID is independent of the Node's directory path or display name. A roo
   <!-- ctx:source id="<stable-node-id>" version="0.1.0" -->
 ```
 
-Source order is not precedence. Compiler 0.2 supports local filesystem Sources inside the same Git repository.
+This remains the simple development/dogfood case.
+
+### Accepted immutable Source
+
+An accepted external Source additionally pins both canonical semantics and exact published package bytes:
+
+```markdown
+## Sources
+
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+  <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
+```
+
+`normalized-digest` and `package-digest` are an all-or-nothing pair. Each is lowercase SHA-256 hexadecimal.
+
+For a pinned Source, the visible link is provenance/update location rather than something ordinary `contextcanon build` dereferences. Build loads only the accepted immutable artifact from the consumer Node's `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests, and package files.
+
+This keeps normal builds offline and prevents a Source repository update from silently changing a consumer.
+
+### Git update transport
+
+A pinned Source may additionally describe how candidate updates are retrieved:
+
+```markdown
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+  <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
+```
+
+`transport`, `ref`, and `node-path` are an all-or-nothing set. Compiler 0.4 supports `transport="git"`.
+
+`ref` names the branch/tag/ref from which `contextcanon source fetch` retrieves a candidate. It is deliberately **not** the accepted identity; the accepted state remains pinned by version plus both digests.
+
+`node-path` locates the Source Node inside the retrieved repository snapshot. Use `.` for a repository-root Node. It is location only and may not be absolute, contain `..`, or use backslashes.
+
+Transport metadata is only for candidate discovery. Normal `build` never uses it.
+
+Source order is not precedence. See [Immutable external Sources](external-sources.md) for package storage and the fetch/review/accept workflow.
 
 ## Rules
 
@@ -46,7 +86,7 @@ The title is part of the human presentation, not identity. Descendants address t
 
 `## Changes` contains explicit local operations on inherited ordinary Rules.
 
-Compiler 0.2 supports **Remove** and **Override**. Both operations bind the inherited Rule's stable identity: origin Node ID plus Rule ID. Visible Source names and Rule titles help humans but do not define identity.
+Compiler 0.4 supports **Remove** and **Override**. Both operations bind the inherited Rule's stable identity: origin Node ID plus Rule ID. Visible Source names and Rule titles help humans but do not define identity.
 
 ### Remove
 
@@ -79,7 +119,7 @@ If the targeted identity is not inherited, compilation fails with a dangling-Cha
 
 An Override preserves the inherited Rule's identity, title, group, and origin, but replaces its effective statement for this Node. The compiler records the overriding Node and rationale as provenance. Descendants inherit that overridden meaning unless they explicitly change it again.
 
-Only the statement is overridable in compiler 0.2. Renaming or regrouping an inherited Rule is deliberately not disguised as an Override.
+Only the statement is currently overridable. Renaming or regrouping an inherited Rule is deliberately not disguised as an Override.
 
 A Node may define at most one local Change for a given inherited Rule identity.
 

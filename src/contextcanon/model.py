@@ -23,6 +23,19 @@ class SourceRef:
     name: str
     version: str
     locator: str
+    normalized_digest: str | None = None
+    package_digest: str | None = None
+    transport: str | None = None
+    transport_ref: str | None = None
+    node_path: str | None = None
+
+    @property
+    def is_pinned(self) -> bool:
+        return self.normalized_digest is not None and self.package_digest is not None
+
+    @property
+    def has_transport(self) -> bool:
+        return self.transport is not None
 
 
 @dataclass(frozen=True)
@@ -83,6 +96,37 @@ class Topic:
 
 
 @dataclass(frozen=True)
+class PackageDependency:
+    id: str
+    name: str
+    version: str
+    normalized_digest: str
+    package_digest: str
+
+
+@dataclass(frozen=True)
+class PackageFile:
+    path: str
+    sha256: str
+    size: int
+
+
+@dataclass(frozen=True)
+class CompiledPackage:
+    """Portable, immutable compiled Context state used across repository boundaries."""
+
+    metadata: NodeMetadata
+    sources: tuple[PackageDependency, ...]
+    changes: tuple[RuleChange, ...]
+    rules: tuple[Rule, ...]
+    removed_rules: tuple[RuleRemoval, ...]
+    topics: tuple[Topic, ...]
+    files: tuple[PackageFile, ...]
+    normalized_digest: str
+    package_digest: str
+
+
+@dataclass(frozen=True)
 class ParsedNode:
     root: Path
     repo_root: Path
@@ -96,7 +140,10 @@ class ParsedNode:
 @dataclass
 class CompiledNode:
     parsed: ParsedNode
-    source_nodes: list["CompiledNode"] = field(default_factory=list)
+    # All composition semantics consume immutable compiled packages. Local
+    # Source Nodes are compiled first and immediately projected to this same
+    # boundary; pinned external Sources are loaded directly into it.
+    source_packages: list[CompiledPackage] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     removed_rules: list[RuleRemoval] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)
@@ -106,6 +153,7 @@ class CompiledNode:
     normalized_digest: str = ""
     package_digest: str = ""
     official_markdown: str = ""
+    package_manifest: str = ""
     machine_yaml: str = ""
     adapters: dict[str, str] = field(default_factory=dict)
 

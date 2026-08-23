@@ -147,6 +147,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         )
         self.assertEqual(len(node.normalized_digest), 64)
         self.assertEqual(len(node.package_digest), 64)
+        self.assertIn('"schema": "contextcanon/package/v0"', node.package_manifest)
         self.assertIn("How to use this context", node.official_markdown)
         self.assertIn("Apply all Rules below to every task in this Node.", node.official_markdown)
         self.assertIn("Rules from Demo Foundation", node.official_markdown)
@@ -191,7 +192,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("Changes to inherited Rules", node.official_markdown)
         self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
         self.assertIn("**Removed** `Demo Foundation / F-002`", node.official_markdown)
-        self.assertIn("compiler_version: \"0.3.0\"", node.machine_yaml)
+        self.assertIn("compiler_version: \"0.4.0\"", node.machine_yaml)
         self.assertIn('"kind": "override"', node.machine_yaml)
         self.assertIn('"kind": "remove"', node.machine_yaml)
         self.assertIn("removed_rules:", node.machine_yaml)
@@ -403,6 +404,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertTrue(agents.is_file())
         self.assertIn("[CONTEXT.md](CONTEXT.md)", agents.read_text(encoding="utf-8"))
         self.assertTrue((repo / ".goosehints").is_file())
+        self.assertTrue((repo / ".context/package.json").is_file())
         self.assertFalse((repo / ".github/copilot-instructions.md").exists())
 
 

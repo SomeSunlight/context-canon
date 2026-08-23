@@ -24,7 +24,29 @@ jobs:
           if ! contextcanon check --all .; then
             echo "::group::Generated drift diff"
             contextcanon build --all .
+            # Include newly generated files in the diagnostic diff without
+            # staging their contents in the repository.
+            git add -N .
             git diff
             echo "::endgroup::"
             exit 1
           fi
+      - name: Upload generated drift snapshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-drift
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 1
+          path: |
+            .context/
+            CONTEXT.md
+            CONTEXT/
+            AGENTS.md
+            .goosehints
+            nodes/**/.context/
+            nodes/**/CONTEXT.md
+            nodes/**/CONTEXT/
+            nodes/**/AGENTS.md
+            nodes/**/.goosehints

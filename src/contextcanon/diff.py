@@ -178,9 +178,10 @@ def _source_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     return {
         source.metadata.id: {
             "version": source.metadata.version,
+            "normalized_digest": source.normalized_digest,
             "package_digest": source.package_digest,
         }
-        for source in compiled.source_nodes
+        for source in compiled.source_packages
     }
 
 
