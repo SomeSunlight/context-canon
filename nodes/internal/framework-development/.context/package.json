@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798",
-    "package": "10f27428243ed0468688d008a01974e80776e80dd6aea2ed7feb519d04e570ae"
+    "package": "ea00c851fb34bfa018129a198b2ca212f9c77cc184d97228174dd2bc6dd8243e"
   },
   "files": [
     {
@@ -48,8 +48,8 @@
     },
     {
       "path": "CONTEXT/references/docs/onboarding.md",
-      "sha256": "57e830ca5883a3004f98c22c83109b309996973eb8c5317459a386907ee8eedb",
-      "size": 7761
+      "sha256": "3042d5f75af4c2ebde09c9f0e23a8963ea4c44bc51ac30103e4d7dc2e239a124",
+      "size": 9986
     },
     {
       "path": "CONTEXT/references/docs/source-format.md",
