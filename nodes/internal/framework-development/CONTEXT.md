@@ -131,6 +131,14 @@ When changing the compiler boundary, package model, Node structure, deterministi
 
 - [`CONTEXT/references/docs/concepts.md`](CONTEXT/references/docs/concepts.md)
 
+### Reviewed project onboarding
+
+When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:
+
+**Required**
+
+- [`CONTEXT/references/docs/onboarding.md`](CONTEXT/references/docs/onboarding.md)
+
 ### Source and official formats
 
 When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:

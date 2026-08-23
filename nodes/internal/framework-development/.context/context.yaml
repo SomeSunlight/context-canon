@@ -32,6 +32,7 @@ local:
   topics:
     - {"id": "CCI-TOPIC-COMPILER", "title": "Compiler implementation"}
     - {"id": "CCI-TOPIC-ARCHITECTURE", "title": "Framework architecture"}
+    - {"id": "CCI-TOPIC-ONBOARDING", "title": "Reviewed project onboarding"}
     - {"id": "CCI-TOPIC-FORMATS", "title": "Source and official formats"}
     - {"id": "CCI-TOPIC-COMPOSITION", "title": "Composition"}
     - {"id": "CCI-TOPIC-HARNESSES", "title": "Harness integration"}
@@ -57,7 +58,7 @@ official:
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -78,6 +79,10 @@ targets:
     intent: "optional"
     kind: "resource"
     locator: "../../../docs/concepts.md"
+  - topic: "CCI-TOPIC-ONBOARDING"
+    intent: "required"
+    kind: "resource"
+    locator: "../../../docs/onboarding.md"
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
@@ -116,6 +121,7 @@ resources:
   - {"source": "../../../docs/external-sources.md", "published": "CONTEXT/references/docs/external-sources.md"}
   - {"source": "../../../docs/harnesses.md", "published": "CONTEXT/references/docs/harnesses.md"}
   - {"source": "../../../docs/official-context.md", "published": "CONTEXT/references/docs/official-context.md"}
+  - {"source": "../../../docs/onboarding.md", "published": "CONTEXT/references/docs/onboarding.md"}
   - {"source": "../../../docs/source-format.md", "published": "CONTEXT/references/docs/source-format.md"}
   - {"source": "../../../docs/state.md", "published": "CONTEXT/references/docs/state.md"}
   - {"source": "../../../docs/topics.md", "published": "CONTEXT/references/docs/topics.md"}
@@ -123,5 +129,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "33db4e2f4aa371836520399b0c5a13f6bc5817d97c4fc4b74258aa295df4d8b7"
-  package_digest: "5f8756517d9bdd994f90ad479825483e038cde925895699423c33117cfdbb4eb"
+  normalized_digest: "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798"
+  package_digest: "10f27428243ed0468688d008a01974e80776e80dd6aea2ed7feb519d04e570ae"
