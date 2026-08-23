@@ -23,3 +23,12 @@ All notable ContextCanon changes will be documented here.
 - Harness-neutral official context with thin generated adapters.
 - Single `.context/context.yaml` machine-state concept per Node.
 - Public documentation-style Rule for precise, plain technical prose.
+- Executable deterministic compiler commands for build, drift checking, and exact compiled Context diff.
+- Inherited Rule `Remove` and `Override` with stable identity, provenance, dangling diagnostics, and deterministic diamond-conflict handling.
+- Canonical semantic normalization separated from exact package-byte identity.
+- Immutable external Source packages with complete `.context/package.json` manifests and strict integrity verification.
+- Offline accepted external Source composition from consumer-local exact package pins.
+- Deterministic Source candidate diff/review receipts and explicit acceptance before changing an accepted Source.
+- Generic Git candidate transport with explicit ref and multi-Node `node-path` addressing.
+- Atomic staging/publication of candidate and accepted packages, review receipts, and canonical Source-pin updates, including recovery from a failed final pin swap.
+- CI generated-drift diagnostics with exact short-lived snapshots for compiler-owned output.
