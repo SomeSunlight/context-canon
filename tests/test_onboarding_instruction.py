@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
-from contextcanon.onboarding_instruction import build_onboarding_instruction
+from contextcanon.onboarding_instruction import MAX_INSTRUCTION_BYTES, build_onboarding_instruction
 from contextcanon.outputs import write_outputs
 from contextcanon.parser import ContextCanonError
 
@@ -126,6 +126,32 @@ class OnboardingInstructionTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ContextCanonError, "package"):
             build_onboarding_instruction(prepared.snapshot_root, catalog_package_roots=[package])
+
+    def test_rendered_instruction_size_limit_rejects_large_catalog_deterministically(self):
+        _, prepared = self.make_project_snapshot()
+        self.assertEqual(MAX_INSTRUCTION_BYTES, 4 * 1024 * 1024)
+        package = self.make_package(
+            "large-source",
+            "Large Source",
+            "L-001",
+            "x" * MAX_INSTRUCTION_BYTES,
+        )
+
+        errors = []
+        for _ in range(2):
+            with self.assertRaises(ContextCanonError) as caught:
+                build_onboarding_instruction(
+                    prepared.snapshot_root,
+                    catalog_package_roots=[package],
+                )
+            errors.append(str(caught.exception))
+
+        self.assertEqual(errors[0], errors[1])
+        self.assertIn(
+            f"Onboarding instruction exceeds safety limit of {MAX_INSTRUCTION_BYTES} bytes",
+            errors[0],
+        )
+        self.assertIn("narrow the evidence or Source catalog", errors[0])
 
     def test_cli_stdout_is_only_instruction_and_digest_goes_to_stderr(self):
         _, prepared = self.make_project_snapshot()
