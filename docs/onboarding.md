@@ -202,6 +202,16 @@ When no catalog package is supplied, the instruction explicitly forbids inventin
 
 This explicit package-list interface is the semantic contract. Convenient discovery of a standard installed/remote Node catalog can be added later without changing the instruction's meaning or introducing live inheritance.
 
+### Rendered instruction size limit
+
+The fully rendered onboarding instruction is capped at **4 MiB (4,194,304 UTF-8 bytes)**. The limit applies to the exact bytes that would be written to stdout, after the frozen Evidence snapshot has been verified and after all supplied Source packages have been integrity-checked, deduplicated by stable Node ID, deterministically sorted, and rendered into the instruction.
+
+This placement is deliberate. Evidence file contents themselves are not copied into the instruction, but a very large evidence inventory can still add metadata, while reusable Source catalog Rules and Topics are rendered directly and can therefore dominate instruction size. Both contributions must count toward one final transport boundary.
+
+A rendered instruction above the limit fails deterministically. ContextCanon does **not** truncate evidence metadata, Rules, Topics, or the output contract to make the instruction fit, because silent truncation would change the semantic task and make catalog coverage ambiguous. The operator must instead narrow the offered evidence or explicit Source catalog and render a new complete instruction.
+
+The 4 MiB ceiling is an instruction-output safety bound, not a claim that every model accepts a prompt of that size and not a replacement for provider-specific context-window checks. It keeps accidental catalog growth from producing an effectively unbounded harness payload while preserving one simple, reproducible framework limit.
+
 ## Harness execution boundary
 
 `onboard instruction` produces harness-neutral content; it does not control what an external harness automatically injects around that content.
