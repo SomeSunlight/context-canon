@@ -36,6 +36,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
         self.assertFalse((repo / "CONTEXT.src.md").exists())
         self.assertEqual(first.evidence_digest, second.evidence_digest)
         self.assertEqual(first.snapshot_root, second.snapshot_root)
+        self.assertEqual(first.excluded, second.excluded)
         self.assertEqual(
             [(entry.path, entry.reason) for entry in first.included],
             [
@@ -133,7 +134,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
         (repo / "large.txt").write_bytes(b"x" * (MAX_EVIDENCE_FILE_BYTES + 1))
         (repo / "folder").mkdir()
 
-        with self.assertRaisesRegex(ContextCanonError, "blocked \(sensitive-path\)"):
+        with self.assertRaisesRegex(ContextCanonError, r"blocked \(sensitive-path\)"):
             prepare_onboarding_evidence(repo, explicit_paths=[".env"])
         with self.assertRaisesRegex(ContextCanonError, "escapes repository"):
             prepare_onboarding_evidence(repo, explicit_paths=["../outside.md"])
