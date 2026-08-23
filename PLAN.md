@@ -132,14 +132,14 @@ normal deterministic compiler
 - [x] Preserve useful README/CONTRIBUTING content rather than treating onboarding as destructive migration.
 - [x] Document the harness execution boundary: ContextCanon controls its rendered instruction bytes but cannot prove or suppress hidden context automatically injected by a third-party harness.
 - [x] Reject duplicate stable Node IDs in the supplied catalog and make catalog argument ordering semantically irrelevant.
-- [ ] Complete instruction-size hardening: the implementation already rejects rendered instructions above 4 MiB; add a focused regression test and document that limit and its rationale.
+- [x] Bound the fully rendered onboarding instruction at 4 MiB, reject oversized valid Source catalogs without truncation, and document the placement and rationale of the bound.
 
 ### Instruction-slice completion
 
-- [ ] Regenerate Framework Development dogfood so the materialized onboarding documentation and package digests match the current source.
-- [ ] Update `STATE.md` and PR #7 to describe the completed instruction boundary and exact remaining review/acceptance work.
-- [ ] Run the exact final PR head through the full deterministic test suite plus `contextcanon check --all .` at zero drift.
-- [ ] Squash-merge the completed framework-owned instruction slice to `main` before starting the human review/acceptance implementation on a fresh branch.
+- [x] Regenerate Framework Development dogfood so the materialized onboarding documentation and package digests match the current source.
+- [x] Update `STATE.md`, contributor architecture notes, and PR #7 to describe the completed instruction boundary and exact remaining review/acceptance work.
+- [x] Run the exact final PR head through the full deterministic test suite plus `contextcanon check --all .` at zero drift before review handoff.
+- [ ] Squash-merge the completed framework-owned instruction slice to `main` after human review, before starting the human review/acceptance implementation on a fresh branch.
 
 ### Review and acceptance
 
