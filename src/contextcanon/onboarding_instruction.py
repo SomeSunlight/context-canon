@@ -12,6 +12,7 @@ from .parser import ContextCanonError
 
 
 INSTRUCTION_SCHEMA = "contextcanon/onboarding-instruction/v0"
+MAX_INSTRUCTION_BYTES = 4 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,7 @@ def _render_evidence(snapshot: EvidenceSnapshot) -> list[str]:
         "",
         f"Evidence digest: `{snapshot.evidence_digest}`",
         "",
-        "Read **every** file listed below before producing the proposal. The files are under the supplied snapshot's `evidence/` directory. Do not use the live repository or any unstated project knowledge as evidence.",
+        "Read **every** file listed below before producing the proposal. The paths are repository-relative identities; the calling harness must map each one to the supplied snapshot root's `evidence/` directory. Do not use the live repository or any unstated project knowledge as evidence.",
         "",
     ]
     if not snapshot.entries:
@@ -152,10 +153,11 @@ def _render_contract() -> list[str]:
         "8. Preserve useful README, CONTRIBUTING, architecture, operating, and explanatory documents as `ordinary-documentation` or `topic-resource` when that is their natural role. Onboarding is not destructive migration.",
         "9. Before using `candidate-reusable-node`, compare the practice against every supplied catalog package. Do not duplicate an existing reusable Source merely to rephrase it locally.",
         "10. Use `existing-source` only for a supplied catalog entry and copy its exact `source_node_id` and `source_name`. Do not claim that the Source is accepted; this is only a proposal for later human review.",
-        "11. A practice may be reusable even when this repository is the only evidence available. Mark uncertainty in confidence and rationale instead of pretending broader adoption has been proven.",
-        "12. Surface contradictions and important missing decisions as `unresolved-question`. Do not silently reconcile incompatible evidence.",
-        "13. Prefer a small set of high-value, non-duplicative items over paraphrasing every sentence in the repository.",
-        "14. Do not create, edit, move, or delete repository files. Do not emit canonical ContextCanon Markdown. This stage produces a proposal only.",
+        "11. Actively notice likely cross-project conventions such as language/runtime choices, testing policy, coding/tooling conventions, documentation or writing guidance, user-guidance style, and security practices. Classify them as an existing Source, a candidate reusable Node, or an unresolved question rather than burying them in project-local Rules by default.",
+        "12. A practice may be reusable even when this repository is the only evidence available. Mark uncertainty in confidence and rationale instead of pretending broader adoption has been proven.",
+        "13. Surface contradictions and important missing decisions as `unresolved-question`. Do not silently reconcile incompatible evidence.",
+        "14. Prefer a small set of high-value, non-duplicative items over paraphrasing every sentence in the repository.",
+        "15. Do not create, edit, move, or delete repository files. Do not emit canonical ContextCanon Markdown. This stage produces a proposal only.",
         "",
         "## Output contract",
         "",
@@ -217,7 +219,13 @@ def build_onboarding_instruction(
     lines.extend(_render_catalog(packages))
     lines.extend(_render_contract())
     text = "\n".join(lines)
-    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    encoded = text.encode("utf-8")
+    if len(encoded) > MAX_INSTRUCTION_BYTES:
+        raise ContextCanonError(
+            "Onboarding instruction exceeds safety limit "
+            f"of {MAX_INSTRUCTION_BYTES} bytes ({len(encoded)} bytes); narrow the evidence or Source catalog"
+        )
+    digest = hashlib.sha256(encoded).hexdigest()
     return OnboardingInstruction(
         evidence_digest=snapshot.evidence_digest,
         catalog_packages=packages,
