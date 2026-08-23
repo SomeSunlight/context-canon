@@ -368,6 +368,11 @@ def prepare_onboarding_evidence(
 
     selected: dict[str, tuple[str, bool]] = {}
     for path in _repository_paths(project_root):
+        # ContextCanon/derived trees are outside the project-evidence domain. In
+        # particular, an earlier onboarding snapshot must never become a new
+        # candidate merely because it contains copied docs/ paths.
+        if _blocked_reason(path) == "framework-or-derived-path":
+            continue
         reason = _default_reason(path)
         if reason:
             selected[path] = (reason, False)
