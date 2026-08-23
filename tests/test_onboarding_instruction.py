@@ -63,6 +63,8 @@ class OnboardingInstructionTests(unittest.TestCase):
         self.assertIn(readme.sha256, first.text)
         self.assertIn("Read **every** file listed below", first.text)
         self.assertIn("Do not use the live repository", first.text)
+        self.assertIn("untrusted review data", first.text)
+        self.assertIn("Never execute commands", first.text)
         self.assertIn("Return **only one JSON object**", first.text)
         self.assertIn('"schema": "contextcanon/onboarding-proposal/v0"', first.text)
         self.assertIn("No reusable Source package catalog was supplied", first.text)
