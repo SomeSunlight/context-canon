@@ -6,10 +6,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+import contextcanon.onboarding as onboarding
 from contextcanon.cli import main
 from contextcanon.onboarding import MAX_EVIDENCE_FILE_BYTES, prepare_onboarding_evidence
 from contextcanon.parser import ContextCanonError
@@ -58,6 +60,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
             manifest["selection"]["repository_listing"],
             "git ls-files --cached --others --exclude-standard",
         )
+        self.assertEqual(manifest["selection"]["max_total_bytes"], onboarding.MAX_EVIDENCE_TOTAL_BYTES)
 
     def test_gitignore_limits_automatic_inventory_but_explicit_include_can_add_safe_file(self):
         repo = self.make_repo()
@@ -126,6 +129,19 @@ class OnboardingEvidenceTests(unittest.TestCase):
             [(entry.path, entry.reason) for entry in prepared.excluded],
             [("README.md", "too-large"), ("docs/binary.md", "non-utf8")],
         )
+
+    def test_total_evidence_size_is_bounded_before_snapshot_publication(self):
+        repo = self.make_repo()
+        (repo / "README.md").write_text("123456\n", encoding="utf-8")
+        (repo / "docs").mkdir()
+        (repo / "docs/architecture.md").write_text("abcdef\n", encoding="utf-8")
+
+        with patch.object(onboarding, "MAX_EVIDENCE_TOTAL_BYTES", 10):
+            with self.assertRaisesRegex(ContextCanonError, "total safety limit"):
+                prepare_onboarding_evidence(repo)
+
+        onboarding_root = repo / ".context/onboarding"
+        self.assertFalse(onboarding_root.exists() and any(onboarding_root.iterdir()))
 
     def test_explicit_include_rejects_sensitive_escape_directory_and_oversize(self):
         repo = self.make_repo()
