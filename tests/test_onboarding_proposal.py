@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -158,7 +159,6 @@ class OnboardingProposalTests(unittest.TestCase):
         proposal_value = self.complete_proposal(prepared)
         first_path = self.write_proposal(repo, proposal_value, "proposal-a.json")
 
-        # Re-serialize with reversed top-level key insertion order and compact JSON.
         second_value = {
             "items": proposal_value["items"],
             "evidence_digest": proposal_value["evidence_digest"],
@@ -261,15 +261,26 @@ class OnboardingProposalTests(unittest.TestCase):
         manifest = json.loads(prepared.manifest_path.read_text(encoding="utf-8"))
         manifest["selection"]["policy"] = "tampered"
         prepared.manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-        with self.assertRaisesRegex(ContextCanonError, "manifest digest does not match"):
+        with self.assertRaisesRegex(ContextCanonError, "selection policy"):
             load_evidence_snapshot(prepared.snapshot_root)
 
-        # Create a fresh independent snapshot for exact file-set verification.
         repo2, prepared2 = self.make_snapshot()
         extra = prepared2.snapshot_root / "evidence/extra.md"
         extra.write_text("unexpected\n", encoding="utf-8")
         with self.assertRaisesRegex(ContextCanonError, "file set does not match"):
             load_evidence_snapshot(prepared2.snapshot_root)
+
+    def test_rehashed_weakened_selection_policy_is_rejected(self):
+        repo, prepared = self.make_snapshot()
+        manifest = json.loads(prepared.manifest_path.read_text(encoding="utf-8"))
+        manifest["selection"]["max_total_bytes"] = 10**12
+        payload = {key: manifest[key] for key in ("schema", "selection", "included", "excluded")}
+        canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        manifest["evidence_digest"] = hashlib.sha256(canonical).hexdigest()
+        prepared.manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        with self.assertRaisesRegex(ContextCanonError, "selection policy"):
+            load_evidence_snapshot(prepared.snapshot_root)
 
     def test_empty_items_is_valid_but_every_item_needs_evidence(self):
         repo, prepared = self.make_snapshot()
