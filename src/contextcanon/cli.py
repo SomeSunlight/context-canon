@@ -8,6 +8,7 @@ from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
 from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
+from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_proposal import load_onboarding_proposal
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
@@ -65,6 +66,19 @@ def main(argv: list[str] | None = None) -> int:
         help="explicitly include one additional safe UTF-8 repository-relative file; may be repeated",
     )
 
+    onboard_instruction = onboard_sub.add_parser(
+        "instruction",
+        help="render the framework-owned semantic instruction for one exact evidence snapshot",
+    )
+    onboard_instruction.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_instruction.add_argument(
+        "--catalog-package",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="verified immutable reusable Source package offered to the semantic reviewer; may be repeated",
+    )
+
     onboard_validate = onboard_sub.add_parser(
         "validate",
         help="validate a semantic onboarding proposal against one exact evidence snapshot",
@@ -110,6 +124,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Evidence snapshot: {label}")
                 print(f"Included files: {len(prepared.included)}")
                 print(f"Excluded candidates: {len(prepared.excluded)}")
+                return 0
+
+            if args.onboard_command == "instruction":
+                instruction = build_onboarding_instruction(
+                    Path(args.snapshot),
+                    catalog_package_roots=(Path(path) for path in args.catalog_package),
+                )
+                print(instruction.text, end="")
+                print(
+                    f"contextcanon onboarding instruction digest: {instruction.instruction_digest}",
+                    file=sys.stderr,
+                )
                 return 0
 
             proposal = load_onboarding_proposal(Path(args.proposal), Path(args.snapshot))
