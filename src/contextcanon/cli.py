@@ -8,6 +8,7 @@ from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
 from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
+from .onboarding_proposal import load_onboarding_proposal
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -49,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     diff_parser.add_argument("after", help="Node root for the later repository snapshot")
     diff_parser.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
 
-    onboard_parser = sub.add_parser("onboard", help="prepare and review project onboarding evidence")
+    onboard_parser = sub.add_parser("onboard", help="prepare and validate reviewed project onboarding state")
     onboard_sub = onboard_parser.add_subparsers(dest="onboard_command", required=True)
     onboard_prepare = onboard_sub.add_parser(
         "prepare",
@@ -63,6 +64,13 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="explicitly include one additional safe UTF-8 repository-relative file; may be repeated",
     )
+
+    onboard_validate = onboard_sub.add_parser(
+        "validate",
+        help="validate a semantic onboarding proposal against one exact evidence snapshot",
+    )
+    onboard_validate.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_validate.add_argument("proposal", help="JSON onboarding proposal to validate")
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
@@ -103,6 +111,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Included files: {len(prepared.included)}")
                 print(f"Excluded candidates: {len(prepared.excluded)}")
                 return 0
+
+            proposal = load_onboarding_proposal(Path(args.proposal), Path(args.snapshot))
+            print(f"validated onboarding proposal {proposal.proposal_digest}")
+            print(f"Evidence snapshot: {proposal.evidence_digest}")
+            print(f"Proposal items: {len(proposal.items)}")
+            return 0
 
         if args.command == "source":
             node_root = _node_root(Path(args.node))
