@@ -2,7 +2,7 @@
 
 ContextCanon has moved beyond architecture-only prototyping and its first external proof. **Compiler 0.4 is the accepted compiler baseline**, including immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
 
-Reviewed onboarding now has three deterministic boundaries above that compiler baseline: frozen evidence preparation, a framework-owned harness-neutral semantic instruction, and strict proposal validation. Human review/acceptance and canonical onboarding publication are still intentionally separate future boundaries.
+Reviewed onboarding now has three deterministic boundaries above that compiler baseline: frozen evidence preparation, a framework-owned harness-neutral semantic instruction, and strict proposal validation. Human review/acceptance and canonical onboarding publication remain intentionally separate future boundaries.
 
 ## Accepted Compiler 0.4 baseline
 
@@ -26,9 +26,9 @@ source accept  → exact accepted package + updated pin
 
 A normal build never dereferences update transport metadata or repairs missing accepted state through hidden network access.
 
-## Reviewed-onboarding boundary under active development
+## Reviewed-onboarding instruction boundary
 
-The implemented flow on branch `agent/onboarding-instruction` is:
+The implemented flow on PR #7 / branch `agent/onboarding-instruction` is:
 
 ```text
 existing Git repository
@@ -109,7 +109,9 @@ Reusable catalog inputs are ordinary verified immutable `CompiledPackage` roots 
 
 The harness boundary is explicit: ContextCanon controls and hashes its rendered instruction, but a third-party harness may inject hidden workspace instructions, `AGENTS.md`, memories, or other context. A reproducible onboarding run must therefore be configured so the ContextCanon instruction controls the task and frozen evidence is read as data. ContextCanon cannot prove a third-party harness's hidden prompt composition.
 
-The latest implementation also introduces a **4 MiB rendered-instruction safety limit**. The code path is present, but this final hardening step is not yet complete: a focused regression test and corresponding documentation of the limit/rationale still need to be added before the instruction slice is considered finished.
+The fully rendered instruction is capped at **4 MiB (4,194,304 UTF-8 bytes)** after Evidence verification and verified/deduplicated/deterministically ordered Source-catalog rendering. An oversized instruction fails rather than being truncated. This is a framework output-safety bound, not a promise about a provider's context window.
+
+A focused regression test constructs a valid reusable Source package whose rendered catalog pushes the instruction above that boundary and verifies deterministic rejection. This tests the real catalog-growth path rather than merely lowering the constant in a fixture.
 
 ### Proposal validation
 
@@ -117,23 +119,19 @@ Semantic output is represented by `contextcanon/onboarding-proposal/v0`, distinc
 
 Every proposal item requires a proposal-local stable ID, one supported classification, title/rationale, explicit high/medium/low confidence, at least one exact evidence reference with path/SHA-256/line range, and a strict kind-specific payload.
 
-`contextcanon onboard validate <snapshot> <proposal.json>` reloads the evidence snapshot and verifies its exact file set, hashes, evidence digest and supported Evidence v0 safety policy before validating the proposal. A rehashed manifest that weakens the preparation policy fails on consumption.
+`contextcanon onboard validate <snapshot> <proposal.json>` reloads and verifies the evidence snapshot, then checks proposal schema, exact evidence digest, unique item IDs, supported kinds, confidence values, non-empty provenance, evidence file hashes, line ranges, and kind-specific payloads. A rehashed manifest that weakens the Evidence v0 preparation policy is rejected on consumption.
 
 A valid proposal receives a deterministic `proposal_digest`. That digest identifies one exact review artifact; **validation is not acceptance** and does not claim the semantic interpretation is correct.
 
 ## Quality status
 
-On PR #7, the latest pre-handoff CI run completed **72/72 unit and repository-consistency tests successfully**. The workflow is still red only because generated Framework Development dogfood is intentionally behind the changed canonical `docs/onboarding.md`: its materialized copy plus package digests need regeneration.
+The instruction slice is complete at code, regression-test, documentation, and Framework Development dogfood level and is being handed off for human review rather than merged automatically.
 
-The instruction-specific regression coverage already checks deterministic instruction identity, exact Evidence binding, verified catalog package semantics, catalog-order independence, duplicate stable Node rejection, tampered package rejection, and clean stdout/stderr CLI separation.
+Regression coverage now includes **73 deterministic unit/repository-consistency tests**, including deterministic instruction identity, exact Evidence binding, verified catalog package semantics, catalog-order independence, duplicate stable Node rejection, tampered package rejection, clean stdout/stderr CLI separation, and real oversized-catalog rejection.
 
-The remaining instruction-slice hardening is narrow and explicit:
+Framework Development dogfood has been regenerated from the canonical onboarding documentation. The semantic `normalized_digest` remains unchanged; only the exact package identity changes with the updated materialized documentation, as expected.
 
-1. add a focused regression test for the already implemented 4 MiB instruction limit and document that limit;
-2. regenerate Framework Development dogfood and package digests;
-3. update PR #7 to the final state;
-4. run the exact final head through the full suite plus `contextcanon check --all .` at zero drift;
-5. squash-merge the instruction slice to `main` before starting human review/acceptance on a fresh branch.
+The merge gate remains the repository's normal one: the exact review head must pass the full test suite and `contextcanon check --all .` at zero drift. PR #7 stays separate from merge approval so a human can review this stable point first.
 
 No LLM participates in evidence selection, evidence identity, snapshot verification, instruction rendering/identity, proposal structural/provenance validation, proposal identity, compiler truth, package verification, Source transport state transitions, review receipts, or Source acceptance.
 
