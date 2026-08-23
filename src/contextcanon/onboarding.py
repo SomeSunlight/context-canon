@@ -68,6 +68,7 @@ _SENSITIVE_FILENAMES = {
     "secrets",
     "secrets.json",
 }
+_SENSITIVE_STEMS = {"credentials", "secrets"}
 _SENSITIVE_SUFFIXES = {".jks", ".kdbx", ".key", ".keystore", ".p12", ".pem", ".pfx"}
 
 
@@ -212,7 +213,11 @@ def _blocked_reason(path: str) -> str | None:
     lower_name = pure.name.lower()
     if lower_name == ".env" or lower_name.startswith(".env."):
         return "sensitive-path"
-    if lower_name in _SENSITIVE_FILENAMES or pure.suffix.lower() in _SENSITIVE_SUFFIXES:
+    if (
+        lower_name in _SENSITIVE_FILENAMES
+        or PurePosixPath(lower_name).stem in _SENSITIVE_STEMS
+        or pure.suffix.lower() in _SENSITIVE_SUFFIXES
+    ):
         return "sensitive-path"
     if any(part in {"credentials", "secrets"} for part in lower_parts[:-1]):
         return "sensitive-path"
@@ -235,14 +240,17 @@ def _explicit_path(project_root: Path, value: str) -> str:
     raw = Path(value)
     if raw.is_absolute():
         raise ContextCanonError(f"Explicit onboarding include must be repository-relative: {value}")
-    candidate = (project_root / raw).resolve()
+    raw_candidate = project_root / raw
+    if raw_candidate.is_symlink():
+        raise ContextCanonError(f"Explicit onboarding include must not be a symlink: {value}")
+    candidate = raw_candidate.resolve()
     try:
         relative = candidate.relative_to(project_root)
     except ValueError as exc:
         raise ContextCanonError(f"Explicit onboarding include escapes repository: {value}") from exc
     if not candidate.exists():
         raise ContextCanonError(f"Explicit onboarding include does not exist: {relative.as_posix()}")
-    if candidate.is_symlink() or not candidate.is_file():
+    if not candidate.is_file():
         raise ContextCanonError(f"Explicit onboarding include must be a regular file: {relative.as_posix()}")
     path = relative.as_posix()
     blocked = _blocked_reason(path)
@@ -258,11 +266,14 @@ def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -
             raise ContextCanonError(f"Explicit onboarding include is blocked ({blocked}): {path}")
         return None, ExcludedEvidence(path, blocked), None
 
-    source = _safe_project_file(project_root, path)
-    if source.is_symlink():
+    pure = PurePosixPath(path)
+    raw_source = project_root.joinpath(*pure.parts)
+    if raw_source.is_symlink():
         if explicit:
             raise ContextCanonError(f"Explicit onboarding include must not be a symlink: {path}")
         return None, ExcludedEvidence(path, "symlink"), None
+
+    source = _safe_project_file(project_root, path)
     if not source.is_file():
         raise ContextCanonError(f"Onboarding evidence changed during preparation or is not a file: {path}")
 
