@@ -50,7 +50,7 @@ That directory contains the files belonging to that Node:
 ├── CONTEXT.src.md       human-edited local context
 ├── CONTEXT.md           generated compact official entry
 ├── CONTEXT/             optional deeper generated resources
-└── .context/            generated machine state
+└── .context/            generated machine/package state
 ```
 
 The node-root may be the root of a Git repository or a directory deeper inside it. A repository can therefore contain several Nodes.
@@ -177,6 +177,22 @@ The tree should answer this without guesswork:
 
 These category names are conventions of this repository. ContextCanon does not require other projects to use `library/` or `internal/`; it only requires each Node to have a clear node root.
 
+## Immutable external Sources
+
+Reusable Sources are not live includes from another Git repository. A consumer accepts an exact immutable Source package and can build offline from its own accepted state.
+
+Compiler 0.4 separates candidate discovery from accepted inheritance:
+
+```text
+source fetch  → candidate only
+source review → exact diff + consumer structural validation + receipt
+source accept → immutable accepted package + exact updated pin
+```
+
+Normal `build` never fetches a missing Source implicitly. Git repository location, ref, and `node-path` are update transport metadata; stable Node identity plus version and exact digests define accepted state.
+
+See [Immutable external Sources](docs/external-sources.md) for the complete contract.
+
 ## Why the package can contain more than Markdown
 
 Topics are the first integration mechanism, not the final data model. The same progressive-disclosure pattern can later connect a task to:
@@ -198,13 +214,14 @@ If the five-second idea above is enough, the best next reads are:
 
 - [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
+- [Immutable external Sources](docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
 - [Official context](docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
 - [Topics and context integration](docs/topics.md) — how deeper context is selected.
 - [Architecture](docs/architecture.md) — deterministic compiler boundary and Node/package structure.
 - [Compiler](docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
 - [Use-case walkthrough](docs/use-case-walkthrough.md) — where the design has already been stress-tested.
 
-See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the next compiler layers.
+See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the active development block.
 
 ## Influence
 
@@ -217,6 +234,8 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-The first external-project experiment validated the basic workflow end to end: a real harness entered through generated instructions, used the compact official context, followed task-specific Topics, and produced better project-specific answers without eagerly loading everything.
+Compiler 0.4 is the accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
 
-ContextCanon is therefore moving from proving basic usefulness to **hardening the reusable compiler core**. New compiler semantics are added in coherent deterministic layers with positive and negative regression tests, then rebuilt across the repository's own dogfood Nodes before moving on.
+The next validation block moves deliberately above compiler truth: **reviewed LLM-assisted onboarding of a materially larger pre-existing repository**. ContextCanon will inventory repository evidence deterministically, provide a harness-neutral semantic classification instruction, require a provenance-rich proposal, and keep human review/explicit acceptance between LLM interpretation and canonical ContextCanon source.
+
+This next test is intended to expose remaining **domain and workflow questions** rather than make the deterministic compiler rediscover already solved transport or package mechanics.
