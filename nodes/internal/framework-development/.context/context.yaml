@@ -18,7 +18,7 @@ sources:
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
     normalized_digest: "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb"
-    package_digest: "584e726d85d0c51ea193dc00b01de383a649bbe53ae16f9d031e14938c76c5f6"
+    package_digest: "795a75ec97b39e4688c4cf89ec288e6783a19232c93dc0030113c44666bb249e"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -124,4 +124,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "33db4e2f4aa371836520399b0c5a13f6bc5817d97c4fc4b74258aa295df4d8b7"
-  package_digest: "771e5c6e224f76e8943915f13a3536dbd662c27a41d94f6ee074212f848cc2c8"
+  package_digest: "caee6a4ec8f97753f67f43733d0e078b7a725134762bc14c0b00186756e3c9d1"
