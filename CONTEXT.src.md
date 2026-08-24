@@ -3,11 +3,19 @@
 
 > [!IMPORTANT]
 > **Edit this file to change the repository Gateway context.**
-> `CONTEXT.md` is generated from this source.
+> `CONTEXT.md` and optional `CONTEXT/` resources are generated from this source.
 >
-> This Node is intentionally minimal: it has no Sources, no Rules and no materialized package resources.
+> This Node is intentionally small: it has no Sources and no Rules. Its job is to recognize a few top-level tasks and route them to the deeper context required for that task.
 
 ## Topics
+
+### Onboard an existing project
+
+When adopting ContextCanon in an existing repository, preparing onboarding evidence, generating or running the onboarding instruction, validating an onboarding proposal, or deciding how to start using ContextCanon on an existing project:
+
+Required:
+- Resource: `docs/onboarding.md`
+<!-- ctx:topic id="CCG-TOPIC-ONBOARDING" -->
 
 ### ContextCanon framework development
 
