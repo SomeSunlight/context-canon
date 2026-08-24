@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798",
-    "package": "2060b928f0751a7d11e102d4ffae2993c5dfe38e9824836b1b5bdba9f2ef03e1"
+    "package": "630ccb807a1793a7851f7666d421c188304cd628552cb240d246f154546d7297"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/references/docs/architecture.md",
-      "sha256": "f50822b14e834141c68fdad7ad121cd9f681fefbdaa5a61fb7e1d14278498aba",
-      "size": 14692
+      "sha256": "54fc01b3da879f76d92414298cc4ea19dd2cdf4875339da66251de7508bc0e3e",
+      "size": 15294
     },
     {
       "path": "CONTEXT/references/docs/compiler.md",
