@@ -1,8 +1,17 @@
 # Plan
 
-## Accepted baseline
+## How to read "accepted" in this plan
 
-ContextCanon has passed self-hosted and real external-project validation. **Compiler 0.4 is accepted on `main` at `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`** after PR #3 was squash-merged.
+Two different ideas use similar words and should not be confused:
+
+- **Project-owner accepted** means the project owner, acting as ContextCanon's first user/reviewer, reviewed a development stage and approved it as the new project baseline.
+- **`source accept` / onboarding acceptance** are product operations performed by an explicit human operator on one candidate Source or one reviewed onboarding proposal.
+
+No anonymous system, CI job, or LLM "accepts" project truth.
+
+## Project-owner accepted baseline
+
+ContextCanon has passed self-hosted and real external-project validation. The project owner accepted **Compiler 0.4** as the deterministic compiler baseline after review and squash-merge.
 
 Validated foundations include:
 
@@ -12,156 +21,166 @@ Validated foundations include:
 - [x] Real GitHub Copilot entry through generated `AGENTS.md`.
 - [x] Ordinary versus Topic-specific progressive disclosure.
 - [x] Inherited Rule `Remove`/`Override`, transitive provenance, and diamond-conflict diagnostics.
-- [x] Compiler 0.3 deterministic Context diff and semantic normalization.
-- [x] Compiler 0.4 immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
+- [x] Deterministic Context diff and semantic normalization.
+- [x] Immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
 
-The development rule remains: **complete one coherent deterministic core block, regenerate dogfood, make CI fully green, squash-merge to `main`, then start the next block on a fresh branch.**
+The development cadence remains:
 
-## Accepted: Compiler 0.4 — immutable external Sources and explicit acceptance
+> complete one coherent block → regenerate dogfood → make CI fully green → project-owner review → squash-merge to `main` → start the next block on a fresh branch.
 
-Merged from `agent/immutable-external-sources` through PR #3 as `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`.
+## Project-owner accepted: Compiler 0.4 — immutable external Sources
 
-Goal: reusable Sources must work across independent repositories without live inheritance or hidden network access during normal build.
+Merged through PR #3 as `7fd1aa64fb1f853a2bd4be84a9ed1afaf07d5de9`.
+
+Goal: reusable Sources work across independent repositories without live inheritance or hidden network access during normal build.
 
 ### Immutable package boundary
 
 - [x] Define `CompiledPackage` as the common semantic Source boundary.
-- [x] Publish a versioned `.context/package.json` manifest alongside `CONTEXT.md` and optional `CONTEXT/`.
-- [x] Carry complete effective Rules, provenance, removals, local Changes/Topics, dependency identities, file hashes, and both digests.
+- [x] Publish a versioned `.context/package.json` alongside `CONTEXT.md` and optional `CONTEXT/`.
+- [x] Carry effective Rules, provenance, removals, local Changes/Topics, dependency identities, file hashes, and both digests.
 - [x] Verify semantic digest, exact package files, path safety, and package digest on load.
 - [x] Round-trip a Source after deleting its original repository.
 - [x] Preserve presentation order independently from canonical semantic ordering.
 - [x] Route local compiled Sources and loaded external Sources through the same Rule-composition algorithm.
-- [x] Remove the temporary `source_nodes` compatibility path.
 
-### Accepted package storage and exact pins
+### Exact accepted Source state
 
-- [x] Store accepted packages under `<consumer>/.context/sources/<package-digest>/`.
-- [x] Treat accepted packages as reproducible consumer state suitable for offline builds.
-- [x] Add all-or-nothing `normalized-digest` + `package-digest` Source pins.
+- [x] Store accepted Source packages under `<consumer>/.context/sources/<package-digest>/`.
+- [x] Treat those packages as reproducible consumer state suitable for offline builds.
+- [x] Add exact `normalized-digest` + `package-digest` Source pins.
 - [x] Preserve unpinned local Sources as the simple development/dogfood case.
-- [x] Make ordinary `build` resolve pinned Sources only from the accepted local package store.
-- [x] Prove that build does not dereference the Source locator.
-- [x] Fail on missing package, wrong ID/version/digest, corrupt manifest/files, or incomplete pins.
+- [x] Make ordinary `build` use only accepted local package state for pinned external Sources.
+- [x] Fail clearly on missing/corrupt/mismatched accepted state rather than fetching silently.
 
-### Candidate review and acceptance
+### Operator review and `source accept`
 
-- [x] Diff accepted and candidate immutable packages through the deterministic `ContextDiff` model.
-- [x] Substitute a candidate into the actual consumer composition in memory before acceptance.
-- [x] Surface dangling local Changes and Rule collisions during candidate review.
-- [x] Write a deterministic review receipt bound to the exact consumer `CONTEXT.src.md`, accepted state, and candidate identity.
-- [x] Require that receipt for the supported `source accept` path.
-- [x] Reject stale acceptance when consumer source, accepted Source state, or candidate changed after review.
-- [x] Install the new immutable accepted package and update only the matching Source version/digest pins.
-- [x] Preserve transport metadata while changing accepted pins.
-- [x] Publish candidate and accepted package directories only after staging and full package verification.
-- [x] Publish review receipts and canonical Source-pin changes atomically from sibling temporary files.
-- [x] Prove that a simulated failure at the final Source-pin replace leaves the old canonical source bytes and old build state intact.
+Here the actor is the **human/operator using ContextCanon**, not the project milestone process above.
+
+- [x] Diff accepted and candidate immutable packages deterministically.
+- [x] Validate the candidate inside the real consumer composition before acceptance.
+- [x] Surface dangling local Changes and Rule collisions during review.
+- [x] Write a deterministic review receipt bound to exact consumer/candidate state.
+- [x] Require that receipt before `contextcanon source accept` can update the accepted Source.
+- [x] Reject stale acceptance after consumer/candidate changes.
+- [x] Publish accepted package state and Source pins atomically.
+- [x] Prove simulated publication failure preserves the old accepted build state.
 
 ### Generic Git candidate transport
 
 - [x] Add explicit `transport="git"`, `ref="..."`, and `node-path="..."` metadata.
-- [x] Keep Node ID as identity and `node-path` as location inside a retrieved repository snapshot.
-- [x] Reject incomplete/unsafe transport metadata.
-- [x] Add `contextcanon source fetch` using the system Git executable rather than GitHub-specific APIs.
-- [x] Clone to a temporary checkout, load only the published immutable package at `node-path`, then persist it under `.context/candidates/<package-digest>/`.
-- [x] Ensure fetching a candidate cannot change normal build output.
-- [x] Test a real local Git repository with a nested reusable Node, v1 accepted, v2 on `main`, fetch, review, accept, and post-accept offline build.
-- [x] Test missing node paths and unknown refs without requiring network access.
-- [x] Keep candidate packages transient; retain accepted packages as reproducible project state.
-- [x] Make interrupted/partial retrieval safe through temporary checkout cleanup plus verified staged publication.
+- [x] Keep Node ID as identity and `node-path` as repository location.
+- [x] Add `contextcanon source fetch` using ordinary Git.
+- [x] Keep fetched candidates separate from accepted build state.
+- [x] Test nested reusable Nodes, unknown refs, missing paths and interrupted retrieval locally in CI.
 
-### 0.4 release completion
+## Project-owner accepted: onboarding through validated proposal
 
-- [x] Document immutable package identity, accepted/candidate separation, Git transport, review receipts, explicit acceptance, and interrupted-operation recovery.
-- [x] Update compiler/contributor/walkthrough documentation to the `CompiledPackage` architecture.
-- [x] Reach 45 green deterministic regression tests including package, offline Source, acceptance, local-Git transport, and failed-pin-publication cases.
-- [x] Regenerate all ContextCanon dogfood packages from the final 0.4 implementation/documentation.
-- [x] Finish the exact final PR head with `contextcanon check --all .` at zero drift.
-- [x] Update PR #3 to describe the completed 0.4 block.
-- [x] Run the exact final PR head through tests plus zero-drift check.
-- [x] Squash-merge 0.4 to `main` as the next stable recovery point.
+The project owner reviewed the onboarding implementation and user-facing documentation as ContextCanon's first user. PR #7 was then squash-merged to `main` as:
 
-## Active next block: reviewed LLM-assisted project onboarding
+`275c6b1f121126fb117f4bdbff1efc18218b0528`
 
-The next 1:1 validation must use a materially larger existing project and must **not** be manually curated from this conversation's prior knowledge.
-
-Onboarding is a semantic workflow above the deterministic compiler:
+The implemented flow is:
 
 ```text
-existing repository
-      ↓
-deterministic inventory + frozen evidence snapshot
-      ↓
-framework-supplied LLM onboarding instruction
-      ↓
-provenance-rich proposal
-      ↓
-deterministic proposal validation
-      ↓
-mandatory human review
-      ↓
-explicit acceptance
-      ↓
-CONTEXT.src.md + Sources + Topics + Resources
-      ↓
-normal deterministic compiler
+[ContextCanon · deterministic]
+existing repository → frozen evidence
+        ↓
+[ContextCanon · deterministic]
+framework-owned semantic assignment
+        ↓
+[External reasoning LLM · semantic]
+proposal.json
+        ↓
+[ContextCanon · deterministic]
+strict proposal/provenance validation
+        ↓
+validated review artifact
 ```
 
 ### Deterministic bootstrap
 
-- [x] Implement `contextcanon onboard prepare <project>` without requiring an existing Context Node.
-- [x] Inventory likely context-bearing project material such as README, CONTRIBUTING, architecture/development docs, existing agent instructions, configuration, and explicitly selected files.
-- [x] Preserve exact provenance through content-addressed evidence snapshots with path, size, SHA-256, selection reason, and copied bytes.
-- [x] Keep inventory deterministic; do not have the compiler interpret natural-language meaning.
-- [x] Respect Git-ignore automatically while permitting explicit safe additions.
-- [x] Bound evidence by secret/path/symlink/UTF-8 checks, 1 MiB per file, and 16 MiB total.
-- [x] Verify and reuse matching snapshots; reject corruption rather than silently repairing it.
+- [x] `contextcanon onboard prepare <project>` works without an existing Context Node.
+- [x] Inventory likely context carriers without copying the whole repository.
+- [x] Preserve exact path/size/hash/selection provenance in content-addressed snapshots.
+- [x] Respect Git-ignore while permitting explicit safe additions.
+- [x] Bound secret/path/symlink/UTF-8 handling, 1 MiB per file and 16 MiB total evidence.
+- [x] Verify/reuse matching snapshots; reject corrupted content-addressed state.
 
-### Framework-supplied LLM instruction
+### Framework-owned LLM assignment
 
-- [x] Ship `contextcanon onboard instruction <snapshot>` with ContextCanon instead of requiring the operator to invent a prompt.
-- [x] Bind deterministic instruction bytes and SHA-256 identity to one exact frozen Evidence v0 snapshot plus explicitly supplied reusable Source packages.
-- [x] Require the LLM to use only inspected frozen project evidence and surface uncertainty or contradictions.
-- [x] Treat evidence and reusable Source package content as untrusted review data rather than an instruction channel.
-- [x] Require provenance and rationale for every proposed item.
-- [x] Require classification into at least: local Rule, existing reusable Source, candidate reusable/generic Node, Topic/Resource, state/planning, ordinary documentation that should remain ordinary documentation, or unresolved question.
-- [x] Compare likely generic material against the explicitly supplied verified ContextCanon Node catalog before copying it locally.
-- [x] Explicitly call out common reusable candidates such as runtime/language, testing, coding/tooling, writing/documentation, user-guidance, and security conventions.
-- [x] Never let onboarding silently publish a new generic Node; that remains a separate reviewed/versioned proposal.
-- [x] Preserve useful README/CONTRIBUTING content rather than treating onboarding as destructive migration.
-- [x] Document the harness execution boundary: ContextCanon controls its rendered instruction bytes but cannot prove or suppress hidden context automatically injected by a third-party harness.
-- [x] Reject duplicate stable Node IDs in the supplied catalog and make catalog argument ordering semantically irrelevant.
-- [x] Bound the fully rendered onboarding instruction at 4 MiB, reject oversized valid Source catalogs without truncation, and document the placement and rationale of the bound.
+- [x] `contextcanon onboard instruction <snapshot>` supplies the semantic task; users do not invent the prompt.
+- [x] Bind exact instruction bytes/digest to one verified evidence snapshot and explicit reusable Source catalog.
+- [x] Treat evidence/catalog contents as untrusted review data, not as meta-instructions.
+- [x] Require exact evidence provenance, rationale and confidence for each proposed item.
+- [x] Classify into local Rule, existing Source, candidate reusable Node, Topic/Resource, state/planning, ordinary documentation, or unresolved question.
+- [x] Compare likely generic practices against supplied verified Source packages before proposing duplication.
+- [x] Preserve useful README/CONTRIBUTING/docs instead of treating onboarding as destructive migration.
+- [x] Keep the external harness/model replaceable and outside compiler truth.
+- [x] Bound the fully rendered instruction at 4 MiB and reject truncation.
 
-### Instruction-slice completion
+### First-user review hardening
 
-- [x] Regenerate Framework Development dogfood so the materialized onboarding documentation and package digests match the current source.
-- [x] Make onboarding discoverable from the product README and repository Gateway, with a user-first guide that progressively reveals technical detail.
-- [x] Add optional local `Overview` orientation to Official Context and dogfood it in the repository Gateway without changing normalized governance semantics.
-- [x] Update `STATE.md`, contributor architecture notes, and PR #7 to describe the completed instruction boundary and exact remaining review/acceptance work.
-- [x] Run the exact final PR head through the full deterministic test suite plus `contextcanon check --all .` at zero drift before review handoff.
-- [ ] Squash-merge the completed framework-owned instruction slice to `main` after human review, before starting the human review/acceptance implementation on a fresh branch.
+- [x] Make onboarding discoverable from README and repository Gateway.
+- [x] Rewrite the user guide as progressive disclosure before technical reference.
+- [x] Show clearly which steps are ContextCanon, which single step belongs to the external LLM, and that the LLM returns exactly one `proposal.json`.
+- [x] Recommend a strong reasoning-capable model for onboarding rather than implying any general LLM is equally suitable.
+- [x] Tell the LLM that README/CONTRIBUTING and other conventional files may be stale.
+- [x] Prefer direct implementation/configuration/manifest/CI/test evidence for **current implemented behavior** when it conflicts clearly with descriptive documentation.
+- [x] Preserve documentation/source comments as evidence for intent, rationale, constraints, workflow, history and target design.
+- [x] Require unresolved current-vs-intended conflicts to remain visible instead of being silently reconciled.
+- [x] Add local `Overview` orientation to Official Context without making explanatory prose inherited governance.
+- [x] Separate framework contributions from reusable `nodes/library/` contributions in CONTRIBUTING.
+- [x] Rewrite STATE for a newcomer rather than as a compressed architecture dump.
 
-### Review and acceptance
+### Proposal validation
 
-- [x] Define `contextcanon/onboarding-proposal/v0` as a proposal format distinct from Official Context.
-- [x] Require every proposal item to carry rationale, confidence, and one or more exact evidence hash/line-range references.
-- [x] Implement `contextcanon onboard validate <snapshot> <proposal.json>` with strict kinds, payloads, file-set verification, evidence hashes/ranges, and deterministic `proposal_digest`.
-- [x] Revalidate the Evidence v0 safety policy when consuming a snapshot so a rehashed weakened manifest cannot bypass preparation limits.
-- [ ] Add the human review representation/workflow for a validated proposal.
-- [ ] Require explicit acceptance before canonical `CONTEXT.src.md` or related authored context is created/replaced.
-- [ ] Immediately run deterministic ContextCanon validation/build on the accepted proposal.
-- [ ] Keep generic-Node extraction proposals separately reviewable.
+- [x] Define `contextcanon/onboarding-proposal/v0` separately from Official Context.
+- [x] Require each item to carry rationale, confidence and exact evidence hash/line-range references.
+- [x] Strictly validate kinds, payloads, evidence file set, hashes/ranges and deterministic `proposal_digest`.
+- [x] Revalidate the Evidence v0 safety policy when consuming a snapshot.
 
-### Larger 1:1 test
+## Active next block: human review and explicit onboarding acceptance
 
-- [ ] Choose a larger existing project with meaningful README/CONTRIBUTING/docs and no pre-curated ContextCanon files.
-- [ ] Run the framework-generated onboarding workflow through an LLM with repository access.
+The next actor is the **human reviewer/operator**. A validated LLM proposal is not yet project truth.
+
+Goal: turn `proposal.json` into an inspectable, correctable review experience and require an explicit human decision before canonical ContextCanon authoring changes.
+
+- [ ] Design the human-readable review representation for a validated proposal.
+- [ ] Show every proposed classification next to its exact evidence and confidence.
+- [ ] Allow a human reviewer to correct or reject classifications without editing raw JSON blindly.
+- [ ] Preserve unresolved questions and candidate reusable Nodes rather than flattening them.
+- [ ] Require explicit human acceptance before canonical `CONTEXT.src.md` or related authored context is created/replaced.
+- [ ] Bind acceptance to the exact validated proposal/evidence state so stale approval cannot apply to changed input.
+- [ ] Immediately run normal deterministic ContextCanon validation/build after accepted authoring is produced.
+- [ ] Keep candidate reusable-Node extraction separately reviewable/versioned; onboarding must never auto-publish it.
+
+## Larger real 1:1 onboarding test
+
+Only after the human review/acceptance path is stable:
+
+- [ ] Choose a materially larger existing project with meaningful README/CONTRIBUTING/docs and no pre-curated ContextCanon files.
+- [ ] Run the framework-generated onboarding assignment through a strong reasoning LLM with access only to frozen evidence plus explicit Source catalog.
 - [ ] Do not pre-author the structure from conversation memory.
 - [ ] Review especially the split between project-local context and reusable generic Nodes.
-- [ ] Accept the corrected proposal, build it, then test ordinary and Topic-specific tasks through a real harness.
-- [ ] Record where the LLM classified correctly, where human correction was required, and whether generic-Node extraction reduced duplication.
+- [ ] Record where standard documentation was stale or contradicted current implementation.
+- [ ] Correct and explicitly accept the proposal through the new human workflow.
+- [ ] Build it and test ordinary plus Topic-specific tasks through a real harness.
+- [ ] Record where the model classified correctly, where humans corrected it, and whether Source reuse reduced duplication.
+
+## Later semantic refinement: important context hidden in source code
+
+Do **not** expand the first bootstrap into a blind whole-repository source scan.
+
+Instead, after a project already has coarse accepted ContextCanon context, investigate a second semantic pass that can use that context to find high-value information hidden in human-written source comments/docstrings.
+
+- [ ] Scan source in bounded Node/directory-sized areas rather than whole large repositories at once.
+- [ ] Look specifically for design invariants, non-obvious constraints, compatibility reasons, architectural decisions and warnings — not routine implementation comments.
+- [ ] Evaluate findings against already accepted local Rules, Topics and reusable Sources so duplicates can be discarded.
+- [ ] Keep exact source path/hash/line provenance for every proposed extraction.
+- [ ] Require human review before centralizing any discovered context.
+- [ ] Consider optional stable references from source comments back to ContextCanon Rule/Topic IDs after those identities exist.
+- [ ] Test whether this second pass improves documentation freshness without turning ContextCanon into source-code indexing or indiscriminate prompt expansion.
 
 ## Later deterministic layers
 
@@ -182,20 +201,20 @@ normal deterministic compiler
 
 ## Semantic layers above exact compiler artifacts
 
-The first high-level impact workflow remains:
+A later high-level impact workflow remains:
 
 ```text
 exact Context / Source diff
         ↓
-LLM impact review
+external reasoning LLM impact review
         ↓
 Rule ID → affected code / config / tests / docs
         ↓
-reason → proposed action → human approval
+reason → proposed action → explicit human approval
 ```
 
-This must remain harness-neutral and outside deterministic compiler truth.
+This remains harness-neutral and outside deterministic compiler truth.
 
 ## Working rule
 
-**Build central deterministic semantics deliberately, merge coherent stable points, then use them aggressively.**
+**Build exact mechanics deterministically, make semantic AI steps explicit and replaceable, name the human who decides durable truth, then use each stable stage aggressively.**
