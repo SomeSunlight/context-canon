@@ -104,7 +104,7 @@ That directory contains the files belonging to that Node:
 
 The node-root may be the root of a Git repository or a directory deeper inside it. A repository can therefore contain several Nodes.
 
-The directory path is **location, not identity**. A Node keeps its stable ID when it is renamed or moved. Likewise, a directory that merely groups Nodes is not itself a Node unless it has its own ContextCanon files.
+The directory path is **location, not identity**. A Node keeps a stable ID when it is renamed or moved. Likewise, a directory that merely groups Nodes is not itself a Node unless it has its own ContextCanon files.
 
 That distinction is important in this repository: `nodes/library/` and `nodes/internal/` are organizational categories; the actual Nodes are directories below them.
 
