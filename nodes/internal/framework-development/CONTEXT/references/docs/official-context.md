@@ -6,7 +6,7 @@ It answers one question:
 
 > What context officially applies here?
 
-A child node may compose exactly that same published result. There is no separate hidden context for the parent and a different context exported to descendants.
+A child node may compose exactly that same published semantic result. There is no separate hidden governance for the parent and a different governance exported to descendants.
 
 ## Concrete package layout
 
@@ -35,11 +35,24 @@ Because completeness and prompt size are different concerns.
 
 This lets a package be complete without forcing every document, glossary, example, and historical note into every LLM turn.
 
-## The minimal case matters
+## Overview: what is this place?
 
-ContextCanon Gateway deliberately has no Sources, no Rules and no materialized `CONTEXT/` resources. Its `CONTEXT.md` only tells an agent when to enter the deeper Development node.
+A Node may begin its compact entry with a short local `Overview`. It answers the orientation questions that are neither Rules nor conditional deep context: what this Node represents, why it exists, and what background helps a human or agent understand the surrounding problem.
 
-This is not a special bootstrap mode. It is an ordinary Context Node and demonstrates that ContextCanon must remain useful even when the useful context is almost nothing.
+An Overview is deliberately **not inherited governance**. Child Nodes do not receive a Source's introductory prose merely because they compose its Rules. The Overview remains part of the exact published `CONTEXT.md`, so changing it changes the package bytes and `package_digest`, but not the Node's normalized semantic digest.
+
+This distinction lets a Node explain itself without pretending every explanatory sentence is a Rule. The Overview should remain short; deeper explanation belongs behind Topics.
+
+## Small gateways matter
+
+A valid Context Node can be very small. ContextCanon Gateway at this repository root has no Sources and no Rules, but it is no longer empty orientation: its Overview briefly explains why ContextCanon exists, while two Topics route relevant work deeper.
+
+- onboarding an existing project loads the user-facing onboarding guide as a Required Resource;
+- ContextCanon framework-development work navigates to the deeper Framework Development Node.
+
+The Gateway therefore has a small `CONTEXT/` directory for the onboarding guide, but that guide is not loaded for unrelated work.
+
+This is not a special bootstrap mode. It is an ordinary Context Node demonstrating two complementary ideas at once: enough always-read orientation to understand where you are, and progressive disclosure for everything that does not belong in every task.
 
 ## Natural source locations, self-contained published package
 
@@ -49,9 +62,9 @@ During compilation, ContextCanon materializes resources that belong inside a pub
 
 ## What belongs in `CONTEXT.md`?
 
-The entry should prioritize broadly required Rules, concise orientation, Topics with clear conditions, explicit Required and Optional targets, and stable visible IDs for published elements that descendants may reference.
+The entry should prioritize a concise Overview when orientation is useful, broadly required Rules, Topics with clear conditions, explicit Required and Optional targets, and stable visible IDs for published elements that descendants may reference.
 
-It should not expose normal readers to package digests, provenance event lists, dependency internals, or every resource in the package.
+It should not expose normal readers to package digests, provenance event lists, dependency internals, or every resource in the package. Nor should an Overview become a hidden preload document: if material matters only for a recognizable task, it belongs behind a Topic.
 
 ## Generated output
 

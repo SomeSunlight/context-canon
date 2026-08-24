@@ -54,6 +54,9 @@ Git locator → git_transport.py → candidate package
 pre-Context onboarding:
 Git repository → onboarding.py → immutable evidence snapshot
                                       ↓
+                        onboarding_instruction.py
+                    framework-owned semantic instruction
+                                      ↓
                         semantic proposal generation
                                       ↓
                        onboarding_proposal.py
@@ -78,6 +81,7 @@ Use modules according to their contracts:
 - **`git_transport.py`** — retrieve candidate bytes only; no composition or acceptance semantics.
 - **`sources.py`** — structural candidate review, deterministic receipt, and explicit acceptance.
 - **`onboarding.py`** — deterministic pre-Context Git inventory, evidence selection, safety limits, content-addressed evidence snapshots, and snapshot publication; it must not make semantic classification decisions.
+- **`onboarding_instruction.py`** — deterministic, harness-neutral rendering and identity of the semantic onboarding task from one verified Evidence snapshot plus an explicitly supplied verified reusable Source catalog; it owns the rendered-instruction safety bound but does not invoke an LLM.
 - **`onboarding_proposal.py`** — strict proposal schema, evidence-snapshot verification, provenance/hash/line-range validation, typed payload validation, and deterministic proposal identity; it validates semantic output but does not decide whether that output is correct or accepted.
 - **`cli.py`** — command orchestration only.
 
@@ -87,33 +91,35 @@ See [docs/compiler.md](docs/compiler.md), [docs/external-sources.md](docs/extern
 
 ### Deterministic truth first
 
-If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, or proposal structural validity.
+If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, instruction rendering/identity, or proposal structural validity.
 
 ### Keep the pipeline one-way
 
 Authoring is parsed into structures; compilation resolves meaning; immutable packages publish compiled meaning; diffs compare compiled meaning; rendering projects it. Never reconstruct semantic truth from generated Markdown.
 
-Onboarding follows the same rule from an earlier project state: repository evidence is frozen first, semantic interpretation produces a proposal, deterministic validation verifies the proposal/evidence boundary, human acceptance creates authored ContextCanon source, and only then does the normal compiler run. LLM output is never parsed directly as Official Context.
+Onboarding follows the same rule from an earlier project state: repository evidence is frozen first, a framework-owned instruction defines the semantic task, semantic interpretation produces a proposal, deterministic validation verifies the proposal/evidence boundary, human acceptance creates authored ContextCanon source, and only then does the normal compiler run. LLM output is never parsed directly as Official Context.
 
 ### Stable identity beats wording and path
 
 Rules and Nodes are referenced by stable identity. Renaming a Node, moving its directory, changing a Git `node-path`, or rewording a Rule must not silently retarget operations.
 
-Onboarding likewise gives the frozen evidence set and normalized proposal their own deterministic digests so later review is not accidentally performed against a moving repository or a different proposal.
+Onboarding likewise gives the frozen evidence set, rendered instruction, and normalized proposal their own deterministic digests so later review is not accidentally performed against a moving repository, a different semantic task, or a different proposal.
 
 ### Fail rather than guess
 
-Unsupported syntax, incomplete pins/transport metadata, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, malformed proposal provenance, or structural ambiguity should fail clearly.
+Unsupported syntax, incomplete pins/transport metadata, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, oversized rendered onboarding instructions, malformed proposal provenance, or structural ambiguity should fail clearly.
 
 ### No implicit Source precedence
 
 Multiple Sources are independent. Source order must not decide conflicts. Canonical semantic normalization likewise ignores ordering where the model does not assign semantic meaning.
 
-### Distinguish semantics, presentation, transport, evidence, and proposal
+### Distinguish semantics, presentation, transport, evidence, instruction, and proposal
 
 `normalized_digest` identifies canonical compiled meaning. `package_digest` identifies exact human/agent package bytes. Git refs and repository paths are transport/location metadata, not either identity.
 
 An onboarding `evidence_digest` identifies the exact selected input bytes and deterministic selection decisions offered to a semantic workflow. It does not claim that those bytes are correct project governance.
+
+An onboarding `instruction_digest` identifies the exact framework-owned task bytes rendered from one verified Evidence snapshot plus the explicit verified Source catalog. It does not identify or constrain hidden context injected by an external harness.
 
 A validated onboarding `proposal_digest` identifies one exact typed interpretation of one exact evidence snapshot. Validation does not imply acceptance.
 
@@ -127,13 +133,13 @@ Onboarding evidence under `.context/onboarding/<evidence-digest>/` is review inp
 
 ### Keep filesystem mutation narrow
 
-Compilation and diff should be possible in memory. Generated output, candidate retrieval, Source acceptance, and onboarding preparation each own only their explicit filesystem areas. Proposal validation is read-only. Never add generic repository cleanup.
+Compilation and diff should be possible in memory. Generated output, candidate retrieval, Source acceptance, and onboarding preparation each own only their explicit filesystem areas. Onboarding instruction rendering and proposal validation are read-only. Never add generic repository cleanup.
 
 ### Preserve human review boundaries
 
 Deterministic tooling can require that `source review` succeeds before `source accept`, but semantic decisions still belong to humans or explicitly invoked LLM workflows.
 
-Onboarding is stricter still: `onboard prepare` only freezes evidence and `onboard validate` only proves structural/provenance validity. A later semantic producer must create a provenance-rich proposal, and human review/explicit acceptance stays between that interpretation and canonical `CONTEXT.src.md` creation or replacement.
+Onboarding is stricter still: `onboard prepare` only freezes evidence, `onboard instruction` only renders the framework-owned semantic task, and `onboard validate` only proves structural/provenance validity. A semantic producer must create a provenance-rich proposal, and human review/explicit acceptance stays between that interpretation and canonical `CONTEXT.src.md` creation or replacement.
 
 ### Preserve human readability
 
@@ -149,7 +155,7 @@ Every deterministic feature should normally include:
 - deterministic ordering/digest assertions where relevant,
 - drift checks when generated output changes.
 
-Compiler/package tests must not require a network service or an LLM. Git transport tests use local temporary Git repositories so CI remains self-contained. Onboarding tests likewise use local temporary Git repositories and must prove evidence identity, safety exclusions, explicit-inclusion behavior, immutable snapshot verification, total/every-file size bounds, proposal schema strictness, provenance/hash/line-range validation, deterministic proposal identity, and independence from an existing Context Node.
+Compiler/package tests must not require a network service or an LLM. Git transport tests use local temporary Git repositories so CI remains self-contained. Onboarding tests likewise use local temporary Git repositories and must prove evidence identity, safety exclusions, explicit-inclusion behavior, immutable snapshot verification, total/every-file size bounds, deterministic instruction identity and Evidence binding, verified/deterministically ordered Source catalog semantics, rendered-instruction size bounds, proposal schema strictness, provenance/hash/line-range validation, deterministic proposal identity, and independence from an existing Context Node.
 
 GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must also match current compiler output.
 

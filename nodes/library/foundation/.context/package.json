@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb",
-    "package": "889aae6c51494d8b5b9b1d2186c45a009b665bb418bf403cf26c6c7f73a41013"
+    "package": "faac06f6830d44c54b3d714ae6e67d0c69714ed12b447f0435e87d04bf5d3758"
   },
   "files": [
     {
@@ -33,13 +33,13 @@
     },
     {
       "path": "CONTEXT/references/docs/official-context.md",
-      "sha256": "323e1efaa7b18a150dbac6b08d72e2adc3c32db39581797b5b212322b1d5c6f0",
-      "size": 3046
+      "sha256": "b9f93336a09b0eafb3874e3601fcc9f8f12b0fbaac35ef12b38bc424c9f0ddf0",
+      "size": 4513
     },
     {
       "path": "CONTEXT/references/docs/source-format.md",
-      "sha256": "68a26efdbada046654c1f2717005c14d85cbb94b865849bdad4364ca94cc9b04",
-      "size": 7035
+      "sha256": "17078a71ddbaa8bc6dfecda9903959ceb843e287c1968e533adfdc6624f1852a",
+      "size": 8267
     },
     {
       "path": "CONTEXT/references/docs/topics.md",

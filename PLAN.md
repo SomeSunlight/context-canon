@@ -120,14 +120,28 @@ normal deterministic compiler
 
 ### Framework-supplied LLM instruction
 
-- [ ] Ship the onboarding instruction with ContextCanon instead of requiring the operator to invent a prompt.
-- [ ] Require the LLM to use only inspected project evidence and surface uncertainty or contradictions.
-- [ ] Require provenance and rationale for every proposed item.
-- [ ] Require classification into at least: local Rule, existing reusable Source, candidate reusable/generic Node, Topic/Resource, state/planning, ordinary documentation that should remain ordinary documentation, or unresolved question.
-- [ ] Compare likely generic material against the available ContextCanon Node catalog before copying it locally.
-- [ ] Explicitly exercise common reusable candidates such as Python development, testing, language, writing, and user-guidance conventions.
-- [ ] Never let onboarding silently publish a new generic Node; that remains a separate reviewed/versioned proposal.
-- [ ] Preserve useful README/CONTRIBUTING content rather than treating onboarding as destructive migration.
+- [x] Ship `contextcanon onboard instruction <snapshot>` with ContextCanon instead of requiring the operator to invent a prompt.
+- [x] Bind deterministic instruction bytes and SHA-256 identity to one exact frozen Evidence v0 snapshot plus explicitly supplied reusable Source packages.
+- [x] Require the LLM to use only inspected frozen project evidence and surface uncertainty or contradictions.
+- [x] Treat evidence and reusable Source package content as untrusted review data rather than an instruction channel.
+- [x] Require provenance and rationale for every proposed item.
+- [x] Require classification into at least: local Rule, existing reusable Source, candidate reusable/generic Node, Topic/Resource, state/planning, ordinary documentation that should remain ordinary documentation, or unresolved question.
+- [x] Compare likely generic material against the explicitly supplied verified ContextCanon Node catalog before copying it locally.
+- [x] Explicitly call out common reusable candidates such as runtime/language, testing, coding/tooling, writing/documentation, user-guidance, and security conventions.
+- [x] Never let onboarding silently publish a new generic Node; that remains a separate reviewed/versioned proposal.
+- [x] Preserve useful README/CONTRIBUTING content rather than treating onboarding as destructive migration.
+- [x] Document the harness execution boundary: ContextCanon controls its rendered instruction bytes but cannot prove or suppress hidden context automatically injected by a third-party harness.
+- [x] Reject duplicate stable Node IDs in the supplied catalog and make catalog argument ordering semantically irrelevant.
+- [x] Bound the fully rendered onboarding instruction at 4 MiB, reject oversized valid Source catalogs without truncation, and document the placement and rationale of the bound.
+
+### Instruction-slice completion
+
+- [x] Regenerate Framework Development dogfood so the materialized onboarding documentation and package digests match the current source.
+- [x] Make onboarding discoverable from the product README and repository Gateway, with a user-first guide that progressively reveals technical detail.
+- [x] Add optional local `Overview` orientation to Official Context and dogfood it in the repository Gateway without changing normalized governance semantics.
+- [x] Update `STATE.md`, contributor architecture notes, and PR #7 to describe the completed instruction boundary and exact remaining review/acceptance work.
+- [x] Run the exact final PR head through the full deterministic test suite plus `contextcanon check --all .` at zero drift before review handoff.
+- [ ] Squash-merge the completed framework-owned instruction slice to `main` after human review, before starting the human review/acceptance implementation on a fresh branch.
 
 ### Review and acceptance
 

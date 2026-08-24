@@ -135,6 +135,7 @@ class ParsedNode:
     rules: tuple[Rule, ...]
     topics: tuple[Topic, ...]
     changes: tuple[RuleChange, ...] = ()
+    overview: str = ""
 
 
 @dataclass

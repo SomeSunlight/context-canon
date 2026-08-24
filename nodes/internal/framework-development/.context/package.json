@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798",
-    "package": "ea00c851fb34bfa018129a198b2ca212f9c77cc184d97228174dd2bc6dd8243e"
+    "package": "d25b7a37cb0038c254d7864843269bff617f3c5558c51319d299747aa42877f3"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/references/docs/architecture.md",
-      "sha256": "f50822b14e834141c68fdad7ad121cd9f681fefbdaa5a61fb7e1d14278498aba",
-      "size": 14692
+      "sha256": "54fc01b3da879f76d92414298cc4ea19dd2cdf4875339da66251de7508bc0e3e",
+      "size": 15294
     },
     {
       "path": "CONTEXT/references/docs/compiler.md",
@@ -43,18 +43,18 @@
     },
     {
       "path": "CONTEXT/references/docs/official-context.md",
-      "sha256": "323e1efaa7b18a150dbac6b08d72e2adc3c32db39581797b5b212322b1d5c6f0",
-      "size": 3046
+      "sha256": "b9f93336a09b0eafb3874e3601fcc9f8f12b0fbaac35ef12b38bc424c9f0ddf0",
+      "size": 4513
     },
     {
       "path": "CONTEXT/references/docs/onboarding.md",
-      "sha256": "3042d5f75af4c2ebde09c9f0e23a8963ea4c44bc51ac30103e4d7dc2e239a124",
-      "size": 9986
+      "sha256": "eac7b5cfd20b98f5cbc525fb116513ce8f8b7f342a6b22d2142ceaff395597c4",
+      "size": 28561
     },
     {
       "path": "CONTEXT/references/docs/source-format.md",
-      "sha256": "68a26efdbada046654c1f2717005c14d85cbb94b865849bdad4364ca94cc9b04",
-      "size": 7035
+      "sha256": "17078a71ddbaa8bc6dfecda9903959ceb843e287c1968e533adfdc6624f1852a",
+      "size": 8267
     },
     {
       "path": "CONTEXT/references/docs/state.md",
@@ -246,7 +246,7 @@
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
       "normalized_digest": "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb",
-      "package_digest": "889aae6c51494d8b5b9b1d2186c45a009b665bb418bf403cf26c6c7f73a41013",
+      "package_digest": "faac06f6830d44c54b3d714ae6e67d0c69714ed12b447f0435e87d04bf5d3758",
       "version": "0.1.0-draft"
     }
   ],

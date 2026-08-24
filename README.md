@@ -25,19 +25,68 @@ There is a second benefit once ContextCanon is used across many projects: **the 
 
 The answers still belong to each project, but the way they are organized no longer has to be rediscovered every time. ContextCanon therefore aims to reduce not only model context cost but also the repeated architectural orientation cost paid by humans and agents moving between repositories.
 
-## What ContextCanon is trying to fix
+## Bring an existing project aboard
 
-Context windows are valuable working memory. They should be spent on the current problem, not on every architecture note, coding convention, troubleshooting guide, glossary, example, and harness-specific instruction a project has ever accumulated.
+The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewable proposal**.
 
-ContextCanon therefore starts with five ideas:
+The short version is:
 
-1. **Load less.** Keep the always-read entry small and use Topics to point to deeper Required or Optional context.
-2. **Repeat less.** Compose reusable Context Nodes and describe only the local delta at each Node.
-3. **Calculate what can be calculated.** Parsing, IDs, dependency resolution, changes, provenance, diffs and package construction belong to a deterministic compiler; LLMs handle genuinely semantic work.
-4. **Keep project knowledge portable.** Canonical context must not depend on Codex, Claude, goose, Copilot, or a particular model. Harness files stay thin adapters at the edge.
-5. **Use model capability efficiently.** Good context should help smaller, cheaper and local models solve well-bounded project tasks without requiring a frontier model for every step.
+```text
+existing repository
+      ↓
+freeze the relevant evidence
+      ↓
+generate ContextCanon's review instruction
+      ↓
+let an LLM classify the evidence
+      ↓
+validate the proposal deterministically
+      ↓
+human review and explicit acceptance
+      ↓
+canonical ContextCanon context
+```
 
-The larger goal is **context integration**: documentation, Rules, terminology, examples, structured data, PDFs, diagrams, skills and hard-won operational experience should all be discoverable through the same model without all being loaded at once.
+The important point is the direction of trust: the LLM may propose meaning, but it does not get to silently publish project truth.
+
+### First run
+
+With the ContextCanon CLI available, start in the root of the Git repository you want to onboard:
+
+```text
+contextcanon onboard prepare .
+```
+
+The command prints the path of a frozen evidence snapshot under:
+
+```text
+.context/onboarding/<evidence-digest>/
+```
+
+That snapshot is the exact material the later semantic review is allowed to use. ContextCanon selects likely high-value project documents conservatively; it does not simply feed the whole repository to a model.
+
+Next generate the framework-owned instruction for that exact snapshot:
+
+```text
+contextcanon onboard instruction .context/onboarding/<evidence-digest> > onboarding-instruction.md
+```
+
+Give that instruction to a capable LLM or agent harness together with read access to the snapshot's `evidence/` directory. ContextCanon deliberately does not choose a provider or model for you. Configure the model run so the generated ContextCanon instruction controls the task and the **frozen evidence is the project evidence**; do not let the harness separately inject live-project `AGENTS.md`, workspace instructions, memories, or other project context as governing instructions.
+
+The model is asked to sort useful project knowledge into a small set of review categories: project-local Rules, existing reusable Sources, candidates for new reusable context, Topic/Resource material, current state or plans, ordinary documentation that should remain ordinary documentation, and unresolved questions.
+
+Save the model's JSON response as, for example, `proposal.json`, then validate it:
+
+```text
+contextcanon onboard validate .context/onboarding/<evidence-digest> proposal.json
+```
+
+Validation checks the proposal structure and every claimed evidence reference against the frozen snapshot. A valid proposal is still **only a proposal**.
+
+> [!NOTE]
+> The current development stage deliberately stops at this validated review artifact. The next planned block adds the human review and explicit acceptance step that may create or replace canonical `CONTEXT.src.md`. Until that exists, do not treat a valid proposal as accepted project truth.
+
+For the complete user walkthrough first, and the technical details only after that, read **[Onboard an existing project](docs/onboarding.md)**.
 
 ## One simple physical rule: a Node has its own directory
 
@@ -55,7 +104,7 @@ That directory contains the files belonging to that Node:
 
 The node-root may be the root of a Git repository or a directory deeper inside it. A repository can therefore contain several Nodes.
 
-The directory path is **location, not identity**. A Node keeps its stable ID when it is renamed or moved. Likewise, a directory that merely groups Nodes is not itself a Node unless it has its own ContextCanon files.
+The directory path is **location, not identity**. A Node keeps a stable ID when it is renamed or moved. Likewise, a directory that merely groups Nodes is not itself a Node unless it has its own ContextCanon files.
 
 That distinction is important in this repository: `nodes/library/` and `nodes/internal/` are organizational categories; the actual Nodes are directories below them.
 
@@ -94,26 +143,28 @@ This repository does not explain ContextCanon from outside and then switch it on
 
 **The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources, no Rules and no deep package directory. Its only job is to recognize ContextCanon framework-development work and direct that work to the deeper internal Node.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses two Topics to route only the tasks that need more depth: onboarding an existing project and developing ContextCanon itself.
 
 ```text
-ContextCanon Gateway  ── Topic ──>  ContextCanon Framework Development
-                                          ▲
-                                          │ Source
-                                 ContextCanon Foundation
+                         ┌─ onboarding Topic ──> onboarding guide
+ContextCanon Gateway ───┤
+                         └─ development Topic ─> ContextCanon Framework Development
+                                                        ▲
+                                                        │ Source
+                                               ContextCanon Foundation
 ```
 
 That gives this repository three real Nodes with three different jobs:
 
-- **[ContextCanon Gateway](CONTEXT.md)** — the almost-empty repository entry. It demonstrates progressive disclosure at the smallest useful scale.
+- **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry. It demonstrates always-read orientation plus progressive disclosure to deeper task-specific material.
 - **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the common reusable baseline of the ContextCanon Node Library.
 - **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus only the additional context needed to design and implement ContextCanon itself.
 
-The first arrow is **navigation**: Gateway does not inherit Framework Development; a Topic sends a relevant task there. The second arrow is **composition**: Framework Development accepts Foundation as a Source and adds a local delta.
+The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The Foundation arrow is **composition**: Framework Development accepts Foundation as a Source and adds a local delta.
 
-Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway is not a library module; it is the deliberately tiny entry Node for this repository.
+Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway is not a library module; it is the deliberately small entry Node for this repository.
 
-Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly, it has failed one of its own most important design goals.
+Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
 ## ContextCanon is also for humans
 
@@ -212,6 +263,7 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
+- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository to a validated proposal.
 - [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
 - [Immutable external Sources](docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
