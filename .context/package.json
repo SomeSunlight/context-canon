@@ -3,13 +3,13 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f",
-    "package": "02e5ee944ec50af3b98a195901f1930c456b5c025ea3aef9daebf4df8752a3aa"
+    "package": "8d8862c833ffb99249338fcb671ba52a7509f825d9f9ac00859038c6866872cb"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "4220dc53d4538c9e0e9f1c57347059f4994b418a9721123947b87c18627020b8",
-      "size": 1244
+      "sha256": "9d583d619784258a7d55c95e7d31971b46e44873febb420aaf5181df461c1cf2",
+      "size": 2713
     },
     {
       "path": "CONTEXT/references/docs/onboarding.md",
