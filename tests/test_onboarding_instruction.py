@@ -70,6 +70,18 @@ class OnboardingInstructionTests(unittest.TestCase):
         self.assertIn("No reusable Source package catalog was supplied", first.text)
         self.assertIn("Do **not** invent an `existing-source`", first.text)
 
+    def test_instruction_treats_conventional_documents_as_fallible_current_state_evidence(self):
+        _, prepared = self.make_project_snapshot()
+        instruction = build_onboarding_instruction(prepared.snapshot_root)
+
+        self.assertIn("fallible and potentially stale", instruction.text)
+        self.assertIn("README.md or CONTRIBUTING.md is not automatically authoritative", instruction.text)
+        self.assertIn("currently implemented system", instruction.text)
+        self.assertIn("prefer direct evidence from implementation, configuration, manifests, CI, or tests", instruction.text)
+        self.assertIn("documentation and source comments", instruction.text)
+        self.assertIn("intended or future behavior", instruction.text)
+        self.assertIn("`unresolved-question` or `state-planning`", instruction.text)
+
     def test_verified_catalog_exposes_exact_source_identity_and_semantics(self):
         _, prepared = self.make_project_snapshot()
         package = self.make_package(
