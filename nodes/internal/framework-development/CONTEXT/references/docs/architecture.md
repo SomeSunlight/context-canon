@@ -90,13 +90,18 @@ This is an explicit architecture decision rather than an inference from whicheve
 
 ## Gateway nodes: almost nothing can be enough
 
-A valid Context Node may have zero Sources, zero Rules and zero materialized resources.
+A valid Context Node may have zero Sources, zero Rules and zero materialized resources. A Gateway can stay close to that minimum while still routing a few top-level tasks to the right depth.
 
-The root of this repository is **ContextCanon Gateway**. It contains one Topic: when the task concerns ContextCanon framework development, load the ContextCanon Framework Development Node. Because the Gateway has no deeper resources of its own, it has no `CONTEXT/` directory.
+The root of this repository is **ContextCanon Gateway**. It has no Sources and no Rules. Its `CONTEXT.md` currently recognizes two top-level tasks:
 
-This is not a special node type. It is an ordinary Node at the smallest useful end of the model.
+- framework-development work routes to the ContextCanon Framework Development Node;
+- onboarding an existing project routes to the user-facing onboarding guide.
 
-The same pattern can later route work in large repositories:
+Only the onboarding guide is a materialized Resource, so the Gateway now has a small `CONTEXT/` directory containing that deeper document. The guide is not loaded for ordinary framework-development work merely because it exists.
+
+This is not a special node type. It is an ordinary small Node demonstrating progressive disclosure: the entry tells an agent **where to go**, while the deeper material is loaded only when its Topic matches.
+
+The same pattern can route work in large repositories:
 
 ```text
 Repository Gateway
@@ -109,16 +114,17 @@ Repository Gateway
 
 A Topic target tells an agent **where to read next for this task**. A Source tells the compiler **which published context becomes part of this Node**.
 
-ContextCanon itself demonstrates both:
+ContextCanon itself demonstrates both kinds of navigation plus composition:
 
 ```text
-ContextCanon Gateway ──Topic──> ContextCanon Framework Development
-                                      ▲
-                                      │ Source
-                           ContextCanon Foundation
+                         ┌─ Topic ──> ContextCanon Framework Development
+ContextCanon Gateway ───┤
+                         └─ Topic ──> onboarding guide
+
+ContextCanon Foundation ── Source ──> ContextCanon Framework Development
 ```
 
-The Gateway does not inherit Framework Development. Framework Development does inherit Foundation and adds a local delta.
+The Gateway does not inherit either Topic target as governance. Framework Development does inherit Foundation and adds a local delta.
 
 ## Transitive composition preserves identity and state
 
@@ -210,7 +216,7 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 Compiler 0.4 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, immutable external Source packages, exact Source pins, package integrity verification, cycle/version errors, transitive Rule composition, Remove/Override operations, override/removal provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, Topic targets, resource materialization, canonical semantic normalization, exact hashes, compiled Context/package diff, Git candidate retrieval, review receipts, explicit Source acceptance, generated views, adapters, drift checks, and atomic publication of Source-update state.
 
-The next validation block deliberately adds a **semantic workflow above that deterministic core**: reviewed LLM-assisted onboarding of an existing repository. Deterministic tooling will inventory evidence and preserve provenance; an LLM may classify and reorganize meaning into a proposal; a human must explicitly accept the proposal before canonical ContextCanon source is created.
+Reviewed onboarding now adds a semantic workflow above that deterministic core. Deterministic tooling freezes repository evidence, renders the framework-owned semantic instruction, and validates a provenance-rich proposal; an LLM may classify and reorganize meaning only inside those boundaries. Human review and explicit acceptance remain the next boundary before canonical ContextCanon source may be created or replaced.
 
 Other later deterministic capabilities include protected Rules and authorized exceptions, Topic composition/materialization across Source package boundaries, richer resource-collision policy, and broader repository-boundary diagnostics.
 
