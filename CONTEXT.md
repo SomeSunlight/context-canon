@@ -3,6 +3,7 @@
 > [!CAUTION]
 > **GENERATED FILE — DO NOT EDIT.**
 > This is the compact official entry for this Context Node.
+> Together with `CONTEXT/` it forms the human/agent-facing Official Context Package.
 >
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
@@ -16,6 +17,14 @@ For the current task, evaluate each Topic condition. When one matches, read ever
 This Node defines no Rules.
 
 ## Topics
+
+### Onboard an existing project
+
+When adopting ContextCanon in an existing repository, preparing onboarding evidence, generating or running the onboarding instruction, validating an onboarding proposal, or deciding how to start using ContextCanon on an existing project:
+
+**Required**
+
+- [`CONTEXT/references/docs/onboarding.md`](CONTEXT/references/docs/onboarding.md)
 
 ### ContextCanon framework development
 
