@@ -4,6 +4,8 @@ ContextCanon has moved beyond architecture-only prototyping and its first extern
 
 Reviewed onboarding now has three deterministic boundaries above that compiler baseline: frozen evidence preparation, a framework-owned harness-neutral semantic instruction, and strict proposal validation. Human review/acceptance and canonical onboarding publication remain intentionally separate future boundaries.
 
+The final review of this slice also exposed a user-orientation gap in the core Node model. `CONTEXT.src.md` now supports an optional local `## Overview` that is rendered near the top of Official `CONTEXT.md`. Overview text explains what a Node is and why it exists without becoming inherited governance: it changes exact package presentation and `package_digest`, but not `normalized_digest`. The repository Gateway dogfoods this by giving humans and agents a compact explanation of why ContextCanon exists before routing them deeper through Topics.
+
 ## Accepted Compiler 0.4 baseline
 
 The accepted compiler boundary is `CompiledPackage`:
@@ -125,11 +127,11 @@ A valid proposal receives a deterministic `proposal_digest`. That digest identif
 
 ## Quality status
 
-The instruction slice is complete at code, regression-test, documentation, and Framework Development dogfood level and is being handed off for human review rather than merged automatically.
+The instruction slice is complete at code, regression-test, user/documentation, and dogfood level and is being handed off for human review rather than merged automatically. README and the repository Gateway now expose onboarding as a first-class entry path, the onboarding guide progresses from a 30-second user view into technical detail, and the Gateway Overview demonstrates compact Node orientation before Topic-specific depth.
 
-Regression coverage now includes **73 deterministic unit/repository-consistency tests**, including deterministic instruction identity, exact Evidence binding, verified catalog package semantics, catalog-order independence, duplicate stable Node rejection, tampered package rejection, clean stdout/stderr CLI separation, and real oversized-catalog rejection.
+Regression coverage now includes **74 deterministic unit/repository-consistency tests**, including deterministic instruction identity, exact Evidence binding, verified catalog package semantics, catalog-order independence, duplicate stable Node rejection, tampered package rejection, clean stdout/stderr CLI separation, real oversized-catalog rejection, and the invariant that Overview-only changes affect exact package presentation without changing normalized governance semantics.
 
-Framework Development dogfood has been regenerated from the canonical onboarding documentation. The semantic `normalized_digest` remains unchanged; only the exact package identity changes with the updated materialized documentation, as expected.
+Gateway, Foundation, and Framework Development dogfood have been regenerated. Overview and documentation changes alter exact package identities where their bytes are published, while the affected Nodes retain their prior `normalized_digest` values. Framework Development also pins the resulting exact Foundation package identity, demonstrating the expected package-identity cascade without semantic drift.
 
 The merge gate remains the repository's normal one: the exact review head must pass the full test suite and `contextcanon check --all .` at zero drift. PR #7 stays separate from merge approval so a human can review this stable point first.
 
