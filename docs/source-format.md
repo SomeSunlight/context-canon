@@ -15,6 +15,22 @@ A source begins with a human-readable H1 and compiler-managed Node metadata:
 
 The stable ID is independent of the Node's directory path or display name. A root Node may additionally declare generated harness adapters, for example `adapters="agents,goose"`.
 
+## Overview
+
+`## Overview` is an optional short orientation block for the Node itself: what this place is, why it exists, and what background helps a human or agent understand it before applying Rules or following Topics.
+
+```markdown
+## Overview
+
+This service owns customer-facing notification delivery. It exists separately from the billing service because delivery retries, provider failover, and message templates have their own operational lifecycle.
+```
+
+Overview text is copied into the generated `CONTEXT.md` near the top of the compact entry. It is **local presentation and orientation**, not inherited governance: using a Node as a Source does not copy its Overview into a child Node.
+
+Changing only an Overview therefore changes the exact published package bytes and `package_digest`, but does not change `normalized_digest`. Rules, Changes, Sources, and Topics remain the semantic composition boundary.
+
+Keep an Overview compact. It is always-read entry context, so deeper explanations belong behind Topics rather than turning the Overview into another preload document. In particular, use Topics for material that needs to be packaged as deeper Resources instead of relying on repository-local links from an Overview.
+
 ## Sources
 
 `## Sources` lists accepted Context Nodes. The visible link names the Source location; the adjacent compiler-managed comment preserves stable identity and accepted version.

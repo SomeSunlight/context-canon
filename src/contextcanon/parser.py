@@ -70,6 +70,7 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
     metadata = NodeMetadata(node_attrs["id"], name, node_attrs["version"], adapters)
 
     sections = _section_ranges(lines)
+    overview = _parse_overview(lines, sections.get("Overview"))
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
     rules = _parse_rules(lines, sections.get("Rules"), source_path, metadata)
     topics = _parse_topics(lines, sections.get("Topics"), source_path, metadata)
@@ -81,7 +82,16 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
         [f"{change.target_node_id}#{change.target_rule_id}" for change in changes],
         f"{source_path}: duplicate Change target",
     )
-    return ParsedNode(node_root, repo_root, metadata, tuple(sources), tuple(rules), tuple(topics), tuple(changes))
+    return ParsedNode(
+        node_root,
+        repo_root,
+        metadata,
+        tuple(sources),
+        tuple(rules),
+        tuple(topics),
+        tuple(changes),
+        overview,
+    )
 
 
 def _section_ranges(lines: list[str]) -> dict[str, tuple[int, int]]:
@@ -94,6 +104,18 @@ def _section_ranges(lines: list[str]) -> dict[str, tuple[int, int]]:
         end = starts[idx + 1][1] - 1 if idx + 1 < len(starts) else len(lines)
         result[name] = (start, end)
     return result
+
+
+def _parse_overview(lines: list[str], section: tuple[int, int] | None) -> str:
+    if not section:
+        return ""
+    start, end = section
+    body = list(lines[start:end])
+    while body and not body[0].strip():
+        body.pop(0)
+    while body and not body[-1].strip():
+        body.pop()
+    return "\n".join(body)
 
 
 def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> list[SourceRef]:

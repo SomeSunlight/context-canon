@@ -27,6 +27,9 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         "",
     ])
 
+    if compiled.parsed.overview:
+        lines.extend(["## Overview", "", *compiled.parsed.overview.splitlines(), ""])
+
     if compiled.inherited_rules or compiled.local_rules or compiled.local_topics:
         lines.extend(["## How to use this context", ""])
         if compiled.inherited_rules or compiled.local_rules:
