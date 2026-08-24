@@ -19,26 +19,32 @@ local:
   rules: []
   changes: []
   topics:
+    - {"id": "CCG-TOPIC-ONBOARDING", "title": "Onboard an existing project"}
     - {"id": "CCG-TOPIC-DEVELOPMENT", "title": "ContextCanon framework development"}
 
 # Compiled Rule view with provenance plus the local Topic index.
 official:
   rules: []
   removed_rules: []
-  topic_ids: ["CCG-TOPIC-DEVELOPMENT"]
-  resource_root: null
+  topic_ids: ["CCG-TOPIC-ONBOARDING", "CCG-TOPIC-DEVELOPMENT"]
+  resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
 targets:
+  - topic: "CCG-TOPIC-ONBOARDING"
+    intent: "required"
+    kind: "resource"
+    locator: "docs/onboarding.md"
   - topic: "CCG-TOPIC-DEVELOPMENT"
     intent: "required"
     kind: "context-node"
     locator: "nodes/internal/framework-development"
 
 # Mapping from author-facing Resource paths to generated package paths.
-resources: []
+resources:
+  - {"source": "docs/onboarding.md", "published": "CONTEXT/references/docs/onboarding.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "83bba4d36e17bde87c22521abf3d8fc7979b2e13fa5e7122e64c02302daa748b"
-  package_digest: "36b40eeae3b15bc7fea5097790245aabeaa5781551b7fa45d6bea944daab96f4"
+  normalized_digest: "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f"
+  package_digest: "02e5ee944ec50af3b98a195901f1930c456b5c025ea3aef9daebf4df8752a3aa"
