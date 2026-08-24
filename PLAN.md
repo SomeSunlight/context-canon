@@ -137,6 +137,8 @@ normal deterministic compiler
 ### Instruction-slice completion
 
 - [x] Regenerate Framework Development dogfood so the materialized onboarding documentation and package digests match the current source.
+- [x] Make onboarding discoverable from the product README and repository Gateway, with a user-first guide that progressively reveals technical detail.
+- [x] Add optional local `Overview` orientation to Official Context and dogfood it in the repository Gateway without changing normalized governance semantics.
 - [x] Update `STATE.md`, contributor architecture notes, and PR #7 to describe the completed instruction boundary and exact remaining review/acceptance work.
 - [x] Run the exact final PR head through the full deterministic test suite plus `contextcanon check --all .` at zero drift before review handoff.
 - [ ] Squash-merge the completed framework-owned instruction slice to `main` after human review, before starting the human review/acceptance implementation on a fresh branch.
