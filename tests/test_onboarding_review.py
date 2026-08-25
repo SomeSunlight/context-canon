@@ -9,10 +9,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+import contextcanon.onboarding_review as onboarding_review_module
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
@@ -128,6 +130,24 @@ class OnboardingReviewTests(unittest.TestCase):
             },
         }
 
+    def existing_source(self, prepared, package):
+        return {
+            "id": "USE-SHARED-PYTHON",
+            "kind": "existing-source",
+            "title": "Use shared Python development",
+            "rationale": "The supplied reusable Node already covers the practice.",
+            "confidence": "high",
+            "evidence": [self.evidence_ref(prepared, "README.md", 3, 3)],
+            "payload": {
+                "source_node_id": package.metadata.id,
+                "source_name": package.metadata.name,
+                "source_version": package.metadata.version,
+                "source_normalized_digest": package.normalized_digest,
+                "source_package_digest": package.package_digest,
+                "reason": "Reuse the shared test discipline instead of copying it locally.",
+            },
+        }
+
     def set_decisions(self, review_path: Path, values: dict[str, str]) -> None:
         data = json.loads(review_path.read_text(encoding="utf-8"))
         for decision in data["decisions"]:
@@ -135,18 +155,24 @@ class OnboardingReviewTests(unittest.TestCase):
                 decision["decision"] = values[decision["id"]]
         review_path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-    def make_package(self, node_id: str = "shared-python") -> Path:
+    def make_package(
+        self,
+        node_id: str = "shared-python",
+        *,
+        version: str = "1.2.0",
+        statement: str = "Run the configured test suite before merging changes.",
+    ) -> Path:
         repo = Path(tempfile.mkdtemp())
         (repo / ".git").mkdir()
         (repo / "CONTEXT.src.md").write_text(
             f'''# Shared Python Development — Local Context Source
-<!-- ctx:node id="{node_id}" version="1.2.0" -->
+<!-- ctx:node id="{node_id}" version="{version}" -->
 
 ## Rules
 
 ### Development
 
-- **Run tests:** Run the configured test suite before merging changes.
+- **Run tests:** {statement}
   Why: Shared testing discipline catches regressions before merge.
   <!-- ctx:rule id="PY-TEST" -->
 ''',
@@ -261,19 +287,7 @@ class OnboardingReviewTests(unittest.TestCase):
         repo, prepared = self.make_project()
         package_root = self.make_package()
         package = Compiler(package_root).compile(package_root)
-        item = {
-            "id": "USE-SHARED-PYTHON",
-            "kind": "existing-source",
-            "title": "Use shared Python development",
-            "rationale": "The supplied reusable Node already covers the practice.",
-            "confidence": "high",
-            "evidence": [self.evidence_ref(prepared, "README.md", 3, 3)],
-            "payload": {
-                "source_node_id": package.metadata.id,
-                "source_name": package.metadata.name,
-                "reason": "Reuse the shared test discipline instead of copying it locally.",
-            },
-        }
+        item = self.existing_source(prepared, package)
         proposal_path = self.write_proposal(repo, prepared, [item])
         review_path = repo / "review.json"
         create_or_load_onboarding_review(
@@ -312,6 +326,63 @@ class OnboardingReviewTests(unittest.TestCase):
         self.assertEqual(compiled.package_digest, accepted.package_digest)
         self.assertEqual(check_outputs(compiled), [])
 
+    def test_legacy_existing_source_proposal_validates_but_cannot_be_accepted_unbound(self):
+        repo, prepared = self.make_project()
+        package_root = self.make_package()
+        package = Compiler(package_root).compile(package_root)
+        item = self.existing_source(prepared, package)
+        for field in ("source_version", "source_normalized_digest", "source_package_digest"):
+            del item["payload"][field]
+        proposal_path = self.write_proposal(repo, prepared, [item])
+        review_path = repo / "review.json"
+        create_or_load_onboarding_review(
+            prepared.snapshot_root,
+            proposal_path,
+            review_path,
+            node_name="Demo Context",
+        )
+        self.set_decisions(review_path, {item["id"]: "accept"})
+
+        with self.assertRaisesRegex(ContextCanonError, "not bound to an exact catalog package"):
+            accept_onboarding_review(
+                prepared.snapshot_root,
+                proposal_path,
+                review_path,
+                repo,
+                catalog_package_roots=[package_root],
+                source_locators={item["id"]: "https://example.invalid/shared-python.git"},
+            )
+
+    def test_existing_source_acceptance_requires_same_exact_package_seen_by_reviewer(self):
+        repo, prepared = self.make_project()
+        reviewed_root = self.make_package(version="1.2.0")
+        reviewed = Compiler(reviewed_root).compile(reviewed_root)
+        different_root = self.make_package(
+            version="1.3.0",
+            statement="Run tests and the integration suite before merging changes.",
+        )
+        item = self.existing_source(prepared, reviewed)
+        proposal_path = self.write_proposal(repo, prepared, [item])
+        review_path = repo / "review.json"
+        create_or_load_onboarding_review(
+            prepared.snapshot_root,
+            proposal_path,
+            review_path,
+            node_name="Demo Context",
+        )
+        self.set_decisions(review_path, {item["id"]: "accept"})
+
+        with self.assertRaisesRegex(ContextCanonError, "exact package identity does not match supplied package"):
+            accept_onboarding_review(
+                prepared.snapshot_root,
+                proposal_path,
+                review_path,
+                repo,
+                catalog_package_roots=[different_root],
+                source_locators={item["id"]: "https://example.invalid/shared-python.git"},
+            )
+        self.assertFalse((repo / "CONTEXT.src.md").exists())
+
     def test_accept_refuses_destructive_replacement(self):
         repo, prepared = self.make_project()
         proposal_path = self.write_proposal(repo, prepared, [self.local_rule(prepared)])
@@ -329,6 +400,69 @@ class OnboardingReviewTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ContextCanonError, "will not replace an existing CONTEXT.src.md"):
             accept_onboarding_review(prepared.snapshot_root, proposal_path, review_path, repo)
+
+    def test_first_adoption_refuses_preexisting_generated_output_paths(self):
+        for relative_path in ("CONTEXT.md", "CONTEXT/legacy.md", "AGENTS.md"):
+            with self.subTest(relative_path=relative_path):
+                repo, prepared = self.make_project()
+                proposal_path = self.write_proposal(repo, prepared, [self.local_rule(prepared)])
+                review_path = repo / "review.json"
+                create_or_load_onboarding_review(
+                    prepared.snapshot_root,
+                    proposal_path,
+                    review_path,
+                    node_name="Demo Context",
+                )
+                self.set_decisions(review_path, {"TEST-001": "accept"})
+                collision = repo / relative_path
+                collision.parent.mkdir(parents=True, exist_ok=True)
+                original = b"project-owned file\n"
+                collision.write_bytes(original)
+
+                with self.assertRaisesRegex(ContextCanonError, "will not replace"):
+                    accept_onboarding_review(prepared.snapshot_root, proposal_path, review_path, repo)
+                self.assertEqual(collision.read_bytes(), original)
+                self.assertFalse((repo / "CONTEXT.src.md").exists())
+
+    def test_failed_acceptance_record_publication_rolls_back_first_adoption(self):
+        repo, prepared = self.make_project()
+        original_readme = (repo / "README.md").read_bytes()
+        proposal_path = self.write_proposal(repo, prepared, [self.local_rule(prepared)])
+        review_path = repo / "review.json"
+        create_or_load_onboarding_review(
+            prepared.snapshot_root,
+            proposal_path,
+            review_path,
+            node_name="Demo Context",
+        )
+        self.set_decisions(review_path, {"TEST-001": "accept"})
+        original_write = onboarding_review_module._atomic_write_text
+
+        def fail_acceptance_record(path: Path, content: str) -> None:
+            if path.name == "acceptance.json":
+                raise ContextCanonError("simulated acceptance record publication failure")
+            original_write(path, content)
+
+        with mock.patch.object(
+            onboarding_review_module,
+            "_atomic_write_text",
+            side_effect=fail_acceptance_record,
+        ):
+            with self.assertRaisesRegex(ContextCanonError, "simulated acceptance record publication failure"):
+                accept_onboarding_review(prepared.snapshot_root, proposal_path, review_path, repo)
+
+        self.assertEqual((repo / "README.md").read_bytes(), original_readme)
+        for relative_path in (
+            "CONTEXT.src.md",
+            "CONTEXT.md",
+            "AGENTS.md",
+            ".goosehints",
+            ".context/context.yaml",
+            ".context/package.json",
+        ):
+            self.assertFalse((repo / relative_path).exists(), relative_path)
+        accepted_parent = repo / ".context" / "onboarding" / "accepted"
+        self.assertFalse(any(accepted_parent.iterdir()) if accepted_parent.exists() else False)
 
     def test_cli_review_creates_human_file_and_prints_report(self):
         repo, prepared = self.make_project()
