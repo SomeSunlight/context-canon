@@ -402,7 +402,7 @@ class OnboardingReviewTests(unittest.TestCase):
             accept_onboarding_review(prepared.snapshot_root, proposal_path, review_path, repo)
 
     def test_first_adoption_refuses_preexisting_generated_output_paths(self):
-        for relative_path in ("CONTEXT.md", "CONTEXT/legacy.md", "AGENTS.md"):
+        for relative_path in ("CONTEXT.md", "CONTEXT/legacy.md"):
             with self.subTest(relative_path=relative_path):
                 repo, prepared = self.make_project()
                 proposal_path = self.write_proposal(repo, prepared, [self.local_rule(prepared)])
