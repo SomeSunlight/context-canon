@@ -27,9 +27,9 @@ The answers still belong to each project, but the way they are organized no long
 
 ## Bring an existing project aboard
 
-The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewable proposal**.
+The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewed, explicitly accepted Context Node**.
 
-The key idea is that ContextCanon does **not** hand the whole process to an LLM. Deterministic software handles the parts that can be exact; one external LLM step handles the semantic classification that ordinary code cannot reliably perform.
+The key idea is that ContextCanon does **not** hand the whole process to an LLM. Deterministic software handles the parts that can be exact; one external LLM step handles the semantic classification that ordinary code cannot reliably perform; a human decides which interpretation becomes durable project truth.
 
 ```text
 [ContextCanon · deterministic] freeze exact project evidence
@@ -40,7 +40,11 @@ The key idea is that ContextCanon does **not** hand the whole process to an LLM.
         ↓
 [ContextCanon · deterministic] validate JSON structure and provenance
         ↓
-[Human · explicit decision] review and accept/correct
+[ContextCanon + Human] inspect each finding and its exact evidence
+        ↓
+[Human · explicit decision] accept/reject every finding
+        ↓
+[ContextCanon · deterministic] stage, compile, publish, build and check
         ↓
 canonical ContextCanon context
 ```
@@ -71,7 +75,9 @@ That snapshot is the exact material the later semantic review is allowed to use.
 Next generate the framework-owned instruction for that exact snapshot:
 
 ```text
-contextcanon onboard instruction .context/onboarding/<evidence-digest> > onboarding-instruction.md
+contextcanon onboard instruction \
+  .context/onboarding/<evidence-digest> \
+  > onboarding-instruction.md
 ```
 
 Now leave deterministic ContextCanon for one step: give `onboarding-instruction.md` to a **strong reasoning LLM or agent harness** together with read access to the snapshot's `evidence/` directory. The model must return exactly one `contextcanon/onboarding-proposal/v0` JSON object; save it as `proposal.json`.
@@ -85,13 +91,45 @@ It is also told not to assume README or other conventional files are automatical
 Back inside deterministic ContextCanon, validate the model's JSON:
 
 ```text
-contextcanon onboard validate .context/onboarding/<evidence-digest> proposal.json
+contextcanon onboard validate \
+  .context/onboarding/<evidence-digest> \
+  proposal.json
 ```
 
 Validation checks the proposal structure and every claimed evidence reference against the frozen snapshot. A valid proposal is still **only a proposal**.
 
+Create the human review file and readable evidence report:
+
+```text
+contextcanon onboard review \
+  .context/onboarding/<evidence-digest> \
+  proposal.json \
+  review.json \
+  --node-name "My Project"
+```
+
+Every proposal item starts `pending`. The report shows each classification next to its rationale, confidence, exact evidence references, and cited evidence lines. The human changes every decision in `review.json` to `accept` or `reject`.
+
+If a semantic finding itself is wrong, correct `proposal.json`, validate it again, and create a fresh review. The changed proposal digest invalidates the old review rather than letting old decisions drift onto new meaning.
+
+When no decisions remain pending, explicitly publish the reviewed result:
+
+```text
+contextcanon onboard accept \
+  .context/onboarding/<evidence-digest> \
+  proposal.json \
+  review.json \
+  --project .
+```
+
+Before publication, ContextCanon rechecks the frozen evidence against the current repository, stages the proposed canonical Node, compiles it, and refuses any Topic/resource closure that would pull in unreviewed files. It then creates the first `CONTEXT.src.md`, runs the normal build, and verifies zero generated drift.
+
+Accepted reusable-Node candidates and unresolved questions remain separate reviewed follow-up artifacts; they are not silently flattened into local Rules. Good ordinary documentation stays ordinary documentation.
+
+For an accepted reusable Source, final acceptance requires the exact immutable package again plus an explicit visible Source locator. The resulting Source is pinned by version and both digests and remains buildable offline.
+
 > [!NOTE]
-> The current implementation deliberately stops at this validated review artifact. The next development block adds the human review and explicit acceptance step that may create or replace canonical `CONTEXT.src.md`. Until that exists, do not treat a valid proposal as accepted project truth.
+> Initial onboarding acceptance deliberately refuses to overwrite an existing `CONTEXT.src.md`. Re-onboarding an already adopted project needs a separate reviewed merge/update contract; first-adoption semantics are not used as a destructive replacement shortcut.
 
 For the complete user walkthrough first, and the technical details only after that, read **[Onboard an existing project](docs/onboarding.md)**.
 
@@ -270,7 +308,7 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
-- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository to a validated proposal.
+- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository through reviewed explicit acceptance.
 - [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
 - [Immutable external Sources](docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
@@ -293,10 +331,10 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-Compiler 0.4 is the accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
+Compiler 0.4 remains the project-owner accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
 
-The first user-reviewed onboarding slice is now merged. ContextCanon can deterministically freeze onboarding evidence, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
+The first user-reviewed onboarding slices are also merged: ContextCanon can freeze onboarding evidence deterministically, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
 
-The active next block is **human review and explicit onboarding acceptance**: make a validated proposal easy to inspect and correct, require an explicit human decision before canonical ContextCanon source is created or replaced, and immediately run the normal deterministic compiler after acceptance.
+The current development block completes the remaining human side: a validated proposal can be turned into a bound human review, every finding can be inspected against exact evidence and explicitly accepted/rejected, stale reviews/evidence are rejected, accepted reusable Sources are pinned exactly, and only then can the first canonical Context Node be published and immediately compiled/checked.
 
-Only after that review/acceptance path is stable will ContextCanon run the larger 1:1 onboarding test on a materially larger existing repository. That test should expose remaining semantic and workflow questions rather than reopen already solved compiler/package mechanics.
+Once this review/acceptance block passes project-owner review, the next major step is the **larger real 1:1 onboarding test on a materially larger existing repository**. That test should now expose semantic and workflow questions rather than missing trust boundaries in the onboarding mechanics.
