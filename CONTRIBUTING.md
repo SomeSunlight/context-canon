@@ -1,22 +1,62 @@
 # Contributing
 
-ContextCanon has an executable deterministic compiler. Changes should keep the human model simple while preserving a compiler core that is exact, inspectable, and independently testable from any LLM.
+ContextCanon has two quite different kinds of contributions:
 
-## Before changing anything
+1. **develop the ContextCanon framework itself** — compiler, formats, CLI, onboarding workflow, documentation, internal Nodes and deterministic semantics;
+2. **contribute reusable ContextCanon Nodes** — shared context under `nodes/library/` that other projects may later consume as Sources.
 
-1. Read the repository [CONTEXT.md](CONTEXT.md). It is intentionally a tiny Gateway.
-2. For ContextCanon development work, follow its Required target to [nodes/internal/framework-development/CONTEXT.md](nodes/internal/framework-development/CONTEXT.md).
-3. Read [STATE.md](STATE.md) for the current project situation.
-4. Check [PLAN.md](PLAN.md) for the active compiler/workflow slice.
+Both matter, but they require different context. A contributor should not have to understand the entire compiler roadmap merely to improve a reusable documentation or security Node.
+
+## Choose your contribution path
+
+### A. Framework development
+
+Use this path when changing ContextCanon itself: compiler behavior, authoring grammar, package identity, Source transport, onboarding mechanics, CLI commands, framework documentation, tests, or internal Nodes.
+
+Before changing anything:
+
+1. Read the repository [CONTEXT.md](CONTEXT.md).
+2. Follow its Framework Development Topic to [nodes/internal/framework-development/CONTEXT.md](nodes/internal/framework-development/CONTEXT.md).
+3. Read [STATE.md](STATE.md) for the current project position.
+4. Read [PLAN.md](PLAN.md) for the active implementation block.
 5. Load only the Topic material required for the task.
 
-## Editing context
+Framework changes should preserve the central rule: **everything that can be exact stays deterministic; LLMs are used only for explicit semantic interpretation steps.**
 
-Three Context Nodes are currently dogfooded in this repository:
+### B. Reusable Node contribution
 
-- Gateway: edit [CONTEXT.src.md](CONTEXT.src.md),
-- Foundation: edit [nodes/library/foundation/CONTEXT.src.md](nodes/library/foundation/CONTEXT.src.md),
-- Framework Development: edit [nodes/internal/framework-development/CONTEXT.src.md](nodes/internal/framework-development/CONTEXT.src.md).
+Use this path when adding or improving context intended to be reused across projects under:
+
+```text
+nodes/library/<node-name>/
+```
+
+Start with:
+
+1. the target Node's `CONTEXT.md` / `CONTEXT.src.md`, if it already exists;
+2. [ContextCanon Foundation](nodes/library/foundation/CONTEXT.md), because reusable library Nodes compose Foundation directly or transitively;
+3. [Source format](docs/source-format.md) for authoring syntax;
+4. [Official context](docs/official-context.md) and [Context composition](docs/composition.md) when inheritance or packaging matters.
+
+You normally do **not** need to read `STATE.md` or the whole framework `PLAN.md` merely to contribute Node content. Read them only when your Node contribution also requires a framework capability or changes the project roadmap.
+
+A reusable Node contribution should answer questions such as:
+
+- Is this guidance genuinely useful across more than one project?
+- Does an existing library Node already cover it?
+- Is it durable governance, a Topic-specific resource, or ordinary documentation?
+- Can the Node remain small and composable rather than becoming another giant instruction bundle?
+- Are stable IDs and Source relationships preserved?
+
+Do not put an experiment into `nodes/library/` merely because it uses ContextCanon. Reusable library content should be reviewed as a product in its own right.
+
+## Where context is edited
+
+Three Nodes are currently dogfooded in this repository:
+
+- Gateway: edit [CONTEXT.src.md](CONTEXT.src.md)
+- Foundation: edit [nodes/library/foundation/CONTEXT.src.md](nodes/library/foundation/CONTEXT.src.md)
+- Framework Development: edit [nodes/internal/framework-development/CONTEXT.src.md](nodes/internal/framework-development/CONTEXT.src.md)
 
 Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, `.context/context.yaml`, or `.context/package.json` files.
 
@@ -31,9 +71,9 @@ python -m unittest discover -s tests -v
 
 `build` may replace compiler-owned generated package files. It must not treat arbitrary repository files as disposable output. `check` performs the same compilation in memory and reports drift.
 
-## Compiler and workflow structure
+## Framework implementation map
 
-The implementation is intentionally split into narrow layers:
+For framework contributors, the implementation is intentionally split into narrow layers:
 
 ```text
 CONTEXT.src.md
@@ -55,124 +95,101 @@ pre-Context onboarding:
 Git repository → onboarding.py → immutable evidence snapshot
                                       ↓
                         onboarding_instruction.py
-                    framework-owned semantic instruction
+                    deterministic semantic assignment
                                       ↓
-                        semantic proposal generation
+                      external reasoning LLM
+                                      ↓
+                         proposal.json
                                       ↓
                        onboarding_proposal.py
-                         strict deterministic validation
+                    strict deterministic validation
                                       ↓
-                         later human review/acceptance
+                         human review/acceptance
                                       ↓
-                         authored context → normal compiler
+                         authored context → compiler
 ```
 
-Use modules according to their contracts:
+Module contracts:
 
 - **`model.py`** — typed compiler data only.
-- **`parser.py`** — authoring grammar and syntax validation; no filesystem writes.
-- **`compiler.py`** — semantic compiler truth: Source composition, Rule changes, conflict/target validation, resource closure.
-- **`package.py`** — immutable compiled package boundary, canonical semantic digest, exact package digest, serialization/loading/integrity checks.
-- **`diff.py`** — exact compiled-Node comparison.
-- **`package_diff.py`** — exact immutable Source-package comparison using the same diff model.
-- **`render.py`** — deterministic human/machine projection; no hidden semantic decisions.
-- **`links.py`** — local Markdown-link extraction for materialization closure.
+- **`parser.py`** — constrained authoring grammar and syntax validation.
+- **`compiler.py`** — semantic compiler truth: Source composition, Rule changes, conflicts, targets and resource closure.
+- **`package.py`** — immutable package state, canonical semantic digest, exact package identity and verification.
+- **`diff.py` / `package_diff.py`** — deterministic comparison by stable identity.
+- **`render.py`** — deterministic human/machine projection.
 - **`outputs.py`** — compare/write compiler-owned generated output.
-- **`git_transport.py`** — retrieve candidate bytes only; no composition or acceptance semantics.
-- **`sources.py`** — structural candidate review, deterministic receipt, and explicit acceptance.
-- **`onboarding.py`** — deterministic pre-Context Git inventory, evidence selection, safety limits, content-addressed evidence snapshots, and snapshot publication; it must not make semantic classification decisions.
-- **`onboarding_instruction.py`** — deterministic, harness-neutral rendering and identity of the semantic onboarding task from one verified Evidence snapshot plus an explicitly supplied verified reusable Source catalog; it owns the rendered-instruction safety bound but does not invoke an LLM.
-- **`onboarding_proposal.py`** — strict proposal schema, evidence-snapshot verification, provenance/hash/line-range validation, typed payload validation, and deterministic proposal identity; it validates semantic output but does not decide whether that output is correct or accepted.
-- **`cli.py`** — command orchestration only.
+- **`git_transport.py`** — retrieve candidate bytes only.
+- **`sources.py`** — deterministic candidate review receipts and explicit Source acceptance.
+- **`onboarding.py`** — deterministic pre-Context inventory and frozen evidence snapshots; no semantic classification.
+- **`onboarding_instruction.py`** — deterministic rendering of the semantic assignment; no LLM invocation.
+- **`onboarding_proposal.py`** — strict proposal/provenance validation; validation is not semantic acceptance.
+- **`cli.py`** — orchestration only.
 
-See [docs/compiler.md](docs/compiler.md), [docs/external-sources.md](docs/external-sources.md), and [docs/onboarding.md](docs/onboarding.md).
+See [Compiler](docs/compiler.md), [Immutable external Sources](docs/external-sources.md), and [Onboarding](docs/onboarding.md) for details.
 
 ## Design principles
 
 ### Deterministic truth first
 
-If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, instruction rendering/identity, or proposal structural validity.
+If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, instruction identity, or proposal structural validity.
 
 ### Keep the pipeline one-way
 
-Authoring is parsed into structures; compilation resolves meaning; immutable packages publish compiled meaning; diffs compare compiled meaning; rendering projects it. Never reconstruct semantic truth from generated Markdown.
+Authoring is parsed into structures; compilation resolves meaning; immutable packages publish compiled meaning; diffs compare it; rendering projects it. Never reconstruct semantic truth from generated Markdown.
 
-Onboarding follows the same rule from an earlier project state: repository evidence is frozen first, a framework-owned instruction defines the semantic task, semantic interpretation produces a proposal, deterministic validation verifies the proposal/evidence boundary, human acceptance creates authored ContextCanon source, and only then does the normal compiler run. LLM output is never parsed directly as Official Context.
+Onboarding follows the same principle earlier in the lifecycle: ContextCanon freezes evidence and defines the assignment, an external LLM proposes meaning, ContextCanon validates the proposal mechanically, and an explicit human decision is required before durable context is authored.
 
 ### Stable identity beats wording and path
 
 Rules and Nodes are referenced by stable identity. Renaming a Node, moving its directory, changing a Git `node-path`, or rewording a Rule must not silently retarget operations.
 
-Onboarding likewise gives the frozen evidence set, rendered instruction, and normalized proposal their own deterministic digests so later review is not accidentally performed against a moving repository, a different semantic task, or a different proposal.
-
 ### Fail rather than guess
 
-Unsupported syntax, incomplete pins/transport metadata, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, oversized rendered onboarding instructions, malformed proposal provenance, or structural ambiguity should fail clearly.
+Unsupported syntax, incomplete pins, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, oversized instructions, malformed proposal provenance, or structural ambiguity should fail clearly.
+
+Semantic uncertainty is different: an onboarding LLM should preserve it as an unresolved question rather than invent certainty.
 
 ### No implicit Source precedence
 
-Multiple Sources are independent. Source order must not decide conflicts. Canonical semantic normalization likewise ignores ordering where the model does not assign semantic meaning.
-
-### Distinguish semantics, presentation, transport, evidence, instruction, and proposal
-
-`normalized_digest` identifies canonical compiled meaning. `package_digest` identifies exact human/agent package bytes. Git refs and repository paths are transport/location metadata, not either identity.
-
-An onboarding `evidence_digest` identifies the exact selected input bytes and deterministic selection decisions offered to a semantic workflow. It does not claim that those bytes are correct project governance.
-
-An onboarding `instruction_digest` identifies the exact framework-owned task bytes rendered from one verified Evidence snapshot plus the explicit verified Source catalog. It does not identify or constrain hidden context injected by an external harness.
-
-A validated onboarding `proposal_digest` identifies one exact typed interpretation of one exact evidence snapshot. Validation does not imply acceptance.
-
-A candidate fetched from Git is not accepted context. Normal `build` must continue to consume the previously accepted package until explicit acceptance changes the pin.
+Multiple Sources are independent. Source order must not decide conflicts. Canonical semantic normalization likewise ignores ordering where the model assigns no semantic meaning.
 
 ### Keep accepted state reproducible
 
-Accepted external packages under `.context/sources/<package-digest>/` are part of the consumer's reproducible project state and should be retained with a project that must build without its Source repository. Candidate packages are temporary update state.
-
-Onboarding evidence under `.context/onboarding/<evidence-digest>/` is review input rather than accepted governance. It is content-addressed and transient by default.
+Accepted external packages under `.context/sources/<package-digest>/` are reproducible consumer state. Candidate packages and onboarding evidence are review/input state, not accepted governance.
 
 ### Keep filesystem mutation narrow
 
-Compilation and diff should be possible in memory. Generated output, candidate retrieval, Source acceptance, and onboarding preparation each own only their explicit filesystem areas. Onboarding instruction rendering and proposal validation are read-only. Never add generic repository cleanup.
-
-### Preserve human review boundaries
-
-Deterministic tooling can require that `source review` succeeds before `source accept`, but semantic decisions still belong to humans or explicitly invoked LLM workflows.
-
-Onboarding is stricter still: `onboard prepare` only freezes evidence, `onboard instruction` only renders the framework-owned semantic task, and `onboard validate` only proves structural/provenance validity. A semantic producer must create a provenance-rich proposal, and human review/explicit acceptance stays between that interpretation and canonical `CONTEXT.src.md` creation or replacement.
+Compilation and diff should work in memory. Generated output, candidate retrieval, Source acceptance, and onboarding preparation own only explicit filesystem areas. Onboarding instruction rendering and proposal validation are read-only.
 
 ### Preserve human readability
 
 The canonical authoring format remains constrained Markdown. Machine state can be boring; humans should be able to understand source and official context without a framework-specific editor.
 
-## Tests
+The same applies to project documentation: `STATE.md`, `PLAN.md`, README and contribution guides should lead with the human story and reveal technical detail only when useful.
 
-Every deterministic feature should normally include:
+## Tests and completion
 
-- a successful fixture,
-- important invalid/corrupt/dangling cases,
-- transitive/composed cases when inheritance is involved,
-- deterministic ordering/digest assertions where relevant,
-- drift checks when generated output changes.
+Every deterministic feature should normally include successful and important failure cases, deterministic digest/order assertions where relevant, and drift checks when generated output changes.
 
-Compiler/package tests must not require a network service or an LLM. Git transport tests use local temporary Git repositories so CI remains self-contained. Onboarding tests likewise use local temporary Git repositories and must prove evidence identity, safety exclusions, explicit-inclusion behavior, immutable snapshot verification, total/every-file size bounds, deterministic instruction identity and Evidence binding, verified/deterministically ordered Source catalog semantics, rendered-instruction size bounds, proposal schema strictness, provenance/hash/line-range validation, deterministic proposal identity, and independence from an existing Context Node.
+Tests must not require an external LLM or network service. Git transport tests use local temporary repositories; onboarding tests use frozen local fixtures.
 
-GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must also match current compiler output.
+GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must match current compiler output.
 
 ## Branch and merge cadence
 
-`main` is the last accepted, fully reproducible ContextCanon stage. Work on one coherent core block per branch/PR, finish tests/docs/dogfood/CI, then squash-merge before starting the next unrelated block.
+`main` is the last project-owner-reviewed, fully reproducible ContextCanon stage. Work on one coherent block per branch/PR, finish tests/docs/dogfood/CI, then squash-merge before starting an unrelated block.
 
-A core block is ready only when:
+A block is ready only when:
 
-- deterministic positive and negative tests pass,
-- dogfood was regenerated by the compiler itself,
-- `contextcanon check --all .` is clean,
-- documentation matches implemented behavior,
-- `STATE.md` and `PLAN.md` describe the resulting stage and next block.
+- deterministic positive and negative tests pass;
+- dogfood was regenerated by the compiler itself;
+- `contextcanon check --all .` is clean;
+- documentation matches implemented behavior;
+- `STATE.md` says plainly where the project now stands;
+- `PLAN.md` says plainly what has been accepted and what comes next.
 
 ## Pull requests
 
-Keep changes conceptually focused. Explain what changed, why it belongs in deterministic truth or in an explicit semantic layer above it, and which invariant/practical need it serves.
+Keep changes conceptually focused. Explain what changed, why it belongs in deterministic truth or an explicit semantic layer above it, and which practical need or invariant it serves.
 
-If a new feature makes compiler semantics depend on hidden transport behavior, generated presentation, an unbound repository snapshot, unvalidated semantic output, or an LLM judgment, redesign the boundary before merging.
+If a new feature makes compiler semantics depend on hidden transport behavior, generated presentation, an unbound repository snapshot, unvalidated semantic output, or an LLM judgment, redesign the separation before merging.

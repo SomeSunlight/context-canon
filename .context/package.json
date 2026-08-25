@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f",
-    "package": "8d8862c833ffb99249338fcb671ba52a7509f825d9f9ac00859038c6866872cb"
+    "package": "cb8cb9b680410d36719600894e6e4f95bfd7f0537b265d5eaacfd892025def20"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/references/docs/onboarding.md",
-      "sha256": "eac7b5cfd20b98f5cbc525fb116513ce8f8b7f342a6b22d2142ceaff395597c4",
-      "size": 28561
+      "sha256": "ac5b2081b0fca76414baa6058c27a1ff84edb7dd70849c45ad191d4578583b1b",
+      "size": 26961
     }
   ],
   "node": {

@@ -29,25 +29,28 @@ The answers still belong to each project, but the way they are organized no long
 
 The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewable proposal**.
 
-The short version is:
+The key idea is that ContextCanon does **not** hand the whole process to an LLM. Deterministic software handles the parts that can be exact; one external LLM step handles the semantic classification that ordinary code cannot reliably perform.
 
 ```text
-existing repository
-      ↓
-freeze the relevant evidence
-      ↓
-generate ContextCanon's review instruction
-      ↓
-let an LLM classify the evidence
-      ↓
-validate the proposal deterministically
-      ↓
-human review and explicit acceptance
-      ↓
+[ContextCanon · deterministic] freeze exact project evidence
+        ↓
+[ContextCanon · deterministic] generate the semantic assignment
+        ↓
+[Your reasoning LLM · semantic] read frozen evidence and return proposal.json
+        ↓
+[ContextCanon · deterministic] validate JSON structure and provenance
+        ↓
+[Human · explicit decision] review and accept/correct
+        ↓
 canonical ContextCanon context
 ```
 
-The important point is the direction of trust: the LLM may propose meaning, but it does not get to silently publish project truth.
+The LLM's entire handoff back to ContextCanon is **one JSON file**. It may propose meaning, but it cannot silently publish project truth.
+
+> [!IMPORTANT]
+> Onboarding is a difficult semantic review. Use a **strong reasoning-capable model**, not merely the fastest or cheapest general model available. ContextCanon can validate that the JSON is well formed and honestly points to frozen evidence; it cannot validate that a weak model made good architectural distinctions.
+
+That does not conflict with ContextCanon's goal of making smaller/local models useful for normal project work. Once the context has been organized, those models benefit from receiving less but better-targeted information. The occasional context-structuring step is where stronger reasoning has unusually high leverage.
 
 ### First run
 
@@ -71,11 +74,15 @@ Next generate the framework-owned instruction for that exact snapshot:
 contextcanon onboard instruction .context/onboarding/<evidence-digest> > onboarding-instruction.md
 ```
 
-Give that instruction to a capable LLM or agent harness together with read access to the snapshot's `evidence/` directory. ContextCanon deliberately does not choose a provider or model for you. Configure the model run so the generated ContextCanon instruction controls the task and the **frozen evidence is the project evidence**; do not let the harness separately inject live-project `AGENTS.md`, workspace instructions, memories, or other project context as governing instructions.
+Now leave deterministic ContextCanon for one step: give `onboarding-instruction.md` to a **strong reasoning LLM or agent harness** together with read access to the snapshot's `evidence/` directory. The model must return exactly one `contextcanon/onboarding-proposal/v0` JSON object; save it as `proposal.json`.
+
+ContextCanon deliberately does not choose a provider or model for you. Configure the model run so the generated ContextCanon instruction controls the task and the **frozen evidence is the project evidence**; do not let the harness separately inject live-project `AGENTS.md`, workspace instructions, memories, or other project context as governing instructions.
 
 The model is asked to sort useful project knowledge into a small set of review categories: project-local Rules, existing reusable Sources, candidates for new reusable context, Topic/Resource material, current state or plans, ordinary documentation that should remain ordinary documentation, and unresolved questions.
 
-Save the model's JSON response as, for example, `proposal.json`, then validate it:
+It is also told not to assume README or other conventional files are automatically current. For claims about the **currently implemented system**, direct implementation/configuration/manifest/CI/test evidence outweighs contradictory descriptive documentation. Documentation and meaningful source comments remain important for intent, rationale, workflow, constraints and target design. Unclear conflicts must remain visible instead of being silently reconciled.
+
+Back inside deterministic ContextCanon, validate the model's JSON:
 
 ```text
 contextcanon onboard validate .context/onboarding/<evidence-digest> proposal.json
@@ -84,7 +91,7 @@ contextcanon onboard validate .context/onboarding/<evidence-digest> proposal.jso
 Validation checks the proposal structure and every claimed evidence reference against the frozen snapshot. A valid proposal is still **only a proposal**.
 
 > [!NOTE]
-> The current development stage deliberately stops at this validated review artifact. The next planned block adds the human review and explicit acceptance step that may create or replace canonical `CONTEXT.src.md`. Until that exists, do not treat a valid proposal as accepted project truth.
+> The current implementation deliberately stops at this validated review artifact. The next development block adds the human review and explicit acceptance step that may create or replace canonical `CONTEXT.src.md`. Until that exists, do not treat a valid proposal as accepted project truth.
 
 For the complete user walkthrough first, and the technical details only after that, read **[Onboard an existing project](docs/onboarding.md)**.
 
@@ -288,6 +295,8 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 Compiler 0.4 is the accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
 
-The next validation block moves deliberately above compiler truth: **reviewed LLM-assisted onboarding of a materially larger pre-existing repository**. ContextCanon will inventory repository evidence deterministically, provide a harness-neutral semantic classification instruction, require a provenance-rich proposal, and keep human review/explicit acceptance between LLM interpretation and canonical ContextCanon source.
+The first user-reviewed onboarding slice is now merged. ContextCanon can deterministically freeze onboarding evidence, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
 
-This next test is intended to expose remaining **domain and workflow questions** rather than make the deterministic compiler rediscover already solved transport or package mechanics.
+The active next block is **human review and explicit onboarding acceptance**: make a validated proposal easy to inspect and correct, require an explicit human decision before canonical ContextCanon source is created or replaced, and immediately run the normal deterministic compiler after acceptance.
+
+Only after that review/acceptance path is stable will ContextCanon run the larger 1:1 onboarding test on a materially larger existing repository. That test should expose remaining semantic and workflow questions rather than reopen already solved compiler/package mechanics.
