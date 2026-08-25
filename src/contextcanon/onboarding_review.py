@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
+from .model import CompiledPackage
 from .onboarding_proposal import (
     EvidenceSnapshot,
     OnboardingProposal,
@@ -363,7 +364,9 @@ def accept_onboarding_review(
     source_bindings = _resolve_source_bindings(accepted_items, packages, locators)
     source_text = _render_context_source(review.node, accepted_items, source_bindings)
 
-    stage = Path(tempfile.mkdtemp(prefix=".onboarding-accept-", dir=project_root / ".context" / "onboarding"))
+    staging_parent = project_root / ".context" / "onboarding"
+    staging_parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=".onboarding-accept-", dir=staging_parent))
     try:
         _prepare_stage(stage, snapshot, source_text, source_bindings)
         Compiler(project_root).compile(stage)
@@ -371,8 +374,7 @@ def accept_onboarding_review(
         if stage.exists():
             shutil.rmtree(stage)
 
-    for item_id, package_root, package, _locator in source_bindings:
-        del item_id
+    for _item_id, package_root, package, _locator in source_bindings:
         installed = install_source_package(project_root, package_root)
         if installed.package_digest != package.package_digest:
             raise ContextCanonError("Installed Source package identity changed during onboarding acceptance")
@@ -468,8 +470,8 @@ def _verify_live_evidence(snapshot: EvidenceSnapshot, project_root: Path) -> Non
             )
 
 
-def _load_catalog_packages(package_roots: Iterable[Path]):
-    result: dict[str, tuple[Path, object]] = {}
+def _load_catalog_packages(package_roots: Iterable[Path]) -> dict[str, tuple[Path, CompiledPackage]]:
+    result: dict[str, tuple[Path, CompiledPackage]] = {}
     for raw_root in package_roots:
         root = raw_root.resolve()
         package = load_package(root)
@@ -482,10 +484,10 @@ def _load_catalog_packages(package_roots: Iterable[Path]):
 
 def _resolve_source_bindings(
     accepted_items: list[ProposalItem],
-    packages: dict[str, tuple[Path, object]],
+    packages: dict[str, tuple[Path, CompiledPackage]],
     locators: dict[str, str],
-):
-    bindings = []
+) -> list[tuple[str, Path, CompiledPackage, str]]:
+    bindings: list[tuple[str, Path, CompiledPackage, str]] = []
     accepted_source_items = [item for item in accepted_items if item.kind == "existing-source"]
     accepted_ids = {item.id for item in accepted_source_items}
     extra_locators = sorted(set(locators) - accepted_ids)
@@ -519,7 +521,11 @@ def _resolve_source_bindings(
     return sorted(bindings, key=lambda binding: binding[2].metadata.id)
 
 
-def _render_context_source(node: ReviewNode, accepted_items: list[ProposalItem], source_bindings) -> str:
+def _render_context_source(
+    node: ReviewNode,
+    accepted_items: list[ProposalItem],
+    source_bindings: list[tuple[str, Path, CompiledPackage, str]],
+) -> str:
     _publishable(node.name, "node.name")
     _publishable(node.id, "node.id")
     _publishable(node.version, "node.version")
@@ -588,7 +594,12 @@ def _publishable(value: str, label: str) -> str:
     return value.strip()
 
 
-def _prepare_stage(stage: Path, snapshot: EvidenceSnapshot, source_text: str, source_bindings) -> None:
+def _prepare_stage(
+    stage: Path,
+    snapshot: EvidenceSnapshot,
+    source_text: str,
+    source_bindings: list[tuple[str, Path, CompiledPackage, str]],
+) -> None:
     stage.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(stage / "CONTEXT.src.md", source_text)
     for entry in snapshot.entries:
