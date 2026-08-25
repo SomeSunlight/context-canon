@@ -201,10 +201,10 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Reach **90 green deterministic tests** before final dogfood regeneration; GitHub Actions run #283 confirms the test step is green.
 - [x] Update README and onboarding guide through explicit acceptance and final trust-hardening semantics.
 - [x] Update STATE/PLAN so the next large step and remaining dogfood/review boundary are explicit.
-- [ ] Regenerate affected dogfood packages from the final documentation head.
-- [ ] Run the exact final PR head through all 90 tests plus `contextcanon check --all .` at zero drift.
-- [ ] Inspect the final PR diff against `main` for only intended files and no temporary/generated surprises.
-- [ ] Update PR #9 description with the exact final head, green CI run, test count and dogfood identities.
+- [x] Regenerate the affected Gateway and Framework Development dogfood packages; Foundation remains unchanged.
+- [x] Verify the post-dogfood review candidate `22a982d67670444d09d051e4a294785e0a1b5803` with all **90 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #285.
+- [x] Inspect that review candidate against `main`: exactly 21 intended implementation/test/documentation/dogfood paths and no temporary or placeholder files.
+- [ ] Update PR #9 description with the exact final review head, green CI run, test count and dogfood identities.
 - [ ] Project-owner review PR #9.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval.
 
