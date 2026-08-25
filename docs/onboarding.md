@@ -54,7 +54,8 @@ contextcanon onboard instruction
                                   │
                                   ▼
                      [ContextCanon · deterministic]
-                     stage → compile → publish → build/check
+                     preflight → stage → compile → publish
+                     → build/check → acceptance record
                                   │
                                   ▼
                        canonical ContextCanon context
@@ -111,7 +112,7 @@ contextcanon onboard accept \
   --project .
 ```
 
-After step 7, ContextCanon has created the first canonical `CONTEXT.src.md`, compiled it, generated the Official Context package, and checked that the generated result has no drift.
+After step 7, ContextCanon has created the first canonical `CONTEXT.src.md`, compiled it, generated the Official Context package, checked the generated result, and written an acceptance record bound to the exact reviewed state.
 
 A validated proposal alone is **not** accepted project truth. A review containing `pending` decisions is also **not** accepted project truth. The explicit `onboard accept` operation is the publication step.
 
@@ -125,7 +126,7 @@ You need:
 
 An existing ContextCanon Node is **not** required. Onboarding is designed to work before a project adopts ContextCanon.
 
-For this first acceptance version, the target repository must **not already contain `CONTEXT.src.md`**. Initial onboarding can create the first canonical Node, but it deliberately refuses to replace an existing Node until a separately reviewed re-onboarding/update workflow exists.
+First-adoption acceptance is deliberately conservative. It will not replace an existing `CONTEXT.src.md`, an existing `CONTEXT/` tree, or another path that the staged first Context Node would need to own as generated output. Re-onboarding an already adopted project requires a separate reviewed update workflow.
 
 ContextCanon does not choose or invoke the model for you. The generated instruction is provider- and harness-neutral.
 
@@ -199,6 +200,8 @@ The generated instruction tells the reviewer to:
 - for claims about the **currently implemented system**, prefer direct implementation/configuration/manifest/CI/test evidence when it contradicts descriptive documentation;
 - still use documentation and source comments as important evidence for intent, rationale, constraints, workflows, history, and target design;
 - surface unresolved "current versus intended" contradictions instead of silently choosing one side;
+- compare reusable practices with every supplied verified Source package;
+- when proposing an `existing-source`, copy the exact Source Node ID, name, version, normalized digest, and package digest that it inspected;
 - return only a strict `contextcanon/onboarding-proposal/v0` JSON object;
 - cite exact evidence path, hash, and line ranges for every proposed item;
 - make no repository edits and accept nothing automatically.
@@ -244,6 +247,14 @@ A successful validation produces a deterministic `proposal_digest`.
 
 That digest identifies one exact semantic review artifact. It does **not** mean that the LLM was right and it does **not** mean that a human accepted it.
 
+### Compatibility note for `existing-source`
+
+`contextcanon/onboarding-proposal/v0` existed before exact Source-package identity was added. ContextCanon therefore still validates historical v0 `existing-source` findings containing only Source Node ID/name/reason.
+
+Newly generated onboarding instructions require three additional fields: Source version, normalized digest and package digest. Those three fields are all-or-nothing when present.
+
+A legacy `existing-source` finding without that exact package identity can still be read and reviewed, but it **cannot be accepted into canonical context**. Correct or regenerate the proposal against an explicit Source catalog and create a fresh review. This preserves historical readability without allowing an old imprecise proposal to publish new truth.
+
 ## 6. ContextCanon prepares the human review
 
 Create a review file:
@@ -282,9 +293,11 @@ This separates **seeing the proposal** from **accepting it**. A large JSON blob 
 
 The LLM does not choose the canonical Node identity.
 
-When the review is first created, the human supplies `--node-name`. The initial version defaults to `0.1.0`. A stable Node ID can be supplied explicitly with `--node-id`; otherwise ContextCanon derives a deterministic UUID from the exact evidence identity so repeated creation from the same evidence does not invent new identities.
+When the review is first created, the human supplies `--node-name`. The initial version defaults to `0.1.0`. A stable Node ID can be supplied explicitly with `--node-id`; otherwise ContextCanon generates a **fresh UUID once** when it creates `review.json`.
 
-The resulting Node name, ID and version live in `review.json` and are therefore part of the human-owned review state.
+That generated ID is then stored in the human-owned review and remains stable when the same review is reopened. It is deliberately **not derived from the evidence digest**: two unrelated projects can contain identical evidence bytes and must not therefore receive the same stable Node identity.
+
+The resulting Node name, ID and version live in `review.json` and are part of the review state that later acceptance verifies.
 
 ### Accept or reject every finding
 
@@ -301,7 +314,7 @@ ContextCanon refuses final acceptance while even one finding remains `pending`.
 
 `review.json` deliberately does not contain a second hidden language for rewriting semantic findings.
 
-If the LLM's finding itself is wrong — wrong classification, wording, payload, evidence, or rationale — correct **`proposal.json`**, run `onboard validate` again, and create a fresh review.
+If the LLM's finding itself is wrong — wrong classification, wording, payload, evidence, rationale, or reusable Source identity — correct **`proposal.json`**, run `onboard validate` again, and create a fresh review.
 
 Why? Because then there is still exactly one semantic proposal format. A human correction becomes part of the same validated proposal artifact instead of being buried in a separate patch language that later tooling would also have to interpret.
 
@@ -328,12 +341,13 @@ Before writing canonical context, ContextCanon:
 3. verifies that `review.json` is bound to exactly that proposal and evidence;
 4. rejects any remaining `pending` decision;
 5. rechecks every frozen evidence file against the **current live repository bytes**;
-6. resolves any accepted existing reusable Sources to exact immutable packages;
+6. resolves every accepted `existing-source` to the same exact immutable package identity that the semantic reviewer saw;
 7. renders the proposed canonical `CONTEXT.src.md` in a staging area;
 8. copies only reviewed evidence into that staging area;
-9. compiles the staged Node before publication.
+9. compiles the staged Node;
+10. computes the exact compiler-owned output paths and checks that first adoption would not replace pre-existing project files.
 
-Only after those checks pass does ContextCanon publish the first canonical source and immediately run the normal compiler/build/check path.
+Only after those checks pass does ContextCanon cross the publication boundary. It installs accepted immutable Source packages, writes the first canonical source, runs the normal deterministic build/check, and writes the acceptance record.
 
 ### If the repository changed after review
 
@@ -351,9 +365,27 @@ Markdown Resources can have local-link closure: if a reviewed architecture docum
 
 Therefore a Topic cannot silently use a reviewed document as a doorway to an unreviewed local file. If its required Markdown closure was not part of the frozen evidence, staging compilation fails before `CONTEXT.src.md` is published.
 
+### If the repository already owns a ContextCanon output path
+
+First adoption must not silently take ownership of an existing project file merely because ContextCanon would normally generate a file with the same name.
+
+The staged compile determines the exact generated output set for the proposed Node. Before publication, ContextCanon refuses if one of those output paths already exists. It also refuses any pre-existing `CONTEXT/` path because that tree is compiler-owned resource output and normal compilation may remove stale generated resources from it.
+
+This check is based on the **actual staged Node**, not on a blanket filename blacklist. For example, an existing `AGENTS.md` may legitimately be onboarding evidence and remains untouched when the proposed first Node does not generate an `AGENTS.md` target.
+
+An existing `CONTEXT.src.md` is always a separate hard stop for first-adoption v0.
+
+### If publication fails after the preflight
+
+First adoption is a transaction-like operation even though several filesystem paths are involved.
+
+If an exception occurs after ContextCanon crosses the publication boundary — including a failure while writing the final acceptance record — it rolls back the new canonical source, generated outputs, partial accepted onboarding records, and Source packages that were newly installed by that failed attempt. Source packages that already existed before the attempt are not removed.
+
+The goal is simple: an operator should be able to fix the cause and retry rather than first having to reconstruct whether the repository is half-adopted.
+
 ### Existing `CONTEXT.src.md`: deliberate refusal in v0
 
-Initial onboarding acceptance currently creates a first Context Node only when the target repository does **not** already contain `CONTEXT.src.md`.
+Initial onboarding acceptance creates a first Context Node only when the target repository does **not** already contain `CONTEXT.src.md`.
 
 If it does exist, ContextCanon refuses to replace it.
 
@@ -375,7 +407,9 @@ A rejected `local-rule` is not published. The rejection remains visible in the a
 
 An accepted `existing-source` means the human agrees that a supplied reusable Node should be composed instead of copying equivalent guidance locally.
 
-The semantic proposal names the Source Node, but that name is not enough to establish immutable Source truth. Final acceptance therefore requires the exact package again:
+When the Source catalog was supplied to `onboard instruction`, the LLM saw the package's stable Node ID, name, version, normalized digest and package digest. A newly generated `existing-source` finding must copy all five values into `proposal.json`.
+
+That matters because **the semantic review is about one exact immutable package, not merely a Node name**. Final acceptance therefore requires that same package again:
 
 ```text
 contextcanon onboard accept \
@@ -387,9 +421,9 @@ contextcanon onboard accept \
 
 `--source-locator` uses `PROPOSAL_ITEM_ID=LOCATOR`.
 
-ContextCanon verifies the immutable package, requires its stable Node ID to match the accepted finding, installs it into the project's accepted Source store, and writes exact version + `normalized-digest` + `package-digest` pins into `CONTEXT.src.md`.
+ContextCanon verifies that Node ID, name, version and both digests exactly match the accepted proposal. Supplying a newer or otherwise different package for the same stable Node ID is rejected rather than silently changing what the human reviewed.
 
-After acceptance, ordinary builds use that local immutable accepted state and do not need the original Source repository. This is the same offline Source principle used everywhere else in ContextCanon.
+After verification, ContextCanon installs the package into the project's accepted Source store and writes exact version + `normalized-digest` + `package-digest` pins into `CONTEXT.src.md`. Ordinary builds then use that local immutable state and do not need the original Source repository.
 
 ## `candidate-reusable-node`
 
@@ -451,9 +485,7 @@ Example: a project-specific rule that every deployment definition must include a
 
 Use when a practice is already materially covered by a reusable ContextCanon Source package supplied to the onboarding run.
 
-Example: a generic Python testing practice that is already defined by an accepted reusable Python-development Node.
-
-This is still only the LLM's proposal to use that Source; onboarding does not accept it automatically.
+Copy the exact package identity from the catalog into the finding. This is still only the LLM's proposal to use that Source; onboarding does not accept it automatically.
 
 ### `candidate-reusable-node`
 
@@ -509,7 +541,7 @@ contextcanon onboard instruction <evidence-snapshot> \
   --catalog-package <package-root-b>
 ```
 
-The LLM then sees the verified Node identity, package identity, effective Rules, and Topics of those packages and can propose `existing-source` where one already covers the practice.
+The LLM then sees the verified Node identity, exact package identity, effective Rules, and Topics of those packages and can propose `existing-source` where one already covers the practice.
 
 If no catalog is supplied, the instruction explicitly forbids inventing an `existing-source`. A potentially reusable practice remains a `candidate-reusable-node` or `unresolved-question` until it can be compared properly.
 
@@ -517,7 +549,7 @@ This is an important long-term effect of ContextCanon: common context can be **c
 
 For a first experiment, using no catalog is valid. It simply means the proposal cannot claim that an existing reusable Source is already the right match.
 
-If the human later accepts an `existing-source` finding, final `onboard accept` requires that exact immutable package again. The LLM's catalog view does not itself install or accept anything.
+If the human later accepts an `existing-source` finding, final `onboard accept` requires exactly the same immutable package identity again. The LLM's catalog view does not itself install or accept anything.
 
 # What ContextCanon does not do behind your back
 
@@ -529,15 +561,17 @@ During onboarding, ContextCanon does not:
 - execute commands found in README, AGENTS, or other evidence;
 - assume README or another conventional file is automatically current;
 - accept a reusable Source merely because a model suggested it;
+- substitute a different version/package for the reusable Source the semantic reviewer inspected;
 - treat proposal validation as semantic correctness or human approval;
 - publish while review decisions are still pending;
 - silently apply an old review to a changed proposal;
 - silently apply reviewed evidence to changed live repository bytes;
 - pull unreviewed files into a Topic package through Markdown-link closure;
+- overwrite an existing `CONTEXT.src.md`, `CONTEXT/` tree, or actual compiler-output collision during first adoption;
 - turn candidate reusable Nodes into published library Nodes;
 - turn unresolved questions into invented answers;
 - rewrite good ordinary documentation merely because onboarding encountered it;
-- overwrite an existing `CONTEXT.src.md` in first-onboarding acceptance v0.
+- leave a deliberately simulated post-publication failure as half-adopted canonical state.
 
 Those separations are intentional. They make semantic reasoning useful without making it authoritative.
 
@@ -591,13 +625,13 @@ review/v0 JSON                               human-owned decisions
         ↓
 contextcanon onboard accept                  explicit operator action
         ↓
-staged canonical authoring + compile         deterministic
+exact Source/output preflight + staged compile
         ↓
 CONTEXT.src.md + accepted Source packages
         ↓
 normal ContextCanon build/check              deterministic
         ↓
-acceptance/v0 record
+acceptance/v0 record                         rollback on failed first publication
 ```
 
 The external LLM is replaceable. It participates only between deterministic instruction generation and deterministic proposal validation.
@@ -658,6 +692,8 @@ Every proposal item requires:
 - one or more evidence references with path, SHA-256 and line range;
 - a strict kind-specific payload.
 
+For newly generated `existing-source` findings, the payload carries stable Source Node ID/name plus exact Source version, normalized digest and package digest. Historical v0 findings without those three exact identity fields remain structurally readable, but acceptance refuses to publish them until corrected/regenerated.
+
 `onboard validate` reloads and verifies the evidence snapshot, validates every field/reference, and computes a deterministic `proposal_digest` over the normalized proposal.
 
 Validation proves the review object is structurally bound to exact evidence. It does not prove semantic correctness.
@@ -689,6 +725,8 @@ The normalized review receives its own deterministic `review_digest`.
 
 Creating a review cannot publish project context. Loading a review whose `proposal_digest` no longer matches the proposal fails.
 
+A default Node ID is a fresh UUID created once with a new review, not a digest-derived identity. Reopening that review reuses the stored ID.
+
 ## Acceptance contract
 
 Final publication is represented by:
@@ -704,9 +742,11 @@ Acceptance requires:
 - exact matching Review v0;
 - zero `pending` decisions;
 - unchanged live bytes for every frozen evidence file;
-- exact immutable package resolution for every accepted `existing-source` item;
+- exact immutable package identity match for every accepted `existing-source` item;
 - successful staged compilation before canonical source publication;
-- successful ordinary build/check immediately after publication.
+- no collision with pre-existing paths that the staged Node would generate, and no pre-existing `CONTEXT/` tree;
+- successful ordinary build/check immediately after publication;
+- successful acceptance-record publication, otherwise first-adoption output is rolled back.
 
 The acceptance record stores evidence/proposal/review identities, Node identity, accepted/rejected item IDs, exact accepted Source package identities, canonical `CONTEXT.src.md` SHA-256, resulting normalized/package digests, and generated output list.
 
@@ -731,15 +771,19 @@ The regression suite covers, among other onboarding acceptance cases:
 
 - every finding begins pending;
 - exact evidence lines are rendered for review;
+- fresh default Node identities are not derived from identical evidence;
 - changed proposal invalidates the prior review;
 - pending decisions block acceptance;
 - changed live evidence blocks acceptance;
 - accepted local Rules/Topics compile into canonical context;
 - rejected Rules are absent from canonical context but remain in the acceptance record;
 - reusable candidates and unresolved questions remain separate follow-up artifacts;
-- accepted reusable Sources require exact packages and locators and continue building offline after the original Source repository is removed;
-- first-onboarding v0 refuses destructive replacement of existing `CONTEXT.src.md`;
-- Topic Markdown closure cannot pull a file outside frozen evidence into the accepted package.
+- historical unbound `existing-source` findings remain readable but cannot be accepted;
+- accepted reusable Sources must match the exact version and both digests inspected by the semantic reviewer;
+- accepted reusable Sources continue building offline after the original Source repository is removed;
+- first-onboarding v0 refuses destructive replacement of existing `CONTEXT.src.md` and generated-output collisions;
+- Topic Markdown closure cannot pull a file outside frozen evidence into the accepted package;
+- simulated failure while publishing the final acceptance record rolls first adoption back.
 
 ## Design invariant
 
