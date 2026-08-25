@@ -1,12 +1,12 @@
 # Current State
 
-ContextCanon now has a stable deterministic core and an onboarding workflow that reaches from an existing Git repository to **human-reviewed, explicitly accepted canonical Context**.
+ContextCanon has a stable deterministic core and now, on the current review branch, a complete first-adoption path from an existing Git repository to **human-reviewed, explicitly accepted canonical Context**.
 
 The project owner, acting as ContextCanon's first user and reviewer, accepted the latest usability-hardening slice and PR #8 was squash-merged to `main` as:
 
 `1280aa9e763f0588fa06b3e1e98b9e7b52302cdd`
 
-The current branch / PR #9 adds the last major onboarding trust step before the larger real-project test: human review plus explicit onboarding acceptance.
+PR #9 / branch `agent/onboarding-review-acceptance` is the current review candidate. It adds the last major onboarding trust step before the larger real-project test: human review plus explicit onboarding acceptance.
 
 > [!NOTE]
 > In this file, **project-owner accepted** means that the project owner reviewed a development stage and approved it as the new project baseline. That is different from the product operations `contextcanon source accept` and `contextcanon onboard accept`, where a human operator explicitly accepts one concrete reviewed artifact.
@@ -26,8 +26,11 @@ Today the current development branch can:
 - show each finding together with rationale, confidence and exact cited evidence lines;
 - require an explicit `accept` or `reject` decision for every finding;
 - reject stale review when the proposal or live evidence changed;
+- bind a proposed reusable Source to the **exact immutable package** the semantic reviewer inspected;
 - stage and compile the proposed first Context Node before publication;
+- refuse first adoption when it would overwrite existing ContextCanon output paths;
 - publish the first canonical `CONTEXT.src.md` only after explicit human acceptance;
+- roll back a failed first publication rather than leave a half-adopted repository;
 - immediately run the normal deterministic build/check after publication.
 
 The workflow deliberately still does **not**:
@@ -36,7 +39,8 @@ The workflow deliberately still does **not**:
 - turn candidate reusable Nodes into library Nodes automatically;
 - invent answers for unresolved questions;
 - splice state/planning prose into existing human documents by pretending text merging is deterministic semantics;
-- overwrite an existing `CONTEXT.src.md` during first-onboarding acceptance v0.
+- replace an existing `CONTEXT.src.md` during first-onboarding acceptance v0;
+- silently substitute a different version of a reusable Source after semantic review.
 
 The next major step after project-owner review of PR #9 is therefore no longer another missing onboarding mechanism. It is the **larger real 1:1 onboarding test**.
 
@@ -66,7 +70,7 @@ record accept/reject decisions
 contextcanon onboard accept
         ↓
 [ContextCanon · deterministic]
-stage → compile → publish → build/check
+preflight → stage → compile → publish → build/check
 ```
 
 ContextCanon does not choose or call the model. The operator supplies the generated assignment and frozen evidence to a suitable external LLM.
@@ -88,23 +92,47 @@ The reviewer sees each item together with:
 
 The human must change every decision to `accept` or `reject`. If the semantic finding itself is wrong, the proposal is corrected and validated again. Because that changes `proposal_digest`, the old review no longer applies.
 
-Node name/ID/version are human-owned review state rather than something the LLM can silently make canonical.
+Node name/ID/version are human-owned review state rather than something the LLM can silently make canonical. If the human does not provide `--node-id`, ContextCanon creates a fresh UUID once when it creates the review. That identity is stored in `review.json`; it is deliberately not derived from evidence bytes, because unrelated projects can contain identical evidence.
 
 ## What explicit acceptance guarantees
 
 `contextcanon onboard accept` refuses publication unless the review is complete and still matches the exact proposal/evidence.
 
-Immediately before publication it also rechecks the frozen evidence against the current live repository. If a reviewed README, manifest, CI file, architecture document or other selected evidence changed after review, acceptance stops and a new evidence/review cycle is required.
+Immediately before publication it rechecks the frozen evidence against the current live repository. If a reviewed README, manifest, CI file, architecture document or other selected evidence changed after review, acceptance stops and a new evidence/review cycle is required.
 
-The proposed Context Node is first compiled in a staging area containing only reviewed evidence. This has an important consequence: a reviewed Markdown Topic resource cannot use a local link to smuggle an unreviewed file into the eventual Context package. If the normal Markdown-resource closure needs a file outside frozen evidence, staging compile fails before canonical source is published.
+The proposed Context Node is first compiled in a staging area containing only reviewed evidence. A reviewed Markdown Topic resource therefore cannot use a local link to smuggle an unreviewed file into the eventual Context package. If normal Markdown-resource closure needs a file outside frozen evidence, staging compile fails before canonical source is published.
 
 Accepted local Rules and Topics become canonical authoring. Rejected findings do not. Ordinary documentation stays ordinary documentation.
 
 Accepted candidate reusable Nodes and unresolved questions remain separate reviewed follow-up artifacts instead of being flattened into local Rules or invented answers.
 
-Accepted `existing-source` findings must be resolved again at final acceptance to exact immutable Source packages plus explicit visible locators. The packages are verified, installed in accepted local state and pinned by both digests; the resulting project continues to build offline after the original Source repository disappears.
+### Reusable Sources stay bound to what was actually reviewed
 
-Initial acceptance v0 deliberately refuses to replace an existing `CONTEXT.src.md`. Re-onboarding an already adopted project needs its own reviewed merge/update contract.
+When a reusable Source catalog is supplied to the semantic review, the generated instruction exposes stable Node ID/name plus exact version, normalized digest and package digest.
+
+New `existing-source` findings must carry that exact package identity. Final acceptance requires the operator to supply the same immutable package again. ContextCanon compares Node ID, name, version and both digests; another version of the same Node is rejected rather than silently replacing what the LLM and human reviewed.
+
+Historical `proposal/v0` files without those exact identity fields remain structurally readable, but an unbound `existing-source` cannot be accepted into canonical context. It must be corrected/regenerated and reviewed again.
+
+After successful acceptance, the package is installed in accepted local state and pinned exactly. The resulting project continues to build offline after the original Source repository disappears.
+
+### First adoption does not seize existing project files
+
+Before live publication, ContextCanon uses the staged compile to determine the exact generated output set for the proposed Node.
+
+If one of those output paths already exists, first adoption refuses to overwrite it. Any existing `CONTEXT/` path is also a hard stop because that tree is compiler-owned resource output and normal builds may clean stale generated resources from it.
+
+This is based on actual outputs, not a blanket filename blacklist. An existing `AGENTS.md`, for example, may remain normal project evidence when the proposed Node does not generate an `AGENTS.md` target.
+
+An existing `CONTEXT.src.md` remains a separate hard stop: re-onboarding needs its own reviewed merge/update contract.
+
+### Failed first publication is rolled back
+
+After the preflight, acceptance may need to install Source packages, write canonical source, generate outputs and publish the acceptance record.
+
+If that post-preflight publication fails, ContextCanon removes the new canonical source, generated outputs, partial onboarding acceptance artifacts and Source packages newly installed by that failed attempt. Pre-existing Source packages are preserved.
+
+A dedicated regression test simulates failure while writing the final `acceptance.json` and verifies that the repository returns to its pre-adoption canonical state.
 
 ## Evidence is not automatically truth
 
@@ -142,20 +170,23 @@ The currently merged baseline is PR #8 at `1280aa9e763f0588fa06b3e1e98b9e7b52302
 
 PR #9 implements the human review/acceptance block above the merged baseline.
 
-The executable path currently passes **84 deterministic tests**. Coverage includes:
+The executable path currently passes **90 deterministic tests**. Coverage includes:
 
-- pending review decisions;
-- exact evidence rendering;
-- stale proposal/review rejection;
-- changed live evidence rejection;
+- pending review decisions and exact evidence rendering;
+- fresh default Node identity independent of evidence identity;
+- stale proposal/review and changed-live-evidence rejection;
 - first canonical Rule/Topic publication;
 - rejected findings remaining rejected and recorded;
 - candidate reusable Node and unresolved-question preservation;
-- exact reusable Source package binding and offline post-accept build;
-- refusal to overwrite existing `CONTEXT.src.md`;
-- refusal to package Markdown-linked material that was outside frozen review evidence.
+- historical unbound Source proposals remaining readable but not publishable;
+- exact reusable Source version/digest binding and offline post-accept build;
+- refusal to overwrite existing `CONTEXT.src.md` and generated-output collisions;
+- refusal to package Markdown-linked material that was outside frozen review evidence;
+- rollback after simulated final acceptance-record publication failure.
 
-Before the documentation changes in this branch, GitHub Actions run #267 also passed `contextcanon check --all .` with zero drift. The final branch still needs its normal documentation dogfood regeneration and exact-head green CI before project-owner review.
+GitHub Actions run #281 (`32860230135`) passed all 90 tests on the executable hardening head. Its only failure was the expected generated-dogfood drift after documentation changes were still outstanding.
+
+The branch now needs the normal final sequence: finish documentation, regenerate only the compiler-reported dogfood drift, and run the **exact final PR head** through tests plus `contextcanon check --all .` at zero drift. Only then is PR #9 ready for project-owner review.
 
 ## What comes next
 
