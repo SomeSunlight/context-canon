@@ -19,7 +19,7 @@ from .onboarding_proposal import (
     load_evidence_snapshot,
     load_onboarding_proposal,
 )
-from .outputs import check_outputs, write_outputs
+from .outputs import check_outputs, expected_outputs, write_outputs
 from .package import load_package
 from .parser import ContextCanonError
 from .sources import install_source_package
@@ -34,6 +34,11 @@ REVIEW_DECISIONS = {"pending", "accept", "reject"}
 _REVIEW_TOP_KEYS = {"schema", "evidence_digest", "proposal_digest", "node", "decisions"}
 _NODE_KEYS = {"id", "name", "version"}
 _DECISION_KEYS = {"id", "decision", "note"}
+_EXACT_SOURCE_IDENTITY_FIELDS = (
+    "source_version",
+    "source_normalized_digest",
+    "source_package_digest",
+)
 
 
 @dataclass(frozen=True)
@@ -326,11 +331,11 @@ def accept_onboarding_review(
 ) -> OnboardingAcceptance:
     """Publish one fully reviewed proposal as the first canonical Context Node.
 
-    Acceptance v0 deliberately creates a Node only when CONTEXT.src.md is
-    absent. It refuses destructive replacement until a reviewed merge/update
-    contract exists. All frozen evidence is rechecked against the live project
-    before publication, so human decisions cannot silently apply to a changed
-    repository snapshot.
+    Acceptance v0 deliberately creates a Node only when canonical ContextCanon
+    authoring/output paths are still unowned. It refuses destructive replacement
+    until a reviewed merge/update contract exists. All frozen evidence is
+    rechecked against the live project before publication, so human decisions
+    cannot silently apply to a changed repository snapshot.
     """
 
     snapshot_root = snapshot_root.resolve()
@@ -347,7 +352,7 @@ def accept_onboarding_review(
     if not (project_root / ".git").exists():
         raise ContextCanonError(f"Onboarding acceptance target must be a Git repository root: {project_root}")
     source_path = project_root / "CONTEXT.src.md"
-    if source_path.exists():
+    if source_path.exists() or source_path.is_symlink():
         raise ContextCanonError(
             "Onboarding acceptance v0 will not replace an existing CONTEXT.src.md; use a reviewed update workflow instead"
         )
@@ -366,68 +371,83 @@ def accept_onboarding_review(
     stage = Path(tempfile.mkdtemp(prefix=".onboarding-accept-", dir=staging_parent))
     try:
         _prepare_stage(stage, snapshot, source_text, source_bindings)
-        Compiler(project_root).compile(stage)
+        staged_compiled = Compiler(project_root).compile(stage)
     finally:
         if stage.exists():
             shutil.rmtree(stage)
 
-    for _item_id, package_root, package, _locator in source_bindings:
-        installed = install_source_package(project_root, package_root)
-        if installed.package_digest != package.package_digest:
-            raise ContextCanonError("Installed Source package identity changed during onboarding acceptance")
-
-    _atomic_write_text(source_path, source_text)
-    try:
-        compiled = Compiler(project_root).compile(project_root)
-    except Exception:
-        source_path.unlink(missing_ok=True)
-        raise
-
-    changed = tuple(write_outputs(compiled))
-    drift = check_outputs(compiled)
-    if drift:
-        raise ContextCanonError(
-            "Internal onboarding acceptance error: generated ContextCanon output still has drift after build"
-        )
+    output_paths = tuple(expected_outputs(staged_compiled))
+    _ensure_first_adoption_outputs_absent(project_root, output_paths)
 
     accepted_root = project_root / ".context" / "onboarding" / "accepted" / proposal.proposal_digest
-    accepted_root.mkdir(parents=True, exist_ok=True)
-    _write_follow_up_artifacts(accepted_root, proposal, review)
-    acceptance = {
-        "schema": ACCEPTANCE_SCHEMA,
-        "evidence_digest": proposal.evidence_digest,
-        "proposal_digest": proposal.proposal_digest,
-        "review_digest": review.review_digest,
-        "node": review.node.to_dict(),
-        "decisions": [decision.to_dict() for decision in review.decisions],
-        "accepted_item_ids": [item.id for item in accepted_items],
-        "rejected_item_ids": [
-            item.id for item in proposal.items if review.by_id[item.id].decision == "reject"
-        ],
-        "sources": [
-            {
-                "item_id": item_id,
-                "node_id": package.metadata.id,
-                "name": package.metadata.name,
-                "version": package.metadata.version,
-                "normalized_digest": package.normalized_digest,
-                "package_digest": package.package_digest,
-                "locator": locator,
-            }
-            for item_id, _root, package, locator in source_bindings
-        ],
-        "canonical": {
-            "context_src_sha256": hashlib.sha256(source_text.encode("utf-8")).hexdigest(),
-            "normalized_digest": compiled.normalized_digest,
-            "package_digest": compiled.package_digest,
-            "generated_outputs": list(changed),
-        },
-    }
-    acceptance_path = accepted_root / "acceptance.json"
-    _atomic_write_text(
-        acceptance_path,
-        json.dumps(acceptance, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    new_source_store_paths = tuple(
+        project_root / ".context" / "sources" / package.package_digest
+        for _item_id, _package_root, package, _locator in source_bindings
+        if not (project_root / ".context" / "sources" / package.package_digest).exists()
     )
+
+    try:
+        for _item_id, package_root, package, _locator in source_bindings:
+            installed = install_source_package(project_root, package_root)
+            if installed.package_digest != package.package_digest:
+                raise ContextCanonError("Installed Source package identity changed during onboarding acceptance")
+
+        _atomic_write_text(source_path, source_text)
+        compiled = Compiler(project_root).compile(project_root)
+        changed = tuple(write_outputs(compiled))
+        drift = check_outputs(compiled)
+        if drift:
+            raise ContextCanonError(
+                "Internal onboarding acceptance error: generated ContextCanon output still has drift after build"
+            )
+
+        accepted_root.mkdir(parents=True, exist_ok=True)
+        _write_follow_up_artifacts(accepted_root, proposal, review)
+        acceptance = {
+            "schema": ACCEPTANCE_SCHEMA,
+            "evidence_digest": proposal.evidence_digest,
+            "proposal_digest": proposal.proposal_digest,
+            "review_digest": review.review_digest,
+            "node": review.node.to_dict(),
+            "decisions": [decision.to_dict() for decision in review.decisions],
+            "accepted_item_ids": [item.id for item in accepted_items],
+            "rejected_item_ids": [
+                item.id for item in proposal.items if review.by_id[item.id].decision == "reject"
+            ],
+            "sources": [
+                {
+                    "item_id": item_id,
+                    "node_id": package.metadata.id,
+                    "name": package.metadata.name,
+                    "version": package.metadata.version,
+                    "normalized_digest": package.normalized_digest,
+                    "package_digest": package.package_digest,
+                    "locator": locator,
+                }
+                for item_id, _root, package, locator in source_bindings
+            ],
+            "canonical": {
+                "context_src_sha256": hashlib.sha256(source_text.encode("utf-8")).hexdigest(),
+                "normalized_digest": compiled.normalized_digest,
+                "package_digest": compiled.package_digest,
+                "generated_outputs": list(changed),
+            },
+        }
+        acceptance_path = accepted_root / "acceptance.json"
+        _atomic_write_text(
+            acceptance_path,
+            json.dumps(acceptance, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
+    except Exception:
+        _rollback_first_adoption(
+            project_root,
+            source_path,
+            output_paths,
+            accepted_root,
+            new_source_store_paths,
+        )
+        raise
+
     return OnboardingAcceptance(
         acceptance_path=acceptance_path,
         source_path=source_path,
@@ -495,6 +515,12 @@ def _resolve_source_bindings(
     used_package_ids: set[str] = set()
     for item in accepted_source_items:
         source_id = str(item.payload["source_node_id"])
+        missing_identity = [field for field in _EXACT_SOURCE_IDENTITY_FIELDS if field not in item.payload]
+        if missing_identity:
+            raise ContextCanonError(
+                f"Accepted existing-source item {item.id} is not bound to an exact catalog package; "
+                "correct/regenerate proposal.json with source_version, source_normalized_digest, and source_package_digest"
+            )
         package_entry = packages.get(source_id)
         if package_entry is None:
             raise ContextCanonError(
@@ -509,6 +535,20 @@ def _resolve_source_bindings(
             raise ContextCanonError(f"Accepted onboarding proposal contains Source Node ID {source_id} more than once")
         used_package_ids.add(source_id)
         root, package = package_entry
+        expected_identity = {
+            "source_node_id": package.metadata.id,
+            "source_name": package.metadata.name,
+            "source_version": package.metadata.version,
+            "source_normalized_digest": package.normalized_digest,
+            "source_package_digest": package.package_digest,
+        }
+        for field, actual in expected_identity.items():
+            proposed = item.payload.get(field)
+            if proposed != actual:
+                raise ContextCanonError(
+                    f"Accepted existing-source item {item.id} exact package identity does not match supplied package: "
+                    f"{field} proposed {proposed!r}, supplied {actual!r}"
+                )
         bindings.append((item.id, root, package, locator.strip()))
     extra_packages = sorted(set(packages) - used_package_ids)
     if extra_packages:
@@ -516,6 +556,53 @@ def _resolve_source_bindings(
             f"Acceptance package supplied for Source not accepted by the review: {extra_packages[0]}"
         )
     return sorted(bindings, key=lambda binding: binding[2].metadata.id)
+
+
+def _ensure_first_adoption_outputs_absent(project_root: Path, output_paths: tuple[str, ...]) -> None:
+    context_dir = project_root / "CONTEXT"
+    if context_dir.exists() or context_dir.is_symlink():
+        raise ContextCanonError(
+            "Onboarding acceptance v0 will not replace a pre-existing CONTEXT path; move/resolve it before first adoption"
+        )
+    for rel in output_paths:
+        if rel.startswith("CONTEXT/"):
+            continue
+        target = project_root / rel
+        if target.exists() or target.is_symlink():
+            raise ContextCanonError(
+                f"Onboarding acceptance v0 will not replace pre-existing compiler output path: {rel}"
+            )
+
+
+def _rollback_first_adoption(
+    project_root: Path,
+    source_path: Path,
+    output_paths: tuple[str, ...],
+    accepted_root: Path,
+    new_source_store_paths: tuple[Path, ...],
+) -> None:
+    if accepted_root.exists():
+        shutil.rmtree(accepted_root)
+    source_path.unlink(missing_ok=True)
+    for rel in sorted(output_paths, key=lambda value: len(PurePosixPath(value).parts), reverse=True):
+        path = project_root / Path(*PurePosixPath(rel).parts)
+        if path.is_file() or path.is_symlink():
+            path.unlink(missing_ok=True)
+        parent = path.parent
+        while parent != project_root and parent != project_root / ".context":
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent
+    for path in new_source_store_paths:
+        if path.exists():
+            shutil.rmtree(path)
+    sources_dir = project_root / ".context" / "sources"
+    try:
+        sources_dir.rmdir()
+    except OSError:
+        pass
 
 
 def _render_context_source(
