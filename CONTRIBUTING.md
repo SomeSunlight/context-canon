@@ -104,9 +104,14 @@ Git repository → onboarding.py → immutable evidence snapshot
                        onboarding_proposal.py
                     strict deterministic validation
                                       ↓
-                         human review/acceptance
+                       onboarding_review.py
+                human review binding + evidence view
                                       ↓
-                         authored context → compiler
+                    explicit onboard accept
+                                      ↓
+                      staged compile → authored context
+                                      ↓
+                           normal compiler
 ```
 
 Module contracts:
@@ -119,10 +124,11 @@ Module contracts:
 - **`render.py`** — deterministic human/machine projection.
 - **`outputs.py`** — compare/write compiler-owned generated output.
 - **`git_transport.py`** — retrieve candidate bytes only.
-- **`sources.py`** — deterministic candidate review receipts and explicit Source acceptance.
+- **`sources.py`** — deterministic candidate review receipts, immutable Source installation, and explicit Source acceptance.
 - **`onboarding.py`** — deterministic pre-Context inventory and frozen evidence snapshots; no semantic classification.
 - **`onboarding_instruction.py`** — deterministic rendering of the semantic assignment; no LLM invocation.
 - **`onboarding_proposal.py`** — strict proposal/provenance validation; validation is not semantic acceptance.
+- **`onboarding_review.py`** — exact proposal/review binding, human-readable evidence review, explicit acceptance checks, staged first-Node publication, and acceptance records.
 - **`cli.py`** — orchestration only.
 
 See [Compiler](docs/compiler.md), [Immutable external Sources](docs/external-sources.md), and [Onboarding](docs/onboarding.md) for details.
@@ -131,13 +137,13 @@ See [Compiler](docs/compiler.md), [Immutable external Sources](docs/external-sou
 
 ### Deterministic truth first
 
-If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, instruction identity, or proposal structural validity.
+If behavior can be specified exactly, implement it deterministically. LLMs are appropriate for semantic interpretation, not Node identity, Source/package resolution, Rule operations, exact diffs, package integrity, acceptance state, provenance, hashes, onboarding evidence identity, instruction identity, proposal structural validity, or review/publication binding.
 
 ### Keep the pipeline one-way
 
 Authoring is parsed into structures; compilation resolves meaning; immutable packages publish compiled meaning; diffs compare it; rendering projects it. Never reconstruct semantic truth from generated Markdown.
 
-Onboarding follows the same principle earlier in the lifecycle: ContextCanon freezes evidence and defines the assignment, an external LLM proposes meaning, ContextCanon validates the proposal mechanically, and an explicit human decision is required before durable context is authored.
+Onboarding follows the same principle earlier in the lifecycle: ContextCanon freezes evidence and defines the assignment, an external LLM proposes meaning, ContextCanon validates the proposal mechanically, a human reviews the exact findings/evidence, and explicit acceptance is required before durable context is authored.
 
 ### Stable identity beats wording and path
 
@@ -145,7 +151,7 @@ Rules and Nodes are referenced by stable identity. Renaming a Node, moving its d
 
 ### Fail rather than guess
 
-Unsupported syntax, incomplete pins, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, oversized instructions, malformed proposal provenance, or structural ambiguity should fail clearly.
+Unsupported syntax, incomplete pins, dangling Changes, duplicate identities, cycles, package corruption, invalid paths, unsafe onboarding evidence, oversized instructions, malformed proposal provenance, stale reviews/evidence, incomplete human decisions, or structural ambiguity should fail clearly.
 
 Semantic uncertainty is different: an onboarding LLM should preserve it as an unresolved question rather than invent certainty.
 
@@ -155,11 +161,13 @@ Multiple Sources are independent. Source order must not decide conflicts. Canoni
 
 ### Keep accepted state reproducible
 
-Accepted external packages under `.context/sources/<package-digest>/` are reproducible consumer state. Candidate packages and onboarding evidence are review/input state, not accepted governance.
+Accepted external packages under `.context/sources/<package-digest>/` are reproducible consumer state. Candidate packages and onboarding evidence are review/input state, not accepted governance. Onboarding acceptance records bind the human decision to exact evidence/proposal/review identities and the resulting canonical package identities.
 
 ### Keep filesystem mutation narrow
 
-Compilation and diff should work in memory. Generated output, candidate retrieval, Source acceptance, and onboarding preparation own only explicit filesystem areas. Onboarding instruction rendering and proposal validation are read-only.
+Compilation and diff should work in memory. Generated output, candidate retrieval, Source acceptance, onboarding preparation, and explicit onboarding acceptance own only explicit filesystem areas. Onboarding instruction rendering, proposal validation, and review inspection do not publish canonical context.
+
+Initial `onboard accept` also refuses to replace an existing `CONTEXT.src.md`; reviewed re-onboarding/update semantics are a separate future workflow.
 
 ### Preserve human readability
 
@@ -171,7 +179,7 @@ The same applies to project documentation: `STATE.md`, `PLAN.md`, README and con
 
 Every deterministic feature should normally include successful and important failure cases, deterministic digest/order assertions where relevant, and drift checks when generated output changes.
 
-Tests must not require an external LLM or network service. Git transport tests use local temporary repositories; onboarding tests use frozen local fixtures.
+Tests must not require an external LLM or network service. Git transport tests use local temporary repositories; onboarding tests use frozen local fixtures and locally built immutable Source packages.
 
 GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must match current compiler output.
 
