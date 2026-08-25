@@ -33,6 +33,11 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _TOP_LEVEL_KEYS = {"schema", "evidence_digest", "items"}
 _ITEM_KEYS = {"id", "kind", "title", "rationale", "confidence", "evidence", "payload"}
 _EVIDENCE_REF_KEYS = {"path", "sha256", "start_line", "end_line"}
+_SOURCE_IDENTITY_FIELDS = {
+    "source_version",
+    "source_normalized_digest",
+    "source_package_digest",
+}
 _EXPECTED_SELECTION = {
     "accepted_encoding": "utf-8",
     "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
@@ -47,7 +52,14 @@ _PAYLOAD_FIELDS: dict[str, tuple[set[str], set[str]]] = {
         {"group", "statement", "why"},
     ),
     "existing-source": (
-        {"source_node_id", "source_name", "reason"},
+        {
+            "source_node_id",
+            "source_name",
+            "source_version",
+            "source_normalized_digest",
+            "source_package_digest",
+            "reason",
+        },
         {"source_node_id", "source_name", "reason"},
     ),
     "candidate-reusable-node": (
@@ -357,6 +369,27 @@ def _validate_payload(kind: str, raw: object, item_id: str, snapshot: EvidenceSn
             "source_name": _nonempty_string(payload["source_name"], f"item {item_id} payload.source_name"),
             "reason": _nonempty_string(payload["reason"], f"item {item_id} payload.reason"),
         }
+        present_identity = _SOURCE_IDENTITY_FIELDS.intersection(payload)
+        if present_identity and present_identity != _SOURCE_IDENTITY_FIELDS:
+            missing = sorted(_SOURCE_IDENTITY_FIELDS - present_identity)
+            raise _error(
+                f"item {item_id} existing-source exact package identity is incomplete; missing: {', '.join(missing)}"
+            )
+        if present_identity:
+            source_version = _nonempty_string(payload["source_version"], f"item {item_id} payload.source_version")
+            normalized_digest = payload["source_normalized_digest"]
+            package_digest = payload["source_package_digest"]
+            if not isinstance(normalized_digest, str) or not _SHA256_RE.fullmatch(normalized_digest):
+                raise _error(f"item {item_id} payload.source_normalized_digest must be a lowercase SHA-256")
+            if not isinstance(package_digest, str) or not _SHA256_RE.fullmatch(package_digest):
+                raise _error(f"item {item_id} payload.source_package_digest must be a lowercase SHA-256")
+            normalized.update(
+                {
+                    "source_version": source_version,
+                    "source_normalized_digest": normalized_digest,
+                    "source_package_digest": package_digest,
+                }
+            )
     elif kind == "candidate-reusable-node":
         normalized = {
             "suggested_name": _nonempty_string(
