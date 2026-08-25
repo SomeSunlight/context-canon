@@ -153,6 +153,8 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Define `contextcanon/onboarding-review/v0` separately from Proposal and Official Context.
 - [x] Bind review state to exact `evidence_digest` and `proposal_digest`.
 - [x] Make canonical Node ID/name/version human-owned review state rather than LLM authority.
+- [x] Generate a fresh UUID for a newly created Node when the operator does not provide `--node-id`; do not derive independent Node identity from shared Evidence identity.
+- [x] Keep that generated/provided Node identity stable by storing it in `review.json`.
 - [x] Create every proposal item as `pending` and require exactly one decision per item.
 - [x] Support explicit `accept` / `reject` plus human note.
 - [x] Render every finding with classification, confidence, rationale, payload, exact evidence references and cited evidence lines.
@@ -175,13 +177,18 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Add `contextcanon onboard accept` as the explicit operator publication action.
 - [x] Reverify frozen evidence against current live repository bytes immediately before publication.
 - [x] Refuse stale acceptance when reviewed evidence changed after review.
+- [x] Bind a newly generated `existing-source` proposal to exact Source Node ID, name, version, `normalized_digest`, and `package_digest` seen by the LLM.
+- [x] Keep legacy v0 proposals structurally readable, but refuse publication of an accepted legacy `existing-source` that lacks exact package identity.
+- [x] Require the package supplied at final acceptance to match that exact proposal identity, not merely the same Source Node ID.
 - [x] Resolve every accepted `existing-source` to an exact verified immutable package plus explicit visible Source locator.
 - [x] Install/pin accepted Source packages exactly and prove normal builds remain offline after the original Source repository is removed.
 - [x] Render proposed canonical `CONTEXT.src.md` in a staging Node before publication.
 - [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the accepted package.
 - [x] Compile the staged Node before writing canonical source.
-- [x] Create the first canonical `CONTEXT.src.md` only after the staged compile succeeds.
+- [x] Preflight the staged compiler's exact first-adoption output paths and refuse to overwrite existing project-owned paths such as `CONTEXT.md` or `CONTEXT/`.
+- [x] Create the first canonical `CONTEXT.src.md` only after the staged compile and collision preflight succeed.
 - [x] Immediately run normal deterministic build/check after publication.
+- [x] Roll back newly created canonical/generated files and newly installed Source packages if first-adoption publication fails before the acceptance record is complete.
 - [x] Record `contextcanon/onboarding-acceptance/v0` with evidence/proposal/review identities, decisions, exact Sources and resulting Context/package identities.
 - [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed merge/update contract.
 
@@ -189,11 +196,15 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 
 - [x] Cover review/acceptance mechanics with focused regression tests.
 - [x] Cover stale proposal, stale live evidence, rejected findings, exact reusable Source binding/offline build and unreviewed Markdown closure.
-- [x] Reach 84 green deterministic tests before final documentation dogfood.
-- [x] Update README and onboarding guide through explicit acceptance.
-- [x] Update STATE/PLAN so the next large step is visible.
-- [ ] Regenerate affected dogfood packages after final documentation changes.
-- [ ] Run the exact final PR head through all tests plus `contextcanon check --all .` at zero drift.
+- [x] Cover independent fresh Node identity for identical evidence.
+- [x] Cover legacy unbound Source proposals, exact Source-version mismatch, first-adoption output collisions and rollback after acceptance-record publication failure.
+- [x] Reach **90 green deterministic tests** before final dogfood regeneration; GitHub Actions run #283 confirms the test step is green.
+- [x] Update README and onboarding guide through explicit acceptance and final trust-hardening semantics.
+- [x] Update STATE/PLAN so the next large step and remaining dogfood/review boundary are explicit.
+- [ ] Regenerate affected dogfood packages from the final documentation head.
+- [ ] Run the exact final PR head through all 90 tests plus `contextcanon check --all .` at zero drift.
+- [ ] Inspect the final PR diff against `main` for only intended files and no temporary/generated surprises.
+- [ ] Update PR #9 description with the exact final head, green CI run, test count and dogfood identities.
 - [ ] Project-owner review PR #9.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval.
 
