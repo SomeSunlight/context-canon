@@ -5,13 +5,15 @@
 Two different ideas use similar words and should not be confused:
 
 - **Project-owner accepted** means the project owner, acting as ContextCanon's first user/reviewer, reviewed a development stage and approved it as the new project baseline.
-- **`source accept` / onboarding acceptance** are product operations performed by an explicit human operator on one candidate Source or one reviewed onboarding proposal.
+- **`source accept` / `onboard accept`** are product operations performed by an explicit human operator on one concrete reviewed Source candidate or onboarding proposal.
 
 No anonymous system, CI job, or LLM "accepts" project truth.
 
 ## Project-owner accepted baseline
 
-ContextCanon has passed self-hosted and real external-project validation. The project owner accepted **Compiler 0.4** as the deterministic compiler baseline after review and squash-merge.
+ContextCanon has passed self-hosted and real external-project validation. The current accepted `main` baseline includes Compiler 0.4 plus the first user-reviewed onboarding and usability-hardening slices through PR #8:
+
+`1280aa9e763f0588fa06b3e1e98b9e7b52302cdd`
 
 Validated foundations include:
 
@@ -23,6 +25,8 @@ Validated foundations include:
 - [x] Inherited Rule `Remove`/`Override`, transitive provenance, and diamond-conflict diagnostics.
 - [x] Deterministic Context diff and semantic normalization.
 - [x] Immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
+- [x] Deterministic onboarding evidence preparation, framework-owned LLM assignment and strict proposal validation.
+- [x] First-user onboarding documentation hardening, explicit actors, strong-reasoning-model guidance and stale-evidence handling.
 
 The development cadence remains:
 
@@ -76,11 +80,9 @@ Here the actor is the **human/operator using ContextCanon**, not the project mil
 
 ## Project-owner accepted: onboarding through validated proposal
 
-The project owner reviewed the onboarding implementation and user-facing documentation as ContextCanon's first user. PR #7 was then squash-merged to `main` as:
+The project owner reviewed the onboarding implementation and user-facing documentation as ContextCanon's first user. PR #7 was squash-merged as `275c6b1f121126fb117f4bdbff1efc18218b0528`; the subsequent first-user usability review was accepted and PR #8 was merged as `1280aa9e763f0588fa06b3e1e98b9e7b52302cdd`.
 
-`275c6b1f121126fb117f4bdbff1efc18218b0528`
-
-The implemented flow is:
+The accepted flow on `main` reaches:
 
 ```text
 [ContextCanon · deterministic]
@@ -140,33 +142,75 @@ validated review artifact
 - [x] Strictly validate kinds, payloads, evidence file set, hashes/ranges and deterministic `proposal_digest`.
 - [x] Revalidate the Evidence v0 safety policy when consuming a snapshot.
 
-## Active next block: human review and explicit onboarding acceptance
+## Current review candidate: human review and explicit onboarding acceptance
 
-The next actor is the **human reviewer/operator**. A validated LLM proposal is not yet project truth.
+PR #9 / branch `agent/onboarding-review-acceptance` implements the next actor: the **human reviewer/operator**. A validated LLM proposal is not yet project truth.
 
-Goal: turn `proposal.json` into an inspectable, correctable review experience and require an explicit human decision before canonical ContextCanon authoring changes.
+Goal: make a proposal inspectable against exact evidence, record explicit human decisions, and allow canonical first adoption only when that exact reviewed state still matches the project.
 
-- [ ] Design the human-readable review representation for a validated proposal.
-- [ ] Show every proposed classification next to its exact evidence and confidence.
-- [ ] Allow a human reviewer to correct or reject classifications without editing raw JSON blindly.
-- [ ] Preserve unresolved questions and candidate reusable Nodes rather than flattening them.
-- [ ] Require explicit human acceptance before canonical `CONTEXT.src.md` or related authored context is created/replaced.
-- [ ] Bind acceptance to the exact validated proposal/evidence state so stale approval cannot apply to changed input.
-- [ ] Immediately run normal deterministic ContextCanon validation/build after accepted authoring is produced.
-- [ ] Keep candidate reusable-Node extraction separately reviewable/versioned; onboarding must never auto-publish it.
+### Human review representation
 
-## Larger real 1:1 onboarding test
+- [x] Define `contextcanon/onboarding-review/v0` separately from Proposal and Official Context.
+- [x] Bind review state to exact `evidence_digest` and `proposal_digest`.
+- [x] Make canonical Node ID/name/version human-owned review state rather than LLM authority.
+- [x] Create every proposal item as `pending` and require exactly one decision per item.
+- [x] Support explicit `accept` / `reject` plus human note.
+- [x] Render every finding with classification, confidence, rationale, payload, exact evidence references and cited evidence lines.
+- [x] Give the normalized review its own deterministic `review_digest`.
+- [x] Reject an existing review when the semantic proposal changes.
 
-Only after the human review/acceptance path is stable:
+### Human correction and decision semantics
+
+- [x] Keep semantic corrections in the single `proposal/v0` language: correct `proposal.json`, validate again, then create a fresh review.
+- [x] Avoid inventing a second semantic patch language inside the review schema.
+- [x] Require every finding to leave `pending` before final acceptance.
+- [x] Prove rejected Rules do not enter canonical authoring while the rejection remains recorded.
+- [x] Preserve accepted unresolved questions rather than inventing answers.
+- [x] Preserve accepted candidate reusable Nodes as separate follow-up artifacts rather than flattening them locally.
+- [x] Leave ordinary documentation untouched.
+- [x] Keep state/planning findings in reviewed acceptance state rather than deterministically splicing prose into STATE/PLAN.
+
+### Explicit onboarding acceptance
+
+- [x] Add `contextcanon onboard accept` as the explicit operator publication action.
+- [x] Reverify frozen evidence against current live repository bytes immediately before publication.
+- [x] Refuse stale acceptance when reviewed evidence changed after review.
+- [x] Resolve every accepted `existing-source` to an exact verified immutable package plus explicit visible Source locator.
+- [x] Install/pin accepted Source packages exactly and prove normal builds remain offline after the original Source repository is removed.
+- [x] Render proposed canonical `CONTEXT.src.md` in a staging Node before publication.
+- [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the accepted package.
+- [x] Compile the staged Node before writing canonical source.
+- [x] Create the first canonical `CONTEXT.src.md` only after the staged compile succeeds.
+- [x] Immediately run normal deterministic build/check after publication.
+- [x] Record `contextcanon/onboarding-acceptance/v0` with evidence/proposal/review identities, decisions, exact Sources and resulting Context/package identities.
+- [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed merge/update contract.
+
+### Regression and documentation completion
+
+- [x] Cover review/acceptance mechanics with focused regression tests.
+- [x] Cover stale proposal, stale live evidence, rejected findings, exact reusable Source binding/offline build and unreviewed Markdown closure.
+- [x] Reach 84 green deterministic tests before final documentation dogfood.
+- [x] Update README and onboarding guide through explicit acceptance.
+- [x] Update STATE/PLAN so the next large step is visible.
+- [ ] Regenerate affected dogfood packages after final documentation changes.
+- [ ] Run the exact final PR head through all tests plus `contextcanon check --all .` at zero drift.
+- [ ] Project-owner review PR #9.
+- [ ] Squash-merge PR #9 to `main` only after project-owner approval.
+
+## Next major block after PR #9: larger real 1:1 onboarding test
+
+Only after the human review/acceptance path is stable and project-owner accepted:
 
 - [ ] Choose a materially larger existing project with meaningful README/CONTRIBUTING/docs and no pre-curated ContextCanon files.
 - [ ] Run the framework-generated onboarding assignment through a strong reasoning LLM with access only to frozen evidence plus explicit Source catalog.
 - [ ] Do not pre-author the structure from conversation memory.
 - [ ] Review especially the split between project-local context and reusable generic Nodes.
 - [ ] Record where standard documentation was stale or contradicted current implementation.
-- [ ] Correct and explicitly accept the proposal through the new human workflow.
-- [ ] Build it and test ordinary plus Topic-specific tasks through a real harness.
-- [ ] Record where the model classified correctly, where humans corrected it, and whether Source reuse reduced duplication.
+- [ ] Correct and explicitly accept the proposal through the human workflow.
+- [ ] Observe whether review.json + rendered evidence is comfortable at real proposal size.
+- [ ] Observe whether state/planning findings need additional authoring assistance rather than deterministic prose merge.
+- [ ] Build the accepted Node and test ordinary plus Topic-specific tasks through a real harness.
+- [ ] Record where the model classified correctly, where humans corrected/rejected it, and whether Source reuse reduced duplication.
 
 ## Later semantic refinement: important context hidden in source code
 
@@ -181,6 +225,15 @@ Instead, after a project already has coarse accepted ContextCanon context, inves
 - [ ] Require human review before centralizing any discovered context.
 - [ ] Consider optional stable references from source comments back to ContextCanon Rule/Topic IDs after those identities exist.
 - [ ] Test whether this second pass improves documentation freshness without turning ContextCanon into source-code indexing or indiscriminate prompt expansion.
+
+## Later onboarding/update refinement
+
+The first acceptance path deliberately creates a new Node only.
+
+- [ ] Design a reviewed re-onboarding/update workflow for repositories that already contain canonical ContextCanon context.
+- [ ] Compare new semantic findings against existing Rules/Sources/Topics/state instead of replacing `CONTEXT.src.md` wholesale.
+- [ ] Preserve stable identities across reviewed updates.
+- [ ] Make conflicts between current canonical context and new evidence visible before publication.
 
 ## Later deterministic layers
 
