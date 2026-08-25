@@ -163,10 +163,7 @@ def create_or_load_onboarding_review(
         )
     name = _nonempty_single_line(node_name, "node.name")
     version = _nonempty_single_line(node_version, "node.version")
-    stable_id = _nonempty_single_line(
-        node_id or str(uuid.uuid5(uuid.NAMESPACE_URL, f"contextcanon:onboarding:{snapshot.evidence_digest}")),
-        "node.id",
-    )
+    stable_id = _nonempty_single_line(node_id or str(uuid.uuid4()), "node.id")
     node = ReviewNode(stable_id, name, version)
     decisions = tuple(ReviewDecision(item.id, "pending", "") for item in proposal.items)
     payload = {
