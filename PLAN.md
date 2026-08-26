@@ -207,7 +207,20 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Rewrite the onboarding first-contact section from the user's point of view and introduce Evidence freezing together with its practical benefit.
 - [x] Explain the semantic AI step in STATE as useful context sorting rather than leading with an implementation-boundary slogan.
 - [x] Promote the four first-adoption trust guarantees into durable Framework Development Rules and architecture documentation.
-- [ ] Regenerate dogfood after these project-owner review corrections and prove the exact new head at zero drift.
+
+### Project-owner review correction: repository orientation and development workflow
+
+This block comes directly from the project owner's continuing PR #9 review. Its purpose is to make ContextCanon's own repository demonstrate the same progressive-disclosure and non-duplication principles expected from onboarded projects.
+
+- [x] Record this correction block in `PLAN.md` before changing repository structure or workflow documentation.
+- [ ] Make authored documentation ownership unambiguous: consolidate framework-owned documents under the Framework Development Node, keep generated `CONTEXT/references/` copies clearly identifiable as generated package material, and preserve useful wording/information while removing accidental duplicate maintenance surfaces.
+- [ ] Add lightweight in-folder orientation where it materially improves direct browsing; prefer mechanisms such as GitHub-rendered `README.md` when they explain a human-authored directory automatically, and define an equally obvious orientation mechanism for compiler-generated Context directories without pretending generated files are authored truth.
+- [ ] Add a Framework Development **Tests and CI** Topic with a short entry summary plus a compact deeper document explaining the deterministic test flow, GitHub Actions runner, generated-drift check/artifact, and how to inspect failures.
+- [ ] Add an internal development-workflow Context Node for the ContextCanon project and use it to make durable LLM-assisted development rules explicit, including PLAN-before-work and immediate checklist completion as part of each completed step.
+- [ ] Simplify and document the PR correction cadence so coherent small changes do not trigger unnecessary manual ceremony: batch related authoring/code work, let CI expose the exact drift once, regenerate dogfood once at the review boundary, then require one exact-head zero-drift run.
+- [ ] Regenerate only the dogfood outputs affected by this correction block and prove the exact new head at zero drift.
+- [ ] Re-read the moved/consolidated documentation and compare old/new content so no important or especially clear explanation was lost.
+
 - [ ] Update PR #9 description with the exact final review head, green CI run, test count and dogfood identities.
 - [ ] Project-owner review PR #9.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval.
