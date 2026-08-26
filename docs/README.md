@@ -9,6 +9,8 @@ It is deliberately small:
 
 Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory.
 
+Short `README.md` files are used at important directory boundaries throughout this repository because GitHub renders them automatically when a directory is opened. They are orientation signs, not second copies of the deeper documentation.
+
 ## Why similar files also appear under `CONTEXT/`
 
 `CONTEXT.md` and `CONTEXT/` are **generated package output**. When a Topic references an authored document, the compiler copies that exact resource into `CONTEXT/references/...` so the Official Context Package is self-contained.
