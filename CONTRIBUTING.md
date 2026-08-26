@@ -21,6 +21,8 @@ Before changing anything:
 4. Read [PLAN.md](PLAN.md) for the active implementation block.
 5. Load only the Topic material required for the task.
 
+Framework Development composes the internal [ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md). Its Rules make long LLM-assisted work recoverable: put coherent work in PLAN before editing, checkpoint completed items immediately, keep recovery-critical decisions in the repository, batch related edits before dogfood regeneration, and still require exact-head green verification before review completion.
+
 Framework changes should preserve the central rule: **everything that can be exact stays deterministic; LLMs are used only for explicit semantic interpretation steps.**
 
 ### B. Reusable Node contribution
@@ -35,8 +37,8 @@ Start with:
 
 1. the target Node's `CONTEXT.md` / `CONTEXT.src.md`, if it already exists;
 2. [ContextCanon Foundation](nodes/library/foundation/CONTEXT.md), because reusable library Nodes compose Foundation directly or transitively;
-3. [Source format](docs/source-format.md) for authoring syntax;
-4. [Official context](docs/official-context.md) and [Context composition](docs/composition.md) when inheritance or packaging matters.
+3. [Source format](nodes/internal/framework-development/docs/source-format.md) for authoring syntax;
+4. [Official context](nodes/internal/framework-development/docs/official-context.md) and [Context composition](nodes/internal/framework-development/docs/composition.md) when inheritance or packaging matters.
 
 You normally do **not** need to read `STATE.md` or the whole framework `PLAN.md` merely to contribute Node content. Read them only when your Node contribution also requires a framework capability or changes the project roadmap.
 
@@ -52,24 +54,28 @@ Do not put an experiment into `nodes/library/` merely because it uses ContextCan
 
 ## Where context is edited
 
-Three Nodes are currently dogfooded in this repository:
+Four Nodes are currently dogfooded in this repository:
 
 - Gateway: edit [CONTEXT.src.md](CONTEXT.src.md)
 - Foundation: edit [nodes/library/foundation/CONTEXT.src.md](nodes/library/foundation/CONTEXT.src.md)
+- Development Workflow: edit [nodes/internal/development-workflow/CONTEXT.src.md](nodes/internal/development-workflow/CONTEXT.src.md)
 - Framework Development: edit [nodes/internal/framework-development/CONTEXT.src.md](nodes/internal/framework-development/CONTEXT.src.md)
 
 Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, `.context/context.yaml`, or `.context/package.json` files.
+
+Technical framework documents are authored under [`nodes/internal/framework-development/docs/`](nodes/internal/framework-development/docs/). Files with similar names under a Node's generated `CONTEXT/references/` tree are compiler-materialized package copies, not another authoring surface.
 
 After changing ContextCanon source or referenced material:
 
 ```text
 python -m pip install -e .
-contextcanon build --all .
-contextcanon check --all .
 python -m unittest discover -s tests -v
+contextcanon check --all .
 ```
 
-`build` may replace compiler-owned generated package files. It must not treat arbitrary repository files as disposable output. `check` performs the same compilation in memory and reports drift.
+`check` performs compilation in memory and reports generated drift. Near a review boundary, use the reported drift to run `contextcanon build --all .` once for the coherent correction block, commit exactly that generated output, then require the exact final head to pass tests plus `contextcanon check --all .` at zero drift.
+
+`build` may replace compiler-owned generated package files. It must not treat arbitrary repository files as disposable output.
 
 ## Framework implementation map
 
@@ -131,7 +137,7 @@ Module contracts:
 - **`onboarding_review.py`** — exact proposal/review binding, human-readable evidence review, explicit acceptance checks, staged first-Node publication, and acceptance records.
 - **`cli.py`** — orchestration only.
 
-See [Compiler](docs/compiler.md), [Immutable external Sources](docs/external-sources.md), and [Onboarding](docs/onboarding.md) for details.
+See [Compiler](nodes/internal/framework-development/docs/compiler.md), [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md), [Tests and GitHub Actions CI](nodes/internal/framework-development/docs/tests-and-ci.md), and [Onboarding](docs/onboarding.md) for details.
 
 ## Design principles
 
@@ -173,7 +179,7 @@ Initial `onboard accept` also refuses to replace an existing `CONTEXT.src.md`; r
 
 The canonical authoring format remains constrained Markdown. Machine state can be boring; humans should be able to understand source and official context without a framework-specific editor.
 
-The same applies to project documentation: `STATE.md`, `PLAN.md`, README and contribution guides should lead with the human story and reveal technical detail only when useful.
+The same applies to project documentation: `STATE.md`, `PLAN.md`, README and contribution guides should lead with the human story and reveal technical detail only when useful. Important directory boundaries should have short README files when that makes direct browsing self-explanatory.
 
 ## Tests and completion
 
@@ -181,7 +187,9 @@ Every deterministic feature should normally include successful and important fai
 
 Tests must not require an external LLM or network service. Git transport tests use local temporary repositories; onboarding tests use frozen local fixtures and locally built immutable Source packages.
 
-GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. A change is not complete merely because unit tests pass: committed dogfood packages must match current compiler output.
+GitHub Actions runs the unit/repository tests and `contextcanon check --all .`. The detailed flow and failure-reading guide lives in [Tests and GitHub Actions CI](nodes/internal/framework-development/docs/tests-and-ci.md).
+
+A change is not complete merely because unit tests pass: committed dogfood packages must match current compiler output.
 
 ## Branch and merge cadence
 
@@ -196,8 +204,14 @@ A block is ready only when:
 - `STATE.md` says plainly where the project now stands;
 - `PLAN.md` says plainly what has been accepted and what comes next.
 
+The active LLM-assisted development cadence is additionally governed by the internal Development Workflow Node. In particular, coherent PLAN items are recorded before editing and completed checkboxes are updated as soon as the corresponding step is genuinely complete.
+
 ## Pull requests
 
 Keep changes conceptually focused. Explain what changed, why it belongs in deterministic truth or an explicit semantic layer above it, and which practical need or invariant it serves.
+
+GitHub Actions cancels superseded runs for the same PR/ref, so intermediate correction heads do not consume CI after a newer head exists. The exact head presented for review must still complete the full deterministic suite with zero drift.
+
+Keep the PR open until the project owner explicitly approves the reviewed result.
 
 If a new feature makes compiler semantics depend on hidden transport behavior, generated presentation, an unbound repository snapshot, unvalidated semantic output, or an LLM judgment, redesign the separation before merging.
