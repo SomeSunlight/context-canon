@@ -7,7 +7,7 @@
 >
 > This Node composes [ContextCanon Foundation](../../library/foundation/) and the internal [ContextCanon Development Workflow](../development-workflow/), then adds only the framework-development delta.
 >
-> Full format documentation: [docs/source-format.md](docs/source-format.md)
+> Full format documentation: [../../library/foundation/docs/source-format.md](../../library/foundation/docs/source-format.md)
 
 <!--
 ContextCanon authoring templates — compiler-managed help, safe to copy.
@@ -137,9 +137,9 @@ Required:
 When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:
 
 Required:
-- Resource: `docs/source-format.md`
-- Resource: `docs/official-context.md`
-- Resource: `docs/topics.md`
+- Resource: `../../library/foundation/docs/source-format.md`
+- Resource: `../../library/foundation/docs/official-context.md`
+- Resource: `../../library/foundation/docs/topics.md`
 <!-- ctx:topic id="CCI-TOPIC-FORMATS" -->
 
 ### Composition
@@ -147,7 +147,7 @@ Required:
 When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
 
 Required:
-- Resource: `docs/composition.md`
+- Resource: `../../library/foundation/docs/composition.md`
 - Resource: `docs/use-case-walkthrough.md`
 <!-- ctx:topic id="CCI-TOPIC-COMPOSITION" -->
 
@@ -156,7 +156,7 @@ Required:
 When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 Required:
-- Resource: `docs/harnesses.md`
+- Resource: `../../library/foundation/docs/harnesses.md`
 <!-- ctx:topic id="CCI-TOPIC-HARNESSES" -->
 
 ### State and planning

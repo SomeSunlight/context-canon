@@ -11,7 +11,7 @@
 > - `Why:` records human rationale.
 > - `<!-- ctx:... -->` comments contain compiler-managed stable IDs. Do not edit them manually.
 >
-> Full format documentation: [../../internal/framework-development/docs/source-format.md](../../internal/framework-development/docs/source-format.md)
+> Full format documentation: [docs/source-format.md](docs/source-format.md)
 
 ## Rules
 
@@ -84,9 +84,9 @@
 When editing ContextCanon source, IDs, generated views, package resources, or Topics:
 
 Required:
-- Resource: `../../internal/framework-development/docs/source-format.md`
-- Resource: `../../internal/framework-development/docs/official-context.md`
-- Resource: `../../internal/framework-development/docs/topics.md`
+- Resource: `docs/source-format.md`
+- Resource: `docs/official-context.md`
+- Resource: `docs/topics.md`
 <!-- ctx:topic id="CC-TOPIC-AUTHORING" -->
 
 ### Context composition
@@ -94,7 +94,7 @@ Required:
 When adding Sources or changing inherited Rules:
 
 Required:
-- Resource: `../../internal/framework-development/docs/composition.md`
+- Resource: `docs/composition.md`
 <!-- ctx:topic id="CC-TOPIC-COMPOSITION" -->
 
 ### Harness adapters
@@ -102,5 +102,5 @@ Required:
 When adding or changing a harness-specific entry file:
 
 Required:
-- Resource: `../../internal/framework-development/docs/harnesses.md`
+- Resource: `docs/harnesses.md`
 <!-- ctx:topic id="CC-TOPIC-HARNESSES" -->
