@@ -31,11 +31,19 @@ read CONTEXT.md
 
 Chat history may add useful discussion, but it must not be required to reconstruct the active plan.
 
+### Resuming after a short conversational interruption
+
+In the current single-developer workflow, a short interruption in the chat does not by itself make the repository state suspect.
+
+When the project owner returns after a short pause, explicitly says to continue, and does not report any intervening repository change, resume from the last established branch/PR state. Do not spend the next work window re-fetching the whole repository, PR and CI history merely to prove that nothing changed.
+
+Re-check the exact mutable state when there is a concrete reason: the project owner reports another edit, GitHub rejects a write because the head moved, a tool result contradicts the last checkpoint, or the next operation itself requires an exact current identity.
+
 ## 3. Work in coherent edits, not micro-cycles
 
 A full ContextCanon dogfood cycle after every tiny wording edit is unnecessary.
 
-For one coherent correction block:
+For one coherent correction block, the normal flow is now:
 
 ```text
 PLAN checkpoint
@@ -44,16 +52,26 @@ related authoring / implementation edits
       ↓
 focused deterministic tests / repository checks
       ↓
-CI exposes the exact generated drift once
+CI may expose known generated drift or another understood intermediate failure
       ↓
-regenerate exactly that dogfood output once
+present one coherent review candidate
+      ↓
+project-owner review
+      ↓
+if corrections are requested → return to coherent edits
+      ↓
+if project owner approves the large line
+      ↓
+final dogfood regeneration / final cleanup
       ↓
 exact-head CI: all tests + zero drift
       ↓
-project-owner review
+squash-merge to main
 ```
 
-If a change introduces a new deterministic behavior, test that behavior before relying on dogfood. If several related documentation/context edits all change the same generated package, allow them to settle before regenerating that package.
+If a change introduces new deterministic behavior, test that behavior before relying on dogfood. If several related documentation/context edits all change the same generated package, allow them to settle before regenerating that package.
+
+The important distinction is that **review-ready and merge-ready are different states**.
 
 ## 4. What CI proves and what it does not
 
@@ -68,20 +86,35 @@ It does **not** mean:
 
 Those remain human review questions.
 
+During project-owner review, CI may therefore still be red when the remaining failure is understood and explicitly disclosed — for example, intentionally stale generated dogfood after authored context changed. Unknown failures still need investigation; "review can happen before green" is not permission to ignore unexplained breakage.
+
 ## 5. Keep obsolete CI work cheap
 
-The GitHub Actions workflow uses concurrency cancellation. When a newer commit arrives on the same PR/ref, an older still-running test job is cancelled because it can no longer become the review head.
+The GitHub Actions workflow uses concurrency cancellation. When a newer commit arrives on the same PR/ref, an older still-running test job is cancelled because it can no longer become the merge head.
 
-This does not weaken the final gate: the exact head handed to the project owner still has to complete the full deterministic suite and `contextcanon check --all .` with zero drift.
+This makes intermediate review work cheaper. The strict requirement moves to the **merge gate**: after project-owner approval, the exact head that is intended for `main` must complete the full deterministic suite and `contextcanon check --all .` with zero drift.
 
-## 6. Review and merge boundary
+## 6. Review-ready boundary
 
-Before calling a block review-ready:
+A block can be handed to the project owner for review when:
 
-- every intended PLAN item for the block is `[x]`, except the explicit project-owner review/merge items;
-- documentation matches implemented behavior;
-- relevant generated packages were regenerated from the compiler rather than hand-edited;
-- the exact current head has green CI and zero generated drift;
-- the PR description identifies that exact head and the verification result.
+- the intended product/documentation structure is present and understandable;
+- completed PLAN items are checkpointed honestly;
+- relevant focused tests have been run far enough to expose obvious implementation/repository mistakes;
+- known CI failures or generated drift are explained rather than hidden;
+- the PR description tells the reviewer what changed, what deserves attention, and what remains technical finalization.
 
-Keep the PR open until the project owner explicitly approves it. Merge only after that approval.
+The reviewer should be able to judge the **large line** without waiting for repeated dogfood regeneration that may be invalidated by the next review correction.
+
+## 7. Merge-ready boundary
+
+After the project owner explicitly approves the reviewed result, finish the mechanical publication gate:
+
+- apply any final approved corrections;
+- regenerate only the compiler-owned dogfood output affected by the final authored state;
+- run the exact current head through the complete deterministic suite;
+- require `contextcanon check --all .` at zero generated drift;
+- inspect the final diff against `main` for accidental temporary/placeholder files;
+- update the PR description with the exact merge-ready head, test count and relevant package identities.
+
+Only then squash-merge to `main`.
