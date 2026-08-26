@@ -143,7 +143,12 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertEqual([topic.id for topic in node.local_topics], ["D-ARCH"])
         self.assertEqual(
             list(node.resources),
-            ["CONTEXT/references/docs/architecture.md", "CONTEXT/references/docs/authoring.md", "CONTEXT/references/docs/details.md"],
+            [
+                "CONTEXT/README.md",
+                "CONTEXT/references/docs/architecture.md",
+                "CONTEXT/references/docs/authoring.md",
+                "CONTEXT/references/docs/details.md",
+            ],
         )
         self.assertEqual(len(node.normalized_digest), 64)
         self.assertEqual(len(node.package_digest), 64)
