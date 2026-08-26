@@ -2,11 +2,12 @@
 
 This directory contains documentation owned by the repository-root **ContextCanon Gateway** rather than by a deeper Context Node.
 
-At present that is deliberately small:
+It is deliberately small:
 
 - [`onboarding.md`](onboarding.md) — the user-facing first-contact guide for bringing an existing project into ContextCanon.
+- [`onboarding-reference.md`](onboarding-reference.md) — a compatibility pointer for older links; the technical reference itself is owned and authored by Framework Development.
 
-Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its `docs/` directory.
+Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory.
 
 ## Why similar files also appear under `CONTEXT/`
 
