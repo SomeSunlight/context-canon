@@ -4,7 +4,9 @@ This document stress-tests ContextCanon as the implementation grows. The initial
 
 ## 1. Enter a repository through an almost-empty Gateway
 
-An agent opens the ContextCanon repository. The root Node has no Sources, no Rules, one Topic, and no `CONTEXT/` directory. Framework-development work follows that Topic to the deeper Development Node.
+An agent opens the ContextCanon repository. The root Node has no Sources and no Rules. Its compact Overview explains what ContextCanon is, while two Topics route framework-development work to the deeper Framework Development Node and onboarding work to the user-facing onboarding guide.
+
+Only the onboarding guide is materialized, so the Gateway has a small generated `CONTEXT/` directory without forcing that guide into unrelated tasks.
 
 **Finding:** a useful Context Node can be extremely small. Progressive disclosure is not an optimization added after the model; it is part of the basic shape.
 
@@ -34,9 +36,11 @@ A Teams selector-maintenance task matched a Topic requiring a selector guide and
 
 ## 6. Keep source documents natural while publishing a self-contained package
 
-A project can keep `docs/architecture.md` in its normal location while the compiler materializes it under `CONTEXT/references/...`. Local Markdown links are followed recursively.
+A project can keep an architecture document in its natural authored location while the compiler materializes it under `CONTEXT/references/...`. Local Markdown links are followed recursively and the repository-relative directory structure is preserved inside the materialized copy.
 
-**Finding:** Resource targets are materialization seeds; package closure must preserve the references needed by the published material.
+When a Node has materialized resources, the compiler also creates `CONTEXT/README.md`. It explains directly inside the generated folder that these are package copies, not another authoring surface, and why keeping them makes the Official Context Package usable independently of the original repository layout.
+
+**Finding:** Resource targets are materialization seeds; package closure must preserve the references needed by the published material. Generated package structure should also explain itself to a human who encounters it directly.
 
 ## 7. Compose independent Sources
 
@@ -155,9 +159,16 @@ A locally compiled Node and an accepted external artifact both become `CompiledP
 
 ## 18. Put several Nodes in one Git repository
 
-ContextCanon itself uses Gateway, Foundation, and Framework Development in one repository. Git transport tests also address a reusable Node below a nested `node-path`.
+ContextCanon itself currently dogfoods four Nodes in one repository:
 
-**Finding:** repository structure organizes Nodes but does not define identity or inheritance.
+- ContextCanon Gateway at the repository root;
+- ContextCanon Foundation under `nodes/library/foundation/`;
+- the internal ContextCanon Development Workflow under `nodes/internal/development-workflow/`;
+- ContextCanon Framework Development under `nodes/internal/framework-development/`.
+
+Framework Development composes both Foundation and Development Workflow explicitly. Their directory proximity under `nodes/` creates no inheritance by itself. Git transport tests also address a reusable Node below a nested `node-path`.
+
+**Finding:** repository structure organizes Nodes but does not define identity or inheritance. This matters directly for future architecture/product/subsystem hierarchies where filesystem nesting may provide orientation without creating hidden context propagation.
 
 ## 19. Move or rename a Node without changing identity
 
@@ -183,25 +194,44 @@ The external experiment produced a strong project-specific answer from a low-cos
 
 A human or agent can consistently ask: what applies (`CONTEXT.md`), what is special here (`CONTEXT.src.md`), what is reused (Sources), what deeper knowledge applies (Topics), what is the current state (`STATE.md`), and what comes next (`PLAN.md`).
 
+Short directory `README.md` files now add another deliberately lightweight orientation layer where direct filesystem/GitHub browsing otherwise leaves ownership ambiguous. Generated `CONTEXT/` directories receive their own compiler-generated README so package copies explain themselves without becoming a second authoring truth.
+
 **Finding:** standardizing project orientation is useful infrastructure independently of LLM token economics.
 
-## 23. Onboard a pre-existing larger project without manually curating it first
+## 23. Run the first large 1:1 onboarding test
 
-The next 1:1 test starts from a repository whose useful context is already scattered through `README.md`, `CONTRIBUTING.md`, architecture/development docs, configuration, and existing instructions.
+The first-adoption mechanics are now implemented on the current review branch. The next 1:1 test starts from a materially larger repository whose useful context is already scattered through `README.md`, `CONTRIBUTING.md`, architecture/development docs, configuration, existing agent instructions, and likely some stale or contradictory material.
 
-ContextCanon will provide a deterministic inventory plus a harness-neutral LLM onboarding instruction. The LLM must produce a **proposal**, not Official Context, with provenance for each extracted item and classifications such as:
+The implemented path is:
 
-- project-local Rule;
-- existing reusable Source;
-- candidate reusable/generic Node;
-- Topic/Resource;
-- state/planning;
-- ordinary documentation that should remain ordinary documentation;
-- unresolved question.
+```text
+existing Git repository
+      ↓
+contextcanon onboard prepare
+      ↓ exact frozen evidence
+contextcanon onboard instruction
+      ↓ framework-owned semantic assignment
+strong external reasoning LLM
+      ↓ one proposal.json
+contextcanon onboard validate
+      ↓ provenance-checked proposal
+contextcanon onboard review
+      ↓ human accept/reject decisions against exact evidence
+contextcanon onboard accept
+      ↓ staged compile + ownership checks + explicit publication
+canonical Context Node + normal build/check
+```
 
-A human must review and explicitly accept the proposal before canonical ContextCanon source is created.
+The LLM may propose project-local Rules, existing reusable Sources, candidate reusable Nodes, Topic/Resource material, state/planning findings, ordinary documentation, and unresolved questions. It cannot publish any of them by itself.
 
-**Finding to test:** onboarding should use LLM semantic capability to reorganize an existing project's knowledge without making the compiler semantic, and it should actively reduce duplication by identifying reusable Python/testing/writing/language conventions rather than copying every rule locally.
+The real test deliberately has **two equally important axes**:
+
+1. Is the onboarding workflow understandable, comfortable and trustworthy at realistic proposal size?
+2. Is ContextCanon itself pleasant and useful when a messy project has to be cleaned up into sensible Nodes, Sources, Rules and Topics?
+
+It must also test a question that mechanics alone cannot answer: whether ContextCanon Foundation should normally be offered/recommended as a reusable baseline during onboarding or remain fully opt-in. The repository Gateway is not a candidate baseline; it is local navigation for this repository.
+
+**Finding to test:** the trust mechanics are now explicit enough that the next uncertainty should be semantic/product ergonomics — what the strong model classifies well, what the human corrects, how naturally reusable context is recognized, and whether the resulting context actually improves later work.
 
 ## 24. Grow into broader context integration
 
@@ -215,7 +245,8 @@ The same package/progressive-disclosure mechanisms can later integrate glossarie
 2. Topic composition/materialization across Source package boundaries.
 3. Resource collision rules across composed packages.
 4. Richer nested-repository boundary cases.
-5. Reviewed LLM-assisted onboarding implementation and generic-Node catalog selection.
+5. Reviewed re-onboarding/update of a repository that already has canonical ContextCanon context.
 6. Semantic code-impact analysis from exact Context/Source diffs.
+7. Second-pass extraction of high-value context hidden in source comments/docstrings after coarse ContextCanon adoption.
 
 These are ordered implementation work, not unresolved proof-of-concept questions.
