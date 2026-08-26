@@ -66,6 +66,8 @@ A local development Source may remain unpinned:
   <!-- ctx:source id="<python-node-id>" version="1.2.0" -->
 ```
 
+This remains the simple development/dogfood case.
+
 An accepted immutable Source adds both exact digests:
 
 ```markdown
@@ -94,7 +96,9 @@ The fields mean:
 
 All three transport fields are required together. `node-path` is location only; the stable Node ID remains identity. Absolute paths, backslashes, and `..` traversal are rejected.
 
-Transport metadata is currently used for **updates of an already accepted pinned Source**. Initial selection/addition of reusable Sources will also be exercised by the reviewed project-onboarding workflow; it must not bypass review merely because a transport locator is available.
+Transport metadata is used for **updates of an already accepted pinned Source**. Initial selection/addition of reusable Sources is handled by the reviewed first-adoption onboarding path: the semantic reviewer may propose an `existing-source`, but final acceptance requires the exact immutable package identity the reviewer saw. A transport locator never bypasses review or exact package binding.
+
+The larger real-project onboarding test still needs to validate how natural this Source-selection/reuse experience feels in practice.
 
 ## Fetch, review, accept
 
@@ -196,4 +200,6 @@ A newer package is therefore a change request, not live inheritance. The determi
 
 Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, and atomic canonical-pin replacement.
 
-The implementation block is complete once its regenerated repository dogfood and final exact-head CI are synchronized. The next validation block then exercises reviewed LLM-assisted onboarding of a larger pre-existing project, including the decision whether extracted rules stay local or should use/become reusable generic Nodes.
+The current reviewed first-adoption onboarding layer can also propose an existing reusable Source from a verified catalog and bind that proposal through human review to the exact Node ID, name, version, normalized digest, and package digest that were inspected. Final onboarding acceptance requires the same immutable package again and then pins it into normal offline consumer state.
+
+What remains unvalidated is primarily product/semantic experience rather than Source trust mechanics: the larger real-project test must show whether people and a strong reasoning model naturally recognize when project guidance should stay local, reuse an existing Source, or become a candidate reusable Node.
