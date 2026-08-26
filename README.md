@@ -191,23 +191,25 @@ This repository does not explain ContextCanon from outside and then switch it on
 Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses two Topics to route only the tasks that need more depth: onboarding an existing project and developing ContextCanon itself.
 
 ```text
-                         ┌─ onboarding Topic ──> onboarding guide
+                         ┌─ Topic ──> onboarding guide
 ContextCanon Gateway ───┤
-                         └─ development Topic ─> ContextCanon Framework Development
-                                                        ▲
-                                                        │ Source
-                                               ContextCanon Foundation
+                         └─ Topic ──> ContextCanon Framework Development
+                                           ▲              ▲
+                                           │ Source       │ Source
+                              ContextCanon Foundation     │
+                                              ContextCanon Development Workflow
 ```
 
-That gives this repository three real Nodes with three different jobs:
+That gives this repository **four real Nodes with four different jobs**:
 
 - **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry. It demonstrates always-read orientation plus progressive disclosure to deeper task-specific material.
 - **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the common reusable baseline of the ContextCanon Node Library.
-- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus only the additional context needed to design and implement ContextCanon itself.
+- **[ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md)** — internal dogfood context for recoverable LLM-assisted development, proportional verification and explicit project-owner review. It remains internal until cross-project use proves it reusable.
+- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the additional context needed to design and implement ContextCanon itself.
 
-The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The Foundation arrow is **composition**: Framework Development accepts Foundation as a Source and adds a local delta.
+The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The two upward arrows are **composition**: Framework Development accepts Foundation and Development Workflow as Sources and then adds a local delta.
 
-Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway is not a library module; it is the deliberately small entry Node for this repository.
+Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway and Development Workflow are not library modules: Gateway is the deliberately small repository entry, while Development Workflow is internal dogfood until its reuse value has been proven.
 
 Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
@@ -221,6 +223,7 @@ The same structure that saves model tokens makes a project easier to inspect:
 - visible stable IDs make inherited changes explicit and traceable.
 - Topics keep the main view short while preserving a clear route to depth.
 - `STATE.md` and `PLAN.md` give a familiar route to where the project is now and where it is going.
+- short `README.md` files at important directory boundaries explain ownership when a human browses the tree directly.
 
 The framework deliberately uses constrained Markdown for human authoring and a boring machine representation underneath. Humans should not have to read YAML to understand the project; machines should not have to infer structure that can be represented exactly.
 
@@ -238,30 +241,43 @@ context-canon/
 │
 ├── CONTEXT.src.md       # ContextCanon Gateway node root = repository root
 ├── CONTEXT.md
+├── CONTEXT/             # generated Gateway package resources
 ├── AGENTS.md
 ├── .goosehints
 ├── .context/
 │
-├── nodes/               # organizes additional Nodes; not itself a Node
+├── docs/                # Gateway-owned user documentation
 │   ├── README.md
-│   ├── library/         # reusable Nodes distributed with ContextCanon
-│   │   ├── README.md
-│   │   └── foundation/  # ContextCanon Foundation node root
-│   │       ├── CONTEXT.src.md
-│   │       ├── CONTEXT.md
-│   │       ├── CONTEXT/
-│   │       └── .context/
-│   │
-│   └── internal/        # Nodes used only to build/maintain ContextCanon
-│       ├── README.md
-│       └── framework-development/   # framework-development node root
-│           ├── CONTEXT.src.md
-│           ├── CONTEXT.md
-│           ├── CONTEXT/
-│           └── .context/
+│   └── onboarding.md
 │
-└── docs/                # human-edited specification and design documentation
+└── nodes/               # organizes additional Nodes; not itself a Node
+    ├── README.md
+    ├── library/         # reusable Nodes distributed with ContextCanon
+    │   ├── README.md
+    │   └── foundation/  # ContextCanon Foundation node root
+    │       ├── README.md
+    │       ├── CONTEXT.src.md
+    │       ├── CONTEXT.md
+    │       ├── CONTEXT/
+    │       └── .context/
+    │
+    └── internal/        # Nodes used only to build/maintain ContextCanon
+        ├── README.md
+        ├── development-workflow/
+        │   ├── README.md
+        │   ├── CONTEXT.src.md
+        │   └── docs/
+        │
+        └── framework-development/
+            ├── README.md
+            ├── CONTEXT.src.md
+            ├── CONTEXT.md
+            ├── docs/    # authored technical framework documentation
+            ├── CONTEXT/ # generated materialized package copies
+            └── .context/
 ```
+
+A useful distinction when browsing is now explicit: **authored technical documents live below the Node that owns them; `CONTEXT/references/...` contains generated package copies, not a second maintenance surface.** The copies exist so an Official Context Package can live independently of the framework repository that originally authored its resources.
 
 ### Where contributors add Nodes
 
@@ -287,7 +303,7 @@ source accept → immutable accepted package + exact updated pin
 
 Normal `build` never fetches a missing Source implicitly. Git repository location, ref, and `node-path` are update transport metadata; stable Node identity plus version and exact digests define accepted state.
 
-See [Immutable external Sources](docs/external-sources.md) for the complete contract.
+See [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) for the complete contract.
 
 ## Why the package can contain more than Markdown
 
@@ -309,14 +325,15 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 If the five-second idea above is enough, the best next reads are:
 
 - [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository through reviewed explicit acceptance.
-- [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
-- [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
-- [Immutable external Sources](docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
-- [Official context](docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
-- [Topics and context integration](docs/topics.md) — how deeper context is selected.
-- [Architecture](docs/architecture.md) — deterministic compiler boundary and Node/package structure.
-- [Compiler](docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
-- [Use-case walkthrough](docs/use-case-walkthrough.md) — where the design has already been stress-tested.
+- [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
+- [Context composition](nodes/internal/framework-development/docs/composition.md) — Sources, local deltas, conflicts and updates.
+- [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
+- [Official context](nodes/internal/framework-development/docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
+- [Topics and context integration](nodes/internal/framework-development/docs/topics.md) — how deeper context is selected.
+- [Architecture](nodes/internal/framework-development/docs/architecture.md) — deterministic compiler boundary and Node/package structure.
+- [Compiler](nodes/internal/framework-development/docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
+- [Tests and GitHub Actions CI](nodes/internal/framework-development/docs/tests-and-ci.md) — the two deterministic test levels and how PR checks work.
+- [Use-case walkthrough](nodes/internal/framework-development/docs/use-case-walkthrough.md) — where the design has already been stress-tested.
 
 See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the active development block.
 
