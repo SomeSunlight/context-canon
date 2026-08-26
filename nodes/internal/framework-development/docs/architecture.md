@@ -22,7 +22,7 @@ referenced source material
        +--> compiled state ──────> deterministic Context/package diff
 ```
 
-`CONTEXT.md` is always present. `CONTEXT/` is generated only when a Node has resources to materialize. `.context/` is compiler-owned state about the Node, its package, accepted external Sources, candidates, and review state.
+`CONTEXT.md` is always present. `CONTEXT/` is generated only when a Node has resources to materialize. Every non-empty generated `CONTEXT/` also contains a compiler-generated `README.md` that explains the package boundary and why `references/` contains materialized copies rather than a second authoring surface. `.context/` is compiler-owned state about the Node, its package, accepted external Sources, candidates, and review state.
 
 The implementation mirrors that conceptual pipeline with narrow stages:
 
@@ -80,6 +80,8 @@ Across projects, ContextCanon gives humans and agents the same conceptual entry 
 
 The content remains project-specific. The orientation workflow becomes reusable.
 
+Short repository `README.md` files can complement that semantic map at important physical directory boundaries. They should answer only local browsing questions — what this directory is, what is authored here, what is generated here, and where to go deeper — rather than duplicating the actual context or technical documentation.
+
 ## Harness integration is explicit and minimal
 
 Harness adapters are compatibility edges, not competing sources of project context. A harness should have one deliberate entry path into the canonical `CONTEXT.md`; ContextCanon should not generate redundant instruction files for the same harness unless observed behavior requires them.
@@ -97,7 +99,7 @@ The root of this repository is **ContextCanon Gateway**. It has no Sources and n
 - framework-development work routes to the ContextCanon Framework Development Node;
 - onboarding an existing project routes to the user-facing onboarding guide.
 
-Only the onboarding guide is a materialized Resource, so the Gateway now has a small `CONTEXT/` directory containing that deeper document. The guide is not loaded for ordinary framework-development work merely because it exists.
+Only the onboarding guide is an authored materialized Resource. Because the Gateway has a resource, its generated `CONTEXT/` also contains the standard generated orientation `README.md`. The guide is not loaded for ordinary framework-development work merely because it exists in the package.
 
 This is not a special node type. It is an ordinary small Node demonstrating progressive disclosure: the entry tells an agent **where to go**, while the deeper material is loaded only when its Topic matches.
 
@@ -121,10 +123,12 @@ ContextCanon itself demonstrates both kinds of navigation plus composition:
 ContextCanon Gateway ───┤
                          └─ Topic ──> onboarding guide
 
-ContextCanon Foundation ── Source ──> ContextCanon Framework Development
+ContextCanon Foundation ─────────────┐
+                                     ├─ Source ──> ContextCanon Framework Development
+ContextCanon Development Workflow ───┘
 ```
 
-The Gateway does not inherit either Topic target as governance. Framework Development does inherit Foundation and adds a local delta.
+The Gateway does not inherit either Topic target as governance. Framework Development explicitly composes Foundation and the internal Development Workflow as Sources, then adds its local delta.
 
 ## Transitive composition preserves identity and state
 
@@ -150,15 +154,18 @@ Accepted external Sources pin both digests. Semantic equality therefore does not
 
 ## Natural source files, generated package files
 
-Project documentation should stay where it makes sense to authors. The compiler materializes context resources into a Node's `CONTEXT/` directory when building a self-contained published package.
+Project documentation should stay where it makes sense to authors. In this repository, technical framework documents are owned by the Framework Development Node and live directly below its authored `docs/` directory. The compiler materializes Topic resources into that Node's generated `CONTEXT/` directory when building a self-contained published package.
 
 ```text
-docs/architecture.md
-        ↓ materialize
-nodes/internal/framework-development/CONTEXT/references/docs/architecture.md
+nodes/internal/framework-development/docs/architecture.md
+        ↓ deterministic materialization
+nodes/internal/framework-development/CONTEXT/references/
+    nodes/internal/framework-development/docs/architecture.md
 ```
 
-Consumers of that Node can use the package without reconstructing the author's source layout.
+The explicit generated path preserves the resource's repository-relative origin. It may look redundant while authoring and generated package output are both visible in the same Git repository, but it is **not duplicate authoring**.
+
+A self-contained package may later be copied or accepted without the original source repository. In that situation the authored path above may not exist at all, while the materialized package copy still contains the exact reviewed resource bytes. The generated `CONTEXT/README.md` explains this boundary at the place where a human browsing the package is most likely to notice the apparent duplication.
 
 A directly referenced Markdown document can itself point to other local files. The compiler therefore computes a **materialization closure**: Topic Resource targets are seeds, and local relative links are followed recursively into the package. External links remain external.
 
@@ -186,7 +193,7 @@ Generated machine files may remain occasionally inspectable by humans, but they 
 
 ## ContextCanon's repository layout
 
-This repository dogfoods three Nodes while keeping their roles visibly separated:
+This repository currently dogfoods four Nodes while keeping navigation, reusable governance, and internal development method visibly separated:
 
 ```text
 repository root
@@ -196,11 +203,17 @@ nodes/
 ├── library/                         organizational category, not a Node
 │   └── foundation/                  ContextCanon Foundation
 └── internal/                        organizational category, not a Node
+    ├── development-workflow/        ContextCanon Development Workflow
+    │                                internal dogfood method
     └── framework-development/       ContextCanon Framework Development
-                                     -> composes Foundation + local delta
+                                     -> composes Foundation
+                                     -> composes Development Workflow
+                                     -> adds framework-local delta
 ```
 
 `library/` contains reusable Nodes distributed as part of ContextCanon. Every Node in that library must compose Foundation directly or transitively. `internal/` contains ContextCanon-specific Nodes that are not intended as reusable library modules.
+
+Development Workflow is deliberately internal while the PLAN/checkpoint/verification method is being proven on ContextCanon itself. If unrelated projects later validate the same method, it can be reviewed for promotion to the reusable library rather than being declared generic in advance.
 
 These category names are repository conventions, not required directory names for other ContextCanon projects.
 
