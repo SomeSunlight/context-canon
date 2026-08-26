@@ -175,12 +175,13 @@ A Topic may direct an agent to deeper information or even to another Context Nod
 
 ```text
 ContextCanon Gateway ──Topic──> ContextCanon Framework Development
-                                      ▲
-                                      │ Source
-                           ContextCanon Foundation
+                                      ▲              ▲
+                                      │ Source       │ Source
+                           ContextCanon Foundation   │
+                                      ContextCanon Development Workflow
 ```
 
-The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development does inherit Foundation as a Source and then adds its local delta.
+The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development composes Foundation and the internal Development Workflow as two independent Sources, then adds its local delta.
 
 Keeping these relationships distinct prevents navigation choices from silently changing which Rules a Node publishes.
 
@@ -194,14 +195,17 @@ The same principle applies to Git transport. A `node-path` says where the Node i
 
 ## ContextCanon's own Node organization
 
-This repository contains three real Nodes:
+This repository currently contains four dogfood Nodes:
 
-- the repository root is **ContextCanon Gateway**,
-- `nodes/library/foundation/` is **ContextCanon Foundation**,
-- `nodes/internal/framework-development/` is **ContextCanon Framework Development**.
+- the repository root is **ContextCanon Gateway**;
+- `nodes/library/foundation/` is **ContextCanon Foundation**, the reusable library baseline;
+- `nodes/internal/development-workflow/` is **ContextCanon Development Workflow**, internal dogfood context for recoverable LLM-assisted development;
+- `nodes/internal/framework-development/` is **ContextCanon Framework Development**, which composes Foundation plus Development Workflow and adds its framework-specific local delta.
 
 The intermediate `nodes/`, `nodes/library/`, and `nodes/internal/` directories are organizational containers, not Context Nodes.
 
 Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance Rule for unrelated projects using ContextCanon.
+
+Development Workflow is deliberately internal while its method is being dogfooded. Filesystem proximity under `nodes/internal/` does not make it apply to Framework Development; the explicit Source relationship does.
 
 Compiler 0.4 supports both local same-repository Source locations and accepted immutable external Source packages. Generic Git transport retrieves candidates from repositories containing root or nested Nodes without turning repository layout into Source identity.
