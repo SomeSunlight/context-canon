@@ -49,6 +49,24 @@ OVERRIDE IMPORTED RULE
   Why: Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth.
   <!-- ctx:rule id="CCI-005" -->
 
+### Onboarding trust
+
+- **Keep new Node identity independent from Evidence identity:** A newly onboarded Context Node must receive human-owned stable identity; when ContextCanon generates that identity it creates a fresh UUID once and stores it in review state rather than deriving it from the Evidence digest.
+  Why: Evidence identifies the exact bytes reviewed, while Node identity identifies one continuing project context; unrelated projects can contain identical evidence and must remain independent Nodes.
+  <!-- ctx:rule id="CCI-006" -->
+
+- **Bind reusable Sources to the exact reviewed package:** An onboarding proposal that reuses an existing Source must bind the Source Node ID, name, version, normalized digest, and package digest inspected by the semantic reviewer, and final acceptance must require that same immutable package.
+  Why: A different package version is a different review object even when the stable Source Node ID is unchanged; semantic review must not silently authorize content the reviewer never saw.
+  <!-- ctx:rule id="CCI-007" -->
+
+- **Do not seize project-owned paths during first adoption:** Before first onboarding publication, compile the proposed Node in staging, derive its actual compiler-owned output paths, and refuse publication when those outputs or canonical Context authoring/resource paths are already owned by the project.
+  Why: Adopting ContextCanon must never silently repurpose or overwrite an existing project file merely because its path collides with a generated ContextCanon output.
+  <!-- ctx:rule id="CCI-008" -->
+
+- **Make first-adoption publication rollback-safe:** Treat first onboarding publication as one transaction-like state change; if publication fails before the acceptance record is complete, remove only the canonical/generated state and Source packages newly created by that failed attempt while preserving pre-existing accepted state.
+  Why: An operator should be able to fix the failure and retry without first reconstructing whether the repository was left half-adopted.
+  <!-- ctx:rule id="CCI-009" -->
+
 ### Development method
 
 - **Validate vertically before hardening:** Validate ContextCanon through concrete repository use cases before hardening abstractions into compiler code.

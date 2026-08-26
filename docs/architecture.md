@@ -216,7 +216,9 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 Compiler 0.4 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, immutable external Source packages, exact Source pins, package integrity verification, cycle/version errors, transitive Rule composition, Remove/Override operations, override/removal provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, Topic targets, resource materialization, canonical semantic normalization, exact hashes, compiled Context/package diff, Git candidate retrieval, review receipts, explicit Source acceptance, generated views, adapters, drift checks, and atomic publication of Source-update state.
 
-Reviewed onboarding now adds a semantic workflow above that deterministic core. Deterministic tooling freezes repository evidence, renders the framework-owned semantic instruction, and validates a provenance-rich proposal; an LLM may classify and reorganize meaning only inside those boundaries. Human review and explicit acceptance remain the next boundary before canonical ContextCanon source may be created or replaced.
+Reviewed onboarding adds one bounded semantic step above that deterministic core. Deterministic tooling freezes repository evidence and renders the framework-owned assignment; a strong reasoning LLM may classify and reorganize meaning inside that box; deterministic validation binds the proposal back to exact evidence; the human then reviews and explicitly decides what may become durable truth.
+
+First-adoption acceptance is implemented as a separate deterministic publication boundary: ContextCanon rechecks the reviewed evidence against the live repository, verifies exact reusable Source identities, stages and compiles the proposed Node, checks output ownership, publishes only after those checks succeed, runs normal build/check, and records the accepted state.
 
 Other later deterministic capabilities include protected Rules and authorized exceptions, Topic composition/materialization across Source package boundaries, richer resource-collision policy, and broader repository-boundary diagnostics.
 
@@ -230,6 +232,36 @@ LLMs may assist with work that genuinely requires interpretation:
 - applying accepted context changes to project code.
 
 LLM judgments never replace deterministic package identity, exact diffs, structural validation, or explicit durable resolutions.
+
+## First-adoption trust invariants
+
+The onboarding implementation deliberately treats several properties as architectural trust boundaries rather than incidental implementation details.
+
+### New Node identity is not evidence identity
+
+A first onboarding review creates or receives a stable Node ID as **human-owned review state**. When ContextCanon generates that ID, it uses a fresh UUID once and stores it in `review.json`; it never derives an independent Node identity from the evidence digest.
+
+Evidence identity answers "which exact bytes were reviewed?" Node identity answers "which continuing Context Node is this?" Two unrelated projects can contain identical evidence bytes and must therefore still receive independent Node identities.
+
+### A reviewed reusable Source means one exact package
+
+When the semantic reviewer proposes an `existing-source`, the proposal is bound to the Source Node ID, name, version, normalized digest, and package digest that the reviewer actually inspected.
+
+Final acceptance requires that exact immutable package again. A newer package with the same stable Source Node ID is a different review object, not a silent substitute. Historical proposal shapes that lack exact package identity may remain readable, but they cannot cross the publication boundary as an accepted Source.
+
+### First adoption must not seize project-owned paths
+
+The staged compile determines which output paths the proposed first Node would own. Before canonical publication, ContextCanon refuses if those paths already exist in the project; a pre-existing `CONTEXT/` tree and an existing `CONTEXT.src.md` are explicit first-adoption stops.
+
+This check is based on the outputs of the actual staged Node rather than a broad filename blacklist. The purpose is ownership safety: adopting ContextCanon must not silently repurpose an existing project file merely because its name collides with a generated ContextCanon output.
+
+### First-adoption publication is rollback-safe
+
+After preflight succeeds, first adoption may install immutable Source packages, write canonical source, generate outputs, and publish the final acceptance record. Those writes form one transaction-like publication step.
+
+If that publication fails before the acceptance record is complete, ContextCanon removes the newly created canonical/generated state, partial onboarding acceptance artifacts, and Source packages installed only by that failed attempt. Pre-existing accepted Source state is preserved.
+
+The invariant is that an operator should recover by fixing the cause and retrying, not by reverse-engineering whether the repository is half-adopted.
 
 ## Versioned accepted composition
 

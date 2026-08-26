@@ -204,11 +204,30 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Regenerate the affected Gateway and Framework Development dogfood packages; Foundation remains unchanged.
 - [x] Verify the post-dogfood review candidate `22a982d67670444d09d051e4a294785e0a1b5803` with all **90 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #285.
 - [x] Inspect that review candidate against `main`: exactly 21 intended implementation/test/documentation/dogfood paths and no temporary or placeholder files.
+- [x] Rewrite the onboarding first-contact section from the user's point of view and introduce Evidence freezing together with its practical benefit.
+- [x] Explain the semantic AI step in STATE as useful context sorting rather than leading with an implementation-boundary slogan.
+- [x] Promote the four first-adoption trust guarantees into durable Framework Development Rules and architecture documentation.
+- [ ] Regenerate dogfood after these project-owner review corrections and prove the exact new head at zero drift.
 - [ ] Update PR #9 description with the exact final review head, green CI run, test count and dogfood identities.
 - [ ] Project-owner review PR #9.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
+
+This real-project exercise is deliberately **two tests at once**:
+
+1. **Onboarding process:** Is the prepare → semantic proposal → review → acceptance workflow understandable, comfortable and trustworthy on a materially larger repository?
+2. **ContextCanon in actual use:** Once the repository has been onboarded, does the resulting context structure genuinely help humans and agents, and how natural does it feel to clean up scattered project knowledge into the right Nodes, Sources, Rules and Topics?
+
+The second part matters as much as the first. Stable IDs and location-independent Node identity give us the mechanics for reorganizing context, but we have not yet tested the human experience of taking a messy real project and distributing its rules and knowledge into a clean context structure.
+
+### Baseline Source question to test explicitly
+
+**Current behavior:** first onboarding adds no Source automatically. A Source enters the new `CONTEXT.src.md` only when the semantic proposal contains an `existing-source` finding and the human accepts that exact package.
+
+The repository-root **ContextCanon Gateway is not the reusable baseline**: it is intentionally repository-local navigation for the ContextCanon project itself and contains no Sources or Rules. ContextCanon Foundation is the plausible reusable baseline because it contains the common ContextCanon rules and the Node Library already builds on it.
+
+We should not silently turn that plausibility into a framework-wide default immediately before the real test. The test should answer whether a normal onboarding should explicitly offer/recommend Foundation as the starting Source, whether projects should remain fully opt-in, or whether another baseline convention is needed.
 
 Only after the human review/acceptance path is stable and project-owner accepted:
 
@@ -216,12 +235,16 @@ Only after the human review/acceptance path is stable and project-owner accepted
 - [ ] Run the framework-generated onboarding assignment through a strong reasoning LLM with access only to frozen evidence plus explicit Source catalog.
 - [ ] Do not pre-author the structure from conversation memory.
 - [ ] Review especially the split between project-local context and reusable generic Nodes.
+- [ ] Explicitly test whether Foundation should be offered/recommended as the default reusable baseline; do not treat the repository Gateway as a reusable Source.
+- [ ] Test the practical "cleanup" operation: move/distribute real project guidance into sensible local Nodes, reusable Sources, Rules and Topics while preserving stable identities.
+- [ ] Observe whether stable IDs and location-independent Nodes are enough ergonomically when context is split, moved or consolidated, or whether authoring/move assistance is needed.
 - [ ] Record where standard documentation was stale or contradicted current implementation.
 - [ ] Correct and explicitly accept the proposal through the human workflow.
-- [ ] Observe whether review.json + rendered evidence is comfortable at real proposal size.
+- [ ] Observe whether `review.json` + rendered evidence is comfortable at real proposal size.
 - [ ] Observe whether state/planning findings need additional authoring assistance rather than deterministic prose merge.
 - [ ] Build the accepted Node and test ordinary plus Topic-specific tasks through a real harness.
-- [ ] Record where the model classified correctly, where humans corrected/rejected it, and whether Source reuse reduced duplication.
+- [ ] Evaluate whether the resulting Context actually improves ordinary work: discoverability, prompt relevance, progressive disclosure and the ability of smaller/local models to work with the right context.
+- [ ] Record where the model classified correctly, where humans corrected/rejected it, whether Source reuse reduced duplication, and which context-distribution decisions felt awkward.
 
 ## Later semantic refinement: important context hidden in source code
 

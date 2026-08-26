@@ -46,7 +46,9 @@ The next major step after project-owner review of PR #9 is therefore no longer a
 
 ## How onboarding works now
 
-Only one step requires semantic AI:
+Onboarding uses a strong reasoning AI as a **semantic sorting assistant** for one bounded step. That is useful because an existing repository rarely presents its context in clean ContextCanon categories: durable rules may be mixed with README prose, configuration, CI, temporary plans, architecture decisions, reusable conventions and contradictions.
+
+Deterministic code is very good at freezing and verifying exact bytes, but it cannot reliably decide what those scattered human artifacts *mean*. The reasoning model therefore proposes a structure: what looks like durable project governance, what belongs in a deeper Topic, what may be reusable across projects, what should remain ordinary documentation, and what is still unresolved. ContextCanon then binds that proposal back to exact evidence, and a human decides what is actually accepted.
 
 ```text
 [ContextCanon · deterministic]
@@ -56,7 +58,7 @@ freeze exact repository evidence
 generate the semantic assignment
         ↓
 [External reasoning LLM · semantic]
-classify the frozen evidence
+classify and organize the frozen evidence
 return one proposal.json
         ↓
 [ContextCanon · deterministic]
@@ -72,6 +74,8 @@ contextcanon onboard accept
 [ContextCanon · deterministic]
 preflight → stage → compile → publish → build/check
 ```
+
+The AI is therefore not there merely because ContextCanon is an AI-related tool. It performs the part that benefits from semantic comparison across messy project material; deterministic ContextCanon performs the integrity and publication mechanics around it.
 
 ContextCanon does not choose or call the model. The operator supplies the generated assignment and frozen evidence to a suitable external LLM.
 
@@ -184,9 +188,9 @@ The executable path currently passes **90 deterministic tests**. Coverage includ
 - refusal to package Markdown-linked material that was outside frozen review evidence;
 - rollback after simulated final acceptance-record publication failure.
 
-GitHub Actions run #281 (`32860230135`) passed all 90 tests on the executable hardening head. Its only failure was the expected generated-dogfood drift after documentation changes were still outstanding.
+The executable acceptance path has already reached **90 green deterministic tests**. The current project-owner review has now triggered another documentation/architecture hardening pass: the onboarding entry is being rewritten from the user's viewpoint, the semantic-AI step is being explained by its benefit, and four first-adoption trust guarantees are being promoted from implementation/status knowledge into durable Framework Development Rules and architecture documentation.
 
-The branch now needs the normal final sequence: finish documentation, regenerate only the compiler-reported dogfood drift, and run the **exact final PR head** through tests plus `contextcanon check --all .` at zero drift. Only then is PR #9 ready for project-owner review.
+After those review corrections, the branch must again follow the normal closing sequence: regenerate only compiler-reported dogfood drift, then run the **exact new PR head** through all 90 tests plus `contextcanon check --all .` at zero drift. Until that succeeds, the previous green review head is evidence about the implementation, not the final state of this corrected review candidate.
 
 ## What comes next
 
@@ -203,7 +207,9 @@ That test should exercise the whole real path:
 7. normal ContextCanon build;
 8. ordinary and Topic-specific work through a real harness.
 
-The interesting questions should now be semantic/product questions rather than missing trust mechanics: What did the LLM classify badly? Which context was stale? Which information should become shared Sources? Which state/planning findings need better authoring assistance? Was the review representation pleasant enough on a real-sized proposal?
+That real-project exercise is deliberately two tests at once. First, it tests the onboarding workflow itself: evidence selection, semantic sorting, review, correction and explicit acceptance. Second, it tests whether ContextCanon is genuinely useful after onboarding: can messy project knowledge be cleaned up into sensible local Rules, Topics and reusable Nodes without the distribution work becoming awkward? The mechanics for stable identities and location-independent Nodes exist; the human experience of reorganizing a real project has not yet been validated.
+
+The interesting questions should now be semantic/product questions rather than missing trust mechanics: What did the LLM classify badly? Which context was stale? Which information should become shared Sources? How natural did it feel to distribute guidance between Nodes, Sources, Rules and Topics? Which state/planning findings need better authoring assistance? Was the review representation pleasant enough on a real-sized proposal?
 
 ## Later refinement: context hidden in source code
 
@@ -218,14 +224,3 @@ The preferred direction is not to feed all source code into the first bootstrap.
 3. use already accepted Rules, Topics and Sources as context for interpreting comments;
 4. propose only high-value context that should be centralized;
 5. keep exact source provenance and human review;
-6. later consider explicit references from source comments back to stable ContextCanon Rule/Topic IDs where that improves traceability.
-
-This should remain a semantic refinement workflow, not a new reason to preload an entire repository.
-
-## Where to look next
-
-- [README.md](README.md) — product overview and first-user entry.
-- [docs/onboarding.md](docs/onboarding.md) — complete onboarding walkthrough and technical contract.
-- [CONTRIBUTING.md](CONTRIBUTING.md) — separate paths for framework work and reusable Node contributions.
-- [PLAN.md](PLAN.md) — completed stages and ordered next work.
-- [CONTEXT.md](CONTEXT.md) — compact official project context and task routing.
