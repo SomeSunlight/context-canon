@@ -12,7 +12,7 @@ Start with the Node's [`CONTEXT.md`](../CONTEXT.md) rather than reading this dir
 - [`composition.md`](composition.md) — Source composition, local changes, exact accepted packages, and update semantics.
 - [`harnesses.md`](harnesses.md) — harness-neutral adapter principles and current compatibility guidance.
 
-Framework-implementation architecture, compiler internals, onboarding implementation, tests/CI, project state, and ContextCanon's own development history belong to the internal [Framework Development Node](../../internal/framework-development/) instead.
+Framework-implementation architecture, compiler internals, onboarding implementation, tests/CI, project state, and ContextCanon's own development history belong to the internal [Framework Development Node](../../../internal/framework-development/) instead.
 
 ## Authoring versus generated package copies
 
