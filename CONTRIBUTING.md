@@ -37,8 +37,8 @@ Start with:
 
 1. the target Node's `CONTEXT.md` / `CONTEXT.src.md`, if it already exists;
 2. [ContextCanon Foundation](nodes/library/foundation/CONTEXT.md), because reusable library Nodes compose Foundation directly or transitively;
-3. [Source format](nodes/internal/framework-development/docs/source-format.md) for authoring syntax;
-4. [Official context](nodes/internal/framework-development/docs/official-context.md) and [Context composition](nodes/internal/framework-development/docs/composition.md) when inheritance or packaging matters.
+3. [Source format](nodes/library/foundation/docs/source-format.md) for authoring syntax;
+4. [Official context](nodes/library/foundation/docs/official-context.md) and [Context composition](nodes/library/foundation/docs/composition.md) when inheritance or packaging matters.
 
 You normally do **not** need to read `STATE.md` or the whole framework `PLAN.md` merely to contribute Node content. Read them only when your Node contribution also requires a framework capability or changes the project roadmap.
 
@@ -63,7 +63,7 @@ Four Nodes are currently dogfooded in this repository:
 
 Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, `.context/context.yaml`, or `.context/package.json` files.
 
-Technical framework documents are authored under [`nodes/internal/framework-development/docs/`](nodes/internal/framework-development/docs/). Files with similar names under a Node's generated `CONTEXT/references/` tree are compiler-materialized package copies, not another authoring surface.
+Reusable ContextCanon guidance owned by Foundation is authored under [`nodes/library/foundation/docs/`](nodes/library/foundation/docs/). Framework-specific implementation, architecture, onboarding-reference, tests/CI, and project-method documents are authored under [`nodes/internal/framework-development/docs/`](nodes/internal/framework-development/docs/). Files with similar names under a Node's generated `CONTEXT/references/` tree are compiler-materialized package copies, not another authoring surface.
 
 After changing ContextCanon source or referenced material:
 

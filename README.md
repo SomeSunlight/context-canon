@@ -258,7 +258,8 @@ context-canon/
     │       ├── README.md
     │       ├── CONTEXT.src.md
     │       ├── CONTEXT.md
-    │       ├── CONTEXT/
+    │       ├── docs/    # authored reusable Foundation documentation
+    │       ├── CONTEXT/ # generated materialized package copies
     │       └── .context/
     │
     └── internal/        # Nodes used only to build/maintain ContextCanon
@@ -272,7 +273,7 @@ context-canon/
             ├── README.md
             ├── CONTEXT.src.md
             ├── CONTEXT.md
-            ├── docs/    # authored technical framework documentation
+            ├── docs/    # authored framework-specific documentation
             ├── CONTEXT/ # generated materialized package copies
             └── .context/
 ```
@@ -326,10 +327,10 @@ If the five-second idea above is enough, the best next reads are:
 
 - [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository through reviewed explicit acceptance.
 - [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
-- [Context composition](nodes/internal/framework-development/docs/composition.md) — Sources, local deltas, conflicts and updates.
+- [Context composition](nodes/library/foundation/docs/composition.md) — Sources, local deltas, conflicts and updates.
 - [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
-- [Official context](nodes/internal/framework-development/docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
-- [Topics and context integration](nodes/internal/framework-development/docs/topics.md) — how deeper context is selected.
+- [Official context](nodes/library/foundation/docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
+- [Topics and context integration](nodes/library/foundation/docs/topics.md) — how deeper context is selected.
 - [Architecture](nodes/internal/framework-development/docs/architecture.md) — deterministic compiler boundary and Node/package structure.
 - [Compiler](nodes/internal/framework-development/docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
 - [Tests and GitHub Actions CI](nodes/internal/framework-development/docs/tests-and-ci.md) — the two deterministic test levels and how PR checks work.

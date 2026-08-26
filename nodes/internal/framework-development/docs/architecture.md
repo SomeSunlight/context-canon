@@ -88,7 +88,7 @@ Harness adapters are compatibility edges, not competing sources of project conte
 
 For the tested GitHub Copilot setup in JetBrains, ContextCanon deliberately uses generated `AGENTS.md` as that entry point. JetBrains must have **Tools → GitHub Copilot → Customizations → Use AGENTS.md file** enabled. ContextCanon does **not** generate a separate `.github/copilot-instructions.md` for this setup.
 
-This is an explicit architecture decision rather than an inference from whichever files a harness happens to notice. Revisit it only if a real Copilot/harness behavior change demonstrates that `AGENTS.md` is no longer sufficient. See [harnesses.md](harnesses.md) for current adapter details.
+This is an explicit architecture decision rather than an inference from whichever files a harness happens to notice. Revisit it only if a real Copilot/harness behavior change demonstrates that `AGENTS.md` is no longer sufficient. See the reusable [Harness adapters](../../../library/foundation/docs/harnesses.md) guidance for current adapter details.
 
 ## Gateway nodes: almost nothing can be enough
 
@@ -154,16 +154,25 @@ Accepted external Sources pin both digests. Semantic equality therefore does not
 
 ## Natural source files, generated package files
 
-Project documentation should stay where it makes sense to authors. In this repository, technical framework documents are owned by the Framework Development Node and live directly below its authored `docs/` directory. The compiler materializes Topic resources into that Node's generated `CONTEXT/` directory when building a self-contained published package.
+Project documentation should stay with the Node that owns its meaning. In this repository, reusable authoring-format, Official Context, Topic, composition, and harness guidance is owned by ContextCanon Foundation under `nodes/library/foundation/docs/`. Framework-specific architecture, compiler, onboarding, test/CI, state, and use-case documentation is owned by Framework Development under its local `docs/` directory.
+
+The compiler materializes Topic resources into the consuming Node's generated `CONTEXT/` package while preserving repository-relative origin. For example:
 
 ```text
+nodes/library/foundation/docs/official-context.md
+        ↓ Foundation build
+nodes/library/foundation/CONTEXT/references/
+    nodes/library/foundation/docs/official-context.md
+
 nodes/internal/framework-development/docs/architecture.md
-        ↓ deterministic materialization
+        ↓ Framework Development build
 nodes/internal/framework-development/CONTEXT/references/
     nodes/internal/framework-development/docs/architecture.md
 ```
 
-The explicit generated path preserves the resource's repository-relative origin. It may look redundant while authoring and generated package output are both visible in the same Git repository, but it is **not duplicate authoring**.
+A Framework Development Topic may also reference a Foundation-owned resource directly. That does not transfer authorship: the package receives a deterministic materialized copy whose path still identifies the original repository location.
+
+The explicit generated path may look redundant while authoring and generated package output are both visible in the same Git repository, but it is **not duplicate authoring**.
 
 A self-contained package may later be copied or accepted without the original source repository. In that situation the authored path above may not exist at all, while the materialized package copy still contains the exact reviewed resource bytes. The generated `CONTEXT/README.md` explains this boundary at the place where a human browsing the package is most likely to notice the apparent duplication.
 
