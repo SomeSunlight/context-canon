@@ -1,9 +1,15 @@
 # ContextCanon Development Workflow
 
-This is an **internal Context Node** for the way ContextCanon itself is developed with long-running LLM assistance and explicit project-owner review.
+This is an **internal dogfood Context Node** for how ContextCanon itself is developed across long LLM-assisted sessions and project-owner review rounds.
 
-[`CONTEXT.src.md`](CONTEXT.src.md) is the authored source. A normal ContextCanon build generates `CONTEXT.md`, which then becomes the compact Official Context entry for this Node.
+It exists so the working method is durable repository context rather than an unwritten chat convention.
 
-The Node is deliberately internal rather than immediately reusable. We first want to prove the method on ContextCanon itself. If the same workflow later works well across unrelated projects, it can be reviewed and promoted into `nodes/library/` as a reusable Node with its own versioned lifecycle.
+Start here:
 
-The deeper change cadence is documented in [`docs/change-workflow.md`](docs/change-workflow.md).
+- [`CONTEXT.src.md`](CONTEXT.src.md) — durable workflow Rules and the Topic entry point.
+- [`docs/README.md`](docs/README.md) — orientation for the authored workflow documentation.
+- [`docs/change-workflow.md`](docs/change-workflow.md) — the practical sequence from PLAN checkpoint through project-owner review to the final merge gate.
+
+The key distinction is **review-ready versus merge-ready**: the project owner may review a coherent large-line candidate while understood CI drift remains; exact-head full green CI and zero generated drift are required only after approval, before merge to `main`.
+
+This Node is intentionally under `nodes/internal/`. If repeated use in unrelated projects proves the workflow genuinely reusable, promote it through an explicit reviewed library contribution rather than assuming that now.
