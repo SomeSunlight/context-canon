@@ -208,6 +208,8 @@ Human and JSON output are projections of the same deterministic model. The JSON 
 
 A Resource target is a seed, not necessarily the entire package. Local Markdown links are followed recursively so materialized resources remain self-contained. External URLs stay external.
 
+When a Node has materialized resources, the compiler also creates `CONTEXT/README.md` as generated package orientation. That file explains the generated boundary and why `CONTEXT/references/` contains package copies rather than another authoring surface.
+
 The immutable package manifest records exact hashes and sizes of the resulting published files and rejects missing, extra, or modified package content when loaded.
 
 ## Test strategy
@@ -229,15 +231,19 @@ Package tests also cover source-repository deletion, semantic manifest tampering
 
 Repository dogfood is the second test level: CI runs `contextcanon check --all .` and fails when committed generated packages differ from current deterministic compiler output.
 
-## Deliberate limitations after 0.4
+For the repository's complete GitHub Actions flow and failure-reading guide, see [Tests and GitHub Actions CI](tests-and-ci.md).
 
-Compiler 0.4 still deliberately leaves several layers for later:
+## Current boundary after Compiler 0.4
+
+Compiler 0.4 deliberately still leaves several layers for later:
 
 - Topic composition/materialization across Source package boundaries;
 - protected Rules and authorized exceptions;
 - richer resource collision policy across composed packages;
 - semantic natural-language conflict detection;
 - LLM impact analysis above exact Source diffs;
-- reviewed onboarding of a pre-existing project and initial recommendation/addition of reusable generic Sources.
+- reviewed re-onboarding/update of a project that already has canonical ContextCanon context.
 
-The next validation block is the reviewed LLM-assisted onboarding workflow. It will inventory an existing repository, give an LLM a framework-supplied classification instruction, produce a provenance-rich proposal, require human review/acceptance, and only then create canonical ContextCanon source for deterministic compilation.
+The reviewed **first-adoption onboarding** path now sits above this deterministic compiler boundary: ContextCanon freezes exact evidence, generates the semantic assignment, validates the external reasoning model's proposal, binds a human review to exact evidence/proposal state, and publishes the first canonical Node only after explicit acceptance and deterministic staging/build checks.
+
+The next major validation is therefore not another missing onboarding trust mechanism. It is the larger real 1:1 onboarding test on a materially larger existing repository, which must test both the onboarding experience and the usefulness of the resulting ContextCanon structure in ordinary work.
