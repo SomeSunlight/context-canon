@@ -4,9 +4,10 @@ This directory contains Context Nodes used to design, implement, maintain, or op
 
 Each actual Context Node lives in its own **node-root directory**. The category directory `internal/` is only organizational and is not itself a Context Node.
 
-Current internal Node:
+Current internal Nodes:
 
-- [`framework-development/`](framework-development/) — **ContextCanon Framework Development**, the context for designing and implementing ContextCanon. It composes ContextCanon Foundation and adds only framework-development context.
+- [`framework-development/`](framework-development/) — **ContextCanon Framework Development**, the context for designing and implementing ContextCanon. It composes ContextCanon Foundation plus the internal Development Workflow and adds only framework-development context.
+- [`development-workflow/`](development-workflow/) — **ContextCanon Development Workflow**, internal dogfood rules for recoverable LLM-assisted planning, checkpointing, proportional verification, and project-owner review.
 
 Add another internal Node only when ContextCanon itself has a distinct context with its own identity and lifecycle.
 

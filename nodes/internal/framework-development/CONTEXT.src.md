@@ -5,9 +5,9 @@
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
 > `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted Context Sources.
 >
-> This Node composes [ContextCanon Foundation](../../library/foundation/) and adds only the framework-development delta.
+> This Node composes [ContextCanon Foundation](../../library/foundation/) and the internal [ContextCanon Development Workflow](../development-workflow/), then adds only the framework-development delta.
 >
-> Full format documentation: [../../../docs/source-format.md](../../../docs/source-format.md)
+> Full format documentation: [docs/source-format.md](docs/source-format.md)
 
 <!--
 ContextCanon authoring templates — compiler-managed help, safe to copy.
@@ -36,6 +36,9 @@ OVERRIDE IMPORTED RULE
 
 - [ContextCanon Foundation](../../library/foundation/) — `0.1.0-draft`
   <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.1.0-draft" -->
+
+- [ContextCanon Development Workflow](../development-workflow/) — `0.1.0-draft`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.1.0-draft" -->
 
 ## Rules
 
@@ -87,22 +90,38 @@ OVERRIDE IMPORTED RULE
 
 ### Compiler implementation
 
-When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler tests:
+When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler behavior:
 
 Required:
-- Resource: `../../../docs/compiler.md`
+- Resource: `docs/compiler.md`
 <!-- ctx:topic id="CCI-TOPIC-COMPILER" -->
+
+### Tests and CI
+
+When changing or reviewing tests, GitHub Actions, repository consistency checks, dogfood drift verification, or when diagnosing why a pull-request check failed, first understand the two test levels: deterministic behavior tests and exact generated-output drift checking.
+
+Required:
+- Resource: `docs/tests-and-ci.md`
+<!-- ctx:topic id="CCI-TOPIC-TESTS" -->
+
+### Development workflow
+
+When planning, resuming, checkpointing, testing, dogfooding, or preparing a ContextCanon development block for project-owner review:
+
+Required:
+- Context Node: `../development-workflow/`
+<!-- ctx:topic id="CCI-TOPIC-DEVELOPMENT-WORKFLOW" -->
 
 ### Framework architecture
 
 When changing the compiler boundary, package model, Node structure, deterministic/semantic split, or generated artifacts:
 
 Required:
-- Resource: `../../../docs/architecture.md`
-- Resource: `../../../docs/use-case-walkthrough.md`
+- Resource: `docs/architecture.md`
+- Resource: `docs/use-case-walkthrough.md`
 
 Optional:
-- Resource: `../../../docs/concepts.md`
+- Resource: `docs/concepts.md`
 <!-- ctx:topic id="CCI-TOPIC-ARCHITECTURE" -->
 
 ### Reviewed project onboarding
@@ -110,7 +129,7 @@ Optional:
 When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:
 
 Required:
-- Resource: `../../../docs/onboarding.md`
+- Resource: `docs/onboarding-reference.md`
 <!-- ctx:topic id="CCI-TOPIC-ONBOARDING" -->
 
 ### Source and official formats
@@ -118,9 +137,9 @@ Required:
 When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:
 
 Required:
-- Resource: `../../../docs/source-format.md`
-- Resource: `../../../docs/official-context.md`
-- Resource: `../../../docs/topics.md`
+- Resource: `docs/source-format.md`
+- Resource: `docs/official-context.md`
+- Resource: `docs/topics.md`
 <!-- ctx:topic id="CCI-TOPIC-FORMATS" -->
 
 ### Composition
@@ -128,8 +147,8 @@ Required:
 When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
 
 Required:
-- Resource: `../../../docs/composition.md`
-- Resource: `../../../docs/use-case-walkthrough.md`
+- Resource: `docs/composition.md`
+- Resource: `docs/use-case-walkthrough.md`
 <!-- ctx:topic id="CCI-TOPIC-COMPOSITION" -->
 
 ### Harness integration
@@ -137,7 +156,7 @@ Required:
 When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 Required:
-- Resource: `../../../docs/harnesses.md`
+- Resource: `docs/harnesses.md`
 <!-- ctx:topic id="CCI-TOPIC-HARNESSES" -->
 
 ### State and planning
@@ -145,5 +164,5 @@ Required:
 When deciding whether information belongs in current state, planning, governance, or history:
 
 Required:
-- Resource: `../../../docs/state.md`
+- Resource: `docs/state.md`
 <!-- ctx:topic id="CCI-TOPIC-STATE" -->
