@@ -21,14 +21,18 @@ Internal dogfood context for carrying ContextCanon development safely across lon
   Why: Long conversations and agent sessions are transient; the repository is the durable shared recovery point for humans and tools.
   <!-- ctx:rule id="CCW-003" -->
 
+- **Resume recent explicit continuation without re-proving unchanged state:** When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.
+  Why: In the current single-developer workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption.
+  <!-- ctx:rule id="CCW-007" -->
+
 ### Proportional verification
 
-- **Batch related edits before dogfood regeneration:** For one coherent correction block, make the related authoring/code changes and run deterministic tests first; use one compiler-reported drift result to regenerate dogfood once near the review boundary instead of regenerating after every micro-edit.
+- **Batch related edits before dogfood regeneration:** For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate compiler-owned dogfood after every micro-edit.
   Why: Generated-output verification is valuable, but repeating the full materialization cycle after every tiny edit adds ceremony without increasing confidence in superseded intermediate heads.
   <!-- ctx:rule id="CCW-004" -->
 
-- **Require exact-head green verification before review completion:** Before presenting a development block as review-ready or merging it, require the exact current head to pass the deterministic test suite and `contextcanon check --all .` with zero generated drift.
-  Why: Batching intermediate work is safe only when the final review object is fully reproducible and verified.
+- **Require exact-head green verification at the merge gate, not the first review gate:** A coherent development block may be presented for project-owner review while known CI failures or generated drift remain, provided that state is understood and disclosed. After explicit project-owner approval and before merging to `main`, require the exact current head to pass the deterministic test suite and `contextcanon check --all .` with zero generated drift.
+  Why: Human review should happen before spending finalization effort on a candidate that may still change, while `main` remains protected by a strict reproducibility gate.
   <!-- ctx:rule id="CCW-005" -->
 
 ### Human review gate
