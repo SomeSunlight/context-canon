@@ -28,9 +28,9 @@ Validated foundations include:
 - [x] Deterministic onboarding evidence preparation, framework-owned LLM assignment and strict proposal validation.
 - [x] First-user onboarding documentation hardening, explicit actors, strong-reasoning-model guidance and stale-evidence handling.
 
-The development cadence remains:
+The development cadence is now deliberately split between human review and mechanical merge finalization:
 
-> complete one coherent block → regenerate dogfood → make CI fully green → project-owner review → squash-merge to `main` → start the next block on a fresh branch.
+> complete one coherent block → make the large line reviewable and disclose known CI/drift → project-owner review → after approval finalize dogfood/cleanup → exact-head fully green + zero drift → squash-merge to `main` → start the next block on a fresh branch.
 
 ## Project-owner accepted: Compiler 0.4 — immutable external Sources
 
@@ -218,14 +218,19 @@ This block comes directly from the project owner's continuing PR #9 review. Its 
 - [x] Add lightweight in-folder orientation where it materially improves direct browsing, including GitHub-rendered authored-directory READMEs and compiler-generated `CONTEXT/README.md` package orientation without pretending generated files are authored truth.
 - [x] Add a Framework Development **Tests and CI** Topic with a short entry summary plus a compact deeper document explaining the deterministic test flow, GitHub Actions runner, generated-drift check/artifact, and how to inspect failures.
 - [x] Add an internal development-workflow Context Node for the ContextCanon project and use it to make durable LLM-assisted development rules explicit, including PLAN-before-work and immediate checklist completion as part of each completed step.
-- [x] Simplify and document the PR correction cadence so coherent small changes do not trigger unnecessary manual ceremony: batch related authoring/code work, let CI expose the exact drift once, regenerate dogfood once at the review boundary, then require one exact-head zero-drift run.
-- [ ] Regenerate only the dogfood outputs affected by this correction block and prove the exact new head at zero drift.
+- [x] Simplify the correction cadence into separate review-ready and merge-ready gates: coherent authored work may be reviewed with understood/disclosed CI drift; final dogfood regeneration, exact-head green CI and zero drift are required only after project-owner approval and before merge.
+- [x] Make short explicit continuations efficient in the current single-developer workflow: when the project owner says to continue after a short pause and reports no intervening repository change, resume from the last established state unless new evidence contradicts it.
 - [x] Re-read the moved/consolidated documentation and compare old/new content so no important or especially clear explanation was lost.
-- [x] Verify the completed authoring/ownership correction before dogfood: exact head `ff0372d6217e2352b671b3429d6883c3fd57ea0f` passes all **92 deterministic/repository tests** in GitHub Actions run #299; the only remaining failure is the intentionally stale generated dogfood output.
+- [x] Verify the completed ownership correction before review handoff: exact head `ff0372d6217e2352b671b3429d6883c3fd57ea0f` passed all **92 deterministic/repository tests** in GitHub Actions run #299; the only failure was intentionally stale generated dogfood output.
+- [x] Prepare PR #9 as a coherent project-owner review candidate without spending another dogfood cycle on a head that may still receive review corrections; known generated drift is explicitly disclosed.
+- [x] Update PR #9 description for this project-owner review handoff with the current scope, review order, verification evidence and known technical remainder.
 
-- [ ] Update PR #9 description with the exact final review head, green CI run, test count and dogfood identities.
 - [ ] Project-owner review PR #9.
-- [ ] Squash-merge PR #9 to `main` only after project-owner approval.
+- [ ] After explicit project-owner approval, apply any final approved corrections and regenerate only the compiler-owned dogfood outputs affected by the final authored state.
+- [ ] Prove the exact merge candidate with the complete deterministic suite and `contextcanon check --all .` at zero generated drift.
+- [ ] Inspect the final merge candidate against `main` for intended paths and accidental temporary/placeholder files.
+- [ ] Update PR #9 description with the exact merge-ready head, final test count and dogfood/package identities.
+- [ ] Squash-merge PR #9 to `main` only after project-owner approval and the green merge gate.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
 
