@@ -24,6 +24,7 @@ local:
     - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "group": "Human review gate"}
+    - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "group": "Accepted baseline"}
   changes: []
   topics:
     - {"id": "CCW-TOPIC-CHANGE-WORKFLOW", "title": "Executing a development block"}
@@ -38,6 +39,7 @@ official:
     - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
   removed_rules: []
   topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW"]
   resource_root: "CONTEXT/"
@@ -56,5 +58,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64"
-  package_digest: "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c"
+  normalized_digest: "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e"
+  package_digest: "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596"

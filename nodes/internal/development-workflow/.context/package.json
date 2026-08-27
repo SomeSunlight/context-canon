@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64",
-    "package": "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c"
+    "normalized": "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e",
+    "package": "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "ca2eaaa39d12f61a3ef227e5296bb3a202c67f89e2be8bf8e1c1a51d11a86279",
-      "size": 3443
+      "sha256": "695348b28b0d7fb6cf9eb2a4dc3c9e891d2cc4b52839f49efa895150452cc878",
+      "size": 3925
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/nodes/internal/development-workflow/docs/change-workflow.md",
-      "sha256": "be76d0ec663409f90dfaa760f7be25a6fe05848d62f9a374c57bb3503fb6e83b",
-      "size": 5965
+      "sha256": "29e460169fa1717924ec761d4b25cddb57c2849c6f3bc42298489940885b6e78",
+      "size": 8139
     }
   ],
   "node": {
@@ -98,6 +98,16 @@
       "statement": "Keep a review PR open until the project owner explicitly approves the reviewed result.",
       "title": "Do not merge without explicit project-owner approval",
       "why": "Green CI proves deterministic consistency, not that the product or documentation is acceptable to its human reviewer."
+    },
+    {
+      "group": "Accepted baseline",
+      "id": "CCW-008",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "ContextCanon Development Workflow",
+      "statement": "After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.",
+      "title": "Close the post-merge baseline checkpoint before new development",
+      "why": "The merge itself changes project truth after the merge candidate was frozen. Without an explicit post-merge checkpoint, `main` can be mechanically correct while its recovery documentation still describes the pre-merge state."
     }
   ],
   "schema": "contextcanon/package/v0",

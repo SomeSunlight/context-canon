@@ -56,6 +56,12 @@ A coherent development block may be presented for project-owner review while kno
 
 Keep a review PR open until the project owner explicitly approves the reviewed result.
 
+### Accepted baseline
+
+#### `CCW-008` — Close the post-merge baseline checkpoint before new development
+
+After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.
+
 ## Topics
 
 ### Executing a development block

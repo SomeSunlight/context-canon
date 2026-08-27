@@ -23,8 +23,8 @@ sources:
     name: "ContextCanon Development Workflow"
     version: "0.1.0-draft"
     locator: "../development-workflow/"
-    normalized_digest: "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64"
-    package_digest: "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c"
+    normalized_digest: "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e"
+    package_digest: "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -71,6 +71,7 @@ official:
     - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
@@ -161,5 +162,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "68d9d31bb6a30f19027f5eee5f5a0bf01bb848de059670c59e6eb8b6a0ab4e6d"
-  package_digest: "8262004db86de5e4f0b72b2b2d0f504ed971f78da1a074955b6014c9910380c7"
+  normalized_digest: "aa43706a25d120ed240fc19b58e78d0f64647dd30484885ff0da56fb50710123"
+  package_digest: "04733c578eb0e57f738ad3581833747ba6df7edf2984f88e2513ae5de5c24768"

@@ -67,11 +67,15 @@ final self-hosted package regeneration / final cleanup
 exact-head CI: all tests + zero drift
       ↓
 squash-merge to main
+      ↓
+post-merge accepted-baseline/state checkpoint
+      ↓
+next coherent development block
 ```
 
 If a change introduces new deterministic behavior, test that behavior before relying on generated-package consistency checks. If several related documentation/context edits all change the same generated package, allow them to settle before regenerating that package.
 
-The important distinction is that **review-ready and merge-ready are different states**.
+The important distinction is that **review-ready and merge-ready are different states**. A successful merge is then followed by one small closure step because the merge itself creates facts that a pre-merge candidate cannot truthfully record.
 
 ## 4. What CI proves and what it does not
 
@@ -118,3 +122,22 @@ After the project owner explicitly approves the reviewed result, finish the mech
 - update the PR description with the exact merge-ready head, test count and relevant package identities.
 
 Only then squash-merge to `main`.
+
+Merge-ready is not the final recovery checkpoint. The merge creates new repository facts — most obviously the actual merged state and, for a squash merge, the final `main` commit identity — that could not be checkpointed honestly on the pre-merge branch.
+
+## 8. Close the accepted baseline after merge
+
+Immediately after a reviewed PR has been merged, and **before starting the next coherent development block**, reconcile the durable status surfaces that were necessarily written from the pre-merge point of view.
+
+At minimum:
+
+1. verify the actual merged PR/state from repository metadata;
+2. mark the completed merge outcome in `PLAN.md` when the preceding block tracked it explicitly;
+3. update `STATE.md` to the newly accepted baseline and next real focus;
+4. update README project-status text and `CHANGELOG.md` when the merge made them stale or incomplete;
+5. correct the merged PR description when it still contains live wording such as "open", "not merged", or "current review candidate" — preserve the historical review evidence, but make its final outcome unambiguous;
+6. search the small set of status/navigation documents for the old branch name, PR status, or previous accepted-baseline wording so another stale surface is not silently left behind.
+
+Keep this checkpoint narrow. It records facts created by the just-completed merge; it is not a place to start the next feature or to smuggle in a new semantic decision. If repository policy requires changes through pull requests, use a small dedicated checkpoint branch/PR. Such a bookkeeping-only checkpoint closes the **preceding product block** and does not need to create a recursive new product-baseline checkpoint for itself.
+
+If the checkpoint itself discovers that a real product, architecture, or workflow change is necessary, stop treating that part as bookkeeping: record a normal coherent development block in PLAN and review it normally.
