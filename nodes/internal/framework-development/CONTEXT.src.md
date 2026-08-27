@@ -98,7 +98,7 @@ Required:
 
 ### Tests and CI
 
-When changing or reviewing tests, GitHub Actions, repository consistency checks, dogfood drift verification, or when diagnosing why a pull-request check failed, first understand the two test levels: deterministic behavior tests and exact generated-output drift checking.
+When changing or reviewing tests, GitHub Actions, repository consistency checks, self-hosted generated-package drift verification, or when diagnosing why a pull-request check failed, first understand the two test levels: deterministic behavior tests and exact generated-output drift checking.
 
 Required:
 - Resource: `docs/tests-and-ci.md`
@@ -106,7 +106,7 @@ Required:
 
 ### Development workflow
 
-When planning, resuming, checkpointing, testing, dogfooding, or preparing a ContextCanon development block for project-owner review:
+When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, or preparing a ContextCanon development block for project-owner review:
 
 Required:
 - Context Node: `../development-workflow/`
