@@ -159,7 +159,7 @@ A locally compiled Node and an accepted external artifact both become `CompiledP
 
 ## 18. Put several Nodes in one Git repository
 
-ContextCanon itself currently dogfoods four Nodes in one repository:
+ContextCanon itself currently uses four Context Nodes on its own repository:
 
 - ContextCanon Gateway at the repository root;
 - ContextCanon Foundation under `nodes/library/foundation/`;
