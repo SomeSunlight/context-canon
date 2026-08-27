@@ -246,6 +246,18 @@ The project owner approved the large-line review and asked for the mechanical co
 - [x] Update PR #9 description with the exact merge-ready head, final test count and self-hosted package identities.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval and the green merge gate.
 
+## Immediate correction after PR #9 merge: accepted-baseline checkpoint
+
+PR #9 was squash-merged to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144` after the documented green merge gate. The merge exposed a lifecycle gap: the development workflow ends at `squash-merge to main` but does not require an immediate accepted-baseline/state reconciliation. As a result, several repository status surfaces and the historical PR description still describe the pre-merge state.
+
+Purpose: restore `main` as a coherent reference point and add the smallest durable procedural guard against repeating this failure. Do not invent a larger product mechanism unless later use proves one necessary.
+
+- [x] Record the post-merge lifecycle finding and this correction block before changing other status/workflow surfaces.
+- [ ] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
+- [ ] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
+- [ ] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
+- [ ] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging.
+
 ## Next major block after PR #9: larger real 1:1 onboarding test
 
 This real-project exercise is deliberately **two tests at once**:
