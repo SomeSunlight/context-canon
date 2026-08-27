@@ -41,6 +41,12 @@ Internal self-hosted context for carrying ContextCanon development safely across
   Why: Green CI proves deterministic consistency, not that the product or documentation is acceptable to its human reviewer.
   <!-- ctx:rule id="CCW-006" -->
 
+### Accepted baseline
+
+- **Close the post-merge baseline checkpoint before new development:** After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.
+  Why: The merge itself changes project truth after the merge candidate was frozen. Without an explicit post-merge checkpoint, `main` can be mechanically correct while its recovery documentation still describes the pre-merge state.
+  <!-- ctx:rule id="CCW-008" -->
+
 ## Topics
 
 ### Executing a development block
