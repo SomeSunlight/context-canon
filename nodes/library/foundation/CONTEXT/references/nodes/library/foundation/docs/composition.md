@@ -174,13 +174,13 @@ Package installation is staged and verified before atomic publication. Review re
 A Topic may direct an agent to deeper information or even to another Context Node when a task needs it. That is progressive disclosure, not inheritance.
 
 ```text
-ContextCanon Gateway ──Topic──> ContextCanon Framework Development
-                                      ▲
-                                      │ Source
-                           ContextCanon Foundation
+Gateway ──Topic──> Deeper Context Node
+                         ▲
+                         │ Source
+                    Foundation
 ```
 
-The Gateway does not inherit Framework Development. It merely sends framework-development work there. Framework Development does inherit Foundation as a Source and then adds its local delta.
+The Gateway does not inherit the deeper Node. It merely sends relevant work there. The deeper Node composes Foundation only when that Source relationship is declared explicitly.
 
 Keeping these relationships distinct prevents navigation choices from silently changing which Rules a Node publishes.
 
@@ -191,17 +191,3 @@ Every Context Node is physically rooted in its own directory, but that directory
 This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships.
 
 The same principle applies to Git transport. A `node-path` says where the Node is found inside a retrieved repository snapshot; the stable Node ID says which Node it is.
-
-## ContextCanon's own Node organization
-
-This repository contains three real Nodes:
-
-- the repository root is **ContextCanon Gateway**,
-- `nodes/library/foundation/` is **ContextCanon Foundation**,
-- `nodes/internal/framework-development/` is **ContextCanon Framework Development**.
-
-The intermediate `nodes/`, `nodes/library/`, and `nodes/internal/` directories are organizational containers, not Context Nodes.
-
-Every reusable Node distributed in the **ContextCanon Node Library** must compose Foundation directly or transitively through another library Node. That is a policy of this library, not a required directory structure or inheritance Rule for unrelated projects using ContextCanon.
-
-Compiler 0.4 supports both local same-repository Source locations and accepted immutable external Source packages. Generic Git transport retrieves candidates from repositories containing root or nested Nodes without turning repository layout into Source identity.

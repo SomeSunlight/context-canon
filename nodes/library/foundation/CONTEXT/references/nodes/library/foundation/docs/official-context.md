@@ -15,6 +15,7 @@ Every node has a generated `CONTEXT.md` entry. Deeper package material exists on
 ```text
 CONTEXT.md              compact official entry; always present
 CONTEXT/                optional deeper compiled/package-local material
+├── README.md           generated orientation for this package directory
 ├── references/
 ├── topics/
 ├── glossaries/         future
@@ -23,7 +24,7 @@ CONTEXT/                optional deeper compiled/package-local material
 └── ...
 ```
 
-A tiny node with no materialized resources may legitimately have no `CONTEXT/` directory at all.
+A tiny node with no materialized resources may legitimately have no `CONTEXT/` directory at all. When `CONTEXT/` exists, its `README.md` is compiler-generated package orientation: it explains that the directory is generated, where to start, and why materialized `references/` are package copies rather than another authoring surface.
 
 `.context/` is different. It contains compiler bookkeeping, accepted Source snapshots, provenance, hashes, package metadata, and other machine state. Humans normally do not need it to understand what applies.
 
@@ -58,7 +59,9 @@ This is not a special bootstrap mode. It is an ordinary Context Node demonstrati
 
 Authors should not reorganize a repository merely to satisfy ContextCanon. Existing material may remain in natural locations such as `SECURITY.md`, `docs/architecture.md`, `schemas/domain.csv`, or `examples/client.py`.
 
-During compilation, ContextCanon materializes resources that belong inside a published package under `CONTEXT/` and rewrites generated links to those package-local copies.
+During compilation, ContextCanon materializes resources that belong inside a published package under `CONTEXT/references/` while preserving their repository-relative directory structure. Local Markdown links are followed recursively into the materialization closure, so links between copied resources continue to resolve from the same relative layout. External links remain external.
+
+The generated copy is intentional package content, not another maintenance surface. This lets an immutable package remain useful after it has been separated from the original authoring repository.
 
 ## What belongs in `CONTEXT.md`?
 
