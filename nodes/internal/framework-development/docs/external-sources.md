@@ -66,7 +66,7 @@ A local development Source may remain unpinned:
   <!-- ctx:source id="<python-node-id>" version="1.2.0" -->
 ```
 
-This remains the simple development/dogfood case.
+This remains the simple local-development case.
 
 An accepted immutable Source adds both exact digests:
 
