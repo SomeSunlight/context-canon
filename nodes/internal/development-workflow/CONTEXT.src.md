@@ -3,7 +3,7 @@
 
 ## Overview
 
-Internal dogfood context for carrying ContextCanon development safely across long LLM-assisted sessions, tool failures, and human review rounds. It is internal first; promote it to the reusable Node Library only after real cross-project use proves the method generic.
+Internal self-hosted context for carrying ContextCanon development safely across long LLM-assisted sessions, tool failures, and human review rounds. It is internal first; promote it to the reusable Node Library only after real cross-project use proves the method generic.
 
 ## Rules
 
@@ -27,7 +27,7 @@ Internal dogfood context for carrying ContextCanon development safely across lon
 
 ### Proportional verification
 
-- **Batch related edits before dogfood regeneration:** For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate compiler-owned dogfood after every micro-edit.
+- **Batch related edits before generated-package regeneration:** For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate ContextCanon's compiler-owned self-hosted package output after every micro-edit.
   Why: Generated-output verification is valuable, but repeating the full materialization cycle after every tiny edit adds ceremony without increasing confidence in superseded intermediate heads.
   <!-- ctx:rule id="CCW-004" -->
 
@@ -45,7 +45,7 @@ Internal dogfood context for carrying ContextCanon development safely across lon
 
 ### Executing a development block
 
-When planning, resuming, checkpointing, testing, dogfooding, or preparing a ContextCanon change block for project-owner review:
+When planning, resuming, checkpointing, testing, regenerating self-hosted Context packages, or preparing a ContextCanon change block for project-owner review:
 
 Required:
 - Resource: `docs/change-workflow.md`
