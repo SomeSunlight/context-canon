@@ -2,7 +2,7 @@
 
 This directory contains GitHub-specific repository integration rather than ContextCanon semantic truth.
 
-Current automation lives under [`workflows/`](workflows/) and runs the deterministic test/dogfood gate for pull requests and `main`.
+Current automation lives under [`workflows/`](workflows/) and runs the deterministic tests plus generated-package consistency gate for pull requests and `main`.
 
 ContextCanon itself remains GitHub-independent: compiler truth, package identity, Source composition, onboarding review state, and acceptance semantics live in the Python implementation and Context Nodes. GitHub Actions is simply the hosted CI runner used by this repository.
 
