@@ -137,7 +137,7 @@ validated review artifact
 
 ### Proposal validation
 
-- [x] Define `contextcanon/onboarding-proposal/v0` separately from Official Context.
+- [x] Define `contextcanon/onboarding-proposal/v0` separately from Proposal and Official Context.
 - [x] Require each item to carry rationale, confidence and exact evidence hash/line-range references.
 - [x] Strictly validate kinds, payloads, evidence file set, hashes/ranges and deterministic `proposal_digest`.
 - [x] Revalidate the Evidence v0 safety policy when consuming a snapshot.
@@ -256,7 +256,7 @@ Purpose: restore `main` as a coherent reference point and add the smallest durab
 - [x] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
 - [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
 - [x] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
-- [ ] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging.
+- [x] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging; exact head `74489182ce359703a00d821eeb61cc05657f0dd5` passed all **92 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #336, and the diff against `main` contained exactly 16 intended paths: 9 authored/status surfaces plus 7 deterministic generated-package updates, with no compiler or test-code changes.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
 
