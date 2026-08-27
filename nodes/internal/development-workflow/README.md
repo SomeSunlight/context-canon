@@ -1,6 +1,6 @@
 # ContextCanon Development Workflow
 
-This is an **internal dogfood Context Node** for how ContextCanon itself is developed across long LLM-assisted sessions and project-owner review rounds.
+This is an **internal self-hosted Context Node** for how ContextCanon itself is developed across long LLM-assisted sessions and project-owner review rounds.
 
 It exists so the working method is durable repository context rather than an unwritten chat convention.
 
