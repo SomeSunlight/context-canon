@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     onboard_review.add_argument(
         "--node-id",
-        help="stable Node ID; defaults deterministically from the evidence identity when the review is created",
+        help="stable Node ID; defaults to a fresh UUID when the review is created",
     )
     onboard_review.add_argument(
         "--node-version",
