@@ -10,6 +10,6 @@ Run everything with:
 python -m unittest discover -s tests -v
 ```
 
-Unit/repository tests are only one of ContextCanon's two verification levels. GitHub Actions also runs `contextcanon check --all .` to prove that committed dogfood output matches the compiler exactly.
+Unit/repository tests are only one of ContextCanon's two verification levels. GitHub Actions also runs `contextcanon check --all .` to prove that the committed generated packages for ContextCanon's own Context Nodes match the compiler exactly.
 
 For the full flow and how to inspect CI failures, read [Tests and GitHub Actions CI](../nodes/internal/framework-development/docs/tests-and-ci.md).
