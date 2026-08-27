@@ -351,10 +351,10 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-Compiler 0.4 remains the project-owner accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
+The current project-owner accepted `main` baseline is PR #9, squash-merged as `f7afe5c82942ecb9e3a04696455f8c960cc9b144`. Compiler 0.4 remains the deterministic foundation for immutable external Sources, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery.
 
-The first user-reviewed onboarding slices are also merged: ContextCanon can freeze onboarding evidence deterministically, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
+The complete first-adoption onboarding path is also accepted on `main`: ContextCanon can freeze onboarding evidence, generate the framework-owned semantic assignment, validate the external LLM's provenance-rich proposal, bind a human review to exact proposal/evidence identity, require explicit accept/reject decisions, bind reusable Sources to the exact reviewed packages, and publish the first canonical Context Node only through explicit rollback-safe acceptance.
 
-The current development block completes the remaining human side: a validated proposal can be turned into a bound human review, every finding can be inspected against exact evidence and explicitly accepted/rejected, stale reviews/evidence are rejected, accepted reusable Sources are pinned exactly, and only then can the first canonical Context Node be published and immediately compiled/checked.
+PR #9 also established the four self-hosted Context Nodes, clearer authored-versus-generated documentation ownership, local folder orientation, and the recoverable Development Workflow. That workflow now includes an explicit post-merge accepted-baseline/state checkpoint so repository status cannot silently remain at the pre-merge candidate state after `main` advances.
 
-Once this review/acceptance block passes project-owner review, the next major step is the **larger real 1:1 onboarding test on a materially larger existing repository**. That test should now expose semantic and workflow questions rather than missing trust boundaries in the onboarding mechanics.
+The next major product step is the **larger real 1:1 onboarding test on a materially larger existing repository**. That test should now expose semantic, usability and context-distribution questions rather than missing trust boundaries in the onboarding mechanics.
