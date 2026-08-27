@@ -202,7 +202,7 @@ Generated machine files may remain occasionally inspectable by humans, but they 
 
 ## ContextCanon's repository layout
 
-This repository currently dogfoods four Nodes while keeping navigation, reusable governance, and internal development method visibly separated:
+This repository currently uses ContextCanon on itself through four Nodes while keeping navigation, reusable governance, and internal development method visibly separated:
 
 ```text
 repository root
@@ -213,7 +213,7 @@ nodes/
 │   └── foundation/                  ContextCanon Foundation
 └── internal/                        organizational category, not a Node
     ├── development-workflow/        ContextCanon Development Workflow
-    │                                internal dogfood method
+    │                                internal self-hosted development method
     └── framework-development/       ContextCanon Framework Development
                                      -> composes Foundation
                                      -> composes Development Workflow
