@@ -42,9 +42,12 @@ targets:
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
+  - {"source": "CONTEXT/README.md", "published": "CONTEXT/README.md"}
+  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/docs/onboarding-reference.md"}
   - {"source": "docs/onboarding.md", "published": "CONTEXT/references/docs/onboarding.md"}
+  - {"source": "nodes/internal/framework-development/docs/onboarding-reference.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f"
-  package_digest: "9169cd68d863aa4ac69a170d52287a58f5195e75d569c7d04753364f46c949a8"
+  package_digest: "9f8022c0835b682d523299f3e60090be18ac44f83531a61e62ab67bed9b0d1c2"

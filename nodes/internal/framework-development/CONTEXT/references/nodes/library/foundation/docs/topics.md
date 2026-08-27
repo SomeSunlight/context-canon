@@ -65,7 +65,7 @@ Authors should keep information where it naturally belongs. A security document 
 
 When ContextCanon builds an Official Context Package, Resource targets are seeds for materialization under `CONTEXT/`. If a materialized Markdown file links to another local file, that target is recursively included so the package remains internally navigable. External links remain external.
 
-The generated `CONTEXT.md` links to the package-local seed resources; deeper links continue from there.
+The generated `CONTEXT.md` links to the package-local seed resources; deeper links continue from there. A generated `CONTEXT/README.md` explains the package directory itself when materialized resources exist, including why `references/` contains copies and where those copies originated.
 
 ## What decides that a Topic applies?
 
@@ -73,6 +73,6 @@ The compiler preserves Topic definitions deterministically. A harness or agent m
 
 Once a Topic applies, however, Required versus Optional and Resource versus Context Node are explicit. The harness should not invent its own meaning for those targets.
 
-## Walking Skeleton 1 limitation
+## Current limitation
 
-The first compiler composes inherited Rules but keeps Topic navigation local to the consuming Node. Topic inheritance across Source package boundaries is deliberately deferred until external package location and materialization behavior is exercised end to end.
+The compiler composes inherited Rules but keeps Topic navigation local to the consuming Node. Topic inheritance across Source package boundaries is deliberately deferred until external package location and materialization behavior is exercised end to end.

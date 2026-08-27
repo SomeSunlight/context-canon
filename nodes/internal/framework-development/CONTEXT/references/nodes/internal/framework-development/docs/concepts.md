@@ -63,15 +63,16 @@ A target may be a package resource or another Context Node entry. The latter is 
 
 This pattern may repeat recursively: summary first, then deeper links.
 
-## Gateway, Foundation and Framework Development
+## ContextCanon's four self-hosted Context Nodes
 
-This repository uses three ordinary Nodes to demonstrate three different jobs:
+This repository currently uses four ordinary ContextCanon Nodes on itself, with different jobs:
 
-- **ContextCanon Gateway** — the minimal repository-root Node; routes framework-development tasks onward.
+- **ContextCanon Gateway** — the minimal repository-root Node; routes onboarding and framework-development tasks onward.
 - **ContextCanon Foundation** — `nodes/library/foundation/`; the reusable baseline of the ContextCanon Node Library.
-- **ContextCanon Framework Development** — `nodes/internal/framework-development/`; composes Foundation and adds only the context needed to design and implement ContextCanon itself.
+- **ContextCanon Development Workflow** — `nodes/internal/development-workflow/`; internal context for recoverable LLM-assisted development and project-owner review.
+- **ContextCanon Framework Development** — `nodes/internal/framework-development/`; composes Foundation plus Development Workflow and adds only the context needed to design and implement ContextCanon itself.
 
-Gateway → Framework Development is Topic navigation. Foundation → Framework Development is Source composition.
+Gateway → Framework Development is Topic navigation. Foundation → Framework Development and Development Workflow → Framework Development are Source composition.
 
 The directories `nodes/library/` and `nodes/internal/` are organizational categories used by this repository, not framework-mandated paths.
 

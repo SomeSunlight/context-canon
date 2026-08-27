@@ -12,11 +12,11 @@
 
 ## Overview
 
-ContextCanon exists because project context tends to grow until every AI task begins by reading far more than it needs. Large advertised context windows are ceilings, not good operating targets: agent harnesses can quickly add system instructions, conversation history, tool traces, files, memories, and generated output. Hosted calls become more expensive as prompts grow, and near practical limits a harness may compact, truncate, or otherwise drop earlier material. A useful operating heuristic is therefore to keep generous headroom — often comfortably below half of the advertised maximum when practical — so the current task still has room to work.
+Most AI projects eventually build a **static context bundle** by hand or with an LLM: a prompt, instruction file, or curated summary that tries to contain everything the model should know. It works until something important is missing; then the harness searches other repository files opportunistically, and whether it finds the right detail becomes less predictable. As the project changes, copied context also drifts and every duplicate becomes another place to review and repair.
 
-ContextCanon's answer is not simply "use a bigger context window." It gives a project a small official entry, makes reusable context explicit, and uses Topics to load deeper knowledge only when a task needs it. Humans get the same map. ContextCanon grew from experimenting with filesystem-oriented progressive disclosure and not finding one existing mechanism that also combined reusable versioned context, deterministic package identity, explicit acceptance, and harness-neutral operation.
+ContextCanon keeps the always-needed overview small, puts deeper detail behind explicit Topics, and makes reusable context a versioned Source instead of another copy. Humans and agents get the same landing points, while detailed knowledge can live close to the narrow context where it belongs without bloating every higher-level overview. Rebuilds propagate accepted Source and authoring changes deterministically into the generated child packages.
 
-The aim is simple: an unfamiliar human or agent should be able to understand where they are, what applies here, and where to go next without unloading the whole ship first. A good project should provide a gangway, not require a fire hose full of documentation or a ladder tall enough to reach the deck.
+The aim is simple: an unfamiliar human or agent should be able to understand where they are, what applies here, and where to go next — without depending on a lucky repository search or maintaining the same guidance in several static prompt bundles.
 
 ## How to use this context
 

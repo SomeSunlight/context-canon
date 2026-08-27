@@ -82,7 +82,7 @@ A pinned Source may additionally describe how candidate updates are retrieved:
 
 Transport metadata is only for candidate discovery. Normal `build` never uses it.
 
-Source order is not precedence. See [Immutable external Sources](external-sources.md) for package storage and the fetch/review/accept workflow.
+Source order is not precedence. See [Context composition](composition.md) for immutable package storage and the fetch/review/accept workflow.
 
 ## Rules
 
@@ -191,4 +191,4 @@ A useful Change template is:
 
 ## Current compiler contract
 
-The executable compiler intentionally supports a narrower language than the complete future specification. See [compiler.md](compiler.md) for implemented behavior and deliberate limitations.
+The executable compiler may intentionally support a narrower language than later specification layers. Unsupported syntax must fail clearly rather than be inferred. Implementation-specific module details belong to the implementation's own development documentation; this Foundation document describes the reusable authoring contract rather than one repository's internal module status.
