@@ -2,9 +2,9 @@
 
 **Give an AI the smallest useful context now — and an exact path to the rest when it matters.**
 
-Most project context grows in one direction: more instructions, more documents, more examples, more tokens loaded before the real work even starts.
+A common response to growing project knowledge is to assemble a **static context bundle**: an instruction file, curated prompt, or LLM-written summary containing what the model is supposed to know. It works until something important is missing; then the harness searches other repository files opportunistically. As the project changes, copied context drifts and every duplicate becomes another place to review and repair.
 
-ContextCanon gives that context structure.
+ContextCanon gives that context structure instead of another static copy.
 
 ```text
                      ┌─ ordinary task ───────────────> start working
@@ -15,7 +15,9 @@ small CONTEXT.md ────┼─ logging task ──────────�
 
 **Context becomes a map, not a preload list.**
 
-A project keeps a compact entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. The result stays readable for humans, cheap for LLM context windows, and precise enough for deterministic tooling.
+A project keeps a compact dependable entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. Detailed guidance can live close to the narrow context where it belongs without bloating every higher-level overview; humans and agents still get clear landing points when they enter anywhere in the tree.
+
+Reusable Sources also give shared guidance one maintained origin. When accepted Sources or authored context change, deterministic rebuilds propagate the updated result into consuming Nodes instead of requiring the same static prompt bundle to be rewritten in several places.
 
 That matters especially for **smaller, cheaper and local models**. ContextCanon cannot turn a weak model into a strong one, but it can avoid wasting model capability on reconstructing project structure and conventions from scratch. A well-scoped task with the right project knowledge gives smaller models a better chance to do useful work reliably.
 
@@ -204,12 +206,12 @@ That gives this repository **four real Nodes with four different jobs**:
 
 - **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry. It demonstrates always-read orientation plus progressive disclosure to deeper task-specific material.
 - **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the common reusable baseline of the ContextCanon Node Library.
-- **[ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md)** — internal dogfood context for recoverable LLM-assisted development, proportional verification and explicit project-owner review. It remains internal until cross-project use proves it reusable.
+- **[ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md)** — ContextCanon's internal self-hosted context for recoverable LLM-assisted development, proportional verification and explicit project-owner review. It remains internal until cross-project use proves it reusable.
 - **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the additional context needed to design and implement ContextCanon itself.
 
 The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The two upward arrows are **composition**: Framework Development accepts Foundation and Development Workflow as Sources and then adds a local delta.
 
-Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway and Development Workflow are not library modules: Gateway is the deliberately small repository entry, while Development Workflow is internal dogfood until its reuse value has been proven.
+Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway and Development Workflow are not library modules: Gateway is the deliberately small repository entry, while Development Workflow remains internal self-hosted context until its reuse value has been proven.
 
 Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
