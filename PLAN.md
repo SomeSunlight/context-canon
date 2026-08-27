@@ -243,7 +243,7 @@ The project owner approved the large-line review and asked for the mechanical co
 - [x] After explicit project-owner approval, apply any final approved corrections and regenerate only the compiler-owned self-hosted package outputs affected by the final authored state.
 - [x] Prove the exact merge candidate with the complete deterministic suite and `contextcanon check --all .` at zero generated drift; GitHub Actions run #330 on `25afc961caab545802e98c42f1716299696816e1` passed all **92 tests** and skipped drift-artifact upload because no drift was found.
 - [x] Inspect the final merge candidate against `main` for intended paths and accidental temporary/placeholder files; the 93-path ownership/onboarding diff contains no temporary marker or placeholder path.
-- [ ] Update PR #9 description with the exact merge-ready head, final test count and self-hosted package identities.
+- [x] Update PR #9 description with the exact merge-ready head, final test count and self-hosted package identities.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval and the green merge gate.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
