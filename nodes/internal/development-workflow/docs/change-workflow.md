@@ -41,7 +41,7 @@ Re-check the exact mutable state when there is a concrete reason: the project ow
 
 ## 3. Work in coherent edits, not micro-cycles
 
-A full ContextCanon dogfood cycle after every tiny wording edit is unnecessary.
+A full regeneration cycle for ContextCanon's own generated Context packages after every tiny wording edit is unnecessary.
 
 For one coherent correction block, the normal flow is now:
 
@@ -62,14 +62,14 @@ if corrections are requested → return to coherent edits
       ↓
 if project owner approves the large line
       ↓
-final dogfood regeneration / final cleanup
+final self-hosted package regeneration / final cleanup
       ↓
 exact-head CI: all tests + zero drift
       ↓
 squash-merge to main
 ```
 
-If a change introduces new deterministic behavior, test that behavior before relying on dogfood. If several related documentation/context edits all change the same generated package, allow them to settle before regenerating that package.
+If a change introduces new deterministic behavior, test that behavior before relying on generated-package consistency checks. If several related documentation/context edits all change the same generated package, allow them to settle before regenerating that package.
 
 The important distinction is that **review-ready and merge-ready are different states**.
 
@@ -86,7 +86,7 @@ It does **not** mean:
 
 Those remain human review questions.
 
-During project-owner review, CI may therefore still be red when the remaining failure is understood and explicitly disclosed — for example, intentionally stale generated dogfood after authored context changed. Unknown failures still need investigation; "review can happen before green" is not permission to ignore unexplained breakage.
+During project-owner review, CI may therefore still be red when the remaining failure is understood and explicitly disclosed — for example, intentionally stale generated Context packages after authored context changed. Unknown failures still need investigation; "review can happen before green" is not permission to ignore unexplained breakage.
 
 ## 5. Keep obsolete CI work cheap
 
@@ -104,14 +104,14 @@ A block can be handed to the project owner for review when:
 - known CI failures or generated drift are explained rather than hidden;
 - the PR description tells the reviewer what changed, what deserves attention, and what remains technical finalization.
 
-The reviewer should be able to judge the **large line** without waiting for repeated dogfood regeneration that may be invalidated by the next review correction.
+The reviewer should be able to judge the **large line** without waiting for repeated generated-package regeneration that may be invalidated by the next review correction.
 
 ## 7. Merge-ready boundary
 
 After the project owner explicitly approves the reviewed result, finish the mechanical publication gate:
 
 - apply any final approved corrections;
-- regenerate only the compiler-owned dogfood output affected by the final authored state;
+- regenerate only the compiler-owned self-hosted package output affected by the final authored state;
 - run the exact current head through the complete deterministic suite;
 - require `contextcanon check --all .` at zero generated drift;
 - inspect the final diff against `main` for accidental temporary/placeholder files;
