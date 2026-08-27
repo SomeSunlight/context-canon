@@ -12,6 +12,7 @@ All notable ContextCanon changes will be documented here.
 - **ContextCanon Gateway** as a minimal root Node that routes framework-development work through normal Topic semantics.
 - **ContextCanon Foundation** as the common baseline of the reusable ContextCanon Node Library.
 - **ContextCanon Framework Development** as Foundation plus a local framework-development delta.
+- **ContextCanon Development Workflow** as an internal self-hosted Node for recoverable LLM-assisted development, proportional verification, explicit project-owner review, and accepted-baseline closure after merge.
 - Explicit node-root directory model: every Node has one physical root while stable identity remains independent of path.
 - Repository separation between reusable Nodes under `nodes/library/` and ContextCanon-internal Nodes under `nodes/internal/`.
 - Explicit distinction between Topic navigation and Source composition.
@@ -36,3 +37,13 @@ All notable ContextCanon changes will be documented here.
 - Onboarding evidence safety bounds for sensitive/generated paths, symlinks, UTF-8 text, 1 MiB per file, and 16 MiB total, with policy revalidation when snapshots are consumed later.
 - Strict `contextcanon/onboarding-proposal/v0` review artifacts with typed classifications, rationale/confidence, exact evidence hashes and line ranges, kind-specific payload validation, and deterministic proposal identity.
 - `contextcanon onboard validate` to verify untrusted semantic onboarding proposals against one exact frozen evidence snapshot without accepting or publishing project context.
+- `contextcanon/onboarding-review/v0` human-review state bound to exact Evidence and Proposal identities, with human-owned Node identity and explicit `pending` / `accept` / `reject` decisions.
+- `contextcanon onboard review` with a readable evidence report showing every semantic finding beside its rationale, confidence, proposed payload, exact references, and cited lines.
+- `contextcanon onboard accept` as the explicit first-adoption publication action, including live-Evidence revalidation and refusal of incomplete or stale review state.
+- Exact reusable Source-package binding across onboarding semantic review, human review, and final acceptance; accepted first-adoption Sources remain pinned and buildable offline.
+- Staged first-adoption compilation that prevents unreviewed Markdown closure, detects project-owned output collisions before publication, refuses replacement of an existing `CONTEXT.src.md`, and rolls back newly created canonical/generated state after publication failure.
+- Acceptance records binding exact evidence/proposal/review decisions, accepted Sources, and resulting Context/package identities.
+- Authored documentation ownership under the Node that owns it, with generated `CONTEXT/references/` material clearly treated as package copies rather than a second authoring surface.
+- Lightweight authored README orientation at useful repository directory boundaries and compiler-generated `CONTEXT/README.md` orientation for non-empty generated package trees.
+- Separate review-ready and merge-ready development gates: coherent human review may happen with understood generated drift, while the exact merge head must pass the full deterministic suite and zero-drift check.
+- Explicit post-merge accepted-baseline/state checkpoint so `PLAN.md`, `STATE.md`, README/CHANGELOG status, and historical PR wording are reconciled before the next coherent development block begins.
