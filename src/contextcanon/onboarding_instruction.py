@@ -91,7 +91,7 @@ def _render_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
 
     lines.extend(
         [
-            "Before proposing a new reusable Node, compare the practice with these verified immutable packages. Use `existing-source` only when a listed package materially covers the evidence-backed practice; use its exact Node ID and name. A catalog package is a candidate reusable Source, not automatic permission to accept it.",
+            "Before proposing a new reusable Node, compare the practice with these verified immutable packages. Use `existing-source` only when a listed package materially covers the evidence-backed practice; copy its exact Node ID, name, version, normalized digest, and package digest into the proposal. A catalog package is a candidate reusable Source, not automatic permission to accept it.",
             "",
         ]
     )
@@ -154,7 +154,7 @@ def _render_contract() -> list[str]:
         "9. Keep temporary status and planned work in `state-planning`; never promote temporary reality into reusable governance.",
         "10. Preserve useful README, CONTRIBUTING, architecture, operating, and explanatory documents as `ordinary-documentation` or `topic-resource` when that is their natural role. Onboarding is not destructive migration.",
         "11. Before using `candidate-reusable-node`, compare the practice against every supplied catalog package. Do not duplicate an existing reusable Source merely to rephrase it locally.",
-        "12. Use `existing-source` only for a supplied catalog entry and copy its exact `source_node_id` and `source_name`. Do not claim that the Source is accepted; this is only a proposal for later human review.",
+        "12. Use `existing-source` only for a supplied catalog entry and copy its exact `source_node_id`, `source_name`, `source_version`, `source_normalized_digest`, and `source_package_digest`. Those fields bind your semantic judgment to the exact immutable package you inspected. Do not claim that the Source is accepted; this is only a proposal for later human review.",
         "13. Actively notice likely cross-project conventions such as language/runtime choices, testing policy, coding/tooling conventions, documentation or writing guidance, user-guidance style, and security practices. Classify them as an existing Source, a candidate reusable Node, or an unresolved question rather than burying them in project-local Rules by default.",
         "14. A practice may be reusable even when this repository is the only evidence available. Mark uncertainty in confidence and rationale instead of pretending broader adoption has been proven.",
         "15. Surface contradictions and important missing decisions as `unresolved-question`. Do not silently reconcile incompatible evidence.",
@@ -188,14 +188,14 @@ def _render_contract() -> list[str]:
         "Kind-specific payloads:",
         "",
         "- `local-rule`: `{\"group\", \"statement\", \"why\"}`",
-        "- `existing-source`: `{\"source_node_id\", \"source_name\", \"reason\"}`",
+        "- `existing-source`: `{\"source_node_id\", \"source_name\", \"source_version\", \"source_normalized_digest\", \"source_package_digest\", \"reason\"}` — copy all five identity fields exactly from one catalog package",
         "- `candidate-reusable-node`: `{\"suggested_name\", \"scope\", \"why_reusable\"}`",
         "- `topic-resource`: `{\"condition\", \"resource_paths\"}` where every resource path is present in the frozen evidence",
         "- `state-planning`: `{\"destination\", \"summary\"}` with destination exactly `state` or `plan`",
         "- `ordinary-documentation`: `{\"document_paths\", \"reason\"}` where every document path is present in the frozen evidence",
         "- `unresolved-question`: `{\"question\", \"why_unresolved\"}`",
         "",
-        "Do not add fields for proposed acceptance, generated IDs, package pins, implementation edits, or confidence explanations outside the defined schema. If no evidence-backed item can be proposed safely, return an empty `items` array.",
+        "Do not add fields for proposed acceptance, generated IDs, implementation edits, or confidence explanations outside the defined schema. If no evidence-backed item can be proposed safely, return an empty `items` array.",
         "",
         "The returned JSON will be passed through deterministic `contextcanon onboard validate`. Structural validity is necessary but does not imply human acceptance.",
         "",

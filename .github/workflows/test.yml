@@ -6,6 +6,12 @@ on:
       - main
   pull_request:
 
+# Keep only the newest run for one PR/ref. A newer commit makes an older run
+# irrelevant, but the final review head still has to pass the complete workflow.
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest

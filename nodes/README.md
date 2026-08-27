@@ -11,12 +11,13 @@ nodes/
 ├── library/                   reusable Nodes distributed with ContextCanon
 │   └── foundation/            ContextCanon Foundation
 └── internal/                  Nodes used only by ContextCanon itself
-    └── framework-development/ ContextCanon Framework Development
+    ├── framework-development/ ContextCanon Framework Development
+    └── development-workflow/  ContextCanon Development Workflow
 ```
 
 The category directories `library/` and `internal/` are also not Nodes. The actual Node roots are the directories beneath them.
 
-The repository root is a third Node, **ContextCanon Gateway**. It stays at the repository root because its job is to be the minimal entry for work on this repository.
+The repository root is another Node, **ContextCanon Gateway**. It stays at the repository root because its job is to be the minimal entry for work on this repository.
 
 ## Which category should a new Node use?
 

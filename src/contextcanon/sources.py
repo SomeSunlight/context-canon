@@ -141,6 +141,20 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     return candidate
 
 
+def install_source_package(node_root: Path, package_root: Path) -> CompiledPackage:
+    """Verify and install one immutable Source package without changing pins.
+
+    This is shared by onboarding acceptance, where the canonical Source entry
+    does not exist until the reviewed onboarding source is published.
+    """
+
+    node_root = node_root.resolve()
+    package_root = package_root.resolve()
+    package = load_package(package_root)
+    _install_package(node_root, package_root, package)
+    return package
+
+
 def _source_index(compiled: CompiledNode, source_id: str) -> tuple[int, SourceRef]:
     matches = [(index, source) for index, source in enumerate(compiled.parsed.sources) if source.id == source_id]
     if not matches:

@@ -90,6 +90,7 @@ class OnboardingInstructionTests(unittest.TestCase):
             "PY-001",
             "Run the configured test suite before merging changes.",
         )
+        compiled = Compiler(package).compile(package)
 
         instruction = build_onboarding_instruction(
             prepared.snapshot_root,
@@ -99,9 +100,16 @@ class OnboardingInstructionTests(unittest.TestCase):
         self.assertEqual([item.metadata.id for item in instruction.catalog_packages], ["shared-python"])
         self.assertIn("### Shared Python Development", instruction.text)
         self.assertIn("Node ID: `shared-python`", instruction.text)
+        self.assertIn(f"Version: `{compiled.metadata.version}`", instruction.text)
+        self.assertIn(f"Normalized digest: `{compiled.normalized_digest}`", instruction.text)
+        self.assertIn(f"Package digest: `{compiled.package_digest}`", instruction.text)
         self.assertIn("`shared-python#PY-001`", instruction.text)
         self.assertIn("Run the configured test suite before merging changes.", instruction.text)
         self.assertIn("Use `existing-source` only when a listed package materially covers", instruction.text)
+        self.assertIn("source_version", instruction.text)
+        self.assertIn("source_normalized_digest", instruction.text)
+        self.assertIn("source_package_digest", instruction.text)
+        self.assertIn("bind your semantic judgment to the exact immutable package", instruction.text)
 
     def test_catalog_order_does_not_change_instruction(self):
         _, prepared = self.make_project_snapshot()

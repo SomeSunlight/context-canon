@@ -2,49 +2,44 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb",
-    "package": "faac06f6830d44c54b3d714ae6e67d0c69714ed12b447f0435e87d04bf5d3758"
+    "normalized": "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b",
+    "package": "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "42bbd9f47379db1a99e9237b82cfe47b3cf2a2de8c6aebf8776cde27333b17b8",
-      "size": 3746
+      "sha256": "4a92037ef0b197fcca8b2623b8b04efe9b3042d22cc30df3c9dba170392a651f",
+      "size": 3996
     },
     {
-      "path": "CONTEXT/references/docs/compiler.md",
-      "sha256": "fd7166a91d9e571836af1dc3a11fc4c9408a9514858ee14c1d5c6d27eeda737d",
-      "size": 12414
+      "path": "CONTEXT/README.md",
+      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
+      "size": 1433
     },
     {
-      "path": "CONTEXT/references/docs/composition.md",
-      "sha256": "5b42832109689341198c26986722412f6dee1d163e4ba9bc3e5ef4e292558af2",
-      "size": 10918
+      "path": "CONTEXT/references/nodes/library/foundation/docs/composition.md",
+      "sha256": "1767df5fad574fbb505ee31b234003d924b88ee91f3bc7f9bfc8b7491147207b",
+      "size": 9871
     },
     {
-      "path": "CONTEXT/references/docs/external-sources.md",
-      "sha256": "97cf0cb89bbc42cf71c12dcbd5e236cfaa6536a8380da0530e116697bde3d638",
-      "size": 10325
+      "path": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md",
+      "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
+      "size": 3499
     },
     {
-      "path": "CONTEXT/references/docs/harnesses.md",
-      "sha256": "b79ad8a3458869b534e977b701e67c8a80e89918f466ade6de589f21ed20f83d",
-      "size": 3509
+      "path": "CONTEXT/references/nodes/library/foundation/docs/official-context.md",
+      "sha256": "c1ea2d125a9073b120fe5a251393618afc8a5c670f79d5027b7169623167f93a",
+      "size": 5239
     },
     {
-      "path": "CONTEXT/references/docs/official-context.md",
-      "sha256": "b9f93336a09b0eafb3874e3601fcc9f8f12b0fbaac35ef12b38bc424c9f0ddf0",
-      "size": 4513
+      "path": "CONTEXT/references/nodes/library/foundation/docs/source-format.md",
+      "sha256": "9f37789ffe0fb39431e469258c627f0cbba670126518a50e0f44e9760fbd1a43",
+      "size": 8460
     },
     {
-      "path": "CONTEXT/references/docs/source-format.md",
-      "sha256": "17078a71ddbaa8bc6dfecda9903959ceb843e287c1968e533adfdc6624f1852a",
-      "size": 8267
-    },
-    {
-      "path": "CONTEXT/references/docs/topics.md",
-      "sha256": "f4e35452dc82d0376b8b9a1b569a585b75cc1ba45e68c561b93b9eb77bdcc7a7",
-      "size": 3722
+      "path": "CONTEXT/references/nodes/library/foundation/docs/topics.md",
+      "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
+      "size": 3889
     }
   ],
   "node": {
@@ -177,17 +172,17 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../../docs/official-context.md"
+          "locator": "docs/official-context.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../../docs/source-format.md"
+          "locator": "docs/source-format.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../../docs/topics.md"
+          "locator": "docs/topics.md"
         }
       ],
       "title": "Context authoring"
@@ -201,7 +196,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../../docs/composition.md"
+          "locator": "docs/composition.md"
         }
       ],
       "title": "Context composition"
@@ -215,7 +210,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../../docs/harnesses.md"
+          "locator": "docs/harnesses.md"
         }
       ],
       "title": "Harness adapters"

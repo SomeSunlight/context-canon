@@ -10,6 +10,12 @@ from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_proposal import load_onboarding_proposal
+from .onboarding_review import (
+    accept_onboarding_review,
+    create_or_load_onboarding_review,
+    parse_source_locator_arguments,
+    render_onboarding_review,
+)
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -51,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     diff_parser.add_argument("after", help="Node root for the later repository snapshot")
     diff_parser.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
 
-    onboard_parser = sub.add_parser("onboard", help="prepare and validate reviewed project onboarding state")
+    onboard_parser = sub.add_parser("onboard", help="prepare, review, and accept project onboarding state")
     onboard_sub = onboard_parser.add_subparsers(dest="onboard_command", required=True)
     onboard_prepare = onboard_sub.add_parser(
         "prepare",
@@ -85,6 +91,54 @@ def main(argv: list[str] | None = None) -> int:
     )
     onboard_validate.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
     onboard_validate.add_argument("proposal", help="JSON onboarding proposal to validate")
+
+    onboard_review = onboard_sub.add_parser(
+        "review",
+        help="create or inspect the human decision file for one validated onboarding proposal",
+    )
+    onboard_review.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_review.add_argument("proposal", help="validated JSON onboarding proposal")
+    onboard_review.add_argument("review", help="human-editable onboarding review JSON file")
+    onboard_review.add_argument(
+        "--node-name",
+        help="canonical Node name; required only when creating a new review file",
+    )
+    onboard_review.add_argument(
+        "--node-id",
+        help="stable Node ID; defaults to a fresh UUID when the review is created",
+    )
+    onboard_review.add_argument(
+        "--node-version",
+        default="0.1.0",
+        help="initial canonical Node version when creating the review (default: 0.1.0)",
+    )
+
+    onboard_accept = onboard_sub.add_parser(
+        "accept",
+        help="explicitly publish a fully reviewed proposal as the first canonical Context Node",
+    )
+    onboard_accept.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_accept.add_argument("proposal", help="validated JSON onboarding proposal")
+    onboard_accept.add_argument("review", help="completed onboarding review JSON file")
+    onboard_accept.add_argument(
+        "--project",
+        default=".",
+        help="target Git repository root (default: current directory)",
+    )
+    onboard_accept.add_argument(
+        "--catalog-package",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="exact immutable Source package for an accepted existing-source finding; may be repeated",
+    )
+    onboard_accept.add_argument(
+        "--source-locator",
+        action="append",
+        default=[],
+        metavar="ITEM_ID=LOCATOR",
+        help="visible Source provenance/update locator for an accepted existing-source finding; may be repeated",
+    )
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
@@ -138,10 +192,41 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 0
 
-            proposal = load_onboarding_proposal(Path(args.proposal), Path(args.snapshot))
-            print(f"validated onboarding proposal {proposal.proposal_digest}")
-            print(f"Evidence snapshot: {proposal.evidence_digest}")
-            print(f"Proposal items: {len(proposal.items)}")
+            if args.onboard_command == "validate":
+                proposal = load_onboarding_proposal(Path(args.proposal), Path(args.snapshot))
+                print(f"validated onboarding proposal {proposal.proposal_digest}")
+                print(f"Evidence snapshot: {proposal.evidence_digest}")
+                print(f"Proposal items: {len(proposal.items)}")
+                return 0
+
+            if args.onboard_command == "review":
+                review, proposal, snapshot, created = create_or_load_onboarding_review(
+                    Path(args.snapshot),
+                    Path(args.proposal),
+                    Path(args.review),
+                    node_name=args.node_name,
+                    node_id=args.node_id,
+                    node_version=args.node_version,
+                )
+                verb = "created" if created else "loaded"
+                print(f"{verb} onboarding review {review.review_digest}")
+                print(f"Review file: {Path(args.review)}")
+                print(render_onboarding_review(review, proposal, snapshot), end="")
+                return 0
+
+            acceptance = accept_onboarding_review(
+                Path(args.snapshot),
+                Path(args.proposal),
+                Path(args.review),
+                Path(args.project),
+                catalog_package_roots=(Path(path) for path in args.catalog_package),
+                source_locators=parse_source_locator_arguments(args.source_locator),
+            )
+            print(f"accepted onboarding review {acceptance.acceptance_path.parent.name}")
+            print(f"Canonical source: {acceptance.source_path}")
+            print(f"Normalized digest: {acceptance.normalized_digest}")
+            print(f"Package digest: {acceptance.package_digest}")
+            print(f"Acceptance record: {acceptance.acceptance_path}")
             return 0
 
         if args.command == "source":

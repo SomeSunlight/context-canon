@@ -17,20 +17,32 @@ sources:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    normalized_digest: "761124d82bc8918a4b042d4431732490b5932e17925d7fd33f12af432cce79eb"
-    package_digest: "faac06f6830d44c54b3d714ae6e67d0c69714ed12b447f0435e87d04bf5d3758"
+    normalized_digest: "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b"
+    package_digest: "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
+  - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
+    name: "ContextCanon Development Workflow"
+    version: "0.1.0-draft"
+    locator: "../development-workflow/"
+    normalized_digest: "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64"
+    package_digest: "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
   rules:
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "group": "Compiler architecture"}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "group": "Compiler architecture"}
+    - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "group": "Onboarding trust"}
+    - {"id": "CCI-007", "title": "Bind reusable Sources to the exact reviewed package", "group": "Onboarding trust"}
+    - {"id": "CCI-008", "title": "Do not seize project-owned paths during first adoption", "group": "Onboarding trust"}
+    - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "group": "Onboarding trust"}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "group": "Development method"}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "group": "Development method"}
     - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "group": "Node library"}
   changes: []
   topics:
     - {"id": "CCI-TOPIC-COMPILER", "title": "Compiler implementation"}
+    - {"id": "CCI-TOPIC-TESTS", "title": "Tests and CI"}
+    - {"id": "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "title": "Development workflow"}
     - {"id": "CCI-TOPIC-ARCHITECTURE", "title": "Framework architecture"}
     - {"id": "CCI-TOPIC-ONBOARDING", "title": "Reviewed project onboarding"}
     - {"id": "CCI-TOPIC-FORMATS", "title": "Source and official formats"}
@@ -52,13 +64,24 @@ official:
     - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
     - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
     - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
+    - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-007", "title": "Bind reusable Sources to the exact reviewed package", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-008", "title": "Do not seize project-owned paths during first adoption", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -66,68 +89,77 @@ targets:
   - topic: "CCI-TOPIC-COMPILER"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/compiler.md"
+    locator: "docs/compiler.md"
+  - topic: "CCI-TOPIC-TESTS"
+    intent: "required"
+    kind: "resource"
+    locator: "docs/tests-and-ci.md"
+  - topic: "CCI-TOPIC-DEVELOPMENT-WORKFLOW"
+    intent: "required"
+    kind: "context-node"
+    locator: "../development-workflow/"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/architecture.md"
+    locator: "docs/architecture.md"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/use-case-walkthrough.md"
+    locator: "docs/use-case-walkthrough.md"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "optional"
     kind: "resource"
-    locator: "../../../docs/concepts.md"
+    locator: "docs/concepts.md"
   - topic: "CCI-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/onboarding.md"
+    locator: "docs/onboarding-reference.md"
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/source-format.md"
+    locator: "../../library/foundation/docs/source-format.md"
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/official-context.md"
+    locator: "../../library/foundation/docs/official-context.md"
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/topics.md"
+    locator: "../../library/foundation/docs/topics.md"
   - topic: "CCI-TOPIC-COMPOSITION"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/composition.md"
+    locator: "../../library/foundation/docs/composition.md"
   - topic: "CCI-TOPIC-COMPOSITION"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/use-case-walkthrough.md"
+    locator: "docs/use-case-walkthrough.md"
   - topic: "CCI-TOPIC-HARNESSES"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/harnesses.md"
+    locator: "../../library/foundation/docs/harnesses.md"
   - topic: "CCI-TOPIC-STATE"
     intent: "required"
     kind: "resource"
-    locator: "../../../docs/state.md"
+    locator: "docs/state.md"
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "../../../docs/architecture.md", "published": "CONTEXT/references/docs/architecture.md"}
-  - {"source": "../../../docs/compiler.md", "published": "CONTEXT/references/docs/compiler.md"}
-  - {"source": "../../../docs/composition.md", "published": "CONTEXT/references/docs/composition.md"}
-  - {"source": "../../../docs/concepts.md", "published": "CONTEXT/references/docs/concepts.md"}
-  - {"source": "../../../docs/external-sources.md", "published": "CONTEXT/references/docs/external-sources.md"}
-  - {"source": "../../../docs/harnesses.md", "published": "CONTEXT/references/docs/harnesses.md"}
-  - {"source": "../../../docs/official-context.md", "published": "CONTEXT/references/docs/official-context.md"}
-  - {"source": "../../../docs/onboarding.md", "published": "CONTEXT/references/docs/onboarding.md"}
-  - {"source": "../../../docs/source-format.md", "published": "CONTEXT/references/docs/source-format.md"}
-  - {"source": "../../../docs/state.md", "published": "CONTEXT/references/docs/state.md"}
-  - {"source": "../../../docs/topics.md", "published": "CONTEXT/references/docs/topics.md"}
-  - {"source": "../../../docs/use-case-walkthrough.md", "published": "CONTEXT/references/docs/use-case-walkthrough.md"}
+  - {"source": "../../../CONTEXT/README.md", "published": "CONTEXT/README.md"}
+  - {"source": "docs/architecture.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/architecture.md"}
+  - {"source": "docs/compiler.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/compiler.md"}
+  - {"source": "docs/concepts.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/concepts.md"}
+  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "docs/state.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/state.md"}
+  - {"source": "docs/tests-and-ci.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md"}
+  - {"source": "docs/use-case-walkthrough.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md"}
+  - {"source": "../../library/foundation/docs/composition.md", "published": "CONTEXT/references/nodes/library/foundation/docs/composition.md"}
+  - {"source": "../../library/foundation/docs/harnesses.md", "published": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md"}
+  - {"source": "../../library/foundation/docs/official-context.md", "published": "CONTEXT/references/nodes/library/foundation/docs/official-context.md"}
+  - {"source": "../../library/foundation/docs/source-format.md", "published": "CONTEXT/references/nodes/library/foundation/docs/source-format.md"}
+  - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/nodes/library/foundation/docs/topics.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "c6970cc92c8e5af3de2d507c87f34850180033d530cd4bff0987c5a2312bc798"
-  package_digest: "fc24097f607aaf77d96542598a547709c620886697bc576aa241e65a41f5f9d6"
+  normalized_digest: "68d9d31bb6a30f19027f5eee5f5a0bf01bb848de059670c59e6eb8b6a0ab4e6d"
+  package_digest: "8262004db86de5e4f0b72b2b2d0f504ed971f78da1a074955b6014c9910380c7"

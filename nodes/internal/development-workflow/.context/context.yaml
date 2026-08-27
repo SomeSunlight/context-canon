@@ -1,0 +1,60 @@
+# GENERATED ContextCanon machine state for ContextCanon Development Workflow.
+# Humans normally read CONTEXT.src.md or CONTEXT.md instead.
+# This file is deterministic compiler output and must not be edited manually.
+
+schema: contextcanon/v0
+compiler_version: "0.4.0"
+
+# Stable logical Node identity. The filesystem path is deliberately not identity.
+node:
+  id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
+  name: "ContextCanon Development Workflow"
+  version: "0.1.0-draft"
+
+# Accepted Source packages used by this build. Both digests are exact pins.
+sources: []
+
+# Elements authored in this Node's CONTEXT.src.md.
+local:
+  rules:
+    - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "group": "Recoverable planning"}
+    - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "group": "Recoverable planning"}
+    - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "group": "Recoverable planning"}
+    - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "group": "Recoverable planning"}
+    - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "group": "Proportional verification"}
+    - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
+    - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "group": "Human review gate"}
+  changes: []
+  topics:
+    - {"id": "CCW-TOPIC-CHANGE-WORKFLOW", "title": "Executing a development block"}
+
+# Compiled Rule view with provenance plus the local Topic index.
+official:
+  rules:
+    - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": true, "overrides": []}
+  removed_rules: []
+  topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW"]
+  resource_root: "CONTEXT/"
+
+# Topic edges are explicit: kind is resource or context-node; intent is required or optional.
+targets:
+  - topic: "CCW-TOPIC-CHANGE-WORKFLOW"
+    intent: "required"
+    kind: "resource"
+    locator: "docs/change-workflow.md"
+
+# Mapping from author-facing Resource paths to generated package paths.
+resources:
+  - {"source": "../../../CONTEXT/README.md", "published": "CONTEXT/README.md"}
+  - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/nodes/internal/development-workflow/docs/change-workflow.md"}
+
+# Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
+package:
+  normalized_digest: "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64"
+  package_digest: "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c"

@@ -2,9 +2,9 @@
 
 **Give an AI the smallest useful context now — and an exact path to the rest when it matters.**
 
-Most project context grows in one direction: more instructions, more documents, more examples, more tokens loaded before the real work even starts.
+A common response to growing project knowledge is to assemble a **static context bundle**: an instruction file, curated prompt, or LLM-written summary containing what the model is supposed to know. It works until something important is missing; then the harness searches other repository files opportunistically. As the project changes, copied context drifts and every duplicate becomes another place to review and repair.
 
-ContextCanon gives that context structure.
+ContextCanon gives that context structure instead of another static copy.
 
 ```text
                      ┌─ ordinary task ───────────────> start working
@@ -15,7 +15,9 @@ small CONTEXT.md ────┼─ logging task ──────────�
 
 **Context becomes a map, not a preload list.**
 
-A project keeps a compact entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. The result stays readable for humans, cheap for LLM context windows, and precise enough for deterministic tooling.
+A project keeps a compact dependable entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. Detailed guidance can live close to the narrow context where it belongs without bloating every higher-level overview; humans and agents still get clear landing points when they enter anywhere in the tree.
+
+Reusable Sources also give shared guidance one maintained origin. When accepted Sources or authored context change, deterministic rebuilds propagate the updated result into consuming Nodes instead of requiring the same static prompt bundle to be rewritten in several places.
 
 That matters especially for **smaller, cheaper and local models**. ContextCanon cannot turn a weak model into a strong one, but it can avoid wasting model capability on reconstructing project structure and conventions from scratch. A well-scoped task with the right project knowledge gives smaller models a better chance to do useful work reliably.
 
@@ -27,9 +29,9 @@ The answers still belong to each project, but the way they are organized no long
 
 ## Bring an existing project aboard
 
-The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewable proposal**.
+The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewed, explicitly accepted Context Node**.
 
-The key idea is that ContextCanon does **not** hand the whole process to an LLM. Deterministic software handles the parts that can be exact; one external LLM step handles the semantic classification that ordinary code cannot reliably perform.
+The key idea is that ContextCanon does **not** hand the whole process to an LLM. Deterministic software handles the parts that can be exact; one external LLM step handles the semantic classification that ordinary code cannot reliably perform; a human decides which interpretation becomes durable project truth.
 
 ```text
 [ContextCanon · deterministic] freeze exact project evidence
@@ -40,7 +42,11 @@ The key idea is that ContextCanon does **not** hand the whole process to an LLM.
         ↓
 [ContextCanon · deterministic] validate JSON structure and provenance
         ↓
-[Human · explicit decision] review and accept/correct
+[ContextCanon + Human] inspect each finding and its exact evidence
+        ↓
+[Human · explicit decision] accept/reject every finding
+        ↓
+[ContextCanon · deterministic] stage, compile, publish, build and check
         ↓
 canonical ContextCanon context
 ```
@@ -71,7 +77,9 @@ That snapshot is the exact material the later semantic review is allowed to use.
 Next generate the framework-owned instruction for that exact snapshot:
 
 ```text
-contextcanon onboard instruction .context/onboarding/<evidence-digest> > onboarding-instruction.md
+contextcanon onboard instruction \
+  .context/onboarding/<evidence-digest> \
+  > onboarding-instruction.md
 ```
 
 Now leave deterministic ContextCanon for one step: give `onboarding-instruction.md` to a **strong reasoning LLM or agent harness** together with read access to the snapshot's `evidence/` directory. The model must return exactly one `contextcanon/onboarding-proposal/v0` JSON object; save it as `proposal.json`.
@@ -85,13 +93,45 @@ It is also told not to assume README or other conventional files are automatical
 Back inside deterministic ContextCanon, validate the model's JSON:
 
 ```text
-contextcanon onboard validate .context/onboarding/<evidence-digest> proposal.json
+contextcanon onboard validate \
+  .context/onboarding/<evidence-digest> \
+  proposal.json
 ```
 
 Validation checks the proposal structure and every claimed evidence reference against the frozen snapshot. A valid proposal is still **only a proposal**.
 
+Create the human review file and readable evidence report:
+
+```text
+contextcanon onboard review \
+  .context/onboarding/<evidence-digest> \
+  proposal.json \
+  review.json \
+  --node-name "My Project"
+```
+
+Every proposal item starts `pending`. The report shows each classification next to its rationale, confidence, exact evidence references, and cited evidence lines. The human changes every decision in `review.json` to `accept` or `reject`.
+
+If a semantic finding itself is wrong, correct `proposal.json`, validate it again, and create a fresh review. The changed proposal digest invalidates the old review rather than letting old decisions drift onto new meaning.
+
+When no decisions remain pending, explicitly publish the reviewed result:
+
+```text
+contextcanon onboard accept \
+  .context/onboarding/<evidence-digest> \
+  proposal.json \
+  review.json \
+  --project .
+```
+
+Before publication, ContextCanon rechecks the frozen evidence against the current repository, stages the proposed canonical Node, compiles it, and refuses any Topic/resource closure that would pull in unreviewed files. It then creates the first `CONTEXT.src.md`, runs the normal build, and verifies zero generated drift.
+
+Accepted reusable-Node candidates and unresolved questions remain separate reviewed follow-up artifacts; they are not silently flattened into local Rules. Good ordinary documentation stays ordinary documentation.
+
+For an accepted reusable Source, final acceptance requires the exact immutable package again plus an explicit visible Source locator. The resulting Source is pinned by version and both digests and remains buildable offline.
+
 > [!NOTE]
-> The current implementation deliberately stops at this validated review artifact. The next development block adds the human review and explicit acceptance step that may create or replace canonical `CONTEXT.src.md`. Until that exists, do not treat a valid proposal as accepted project truth.
+> Initial onboarding acceptance deliberately refuses to overwrite an existing `CONTEXT.src.md`. Re-onboarding an already adopted project needs a separate reviewed merge/update contract; first-adoption semantics are not used as a destructive replacement shortcut.
 
 For the complete user walkthrough first, and the technical details only after that, read **[Onboard an existing project](docs/onboarding.md)**.
 
@@ -153,23 +193,25 @@ This repository does not explain ContextCanon from outside and then switch it on
 Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses two Topics to route only the tasks that need more depth: onboarding an existing project and developing ContextCanon itself.
 
 ```text
-                         ┌─ onboarding Topic ──> onboarding guide
+                         ┌─ Topic ──> onboarding guide
 ContextCanon Gateway ───┤
-                         └─ development Topic ─> ContextCanon Framework Development
-                                                        ▲
-                                                        │ Source
-                                               ContextCanon Foundation
+                         └─ Topic ──> ContextCanon Framework Development
+                                           ▲              ▲
+                                           │ Source       │ Source
+                              ContextCanon Foundation     │
+                                              ContextCanon Development Workflow
 ```
 
-That gives this repository three real Nodes with three different jobs:
+That gives this repository **four real Nodes with four different jobs**:
 
 - **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry. It demonstrates always-read orientation plus progressive disclosure to deeper task-specific material.
 - **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the common reusable baseline of the ContextCanon Node Library.
-- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus only the additional context needed to design and implement ContextCanon itself.
+- **[ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md)** — ContextCanon's internal self-hosted context for recoverable LLM-assisted development, proportional verification and explicit project-owner review. It remains internal until cross-project use proves it reusable.
+- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the additional context needed to design and implement ContextCanon itself.
 
-The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The Foundation arrow is **composition**: Framework Development accepts Foundation as a Source and adds a local delta.
+The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The two upward arrows are **composition**: Framework Development accepts Foundation and Development Workflow as Sources and then adds a local delta.
 
-Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway is not a library module; it is the deliberately small entry Node for this repository.
+Every reusable Node that ships in the **ContextCanon Node Library** will compose Foundation directly or transitively. The Gateway and Development Workflow are not library modules: Gateway is the deliberately small repository entry, while Development Workflow remains internal self-hosted context until its reuse value has been proven.
 
 Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
@@ -183,6 +225,7 @@ The same structure that saves model tokens makes a project easier to inspect:
 - visible stable IDs make inherited changes explicit and traceable.
 - Topics keep the main view short while preserving a clear route to depth.
 - `STATE.md` and `PLAN.md` give a familiar route to where the project is now and where it is going.
+- short `README.md` files at important directory boundaries explain ownership when a human browses the tree directly.
 
 The framework deliberately uses constrained Markdown for human authoring and a boring machine representation underneath. Humans should not have to read YAML to understand the project; machines should not have to infer structure that can be represented exactly.
 
@@ -200,30 +243,44 @@ context-canon/
 │
 ├── CONTEXT.src.md       # ContextCanon Gateway node root = repository root
 ├── CONTEXT.md
+├── CONTEXT/             # generated Gateway package resources
 ├── AGENTS.md
 ├── .goosehints
 ├── .context/
 │
-├── nodes/               # organizes additional Nodes; not itself a Node
+├── docs/                # Gateway-owned user documentation
 │   ├── README.md
-│   ├── library/         # reusable Nodes distributed with ContextCanon
-│   │   ├── README.md
-│   │   └── foundation/  # ContextCanon Foundation node root
-│   │       ├── CONTEXT.src.md
-│   │       ├── CONTEXT.md
-│   │       ├── CONTEXT/
-│   │       └── .context/
-│   │
-│   └── internal/        # Nodes used only to build/maintain ContextCanon
-│       ├── README.md
-│       └── framework-development/   # framework-development node root
-│           ├── CONTEXT.src.md
-│           ├── CONTEXT.md
-│           ├── CONTEXT/
-│           └── .context/
+│   └── onboarding.md
 │
-└── docs/                # human-edited specification and design documentation
+└── nodes/               # organizes additional Nodes; not itself a Node
+    ├── README.md
+    ├── library/         # reusable Nodes distributed with ContextCanon
+    │   ├── README.md
+    │   └── foundation/  # ContextCanon Foundation node root
+    │       ├── README.md
+    │       ├── CONTEXT.src.md
+    │       ├── CONTEXT.md
+    │       ├── docs/    # authored reusable Foundation documentation
+    │       ├── CONTEXT/ # generated materialized package copies
+    │       └── .context/
+    │
+    └── internal/        # Nodes used only to build/maintain ContextCanon
+        ├── README.md
+        ├── development-workflow/
+        │   ├── README.md
+        │   ├── CONTEXT.src.md
+        │   └── docs/
+        │
+        └── framework-development/
+            ├── README.md
+            ├── CONTEXT.src.md
+            ├── CONTEXT.md
+            ├── docs/    # authored framework-specific documentation
+            ├── CONTEXT/ # generated materialized package copies
+            └── .context/
 ```
+
+A useful distinction when browsing is now explicit: **authored technical documents live below the Node that owns them; `CONTEXT/references/...` contains generated package copies, not a second maintenance surface.** The copies exist so an Official Context Package can live independently of the framework repository that originally authored its resources.
 
 ### Where contributors add Nodes
 
@@ -249,7 +306,7 @@ source accept → immutable accepted package + exact updated pin
 
 Normal `build` never fetches a missing Source implicitly. Git repository location, ref, and `node-path` are update transport metadata; stable Node identity plus version and exact digests define accepted state.
 
-See [Immutable external Sources](docs/external-sources.md) for the complete contract.
+See [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) for the complete contract.
 
 ## Why the package can contain more than Markdown
 
@@ -270,15 +327,16 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
-- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository to a validated proposal.
-- [Concepts](docs/concepts.md) — Node roots, vocabulary and mental model.
-- [Context composition](docs/composition.md) — Sources, local deltas, conflicts and updates.
-- [Immutable external Sources](docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
-- [Official context](docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
-- [Topics and context integration](docs/topics.md) — how deeper context is selected.
-- [Architecture](docs/architecture.md) — deterministic compiler boundary and Node/package structure.
-- [Compiler](docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
-- [Use-case walkthrough](docs/use-case-walkthrough.md) — where the design has already been stress-tested.
+- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough from an existing repository through reviewed explicit acceptance.
+- [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
+- [Context composition](nodes/library/foundation/docs/composition.md) — Sources, local deltas, conflicts and updates.
+- [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
+- [Official context](nodes/library/foundation/docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
+- [Topics and context integration](nodes/library/foundation/docs/topics.md) — how deeper context is selected.
+- [Architecture](nodes/internal/framework-development/docs/architecture.md) — deterministic compiler boundary and Node/package structure.
+- [Compiler](nodes/internal/framework-development/docs/compiler.md) — implementation pipeline, invariants, tests, and deterministic capabilities.
+- [Tests and GitHub Actions CI](nodes/internal/framework-development/docs/tests-and-ci.md) — the two deterministic test levels and how PR checks work.
+- [Use-case walkthrough](nodes/internal/framework-development/docs/use-case-walkthrough.md) — where the design has already been stress-tested.
 
 See [STATE.md](STATE.md) for the current project situation and [PLAN.md](PLAN.md) for the active development block.
 
@@ -293,10 +351,10 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-Compiler 0.4 is the accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
+Compiler 0.4 remains the project-owner accepted deterministic baseline. It provides immutable external Source packages, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery guarantees in addition to the earlier compiler, diff, composition, and progressive-disclosure capabilities.
 
-The first user-reviewed onboarding slice is now merged. ContextCanon can deterministically freeze onboarding evidence, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
+The first user-reviewed onboarding slices are also merged: ContextCanon can freeze onboarding evidence deterministically, render the framework-owned semantic assignment, accept an explicitly supplied reusable Source catalog, and validate the external LLM's provenance-rich JSON proposal.
 
-The active next block is **human review and explicit onboarding acceptance**: make a validated proposal easy to inspect and correct, require an explicit human decision before canonical ContextCanon source is created or replaced, and immediately run the normal deterministic compiler after acceptance.
+The current development block completes the remaining human side: a validated proposal can be turned into a bound human review, every finding can be inspected against exact evidence and explicitly accepted/rejected, stale reviews/evidence are rejected, accepted reusable Sources are pinned exactly, and only then can the first canonical Context Node be published and immediately compiled/checked.
 
-Only after that review/acceptance path is stable will ContextCanon run the larger 1:1 onboarding test on a materially larger existing repository. That test should expose remaining semantic and workflow questions rather than reopen already solved compiler/package mechanics.
+Once this review/acceptance block passes project-owner review, the next major step is the **larger real 1:1 onboarding test on a materially larger existing repository**. That test should now expose semantic and workflow questions rather than missing trust boundaries in the onboarding mechanics.

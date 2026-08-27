@@ -88,9 +88,9 @@ When editing ContextCanon source, IDs, generated views, package resources, or To
 
 **Required**
 
-- [`CONTEXT/references/docs/source-format.md`](CONTEXT/references/docs/source-format.md)
-- [`CONTEXT/references/docs/official-context.md`](CONTEXT/references/docs/official-context.md)
-- [`CONTEXT/references/docs/topics.md`](CONTEXT/references/docs/topics.md)
+- [`CONTEXT/references/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/nodes/library/foundation/docs/topics.md`](CONTEXT/references/nodes/library/foundation/docs/topics.md)
 
 ### Context composition
 
@@ -98,7 +98,7 @@ When adding Sources or changing inherited Rules:
 
 **Required**
 
-- [`CONTEXT/references/docs/composition.md`](CONTEXT/references/docs/composition.md)
+- [`CONTEXT/references/nodes/library/foundation/docs/composition.md`](CONTEXT/references/nodes/library/foundation/docs/composition.md)
 
 ### Harness adapters
 
@@ -106,4 +106,4 @@ When adding or changing a harness-specific entry file:
 
 **Required**
 
-- [`CONTEXT/references/docs/harnesses.md`](CONTEXT/references/docs/harnesses.md)
+- [`CONTEXT/references/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/nodes/library/foundation/docs/harnesses.md)
