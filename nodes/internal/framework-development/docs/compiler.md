@@ -229,7 +229,7 @@ Git transport tests use a real **local** temporary Git repository, including a C
 
 Package tests also cover source-repository deletion, semantic manifest tampering, human-package tampering, missing resources, invalid paths, and preservation of presentation order.
 
-Repository dogfood is the second test level: CI runs `contextcanon check --all .` and fails when committed generated packages differ from current deterministic compiler output.
+Repository self-hosting is the second test level: CI runs `contextcanon check --all .` and fails when the committed generated packages for ContextCanon's own Nodes differ from current deterministic compiler output.
 
 For the repository's complete GitHub Actions flow and failure-reading guide, see [Tests and GitHub Actions CI](tests-and-ci.md).
 
