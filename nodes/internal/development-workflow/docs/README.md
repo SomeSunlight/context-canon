@@ -2,7 +2,7 @@
 
 This directory contains the **human-authored explanation** of ContextCanon's internal development workflow.
 
-Read [`change-workflow.md`](change-workflow.md) when you need the practical sequence for planning, resuming, reviewing, finalizing dogfood, and merging a coherent change block.
+Read [`change-workflow.md`](change-workflow.md) when you need the practical sequence for planning, resuming, reviewing, finalizing ContextCanon's self-hosted generated packages, and merging a coherent change block.
 
 The durable normative Rules live one level up in [`../CONTEXT.src.md`](../CONTEXT.src.md). This directory explains how to apply them in practice; it is not a second rule source.
 
