@@ -253,9 +253,9 @@ PR #9 was squash-merged to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144` 
 Purpose: restore `main` as a coherent reference point and add the smallest durable procedural guard against repeating this failure. Do not invent a larger product mechanism unless later use proves one necessary.
 
 - [x] Record the post-merge lifecycle finding and this correction block before changing other status/workflow surfaces.
-- [ ] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
+- [x] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
 - [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
-- [ ] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
+- [x] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
 - [ ] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
