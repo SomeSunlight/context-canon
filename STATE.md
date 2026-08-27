@@ -1,32 +1,29 @@
 # Current State
 
-ContextCanon has a stable deterministic core and, on PR #9, a complete first-adoption path from an existing Git repository to **human-reviewed, explicitly accepted canonical Context**.
+ContextCanon has a stable deterministic core and, since PR #9, a complete first-adoption path from an existing Git repository to **human-reviewed, explicitly accepted canonical Context**.
 
-The project-owner accepted baseline on `main` remains PR #8:
+The current project-owner accepted product baseline on `main` is PR #9, squash-merged as:
 
-`1280aa9e763f0588fa06b3e1e98b9e7b52302cdd`
+`f7afe5c82942ecb9e3a04696455f8c960cc9b144`
 
-PR #9 / branch `agent/onboarding-review-acceptance` is the current review candidate. It adds the human review/acceptance mechanics and a substantial self-hosting cleanup around repository orientation, documentation ownership and recoverable LLM-assisted development.
+PR #9 added the human review/acceptance mechanics and a substantial self-hosting cleanup around repository orientation, documentation ownership and recoverable LLM-assisted development.
 
 > [!NOTE]
 > **Project-owner accepted** means the project owner, acting as ContextCanon's first user/reviewer, reviewed a development stage and approved it as the new project baseline. That is different from `contextcanon source accept` and `contextcanon onboard accept`, where a human operator explicitly accepts one concrete reviewed artifact.
 
 ## Where we are now
 
-The current branch is in the final project-owner wording pass before the mechanical merge gate.
+PR #9 is accepted and merged. Its exact merge candidate completed the mechanical gate with **92/92 deterministic/repository tests** and zero generated drift in GitHub Actions run #333 before the squash merge.
 
-The large product/documentation line is present and can be reviewed before every generated package is refreshed. Full green CI and zero generated drift are required for the exact merge candidate **after** project-owner approval.
+The merge exposed one process gap in ContextCanon's own development workflow: the workflow described the exact pre-merge gate but stopped at `squash-merge to main`. It did not require a small checkpoint immediately afterwards to record facts that only exist after the merge, such as the actual merged state and final baseline identity. That allowed `STATE.md`, `PLAN.md`, README project status, CHANGELOG and the historical PR description to retain pre-merge wording even though `main` had already advanced.
 
-The latest completed broad authoring verification before the final wording pass was GitHub Actions run #299 on head `ff0372d6217e2352b671b3429d6883c3fd57ea0f`:
+The workflow now includes that explicit **post-merge accepted-baseline/state checkpoint**. The correction is deliberately procedural: close the previous block's durable status before beginning a new coherent development block; do not invent compiler machinery until real use shows that deterministic automation would add value.
 
-- **92/92 deterministic/repository tests passed**;
-- the only failure was intentionally stale generated self-hosted package output.
-
-The final wording pass changes authored context again, so generated packages are expected to remain stale until the final regeneration. Unknown test failures would still be a stop signal; understood generated drift is not.
+The next major product block remains the **materially larger real 1:1 onboarding test** described in PLAN.
 
 ## In one minute
 
-The current PR candidate can:
+The accepted `main` baseline can:
 
 - compile Context Nodes deterministically;
 - compose reusable immutable Sources with exact identities and offline accepted state;
@@ -57,7 +54,7 @@ It deliberately does **not**:
 
 ## Four self-hosted Context Nodes, four different jobs
 
-ContextCanon now uses four real Context Nodes on its own repository.
+ContextCanon uses four real Context Nodes on its own repository.
 
 ### 1. ContextCanon Gateway
 
@@ -67,7 +64,7 @@ The repository root is the deliberately small Gateway. It owns first-contact ori
 
 `nodes/library/foundation/` is the reusable baseline for the ContextCanon Node Library.
 
-Foundation now owns its own reusable authored documentation:
+Foundation owns its own reusable authored documentation:
 
 - source/authoring format;
 - Official Context package semantics;
@@ -90,7 +87,8 @@ Its Rules make the working method explicit:
 - batch related edits instead of regenerating generated Context packages after every micro-change;
 - allow a coherent candidate to reach project-owner review with understood/disclosed CI drift;
 - require exact-head full green CI and zero drift only at the final merge gate;
-- never merge without explicit project-owner approval.
+- never merge without explicit project-owner approval;
+- after a successful merge, close the accepted-baseline/state checkpoint before beginning the next coherent development block.
 
 This Node remains internal until unrelated projects demonstrate that the workflow is genuinely reusable.
 
@@ -102,7 +100,7 @@ It owns compiler implementation, architecture, onboarding internals/reference ma
 
 ## Why the extra README files matter
 
-Important physical directories now explain themselves when opened directly in GitHub.
+Important physical directories explain themselves when opened directly in GitHub.
 
 The authored README files are not decorative. They make ownership and purpose visible before a reader has to understand the whole ContextCanon architecture. In particular they distinguish:
 
@@ -115,6 +113,8 @@ owning/consuming Node / CONTEXT/... generated self-contained package material
 Generated non-empty `CONTEXT/` directories also receive a compiler-generated `README.md` explaining that `references/` contains package copies rather than another authoring surface.
 
 This preserves a self-contained immutable package without creating a second place where humans are expected to maintain the same documentation. It also lets precise detail live close to the narrow context where it belongs while higher-level overviews stay compact.
+
+The larger real onboarding test will separately observe a related human-UX question: whether project-owned Node-root README files, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md` should be distinguished more explicitly as a general ContextCanon convention. That observation remains a test hypothesis, not a new Foundation rule.
 
 ## How onboarding works now
 
@@ -177,9 +177,9 @@ Those files may disagree or be stale. The generated assignment therefore tells t
 - documentation and meaningful source comments remain important evidence for intent, rationale, constraints, workflow, history and target design;
 - unclear "is versus should become" conflicts stay visible as unresolved questions or planning state.
 
-## What is already stable on main
+## What is stable on main
 
-The merged baseline through PR #8 includes:
+The accepted baseline through PR #9 includes:
 
 - deterministic Context Node compilation and generated drift checking;
 - compact Gateway context plus Topic-based progressive disclosure;
@@ -190,26 +190,28 @@ The merged baseline through PR #8 includes:
 - deterministic onboarding evidence preparation;
 - framework-owned, harness-neutral semantic assignment;
 - strict provenance-rich onboarding proposal validation;
-- user-facing onboarding walkthrough and first-user usability hardening.
+- human onboarding review bound to exact proposal/evidence identity;
+- explicit accept/reject decisions and explicit `contextcanon onboard accept` publication;
+- exact reusable Source package binding across semantic review and final acceptance;
+- staged first-adoption compilation, project-path collision refusal and rollback-safe publication;
+- user-facing onboarding walkthrough and first-user usability hardening;
+- four self-hosted Context Nodes with explicit documentation ownership and folder orientation;
+- a recoverable Development Workflow with separate review-ready and merge-ready gates.
 
-PR #9 is **not yet project-owner accepted** and remains open.
+## PR #9 merge gate
 
-## What remains before PR #9 can merge
+PR #9 was project-owner approved and mechanically finalized before merge. Its final verification head `4bc0e2ff586c606479e66eb72e275f5ac1a0e4e8` passed GitHub Actions run #333 with:
 
-Finish the final wording pass, then create the exact mechanical merge candidate:
+- **92/92 tests passed**;
+- `contextcanon check --all .` clean for Gateway, Development Workflow, Framework Development and Foundation;
+- no generated-drift artifact because no drift remained;
+- the final 93-path diff checked for accidental temporary/placeholder files.
 
-1. regenerate only compiler-owned self-hosted Context packages affected by the final authored state;
-2. run the exact merge candidate through the complete deterministic suite;
-3. require `contextcanon check --all .` at zero generated drift;
-4. inspect the final diff against `main` for accidental temporary/placeholder files;
-5. update PR #9 with the exact merge-ready head, test count and package identities;
-6. squash-merge only after explicit project-owner approval.
+GitHub then squash-merged PR #9 to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144`.
 
-No merge happens without explicit project-owner approval.
+## What comes next
 
-## What comes next after PR #9
-
-After PR #9 is accepted and merged, ContextCanon should be used on a **materially larger existing project** with no pre-curated ContextCanon files.
+ContextCanon should now be used on a **materially larger existing project** with no pre-curated ContextCanon files.
 
 That exercise is deliberately two tests at once:
 

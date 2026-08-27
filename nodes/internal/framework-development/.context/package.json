@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "68d9d31bb6a30f19027f5eee5f5a0bf01bb848de059670c59e6eb8b6a0ab4e6d",
-    "package": "8262004db86de5e4f0b72b2b2d0f504ed971f78da1a074955b6014c9910380c7"
+    "normalized": "aa43706a25d120ed240fc19b58e78d0f64647dd30484885ff0da56fb50710123",
+    "package": "04733c578eb0e57f738ad3581833747ba6df7edf2984f88e2513ae5de5c24768"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "43dba2b0c7ae8191c21f0602e2ca1dbd6f50b8ba2ba6feb80a0d1ef08f776064",
-      "size": 11559
+      "sha256": "265a6770b1fd5b7d87dc611470f4e7dd94f2e8ef5ea5d5634b5f7fcb705baf4c",
+      "size": 12041
     },
     {
       "path": "CONTEXT/README.md",
@@ -265,6 +265,16 @@
       "why": "Green CI proves deterministic consistency, not that the product or documentation is acceptable to its human reviewer."
     },
     {
+      "group": "Accepted baseline",
+      "id": "CCW-008",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "ContextCanon Development Workflow",
+      "statement": "After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.",
+      "title": "Close the post-merge baseline checkpoint before new development",
+      "why": "The merge itself changes project truth after the merge candidate was frozen. Without an explicit post-merge checkpoint, `main` can be mechanically correct while its recovery documentation still describes the pre-merge state."
+    },
+    {
       "group": "Compiler architecture",
       "id": "CCI-001",
       "modifications": [],
@@ -367,8 +377,8 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "ContextCanon Development Workflow",
-      "normalized_digest": "f76cd588762f836a1e9e2adef3394021d134e0b587650b52d3c15b0fac396d64",
-      "package_digest": "637bb9ab3babc52387c5600a2273f0bdabb995fa5b23673513b81df5a5b5e59c",
+      "normalized_digest": "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e",
+      "package_digest": "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596",
       "version": "0.1.0-draft"
     }
   ],

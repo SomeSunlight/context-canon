@@ -11,13 +11,13 @@ No anonymous system, CI job, or LLM "accepts" project truth.
 
 ## Project-owner accepted baseline
 
-ContextCanon has passed self-hosted and real external-project validation. The current accepted `main` baseline includes Compiler 0.4 plus the first user-reviewed onboarding and usability-hardening slices through PR #8:
+ContextCanon has passed self-hosted and real external-project validation. The current project-owner accepted `main` baseline is PR #9, squash-merged as:
 
-`1280aa9e763f0588fa06b3e1e98b9e7b52302cdd`
+`f7afe5c82942ecb9e3a04696455f8c960cc9b144`
 
 Validated foundations include:
 
-- [x] Gateway, Foundation, and Framework Development as real self-hosted Context Nodes.
+- [x] Gateway, Foundation, Development Workflow, and Framework Development as real self-hosted Context Nodes.
 - [x] Deterministic compiler and generated drift checking.
 - [x] `SomeSunlight/teams-chat-exporter` external experiment.
 - [x] Real GitHub Copilot entry through generated `AGENTS.md`.
@@ -25,12 +25,12 @@ Validated foundations include:
 - [x] Inherited Rule `Remove`/`Override`, transitive provenance, and diamond-conflict diagnostics.
 - [x] Deterministic Context diff and semantic normalization.
 - [x] Immutable external Sources, reviewed Source updates, generic Git candidate transport, and atomic publication/recovery.
-- [x] Deterministic onboarding evidence preparation, framework-owned LLM assignment and strict proposal validation.
-- [x] First-user onboarding documentation hardening, explicit actors, strong-reasoning-model guidance and stale-evidence handling.
+- [x] Complete first-adoption onboarding from deterministic Evidence preparation through framework-owned LLM assignment, strict proposal validation, human review, explicit acceptance, staged publication, exact Source binding, and rollback-safe canonical adoption.
+- [x] Repository orientation, documentation ownership, Tests/CI context, and recoverable LLM-assisted development workflow hardened through PR #9.
 
-The development cadence is now deliberately split between human review and mechanical merge finalization:
+The development cadence is deliberately split between human review, mechanical merge finalization, and accepted-baseline closure:
 
-> complete one coherent block → make the large line reviewable and disclose known CI/drift → project-owner review → after approval finalize self-hosted generated packages/cleanup → exact-head fully green + zero drift → squash-merge to `main` → start the next block on a fresh branch.
+> complete one coherent block → make the large line reviewable and disclose known CI/drift → project-owner review → after approval finalize self-hosted generated packages/cleanup → exact-head fully green + zero drift → squash-merge to `main` → close the post-merge accepted-baseline/state checkpoint → start the next block on a fresh branch.
 
 ## Project-owner accepted: Compiler 0.4 — immutable external Sources
 
@@ -137,14 +137,14 @@ validated review artifact
 
 ### Proposal validation
 
-- [x] Define `contextcanon/onboarding-proposal/v0` separately from Official Context.
+- [x] Define `contextcanon/onboarding-proposal/v0` separately from Proposal and Official Context.
 - [x] Require each item to carry rationale, confidence and exact evidence hash/line-range references.
 - [x] Strictly validate kinds, payloads, evidence file set, hashes/ranges and deterministic `proposal_digest`.
 - [x] Revalidate the Evidence v0 safety policy when consuming a snapshot.
 
-## Current review candidate: human review and explicit onboarding acceptance
+## Project-owner accepted: human review and explicit onboarding acceptance
 
-PR #9 / branch `agent/onboarding-review-acceptance` implements the next actor: the **human reviewer/operator**. A validated LLM proposal is not yet project truth.
+PR #9 / branch `agent/onboarding-review-acceptance` was project-owner approved, passed the exact-head mechanical merge gate, and was squash-merged to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144`.
 
 Goal: make a proposal inspectable against exact evidence, record explicit human decisions, and allow canonical first adoption only when that exact reviewed state still matches the project.
 
@@ -244,7 +244,19 @@ The project owner approved the large-line review and asked for the mechanical co
 - [x] Prove the exact merge candidate with the complete deterministic suite and `contextcanon check --all .` at zero generated drift; GitHub Actions run #330 on `25afc961caab545802e98c42f1716299696816e1` passed all **92 tests** and skipped drift-artifact upload because no drift was found.
 - [x] Inspect the final merge candidate against `main` for intended paths and accidental temporary/placeholder files; the 93-path ownership/onboarding diff contains no temporary marker or placeholder path.
 - [x] Update PR #9 description with the exact merge-ready head, final test count and self-hosted package identities.
-- [ ] Squash-merge PR #9 to `main` only after project-owner approval and the green merge gate.
+- [x] Squash-merge PR #9 to `main` after project-owner approval and the green merge gate; GitHub records merge commit `f7afe5c82942ecb9e3a04696455f8c960cc9b144`.
+
+## Immediate correction after PR #9 merge: accepted-baseline checkpoint
+
+PR #9 was squash-merged to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144` after the documented green merge gate. The merge exposed a lifecycle gap: the development workflow ended at `squash-merge to main` but did not require an immediate accepted-baseline/state reconciliation. As a result, several repository status surfaces and the historical PR description still described the pre-merge state.
+
+Purpose: restore `main` as a coherent reference point and add the smallest durable procedural guard against repeating this failure. Do not invent a larger product mechanism unless later use proves one necessary.
+
+- [x] Record the post-merge lifecycle finding and this correction block before changing other status/workflow surfaces.
+- [x] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
+- [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
+- [x] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
+- [x] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging; exact head `74489182ce359703a00d821eeb61cc05657f0dd5` passed all **92 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #336, and the diff against `main` contained exactly 16 intended paths: 9 authored/status surfaces plus 7 deterministic generated-package updates, with no compiler or test-code changes.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
 
