@@ -17,7 +17,7 @@ ContextCanon has passed self-hosted and real external-project validation. The cu
 
 Validated foundations include:
 
-- [x] Gateway, Foundation, and Framework Development as real dogfood Nodes.
+- [x] Gateway, Foundation, and Framework Development as real self-hosted Context Nodes.
 - [x] Deterministic compiler and generated drift checking.
 - [x] `SomeSunlight/teams-chat-exporter` external experiment.
 - [x] Real GitHub Copilot entry through generated `AGENTS.md`.
@@ -30,7 +30,7 @@ Validated foundations include:
 
 The development cadence is now deliberately split between human review and mechanical merge finalization:
 
-> complete one coherent block → make the large line reviewable and disclose known CI/drift → project-owner review → after approval finalize dogfood/cleanup → exact-head fully green + zero drift → squash-merge to `main` → start the next block on a fresh branch.
+> complete one coherent block → make the large line reviewable and disclose known CI/drift → project-owner review → after approval finalize self-hosted generated packages/cleanup → exact-head fully green + zero drift → squash-merge to `main` → start the next block on a fresh branch.
 
 ## Project-owner accepted: Compiler 0.4 — immutable external Sources
 
@@ -53,7 +53,7 @@ Goal: reusable Sources work across independent repositories without live inherit
 - [x] Store accepted Source packages under `<consumer>/.context/sources/<package-digest>/`.
 - [x] Treat those packages as reproducible consumer state suitable for offline builds.
 - [x] Add exact `normalized-digest` + `package-digest` Source pins.
-- [x] Preserve unpinned local Sources as the simple development/dogfood case.
+- [x] Preserve unpinned local Sources as the simple local-development/self-hosting case.
 - [x] Make ordinary `build` use only accepted local package state for pinned external Sources.
 - [x] Fail clearly on missing/corrupt/mismatched accepted state rather than fetching silently.
 
@@ -198,12 +198,12 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Cover stale proposal, stale live evidence, rejected findings, exact reusable Source binding/offline build and unreviewed Markdown closure.
 - [x] Cover independent fresh Node identity for identical evidence.
 - [x] Cover legacy unbound Source proposals, exact Source-version mismatch, first-adoption output collisions and rollback after acceptance-record publication failure.
-- [x] Reach **90 green deterministic tests** before final dogfood regeneration; GitHub Actions run #283 confirms the test step is green.
+- [x] Reach **90 green deterministic tests** before final self-hosted package regeneration; GitHub Actions run #283 confirms the test step is green.
 - [x] Update README and onboarding guide through explicit acceptance and final trust-hardening semantics.
-- [x] Update STATE/PLAN so the next large step and remaining dogfood/review boundary are explicit.
-- [x] Regenerate the affected Gateway and Framework Development dogfood packages; Foundation remains unchanged.
-- [x] Verify the post-dogfood review candidate `22a982d67670444d09d051e4a294785e0a1b5803` with all **90 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #285.
-- [x] Inspect that review candidate against `main`: exactly 21 intended implementation/test/documentation/dogfood paths and no temporary or placeholder files.
+- [x] Update STATE/PLAN so the next large step and remaining generated-package/review boundary are explicit.
+- [x] Regenerate the affected Gateway and Framework Development self-hosted packages; Foundation remains unchanged.
+- [x] Verify the post-regeneration review candidate `22a982d67670444d09d051e4a294785e0a1b5803` with all **90 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #285.
+- [x] Inspect that review candidate against `main`: exactly 21 intended implementation/test/documentation/generated-package paths and no temporary or placeholder files.
 - [x] Rewrite the onboarding first-contact section from the user's point of view and introduce Evidence freezing together with its practical benefit.
 - [x] Explain the semantic AI step in STATE as useful context sorting rather than leading with an implementation-boundary slogan.
 - [x] Promote the four first-adoption trust guarantees into durable Framework Development Rules and architecture documentation.
@@ -218,18 +218,30 @@ This block comes directly from the project owner's continuing PR #9 review. Its 
 - [x] Add lightweight in-folder orientation where it materially improves direct browsing, including GitHub-rendered authored-directory READMEs and compiler-generated `CONTEXT/README.md` package orientation without pretending generated files are authored truth.
 - [x] Add a Framework Development **Tests and CI** Topic with a short entry summary plus a compact deeper document explaining the deterministic test flow, GitHub Actions runner, generated-drift check/artifact, and how to inspect failures.
 - [x] Add an internal development-workflow Context Node for the ContextCanon project and use it to make durable LLM-assisted development rules explicit, including PLAN-before-work and immediate checklist completion as part of each completed step.
-- [x] Simplify the correction cadence into separate review-ready and merge-ready gates: coherent authored work may be reviewed with understood/disclosed CI drift; final dogfood regeneration, exact-head green CI and zero drift are required only after project-owner approval and before merge.
+- [x] Simplify the correction cadence into separate review-ready and merge-ready gates: coherent authored work may be reviewed with understood/disclosed CI drift; final generated-package regeneration, exact-head green CI and zero drift are required only after project-owner approval and before merge.
 - [x] Make short explicit continuations efficient in the current single-developer workflow: when the project owner says to continue after a short pause and reports no intervening repository change, resume from the last established state unless new evidence contradicts it.
 - [x] Re-read the moved/consolidated documentation and compare old/new content so no important or especially clear explanation was lost.
-- [x] Verify the completed ownership correction before review handoff: exact head `ff0372d6217e2352b671b3429d6883c3fd57ea0f` passed all **92 deterministic/repository tests** in GitHub Actions run #299; the only failure was intentionally stale generated dogfood output.
-- [x] Prepare PR #9 as a coherent project-owner review candidate without spending another dogfood cycle on a head that may still receive review corrections; known generated drift is explicitly disclosed.
+- [x] Verify the completed ownership correction before review handoff: exact head `ff0372d6217e2352b671b3429d6883c3fd57ea0f` passed all **92 deterministic/repository tests** in GitHub Actions run #299; the only failure was intentionally stale generated self-hosted package output.
+- [x] Prepare PR #9 as a coherent project-owner review candidate without spending another generated-package cycle on a head that may still receive review corrections; known generated drift is explicitly disclosed.
 - [x] Update PR #9 description for this project-owner review handoff with the current scope, review order, verification evidence and known technical remainder.
 
+### Final project-owner wording pass before the merge gate
+
+This final review pass polishes the product story and records one additional onboarding-lifecycle use case before the merge candidate is mechanically finalized.
+
+- [x] Record this wording/lifecycle pass in `PLAN.md` before editing the reviewed texts.
+- [ ] Replace the misleading root Gateway story about "using a bigger context window" with the real observed problem: manually assembled static context drifts, misses details, triggers opportunistic repository searching, and becomes expensive to update across duplicated context copies.
+- [ ] State the positive ContextCanon model just as briefly: a small dependable overview, deeper detail available on demand, reusable/inherited context with one maintained source, and deterministic propagation to children when rebuilt.
+- [ ] Replace "dogfood" jargon in current user/developer-facing documentation with plain language such as **self-hosted Context Nodes**, **ContextCanon's own Context**, or **generated self-hosted packages**, while preserving historical meaning.
+- [ ] Add one short top-level benefit of the README/Node structure: details can live close to the narrow context where they belong without bloating every higher-level overview, while humans and agents still get immediate landing points.
+- [ ] Record a later **onboarding cleanup / strip-down** workflow: preview exactly which transient ContextCanon onboarding/review artifacts are safe to remove, require explicit human confirmation, and preserve useful canonical/generated Context by default rather than pretending `git reset` is the right recovery mechanism.
+- [ ] Return the updated authored PR #9 to the project owner for the final large-line check before mechanical merge finalization.
+
 - [ ] Project-owner review PR #9.
-- [ ] After explicit project-owner approval, apply any final approved corrections and regenerate only the compiler-owned dogfood outputs affected by the final authored state.
+- [ ] After explicit project-owner approval, apply any final approved corrections and regenerate only the compiler-owned self-hosted package outputs affected by the final authored state.
 - [ ] Prove the exact merge candidate with the complete deterministic suite and `contextcanon check --all .` at zero generated drift.
 - [ ] Inspect the final merge candidate against `main` for intended paths and accidental temporary/placeholder files.
-- [ ] Update PR #9 description with the exact merge-ready head, final test count and dogfood/package identities.
+- [ ] Update PR #9 description with the exact merge-ready head, final test count and self-hosted package identities.
 - [ ] Squash-merge PR #9 to `main` only after project-owner approval and the green merge gate.
 
 ## Next major block after PR #9: larger real 1:1 onboarding test
@@ -288,6 +300,7 @@ The first acceptance path deliberately creates a new Node only.
 - [ ] Compare new semantic findings against existing Rules/Sources/Topics/state instead of replacing `CONTEXT.src.md` wholesale.
 - [ ] Preserve stable identities across reviewed updates.
 - [ ] Make conflicts between current canonical context and new evidence visible before publication.
+- [ ] Design a non-destructive onboarding cleanup/strip-down command for experiments, retries and version upgrades: show a deterministic **Ready to delete** list of transient onboarding/review artifacts, require explicit human confirmation, and preserve useful canonical/generated Context and nested Context Nodes by default. A deeper destructive reset, if ever added, must be a separate explicit operation.
 
 ## Later deterministic layers
 
