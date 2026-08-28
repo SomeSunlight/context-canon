@@ -302,3 +302,44 @@ Purpose: remove only that GitHub-specific presentation conflict before tagging/u
 - [x] Rename `.github/README.md` to `.github/ABOUT.md` with identical content so GitHub can render the repository-root `README.md` again.
 - [x] Verify `.github/workflows/README.md` remains useful and repository search finds no links depending on `.github/README.md`.
 - [x] Run the complete deterministic suite and zero-drift check, inspect the tiny diff, and open a focused review PR without merging; GitHub Actions run #339 on `c61f0f40860366b99dcba5a945c33648ee9fc395` passed all **92 tests** and `contextcanon check --all .` at zero drift, and PR #11 contains only the content-identical rename plus this PLAN checkpoint.
+
+## Active development block: structure-first onboarding on `ai-workstation`
+
+The first materially larger onboarding run on `SomeSunlight/ai-workstation` exposed a more fundamental problem than wording polish: the current onboarding proposal starts at individual semantic findings before the project owner and the model have agreed on the coarse Context structure that should organize those findings. The result can be semantically valid while still feeling flat, over-abstracted and awkward to evolve.
+
+Purpose: keep the existing frozen-Evidence and human-trust boundaries, but split semantic onboarding into two passes. **Pass 1 discovers and reviews the coarse knowledge/context structure; Pass 2 later places existing project knowledge into that accepted structure.** The project owner's mental model is authoritative for the coarse structure. The LLM proposes and explains; it does not get to impose a taxonomy. Good existing wording should normally survive placement rather than being gratuitously rewritten.
+
+This block uses `ai-workstation` as the concrete design pressure. Do not generalize beyond what this repository needs until a second unrelated real project shows the same requirement.
+
+### Part 1 — discover and materialize the coarse structure
+
+- [x] Record the structure-first pivot, concrete `ai-workstation` motivation, human ownership boundary and two-pass intent in `PLAN.md` before implementation changes.
+- [ ] Define the smallest structure-proposal contract needed for the experiment: candidate local Nodes/grouping Nodes, matches to existing reusable Nodes/Sources when a supplied catalog supports them, non-Node knowledge bodies that should remain Resources/authoritative corpora, parent/child placement, rationale, confidence and exact frozen-Evidence provenance.
+- [ ] Reuse the existing frozen Evidence and Source-catalog boundary; add a framework-owned **structure-discovery instruction** that asks the strong reasoning LLM to find coarse groups before classifying or rewriting individual Rules.
+- [ ] Add deterministic validation and digesting for the structure proposal without making semantic correctness a compiler decision.
+- [ ] Produce a deliberately simple, human-editable `structure.md` review artifact bound to exact Evidence/proposal identity. Make the hierarchy obvious, keep existing Nodes stable/protected by identity, and allow the project owner to add/rearrange proposed or future/reserved Nodes without editing a large JSON document.
+- [ ] Define a narrow deterministic import/normalization contract for edited `structure.md`; avoid a general Markdown AST/editor language. Preserve stable IDs for existing Nodes and allocate fresh human-side identity for newly accepted Nodes only once.
+- [ ] Add a preview step that shows exactly which missing Node directories/files would be created from the edited structure before touching the project.
+- [ ] Materialize only the accepted **Node skeletons** needed by the structure: minimal `CONTEXT.src.md`/identity plus short human orientation such as a Node-root `README.md` where useful. Future/reserved Nodes may explicitly say that the area is planned and not yet implemented. Do not distribute individual project Rules/Resources in Part 1.
+- [ ] Make the structure iteration cheap: if the owner dislikes the result, edit `structure.md` again and regenerate the not-yet-populated missing skeletons deterministically rather than repeating semantic content analysis.
+- [ ] Test Part 1 vertically against the real `ai-workstation` shape, including independently deployable/containerized tool areas and at least one grouping Node, and record where the proposed tree needs human correction.
+
+### Part 2 — place the books after the shelves are accepted
+
+Do not implement the full placement/migration semantics before Part 1 has produced a structure the project owner actually likes. The intended next pass is already explicit so Part 1 does not accidentally hard-code the old leaf-first model.
+
+- [ ] Bind the second semantic assignment to both the exact frozen Evidence and the accepted structure identity.
+- [ ] Ask the LLM primarily **where existing information belongs**, not to restyle it: distinguish at least keep, move, reference and authority/compliance mapping; preserve good source language by default and record when synthesis is genuinely necessary.
+- [ ] Carry every accepted finding durably according to its semantic class; fix the current gap where accepted state/planning semantics can disappear when the original proposal artifact is removed.
+- [ ] Let ordinary documentation and larger corpora remain at natural/authoritative locations while Nodes provide progressive-disclosure entry points and mappings into them.
+- [ ] Use stable IDs so moved/localized context can be referenced without making file location the semantic identity.
+- [ ] Only after a reviewed placement proposal exists, design the cleanup step that removes true duplicate rule text from old locations and leaves useful references/orientation behind.
+
+### Questions this experiment must answer, not assume
+
+- [ ] Does a normal ContextCanon-managed root explicitly offer/recommend Foundation as its baseline Source, and how should that self-explanation appear without mixing ContextCanon infrastructure into the project's domain tree?
+- [ ] Is a normal Node sufficient for grouping/"directory" Nodes, including nodes with little local governance, or does real use expose a missing semantic distinction?
+- [ ] How should cross-cutting graph relationships be represented without making the human primary navigation cease to look like a simple hierarchy?
+- [ ] Which non-Node knowledge-body concepts need first-class representation, if any, beyond today's Resources and Sources? In particular test authoritative standards/policies and large imported documentation corpora before inventing a universal type system.
+- [ ] Is constrained Markdown the right human review/edit surface for coarse structure, with JSON remaining the deterministic machine form underneath, or does the round-trip become too fragile?
+- [ ] Which atomic CLI commands should remain as the stable automation API, and which repeated onboarding steps later deserve a thin orchestration command or local browser UI? Do not build the UI before the structure workflow has been used end to end.
