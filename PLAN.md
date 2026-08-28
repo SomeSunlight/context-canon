@@ -291,3 +291,14 @@ Only after the human review/acceptance path is stable and project-owner accepted
 - [ ] Build the accepted Node and test ordinary plus Topic-specific tasks through a real harness.
 - [ ] Evaluate whether the resulting Context actually improves ordinary work: discoverability, prompt relevance, progressive disclosure and the ability of smaller/local models to work with the right context.
 - [ ] Record where the model classified correctly, where humans corrected/rejected it, whether Source reuse reduced duplication, and which context-distribution decisions felt awkward.
+
+## Public repository README hotfix before the real onboarding baseline
+
+GitHub gives `.github/README.md` precedence over the repository-root `README.md` on the repository landing page. The folder-orientation README added for `.github/` therefore hides ContextCanon's actual public project introduction from visitors.
+
+Purpose: remove only that GitHub-specific presentation conflict before tagging/using the accepted baseline for the first materially larger real onboarding test. Keep the broader folder-landing-page question as an empirical finding for that test rather than turning this hosting-specific workaround into a Foundation rule.
+
+- [x] Record this isolated public-README hotfix before changing repository files.
+- [x] Rename `.github/README.md` to `.github/ABOUT.md` with identical content so GitHub can render the repository-root `README.md` again.
+- [x] Verify `.github/workflows/README.md` remains useful and repository search finds no links depending on `.github/README.md`.
+- [x] Run the complete deterministic suite and zero-drift check, inspect the tiny diff, and open a focused review PR without merging; GitHub Actions run #339 on `c61f0f40860366b99dcba5a945c33648ee9fc395` passed all **92 tests** and `contextcanon check --all .` at zero drift, and PR #11 contains only the content-identical rename plus this PLAN checkpoint.
