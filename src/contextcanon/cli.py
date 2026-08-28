@@ -16,6 +16,11 @@ from .onboarding_review import (
     parse_source_locator_arguments,
     render_onboarding_review,
 )
+from .onboarding_structure import (
+    create_or_load_structure_markdown,
+    load_onboarding_structure_proposal,
+)
+from .onboarding_structure_instruction import build_onboarding_structure_instruction
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -71,6 +76,40 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="explicitly include one additional safe UTF-8 repository-relative file; may be repeated",
     )
+
+    onboard_structure_instruction = onboard_sub.add_parser(
+        "structure-instruction",
+        help="render the framework-owned coarse structure-discovery instruction for one exact evidence snapshot",
+    )
+    onboard_structure_instruction.add_argument(
+        "snapshot", help="root of the prepared content-addressed evidence snapshot"
+    )
+    onboard_structure_instruction.add_argument(
+        "--catalog-package",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="verified immutable reusable Source package offered to the structure reviewer; may be repeated",
+    )
+
+    onboard_structure_validate = onboard_sub.add_parser(
+        "structure-validate",
+        help="validate a coarse onboarding structure proposal against one exact evidence snapshot",
+    )
+    onboard_structure_validate.add_argument(
+        "snapshot", help="root of the prepared content-addressed evidence snapshot"
+    )
+    onboard_structure_validate.add_argument("proposal", help="JSON onboarding structure proposal to validate")
+
+    onboard_structure_review = onboard_sub.add_parser(
+        "structure-review",
+        help="create or validate the human-editable Markdown structure review for one validated structure proposal",
+    )
+    onboard_structure_review.add_argument(
+        "snapshot", help="root of the prepared content-addressed evidence snapshot"
+    )
+    onboard_structure_review.add_argument("proposal", help="validated JSON onboarding structure proposal")
+    onboard_structure_review.add_argument("structure", help="human-editable structure Markdown file")
 
     onboard_instruction = onboard_sub.add_parser(
         "instruction",
@@ -178,6 +217,40 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Evidence snapshot: {label}")
                 print(f"Included files: {len(prepared.included)}")
                 print(f"Excluded candidates: {len(prepared.excluded)}")
+                return 0
+
+            if args.onboard_command == "structure-instruction":
+                instruction = build_onboarding_structure_instruction(
+                    Path(args.snapshot),
+                    catalog_package_roots=(Path(path) for path in args.catalog_package),
+                )
+                print(instruction.text, end="")
+                print(
+                    f"contextcanon onboarding structure instruction digest: {instruction.instruction_digest}",
+                    file=sys.stderr,
+                )
+                return 0
+
+            if args.onboard_command == "structure-validate":
+                proposal = load_onboarding_structure_proposal(Path(args.proposal), Path(args.snapshot))
+                print(f"validated onboarding structure proposal {proposal.proposal_digest}")
+                print(f"Evidence snapshot: {proposal.evidence_digest}")
+                print(f"Proposed Nodes: {len(proposal.nodes)}")
+                print(f"Knowledge bodies: {len(proposal.knowledge_bodies)}")
+                print(f"Source reuses: {len(proposal.source_reuses)}")
+                return 0
+
+            if args.onboard_command == "structure-review":
+                plan, proposal, _, created = create_or_load_structure_markdown(
+                    Path(args.snapshot),
+                    Path(args.proposal),
+                    Path(args.structure),
+                )
+                verb = "created" if created else "loaded"
+                print(f"{verb} onboarding structure {plan.structure_digest}")
+                print(f"Structure file: {Path(args.structure)}")
+                print(f"Structure proposal: {proposal.proposal_digest}")
+                print(f"Nodes in edited tree: {len(plan.nodes)}")
                 return 0
 
             if args.onboard_command == "instruction":
