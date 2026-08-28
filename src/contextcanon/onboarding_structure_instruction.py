@@ -136,7 +136,7 @@ def _render_contract() -> list[str]:
         "Rules for Node objects:",
         "",
         "- `key` is proposal-local only; use unique identifiers such as `N-001`. Do not invent canonical ContextCanon Node IDs.",
-        "- exactly one Node has `parent_key: null`; it is the project root and must use `suggested_path: "."`;",
+        '- exactly one Node has `parent_key: null`; it is the project root and must use `suggested_path: "."`;',
         "- every other `parent_key` names another proposed Node;",
         "- every child `suggested_path` is a normalized repository-relative POSIX directory nested under its primary parent's path;",
         "- `lifecycle` is exactly `current` or `reserved`;",
