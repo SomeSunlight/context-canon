@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from .model import CompiledPackage
-from .onboarding_instruction import MAX_INSTRUCTION_BYTES, _load_catalog, _render_catalog, _render_evidence
+from .onboarding_instruction import MAX_INSTRUCTION_BYTES, _load_catalog, _render_evidence
 from .onboarding_proposal import load_evidence_snapshot
 from .parser import ContextCanonError
 
@@ -20,6 +20,58 @@ class OnboardingStructureInstruction:
     catalog_packages: tuple[CompiledPackage, ...]
     text: str
     instruction_digest: str
+
+
+def _render_structure_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
+    lines = [
+        "## Available reusable ContextCanon Source catalog",
+        "",
+    ]
+    if not packages:
+        lines.extend(
+            [
+                "No reusable Source package catalog was supplied for this run.",
+                "",
+                "Return an empty `source_reuses` array. Do not invent reusable Sources or turn generic-looking project practices into a reusable Node during this coarse structure pass.",
+                "",
+            ]
+        )
+        return lines
+
+    lines.extend(
+        [
+            "Compare the proposed coarse structure with these verified immutable packages. Add a `source_reuses` entry only when one exact listed package materially belongs at one proposed Node. Copy its exact Node ID, name, version, normalized digest, and package digest. The package is a candidate Source relationship for later human review, not automatic acceptance.",
+            "",
+        ]
+    )
+    for package in packages:
+        metadata = package.metadata
+        lines.extend(
+            [
+                f"### {metadata.name}",
+                "",
+                f"- Node ID: `{metadata.id}`",
+                f"- Version: `{metadata.version}`",
+                f"- Normalized digest: `{package.normalized_digest}`",
+                f"- Package digest: `{package.package_digest}`",
+            ]
+        )
+        if package.rules:
+            lines.append("- Effective Rules:")
+            for rule in package.rules:
+                lines.append(
+                    f"  - `{rule.origin_node_id}#{rule.id}` — **{rule.title}**: {rule.statement} Why: {rule.why}"
+                )
+        else:
+            lines.append("- Effective Rules: none")
+        if package.topics:
+            lines.append("- Published Topics:")
+            for topic in package.topics:
+                lines.append(f"  - `{topic.id}` — **{topic.title}**: {topic.condition}")
+        else:
+            lines.append("- Published Topics: none")
+        lines.append("")
+    return lines
 
 
 def _render_contract() -> list[str]:
@@ -158,7 +210,7 @@ def build_onboarding_structure_instruction(
         "",
     ]
     lines.extend(_render_evidence(snapshot))
-    lines.extend(_render_catalog(packages))
+    lines.extend(_render_structure_catalog(packages))
     lines.extend(_render_contract())
     text = "\n".join(lines)
     encoded = text.encode("utf-8")
