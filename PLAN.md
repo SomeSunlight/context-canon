@@ -299,6 +299,6 @@ GitHub gives `.github/README.md` precedence over the repository-root `README.md`
 Purpose: remove only that GitHub-specific presentation conflict before tagging/using the accepted baseline for the first materially larger real onboarding test. Keep the broader folder-landing-page question as an empirical finding for that test rather than turning this hosting-specific workaround into a Foundation rule.
 
 - [x] Record this isolated public-README hotfix before changing repository files.
-- [ ] Rename `.github/README.md` to a non-reserved local orientation filename while preserving its content.
-- [ ] Verify nested `.github/workflows/README.md` remains useful and no repository links depend on `.github/README.md`.
-- [ ] Run the complete deterministic suite and zero-drift check, inspect the tiny diff, and open a focused review PR without merging.
+- [x] Rename `.github/README.md` to `.github/ABOUT.md` with identical content so GitHub can render the repository-root `README.md` again.
+- [x] Verify `.github/workflows/README.md` remains useful and repository search finds no links depending on `.github/README.md`.
+- [x] Run the complete deterministic suite and zero-drift check, inspect the tiny diff, and open a focused review PR without merging; GitHub Actions run #339 on `c61f0f40860366b99dcba5a945c33648ee9fc395` passed all **92 tests** and `contextcanon check --all .` at zero drift, and PR #11 contains only the content-identical rename plus this PLAN checkpoint.
