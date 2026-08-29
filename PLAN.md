@@ -183,7 +183,7 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Resolve every accepted `existing-source` to an exact verified immutable package plus explicit visible Source locator.
 - [x] Install/pin accepted Source packages exactly and prove normal builds remain offline after the original Source repository is removed.
 - [x] Render proposed canonical `CONTEXT.src.md` in a staging Node before publication.
-- [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the accepted package.
+- [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the package.
 - [x] Compile the staged Node before writing canonical source.
 - [x] Preflight the staged compiler's exact first-adoption output paths and refuse to overwrite existing project-owned paths such as `CONTEXT.md` or `CONTEXT/`.
 - [x] Create the first canonical `CONTEXT.src.md` only after the staged compile and collision preflight succeed.
@@ -345,3 +345,15 @@ Do not implement the full placement/migration semantics before Part 1 has produc
 - [ ] Which non-Node knowledge-body concepts need first-class representation, if any, beyond today's Resources and Sources? In particular test authoritative standards/policies and large imported documentation corpora before inventing a universal type system.
 - [ ] Is constrained Markdown the right human review/edit surface for coarse structure, with JSON remaining the deterministic machine form underneath, or does the round-trip become too fragile?
 - [ ] Which atomic CLI commands should remain as the stable automation API, and which repeated onboarding steps later deserve a thin orchestration command or local browser UI? Do not build the UI before the structure workflow has been used end to end.
+
+### Pre-test operator UX hardening from the first `ai-workstation` run
+
+The first real operator run exposed two practical issues that are worth fixing before asking the project owner to repeat the structure experiment: the project development instructions did not preserve the established `uv` installation workflow across chats, and important onboarding Markdown was being created by shell redirection, which is brittle on Windows PowerShell because encoding behavior can make the resulting file unusable in editors.
+
+- [x] Record these operator findings in PLAN before changing development guidance or onboarding output behavior.
+- [ ] Make `uv` the preferred ContextCanon development/tool installation path when practical, with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"` as the normal Windows/PowerShell development pattern; keep the guidance cross-platform and do not make PowerShell or Windows a framework requirement.
+- [ ] Add one visible human-facing onboarding workspace with a collision-safe ContextCanon marker and standard filenames instead of mixing editable LLM/review artifacts into the repository root or hiding them under `.context/`.
+- [ ] Keep `.context/onboarding/<digest>/` as the immutable machine Evidence/review anchor, while explaining in the visible workspace README why frozen Evidence lets semantic/review work resume and iterate without silently changing its project basis.
+- [ ] Make the structure-discovery instruction write UTF-8 directly to its standard workspace file by default, avoiding shell capture; retain an explicit stdout mode for scripting/harnesses.
+- [ ] Let the new structure validate/review commands use standard workspace paths by default while retaining explicit path overrides for automation and unusual layouts.
+- [ ] Cover workspace ownership/collision behavior, exact UTF-8 writes, standard-path CLI flow, and explicit stdout/path overrides with deterministic tests on the platform-independent Python layer.
