@@ -9,10 +9,10 @@ Current organization:
 ```text
 nodes/
 ├── library/                   reusable Nodes distributed with ContextCanon
-│   └── foundation/            ContextCanon Foundation
+│   ├── foundation/            ContextCanon Foundation
+│   └── development-workflow/  reusable Development Workflow
 └── internal/                  Nodes used only by ContextCanon itself
-    ├── framework-development/ ContextCanon Framework Development
-    └── development-workflow/  ContextCanon Development Workflow
+    └── framework-development/ ContextCanon Framework Development
 ```
 
 The category directories `library/` and `internal/` are also not Nodes. The actual Node roots are the directories beneath them.
@@ -27,4 +27,4 @@ The repository root is another Node, **ContextCanon Gateway**. It stays at the r
 
 These categories are conventions of this repository. The ContextCanon framework itself does not require other repositories to use the same directory names.
 
-A Node's stable identity is independent of its path. Moving a Node between directories changes its location, not its identity.
+A Node's stable identity is independent of its path. Moving a Node between directories changes its location, not its identity. The Development Workflow is a concrete example: after real cross-project use proved reuse, its existing Node ID moved from `internal/` to `library/` instead of creating a duplicate Node.

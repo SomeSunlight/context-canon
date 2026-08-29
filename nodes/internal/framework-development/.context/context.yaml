@@ -20,11 +20,11 @@ sources:
     normalized_digest: "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b"
     package_digest: "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
-    name: "ContextCanon Development Workflow"
-    version: "0.1.0-draft"
-    locator: "../development-workflow/"
-    normalized_digest: "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e"
-    package_digest: "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596"
+    name: "Development Workflow"
+    version: "0.2.0-draft"
+    locator: "../../library/development-workflow/"
+    normalized_digest: "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463"
+    package_digest: "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -37,7 +37,8 @@ local:
     - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "group": "Onboarding trust"}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "group": "Development method"}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "group": "Development method"}
-    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "group": "Node library"}
+    - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "group": "Development method"}
+    - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "group": "Node library"}
   changes: []
   topics:
     - {"id": "CCI-TOPIC-COMPILER", "title": "Compiler implementation"}
@@ -64,14 +65,14 @@ official:
     - {"id": "CC-009", "title": "Canonical context is model- and harness-neutral", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
     - {"id": "CC-010", "title": "Keep familiar repository documents useful", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
     - {"id": "CC-011", "title": "Write for intelligent readers", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
-    - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-004", "title": "Batch related edits before generated-package regeneration", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "ContextCanon Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
@@ -80,7 +81,8 @@ official:
     - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
-    - {"id": "CCI-004", "title": "Keep library Nodes on Foundation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
   topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
@@ -98,7 +100,7 @@ targets:
   - topic: "CCI-TOPIC-DEVELOPMENT-WORKFLOW"
     intent: "required"
     kind: "context-node"
-    locator: "../development-workflow/"
+    locator: "../../library/development-workflow/"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
@@ -162,5 +164,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "aa43706a25d120ed240fc19b58e78d0f64647dd30484885ff0da56fb50710123"
-  package_digest: "04733c578eb0e57f738ad3581833747ba6df7edf2984f88e2513ae5de5c24768"
+  normalized_digest: "86130e850646b598067b03a59f160c608f26ec57fbf3bbbbc5caea67a6f1b456"
+  package_digest: "7631141a9e5d1588384cd9bb6d29235726dc2ae6079be70d8bfab8c664bed226"

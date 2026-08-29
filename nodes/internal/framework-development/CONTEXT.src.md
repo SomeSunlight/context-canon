@@ -5,7 +5,7 @@
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
 > `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted Context Sources.
 >
-> This Node composes [ContextCanon Foundation](../../library/foundation/) and the internal [ContextCanon Development Workflow](../development-workflow/), then adds only the framework-development delta.
+> This Node composes [ContextCanon Foundation](../../library/foundation/) and the reusable [Development Workflow](../../library/development-workflow/), then adds only the framework-development delta.
 >
 > Full format documentation: [../../library/foundation/docs/source-format.md](../../library/foundation/docs/source-format.md)
 
@@ -37,8 +37,8 @@ OVERRIDE IMPORTED RULE
 - [ContextCanon Foundation](../../library/foundation/) — `0.1.0-draft`
   <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.1.0-draft" -->
 
-- [ContextCanon Development Workflow](../development-workflow/) — `0.1.0-draft`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.1.0-draft" -->
+- [Development Workflow](../../library/development-workflow/) — `0.2.0-draft`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
 
 ## Rules
 
@@ -80,10 +80,14 @@ OVERRIDE IMPORTED RULE
   Why: ContextCanon itself should demonstrate durable, reviewable project context.
   <!-- ctx:rule id="CCI-003" -->
 
+- **Prefer uv for ContextCanon development and tool installation:** Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.
+  Why: A uv-managed tool install has proven more repeatable for the real ContextCanon operator workflow and avoids repeatedly reintroducing environment-specific `pip` setup across development sessions, while the framework itself must remain usable on other operating systems and shells.
+  <!-- ctx:rule id="CCI-010" -->
+
 ### Node library
 
-- **Keep library Nodes on Foundation:** Every reusable Node published in the ContextCanon Node Library must compose ContextCanon Foundation directly or transitively.
-  Why: The library needs one common baseline while specialized Nodes should still contain only their own additional context.
+- **Keep reusable Node dependencies explicit:** A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
+  Why: Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed.
   <!-- ctx:rule id="CCI-004" -->
 
 ## Topics
@@ -106,10 +110,10 @@ Required:
 
 ### Development workflow
 
-When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, or preparing a ContextCanon development block for project-owner review:
+When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, installing a ContextCanon development build, or preparing a ContextCanon development block for project-owner review:
 
 Required:
-- Context Node: `../development-workflow/`
+- Context Node: `../../library/development-workflow/`
 <!-- ctx:topic id="CCI-TOPIC-DEVELOPMENT-WORKFLOW" -->
 
 ### Framework architecture

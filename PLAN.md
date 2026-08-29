@@ -190,7 +190,7 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Immediately run normal deterministic build/check after publication.
 - [x] Roll back newly created canonical/generated files and newly installed Source packages if first-adoption publication fails before the acceptance record is complete.
 - [x] Record `contextcanon/onboarding-acceptance/v0` with evidence/proposal/review identities, decisions, exact Sources and resulting Context/package identities.
-- [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed merge/update contract.
+- [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed update workflow.
 
 ### Regression and documentation completion
 
@@ -254,7 +254,7 @@ Purpose: restore `main` as a coherent reference point and add the smallest durab
 
 - [x] Record the post-merge lifecycle finding and this correction block before changing other status/workflow surfaces.
 - [x] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
-- [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
+- [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next coherent development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
 - [x] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
 - [x] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging; exact head `74489182ce359703a00d821eeb61cc05657f0dd5` passed all **92 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #336, and the diff against `main` contained exactly 16 intended paths: 9 authored/status surfaces plus 7 deterministic generated-package updates, with no compiler or test-code changes.
 
@@ -302,3 +302,77 @@ Purpose: remove only that GitHub-specific presentation conflict before tagging/u
 - [x] Rename `.github/README.md` to `.github/ABOUT.md` with identical content so GitHub can render the repository-root `README.md` again.
 - [x] Verify `.github/workflows/README.md` remains useful and repository search finds no links depending on `.github/README.md`.
 - [x] Run the complete deterministic suite and zero-drift check, inspect the tiny diff, and open a focused review PR without merging; GitHub Actions run #339 on `c61f0f40860366b99dcba5a945c33648ee9fc395` passed all **92 tests** and `contextcanon check --all .` at zero drift, and PR #11 contains only the content-identical rename plus this PLAN checkpoint.
+
+## Active development block: structure-first onboarding on `ai-workstation`
+
+The first materially larger onboarding run on `SomeSunlight/ai-workstation` exposed a more fundamental problem than wording polish: the current onboarding proposal starts at individual semantic findings before the project owner and the model have agreed on the coarse Context structure that should organize those findings. The result can be semantically valid while still feeling flat, over-abstracted and awkward to evolve.
+
+Purpose: keep the existing frozen-Evidence and human-trust boundaries, but split semantic onboarding into two passes. **Pass 1 discovers and reviews the coarse knowledge/context structure; Pass 2 later places existing project knowledge into that accepted structure.** The project owner's mental model is authoritative for the coarse structure. The LLM proposes and explains; it does not get to impose a taxonomy. Good existing wording should normally survive placement rather than being gratuitously rewritten.
+
+This block uses `ai-workstation` as the concrete design pressure. Do not generalize beyond what this repository needs until a second unrelated real project shows the same requirement.
+
+### Part 1 — discover and materialize the coarse structure
+
+- [x] Record the structure-first pivot, concrete `ai-workstation` motivation, human ownership boundary and two-pass intent in `PLAN.md` before implementation changes.
+- [x] Define the smallest structure-proposal contract needed for the experiment: candidate local Nodes/grouping Nodes, matches to existing reusable Nodes/Sources when a supplied catalog supports them, non-Node knowledge bodies that should remain Resources/authoritative corpora, parent/child placement, rationale, confidence and exact frozen-Evidence provenance.
+- [x] Reuse the existing frozen Evidence and Source-catalog boundary; add a framework-owned **structure-discovery instruction** that asks the strong reasoning LLM to find coarse groups before classifying or rewriting individual Rules.
+- [x] Add deterministic validation and digesting for the structure proposal without making semantic correctness a compiler decision.
+- [x] Produce a deliberately simple, human-editable `structure.md` review artifact bound to exact Evidence/proposal identity. Make the hierarchy obvious, keep existing Nodes stable/protected by identity, and allow the project owner to add/rearrange proposed or future/reserved Nodes without editing a large JSON document.
+  - [x] Prototype the hierarchy-first Markdown surface with evidence excerpts below it, proposal/evidence binding, re-parenting by indentation, and human-added `[reserved]` Nodes; exact head `fb293b2e472eba48905a7d0c17d218149d0a14d9` passed all **99 tests** and zero generated drift in GitHub Actions run #344.
+  - [ ] Exercise existing-Node identity protection against the real already-onboarded `ai-workstation` root before declaring the Markdown review contract complete.
+- [x] Define a narrow deterministic import/normalization contract for edited `structure.md`; avoid a general Markdown AST/editor language. Preserve stable IDs for existing Nodes and allocate fresh human-side identity for newly accepted Nodes only once.
+- [x] Add a preview step that shows exactly which missing Node directories/files would be created from the edited structure before touching the project.
+- [x] Materialize only the accepted **Node skeletons** needed by the structure: minimal `CONTEXT.src.md`/identity plus short human orientation such as a Node-root `README.md` where useful. Future/reserved Nodes may explicitly say that the area is planned and not yet implemented. Do not distribute individual project Rules/Resources in Part 1.
+- [x] Make the structure iteration cheap: if the owner dislikes the result, edit `structure.md` again and regenerate the not-yet-populated missing skeletons deterministically rather than repeating semantic content analysis.
+- [ ] Test Part 1 vertically against the real `ai-workstation` shape, including independently deployable/containerized tool areas and at least one grouping Node, and record where the proposed tree needs human correction.
+
+### Part 2 — place the books after the shelves are accepted
+
+Do not implement the full placement/migration semantics before Part 1 has produced a structure the project owner actually likes. The intended next pass is already explicit so Part 1 does not accidentally hard-code the old leaf-first model.
+
+- [x] Bind the second semantic assignment to both the exact frozen Evidence and the accepted structure identity.
+- [x] Ask the LLM primarily **where existing information belongs**, not to restyle it: distinguish at least keep, move, reference and authority/compliance mapping; preserve good source language by default and record when synthesis is genuinely necessary.
+- [ ] Carry every accepted finding durably according to its semantic class; fix the current gap where accepted state/planning semantics can disappear when the original proposal artifact is removed.
+- [ ] Let ordinary documentation and larger corpora remain at natural/authoritative locations while Nodes provide progressive-disclosure entry points and mappings into them.
+- [ ] Use stable IDs so moved/localized context can be referenced without making file location the semantic identity.
+- [ ] Only after a reviewed placement proposal exists, design the cleanup step that removes true duplicate rule text from old locations and leaves useful references/orientation behind.
+
+### Questions this experiment must answer, not assume
+
+- [ ] Does a normal ContextCanon-managed root explicitly offer/recommend Foundation as its baseline Source, and how should that self-explanation appear without mixing ContextCanon infrastructure into the project's domain tree?
+- [ ] Is a normal Node sufficient for grouping/"directory" Nodes, including nodes with little local governance, or does real use expose a missing semantic distinction?
+- [ ] How should cross-cutting graph relationships be represented without making the human primary navigation cease to look like a simple hierarchy?
+- [ ] Which non-Node knowledge-body concepts need first-class representation, if any, beyond today's Resources and Sources? In particular test authoritative standards/policies and large imported documentation corpora before inventing a universal type system.
+- [ ] Is constrained Markdown the right human review/edit surface for coarse structure, with JSON remaining the deterministic machine form underneath, or does the round-trip become too fragile?
+- [ ] Which atomic CLI commands should remain as the stable automation API, and which repeated onboarding steps later deserve a thin orchestration command or local browser UI? Do not build the UI before the structure workflow has been used end to end.
+
+### Pre-test operator UX hardening from the first `ai-workstation` run
+
+The first real operator run exposed two practical issues that are worth fixing before asking the project owner to repeat the structure experiment: the project development instructions did not preserve the established `uv` installation workflow across chats, and important onboarding Markdown was being created by shell redirection, which is brittle on Windows PowerShell because encoding behavior can make the resulting file unusable in editors.
+
+- [x] Record these operator findings in PLAN before changing development guidance or onboarding output behavior.
+- [x] Make `uv` the preferred ContextCanon development/tool installation path when practical, with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"` as the normal Windows/PowerShell development pattern; keep the guidance cross-platform and do not make PowerShell or Windows a framework requirement.
+- [x] Add one visible human-facing onboarding workspace with a collision-safe ContextCanon marker and standard filenames instead of mixing editable LLM/review artifacts into the repository root or hiding them under `.context/`.
+- [x] Keep `.context/onboarding/<digest>/` as the immutable machine Evidence/review anchor, while explaining in the visible workspace README why frozen Evidence lets semantic/review work resume and iterate without silently changing its project basis.
+- [x] Make the structure-discovery instruction write UTF-8 directly to its standard workspace file by default, avoiding shell capture; retain an explicit stdout mode for scripting/harnesses.
+- [x] Let the new structure validate/review commands use standard workspace paths by default while retaining explicit path overrides for automation and unusual layouts.
+- [x] Cover workspace ownership/collision behavior, exact UTF-8 writes, standard-path CLI flow, and explicit stdout/path overrides with deterministic tests on the platform-independent Python layer; GitHub Actions run #352 on `a75096024bd31a4d4654bd09b3b4a79d3c744a0c` passed all **102 tests**. The remaining workflow failure was only the deliberately deferred self-hosted generated-package drift from these authored documentation/context changes.
+
+### Real structure review: useful owner correction and reusable workflow pressure
+
+The first real `ai-workstation` structure proposal succeeded at the level that matters: it reconstructed a strong coarse project shape from frozen Evidence and immediately triggered useful project-owner architecture review. The owner renamed/grouped the proposed shelves and removed the reserved `Local model integration` Node because the proposal had placed an intentionally deferred future concern under `compose` even though the Evidence does not establish that future implementation boundary. This is the intended human gate: software archaeology may propose a plausible structure, but future architecture remains owner-owned.
+
+The same review also exposed a real reuse opportunity. `ai-workstation` should use essentially the same recoverable, review-gated development workflow already proven while developing ContextCanon, rather than receive a second copied version. ContextCanon currently keeps that workflow under `nodes/internal/`, while the library convention currently says every reusable Node must compose Foundation. Real use shows that blanket convention is too strong: a reusable workflow should not force Foundation transitively on consumers that may want the workflow independently.
+
+- [x] Record the successful structure-review outcome, the owner's removal of the speculative `compose/local-model-integration` reservation, and the newly proven value of human coarse-structure review before continuing Part 2.
+- [x] Promote the existing Development Workflow by **moving rather than copying** its stable Node identity into the reusable Node Library; generalize only ContextCanon-specific wording that would be wrong for another project, and keep ContextCanon-only development tooling guidance as Framework Development delta.
+- [x] Relax the Node Library convention from "every reusable Node composes Foundation" to "compose Foundation only when the reusable Node semantically depends on it"; do not invent whole-Source exclusion merely to compensate for an unnecessarily coupled library Node.
+- [x] Preserve the existing explicit per-Rule `Remove`/`Override` model as the consumer exception mechanism; do not add Source-subtree exclusion unless another real case proves that separate capability necessary.
+- [ ] Finish Part 1 against the owner-edited `structure.md`: preserve the existing `ai-workstation` root Node identity, preview the seven missing child/group Node skeletons, and materialize only those missing skeletons without overwriting the already-onboarded root.
+- [x] Add a framework-owned **placement instruction** bound to the exact frozen Evidence plus the exact edited structure digest. The LLM's job is primarily destination selection, not rewriting: preserve exact wording when it is already clear and distinguish at least keep, move, reference, and authority/compliance mapping.
+- [x] Let the placement pass compare proposed generic guidance against explicitly supplied reusable Source packages, including the promoted Development Workflow, so `ai-workstation` can reuse the same Node instead of receiving duplicate local workflow Rules.
+- [x] Define and validate a compact placement proposal with exact Evidence provenance, destination Node identity/path, semantic kind, action, wording origin (`exact`, `lightly-edited`, `synthesized`) and rationale; keep JSON as the machine contract.
+- [x] Render a visible `contextcanon-onboarding/placement.md` review artifact that shows source excerpt → proposed destination/action → proposed canonical wording, while keeping the owner-edited structure as the accepted shelf map.
+- [x] Stop before destructive cleanup: first inspect the real `ai-workstation` placement result. Only after that review decide how canonical moves, ordinary documents, cross-cutting project resources, and duplicate-removal references should be materialized safely.
+
+Implementation checkpoint: exact head `3e75f9f10981400f0b17a7e63046f634a4c569c4` passed all **112 tests** and `contextcanon check --all .` at zero generated drift in GitHub Actions run #369 after regenerating Gateway, Framework Development, the promoted Development Workflow, and Foundation. The remaining unchecked `ai-workstation` items require the real owner-edited repository run rather than another framework implementation assumption.
