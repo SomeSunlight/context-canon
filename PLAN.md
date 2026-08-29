@@ -190,7 +190,7 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Immediately run normal deterministic build/check after publication.
 - [x] Roll back newly created canonical/generated files and newly installed Source packages if first-adoption publication fails before the acceptance record is complete.
 - [x] Record `contextcanon/onboarding-acceptance/v0` with evidence/proposal/review identities, decisions, exact Sources and resulting Context/package identities.
-- [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed merge/update contract.
+- [x] Deliberately refuse replacement when `CONTEXT.src.md` already exists; re-onboarding needs a separate reviewed update workflow.
 
 ### Regression and documentation completion
 
@@ -351,9 +351,9 @@ Do not implement the full placement/migration semantics before Part 1 has produc
 The first real operator run exposed two practical issues that are worth fixing before asking the project owner to repeat the structure experiment: the project development instructions did not preserve the established `uv` installation workflow across chats, and important onboarding Markdown was being created by shell redirection, which is brittle on Windows PowerShell because encoding behavior can make the resulting file unusable in editors.
 
 - [x] Record these operator findings in PLAN before changing development guidance or onboarding output behavior.
-- [ ] Make `uv` the preferred ContextCanon development/tool installation path when practical, with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"` as the normal Windows/PowerShell development pattern; keep the guidance cross-platform and do not make PowerShell or Windows a framework requirement.
-- [ ] Add one visible human-facing onboarding workspace with a collision-safe ContextCanon marker and standard filenames instead of mixing editable LLM/review artifacts into the repository root or hiding them under `.context/`.
-- [ ] Keep `.context/onboarding/<digest>/` as the immutable machine Evidence/review anchor, while explaining in the visible workspace README why frozen Evidence lets semantic/review work resume and iterate without silently changing its project basis.
-- [ ] Make the structure-discovery instruction write UTF-8 directly to its standard workspace file by default, avoiding shell capture; retain an explicit stdout mode for scripting/harnesses.
-- [ ] Let the new structure validate/review commands use standard workspace paths by default while retaining explicit path overrides for automation and unusual layouts.
-- [ ] Cover workspace ownership/collision behavior, exact UTF-8 writes, standard-path CLI flow, and explicit stdout/path overrides with deterministic tests on the platform-independent Python layer.
+- [x] Make `uv` the preferred ContextCanon development/tool installation path when practical, with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"` as the normal Windows/PowerShell development pattern; keep the guidance cross-platform and do not make PowerShell or Windows a framework requirement.
+- [x] Add one visible human-facing onboarding workspace with a collision-safe ContextCanon marker and standard filenames instead of mixing editable LLM/review artifacts into the repository root or hiding them under `.context/`.
+- [x] Keep `.context/onboarding/<digest>/` as the immutable machine Evidence/review anchor, while explaining in the visible workspace README why frozen Evidence lets semantic/review work resume and iterate without silently changing its project basis.
+- [x] Make the structure-discovery instruction write UTF-8 directly to its standard workspace file by default, avoiding shell capture; retain an explicit stdout mode for scripting/harnesses.
+- [x] Let the new structure validate/review commands use standard workspace paths by default while retaining explicit path overrides for automation and unusual layouts.
+- [x] Cover workspace ownership/collision behavior, exact UTF-8 writes, standard-path CLI flow, and explicit stdout/path overrides with deterministic tests on the platform-independent Python layer; GitHub Actions run #352 on `a75096024bd31a4d4654bd09b3b4a79d3c744a0c` passed all **102 tests**. The remaining workflow failure was only the deliberately deferred self-hosted generated-package drift from these authored documentation/context changes.
