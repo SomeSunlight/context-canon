@@ -21,6 +21,7 @@ from .onboarding_structure import (
     load_onboarding_structure_proposal,
 )
 from .onboarding_structure_instruction import build_onboarding_structure_instruction
+from .onboarding_workspace import open_onboarding_workspace, write_utf8
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -47,6 +48,10 @@ def _compile_one(path: Path):
     node_root = _node_root(path)
     repo_root = find_repo_root(node_root)
     return Compiler(repo_root).compile(node_root)
+
+
+def _workspace_path(value: str | None) -> Path | None:
+    return Path(value) if value is not None else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -79,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
 
     onboard_structure_instruction = onboard_sub.add_parser(
         "structure-instruction",
-        help="render the framework-owned coarse structure-discovery instruction for one exact evidence snapshot",
+        help="write the framework-owned coarse structure-discovery instruction for one exact evidence snapshot",
     )
     onboard_structure_instruction.add_argument(
         "snapshot", help="root of the prepared content-addressed evidence snapshot"
@@ -91,6 +96,16 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="verified immutable reusable Source package offered to the structure reviewer; may be repeated",
     )
+    onboard_structure_instruction.add_argument(
+        "--workspace",
+        metavar="PATH",
+        help="visible human onboarding workspace (default: <project>/contextcanon-onboarding)",
+    )
+    onboard_structure_instruction.add_argument(
+        "--stdout",
+        action="store_true",
+        help="emit the instruction to stdout instead of creating/updating the visible onboarding workspace",
+    )
 
     onboard_structure_validate = onboard_sub.add_parser(
         "structure-validate",
@@ -99,7 +114,16 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_validate.add_argument(
         "snapshot", help="root of the prepared content-addressed evidence snapshot"
     )
-    onboard_structure_validate.add_argument("proposal", help="JSON onboarding structure proposal to validate")
+    onboard_structure_validate.add_argument(
+        "proposal",
+        nargs="?",
+        help="JSON onboarding structure proposal (default: <workspace>/structure-proposal.json)",
+    )
+    onboard_structure_validate.add_argument(
+        "--workspace",
+        metavar="PATH",
+        help="visible human onboarding workspace (default: <project>/contextcanon-onboarding)",
+    )
 
     onboard_structure_review = onboard_sub.add_parser(
         "structure-review",
@@ -108,8 +132,21 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_review.add_argument(
         "snapshot", help="root of the prepared content-addressed evidence snapshot"
     )
-    onboard_structure_review.add_argument("proposal", help="validated JSON onboarding structure proposal")
-    onboard_structure_review.add_argument("structure", help="human-editable structure Markdown file")
+    onboard_structure_review.add_argument(
+        "proposal",
+        nargs="?",
+        help="validated JSON onboarding structure proposal (default: <workspace>/structure-proposal.json)",
+    )
+    onboard_structure_review.add_argument(
+        "structure",
+        nargs="?",
+        help="human-editable structure Markdown file (default: <workspace>/structure.md)",
+    )
+    onboard_structure_review.add_argument(
+        "--workspace",
+        metavar="PATH",
+        help="visible human onboarding workspace (default: <project>/contextcanon-onboarding)",
+    )
 
     onboard_instruction = onboard_sub.add_parser(
         "instruction",
@@ -224,16 +261,41 @@ def main(argv: list[str] | None = None) -> int:
                     Path(args.snapshot),
                     catalog_package_roots=(Path(path) for path in args.catalog_package),
                 )
-                print(instruction.text, end="")
-                print(
-                    f"contextcanon onboarding structure instruction digest: {instruction.instruction_digest}",
-                    file=sys.stderr,
+                if args.stdout:
+                    if args.workspace is not None:
+                        raise ContextCanonError("--workspace cannot be combined with --stdout")
+                    print(instruction.text, end="")
+                    print(
+                        f"contextcanon onboarding structure instruction digest: {instruction.instruction_digest}",
+                        file=sys.stderr,
+                    )
+                    return 0
+
+                workspace = open_onboarding_workspace(
+                    Path(args.snapshot),
+                    _workspace_path(args.workspace),
+                    create=True,
                 )
+                write_utf8(workspace.structure_instruction_path, instruction.text)
+                print(f"wrote onboarding structure instruction {workspace.structure_instruction_path}")
+                print(f"Instruction digest: {instruction.instruction_digest}")
+                print(f"Evidence snapshot: {instruction.evidence_digest}")
+                print(f"Expected LLM output: {workspace.structure_proposal_path}")
                 return 0
 
             if args.onboard_command == "structure-validate":
-                proposal = load_onboarding_structure_proposal(Path(args.proposal), Path(args.snapshot))
+                if args.proposal is None:
+                    workspace = open_onboarding_workspace(
+                        Path(args.snapshot),
+                        _workspace_path(args.workspace),
+                        create=False,
+                    )
+                    proposal_path = workspace.structure_proposal_path
+                else:
+                    proposal_path = Path(args.proposal)
+                proposal = load_onboarding_structure_proposal(proposal_path, Path(args.snapshot))
                 print(f"validated onboarding structure proposal {proposal.proposal_digest}")
+                print(f"Proposal file: {proposal_path}")
                 print(f"Evidence snapshot: {proposal.evidence_digest}")
                 print(f"Proposed Nodes: {len(proposal.nodes)}")
                 print(f"Knowledge bodies: {len(proposal.knowledge_bodies)}")
@@ -241,14 +303,23 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
 
             if args.onboard_command == "structure-review":
+                workspace = None
+                if args.proposal is None or args.structure is None:
+                    workspace = open_onboarding_workspace(
+                        Path(args.snapshot),
+                        _workspace_path(args.workspace),
+                        create=False,
+                    )
+                proposal_path = Path(args.proposal) if args.proposal is not None else workspace.structure_proposal_path
+                structure_path = Path(args.structure) if args.structure is not None else workspace.structure_path
                 plan, proposal, _, created = create_or_load_structure_markdown(
                     Path(args.snapshot),
-                    Path(args.proposal),
-                    Path(args.structure),
+                    proposal_path,
+                    structure_path,
                 )
                 verb = "created" if created else "loaded"
                 print(f"{verb} onboarding structure {plan.structure_digest}")
-                print(f"Structure file: {Path(args.structure)}")
+                print(f"Structure file: {structure_path}")
                 print(f"Structure proposal: {proposal.proposal_digest}")
                 print(f"Nodes in edited tree: {len(plan.nodes)}")
                 return 0
