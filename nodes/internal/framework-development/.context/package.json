@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "aa43706a25d120ed240fc19b58e78d0f64647dd30484885ff0da56fb50710123",
-    "package": "04733c578eb0e57f738ad3581833747ba6df7edf2984f88e2513ae5de5c24768"
+    "normalized": "86130e850646b598067b03a59f160c608f26ec57fbf3bbbbc5caea67a6f1b456",
+    "package": "7631141a9e5d1588384cd9bb6d29235726dc2ae6079be70d8bfab8c664bed226"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "265a6770b1fd5b7d87dc611470f4e7dd94f2e8ef5ea5d5634b5f7fcb705baf4c",
-      "size": 12041
+      "sha256": "10e6462fe6474f5b7d98c94ddac75b26f6d9ffca76918eb887cc9c7480fc0327",
+      "size": 13087
     },
     {
       "path": "CONTEXT/README.md",
@@ -199,8 +199,8 @@
       "id": "CCW-001",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "Before starting a new coherent ContextCanon development block, add a short purpose and checklist to `PLAN.md`.",
+      "origin_node_name": "Development Workflow",
+      "statement": "Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.",
       "title": "Plan a coherent change block before editing",
       "why": "Repository state must explain what work is in progress even if the chat, model session, or tool run disappears."
     },
@@ -209,7 +209,7 @@
       "id": "CCW-002",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
+      "origin_node_name": "Development Workflow",
       "statement": "When a listed step is actually complete, mark its `PLAN.md` checkbox `[x]` immediately rather than reconstructing completion at the end of a long session.",
       "title": "Checkpoint completed plan items immediately",
       "why": "Immediate checkpoints turn PLAN into a reliable recovery ledger instead of requiring plan archaeology after an interruption."
@@ -219,8 +219,8 @@
       "id": "CCW-003",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "Put decisions, active constraints, accepted state, and next steps needed to resume work in repository documentation rather than relying on chat history or model memory.",
+      "origin_node_name": "Development Workflow",
+      "statement": "Put decisions, active constraints, accepted state, and next steps needed to resume work in repository documentation such as `PLAN.md`, `STATE.md`, or the project's equivalent rather than relying on chat history or model memory.",
       "title": "Keep recovery-critical knowledge in the repository",
       "why": "Long conversations and agent sessions are transient; the repository is the durable shared recovery point for humans and tools."
     },
@@ -229,50 +229,50 @@
       "id": "CCW-007",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
+      "origin_node_name": "Development Workflow",
       "statement": "When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.",
       "title": "Resume recent explicit continuation without re-proving unchanged state",
-      "why": "In the current single-developer workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption."
+      "why": "In a controlled single-owner workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption."
     },
     {
       "group": "Proportional verification",
       "id": "CCW-004",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate ContextCanon's compiler-owned self-hosted package output after every micro-edit.",
-      "title": "Batch related edits before generated-package regeneration",
-      "why": "Generated-output verification is valuable, but repeating the full materialization cycle after every tiny edit adds ceremony without increasing confidence in superseded intermediate heads."
+      "origin_node_name": "Development Workflow",
+      "statement": "For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.",
+      "title": "Batch related edits before expensive final verification",
+      "why": "Final verification is valuable, but repeating it on superseded intermediate heads adds ceremony without increasing confidence in the candidate that will actually be reviewed or merged."
     },
     {
       "group": "Proportional verification",
       "id": "CCW-005",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "A coherent development block may be presented for project-owner review while known CI failures or generated drift remain, provided that state is understood and disclosed. After explicit project-owner approval and before merging to `main`, require the exact current head to pass the deterministic test suite and `contextcanon check --all .` with zero generated drift.",
+      "origin_node_name": "Development Workflow",
+      "statement": "A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.",
       "title": "Require exact-head green verification at the merge gate, not the first review gate",
-      "why": "Human review should happen before spending finalization effort on a candidate that may still change, while `main` remains protected by a strict reproducibility gate."
+      "why": "Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate."
     },
     {
       "group": "Human review gate",
       "id": "CCW-006",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "Keep a review PR open until the project owner explicitly approves the reviewed result.",
+      "origin_node_name": "Development Workflow",
+      "statement": "Keep a review PR or equivalent change set open until the project owner explicitly approves the reviewed result.",
       "title": "Do not merge without explicit project-owner approval",
-      "why": "Green CI proves deterministic consistency, not that the product or documentation is acceptable to its human reviewer."
+      "why": "Green automation proves only the properties it checks; it does not prove that the product, architecture, or documentation is acceptable to its human owner."
     },
     {
       "group": "Accepted baseline",
       "id": "CCW-008",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "origin_node_name": "ContextCanon Development Workflow",
-      "statement": "After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.",
+      "origin_node_name": "Development Workflow",
+      "statement": "After a reviewed change is successfully merged into the accepted branch, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` or equivalent current-state documentation, and refresh README/CHANGELOG or review-status wording made stale by the merge when applicable.",
       "title": "Close the post-merge baseline checkpoint before new development",
-      "why": "The merge itself changes project truth after the merge candidate was frozen. Without an explicit post-merge checkpoint, `main` can be mechanically correct while its recovery documentation still describes the pre-merge state."
+      "why": "The merge itself creates project facts after the merge candidate was frozen. Without a post-merge checkpoint, the accepted code can be correct while recovery documentation still describes the pre-merge state."
     },
     {
       "group": "Compiler architecture",
@@ -355,14 +355,24 @@
       "why": "ContextCanon itself should demonstrate durable, reviewable project context."
     },
     {
+      "group": "Development method",
+      "id": "CCI-010",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force \"git+https://github.com/SomeSunlight/context-canon.git@<ref>\"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.",
+      "title": "Prefer uv for ContextCanon development and tool installation",
+      "why": "A uv-managed tool install has proven more repeatable for the real ContextCanon operator workflow and avoids repeatedly reintroducing environment-specific `pip` setup across development sessions, while the framework itself must remain usable on other operating systems and shells."
+    },
+    {
       "group": "Node library",
       "id": "CCI-004",
       "modifications": [],
       "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
       "origin_node_name": "ContextCanon Framework Development",
-      "statement": "Every reusable Node published in the ContextCanon Node Library must compose ContextCanon Foundation directly or transitively.",
-      "title": "Keep library Nodes on Foundation",
-      "why": "The library needs one common baseline while specialized Nodes should still contain only their own additional context."
+      "statement": "A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.",
+      "title": "Keep reusable Node dependencies explicit",
+      "why": "Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed."
     }
   ],
   "schema": "contextcanon/package/v0",
@@ -376,10 +386,10 @@
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
-      "name": "ContextCanon Development Workflow",
-      "normalized_digest": "6dd73f005b4efdaa404b66530835947fcfcdb7641958abafdafe6596b3b63b4e",
-      "package_digest": "24c1044dc05fb9640b41c7e03df95ac80a981657d4a9425a68664be8b1621596",
-      "version": "0.1.0-draft"
+      "name": "Development Workflow",
+      "normalized_digest": "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463",
+      "package_digest": "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a",
+      "version": "0.2.0-draft"
     }
   ],
   "topics": [
@@ -412,7 +422,7 @@
       "title": "Tests and CI"
     },
     {
-      "condition": "When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, or preparing a ContextCanon development block for project-owner review:",
+      "condition": "When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, installing a ContextCanon development build, or preparing a ContextCanon development block for project-owner review:",
       "id": "CCI-TOPIC-DEVELOPMENT-WORKFLOW",
       "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
       "origin_node_name": "ContextCanon Framework Development",
@@ -420,7 +430,7 @@
         {
           "intent": "required",
           "kind": "context-node",
-          "locator": "../development-workflow/"
+          "locator": "../../library/development-workflow/"
         }
       ],
       "title": "Development workflow"

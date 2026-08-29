@@ -80,13 +80,13 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are us
 
 Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
 
-## Rules from ContextCanon Development Workflow
+## Rules from Development Workflow
 
 ### Recoverable planning
 
 #### `CCW-001` — Plan a coherent change block before editing
 
-Before starting a new coherent ContextCanon development block, add a short purpose and checklist to `PLAN.md`.
+Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.
 
 #### `CCW-002` — Checkpoint completed plan items immediately
 
@@ -94,7 +94,7 @@ When a listed step is actually complete, mark its `PLAN.md` checkbox `[x]` immed
 
 #### `CCW-003` — Keep recovery-critical knowledge in the repository
 
-Put decisions, active constraints, accepted state, and next steps needed to resume work in repository documentation rather than relying on chat history or model memory.
+Put decisions, active constraints, accepted state, and next steps needed to resume work in repository documentation such as `PLAN.md`, `STATE.md`, or the project's equivalent rather than relying on chat history or model memory.
 
 #### `CCW-007` — Resume recent explicit continuation without re-proving unchanged state
 
@@ -102,25 +102,25 @@ When the project owner resumes work after a short conversational interruption, e
 
 ### Proportional verification
 
-#### `CCW-004` — Batch related edits before generated-package regeneration
+#### `CCW-004` — Batch related edits before expensive final verification
 
-For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate ContextCanon's compiler-owned self-hosted package output after every micro-edit.
+For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
 
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 
-A coherent development block may be presented for project-owner review while known CI failures or generated drift remain, provided that state is understood and disclosed. After explicit project-owner approval and before merging to `main`, require the exact current head to pass the deterministic test suite and `contextcanon check --all .` with zero generated drift.
+A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
 
 ### Human review gate
 
 #### `CCW-006` — Do not merge without explicit project-owner approval
 
-Keep a review PR open until the project owner explicitly approves the reviewed result.
+Keep a review PR or equivalent change set open until the project owner explicitly approves the reviewed result.
 
 ### Accepted baseline
 
 #### `CCW-008` — Close the post-merge baseline checkpoint before new development
 
-After a reviewed PR is successfully merged to `main`, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` and any README/CHANGELOG status text made stale by the merge, and correct live-status wording in the merged PR description when needed.
+After a reviewed change is successfully merged into the accepted branch, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` or equivalent current-state documentation, and refresh README/CHANGELOG or review-status wording made stale by the merge when applicable.
 
 ## Local Rules
 
@@ -162,11 +162,15 @@ Validate ContextCanon through concrete repository use cases before hardening abs
 
 Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
 
+#### `CCI-010` — Prefer uv for ContextCanon development and tool installation
+
+Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.
+
 ### Node library
 
-#### `CCI-004` — Keep library Nodes on Foundation
+#### `CCI-004` — Keep reusable Node dependencies explicit
 
-Every reusable Node published in the ContextCanon Node Library must compose ContextCanon Foundation directly or transitively.
+A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
 
 ## Topics
 
@@ -188,11 +192,11 @@ When changing or reviewing tests, GitHub Actions, repository consistency checks,
 
 ### Development workflow
 
-When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, or preparing a ContextCanon development block for project-owner review:
+When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, installing a ContextCanon development build, or preparing a ContextCanon development block for project-owner review:
 
 **Required**
 
-- [ContextCanon Development Workflow](../development-workflow/CONTEXT.md)
+- [Development Workflow](../../library/development-workflow/CONTEXT.md)
 
 ### Framework architecture
 
