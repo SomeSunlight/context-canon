@@ -21,7 +21,7 @@ Before changing anything:
 4. Read [PLAN.md](PLAN.md) for the active implementation block.
 5. Load only the Topic material required for the task.
 
-Framework Development composes the internal [ContextCanon Development Workflow](nodes/internal/development-workflow/CONTEXT.src.md). Its Rules make long LLM-assisted work recoverable: put coherent work in PLAN before editing, checkpoint completed items immediately, keep recovery-critical decisions in the repository, batch related edits before regenerating ContextCanon's own generated packages, require exact-head green verification at the final merge gate, and close the accepted-baseline/state checkpoint after a successful merge before starting new development.
+Framework Development composes the reusable [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md). Its Rules make long LLM-assisted work recoverable: put coherent work in PLAN before editing, checkpoint completed items immediately, keep recovery-critical decisions in the repository, batch related edits before expensive final verification, require exact-head green verification at the final merge gate, and close the accepted-baseline/state checkpoint after a successful merge before starting new development.
 
 Framework changes should preserve the central rule: **everything that can be exact stays deterministic; LLMs are used only for explicit semantic interpretation steps.**
 
@@ -36,9 +36,11 @@ nodes/library/<node-name>/
 Start with:
 
 1. the target Node's `CONTEXT.md` / `CONTEXT.src.md`, if it already exists;
-2. [ContextCanon Foundation](nodes/library/foundation/CONTEXT.md), because reusable library Nodes compose Foundation directly or transitively;
-3. [Source format](nodes/library/foundation/docs/source-format.md) for authoring syntax;
-4. [Official context](nodes/library/foundation/docs/official-context.md) and [Context composition](nodes/library/foundation/docs/composition.md) when inheritance or packaging matters.
+2. [Source format](nodes/library/foundation/docs/source-format.md) for authoring syntax;
+3. [Official context](nodes/library/foundation/docs/official-context.md) and [Context composition](nodes/library/foundation/docs/composition.md) when inheritance or packaging matters;
+4. [ContextCanon Foundation](nodes/library/foundation/CONTEXT.md) when the target Node composes Foundation or when you are deciding whether that dependency is semantically required.
+
+A reusable Node does **not** automatically inherit Foundation merely because it lives in the library. Source dependencies are explicit product decisions. Compose Foundation when the Node's meaning depends on it; keep an independent reusable concern standalone when consumers should be able to choose it separately.
 
 You normally do **not** need to read `STATE.md` or the whole framework `PLAN.md` merely to contribute Node content. Read them only when your Node contribution also requires a framework capability or changes the project roadmap.
 
@@ -48,6 +50,7 @@ A reusable Node contribution should answer questions such as:
 - Does an existing library Node already cover it?
 - Is it durable governance, a Topic-specific resource, or ordinary documentation?
 - Can the Node remain small and composable rather than becoming another giant instruction bundle?
+- Does it actually depend on Foundation or another Source, or should that dependency remain a consumer choice?
 - Are stable IDs and Source relationships preserved?
 
 Do not put an experiment into `nodes/library/` merely because it uses ContextCanon. Reusable library content should be reviewed as a product in its own right.
@@ -58,22 +61,23 @@ ContextCanon currently uses four real Context Nodes on its own repository:
 
 - Gateway: edit [CONTEXT.src.md](CONTEXT.src.md)
 - Foundation: edit [nodes/library/foundation/CONTEXT.src.md](nodes/library/foundation/CONTEXT.src.md)
-- Development Workflow: edit [nodes/internal/development-workflow/CONTEXT.src.md](nodes/internal/development-workflow/CONTEXT.src.md)
+- Development Workflow: edit [nodes/library/development-workflow/CONTEXT.src.md](nodes/library/development-workflow/CONTEXT.src.md)
 - Framework Development: edit [nodes/internal/framework-development/CONTEXT.src.md](nodes/internal/framework-development/CONTEXT.src.md)
 
 Do not directly edit generated `CONTEXT.md`, `CONTEXT/`, harness adapters, `.context/context.yaml`, or `.context/package.json` files.
 
-Reusable ContextCanon guidance owned by Foundation is authored under [`nodes/library/foundation/docs/`](nodes/library/foundation/docs/). Framework-specific implementation, architecture, onboarding-reference, tests/CI, and project-method documents are authored under [`nodes/internal/framework-development/docs/`](nodes/internal/framework-development/docs/). Files with similar names under a Node's generated `CONTEXT/references/` tree are compiler-materialized package copies, not another authoring surface.
+Reusable guidance is authored with the reusable Node that owns it. Foundation-owned guidance lives under [`nodes/library/foundation/docs/`](nodes/library/foundation/docs/); the Development Workflow owns its material under [`nodes/library/development-workflow/docs/`](nodes/library/development-workflow/docs/). Framework-specific implementation, architecture, onboarding-reference, tests/CI, and project-method documents are authored under [`nodes/internal/framework-development/docs/`](nodes/internal/framework-development/docs/). Files with similar names under a Node's generated `CONTEXT/references/` tree are compiler-materialized package copies, not another authoring surface.
 
-After changing ContextCanon source or referenced material, useful verification commands are:
+For source-tree verification, prefer `uv` rather than installing an editable package with `pip` by habit:
 
 ```text
-python -m pip install -e .
-python -m unittest discover -s tests -v
-contextcanon check --all .
+uv run python -m unittest discover -s tests -v
+uv run contextcanon check --all .
 ```
 
-`check` performs compilation in memory and reports generated drift. During project-owner review, understood and disclosed drift may remain while the authored result is still changing. After project-owner approval and before merge, use the final reported drift to run `contextcanon build --all .`, commit exactly that generated output, then require the exact merge candidate to pass tests plus `contextcanon check --all .` at zero drift.
+When testing ContextCanon as a globally available development tool on the current Windows operator environment, install the exact review branch or commit from a dedicated PowerShell 7.x window using the Framework Development convention documented in its Context.
+
+`check` performs compilation in memory and reports generated drift. During project-owner review, understood and disclosed drift may remain while the authored result is still changing. After project-owner approval and before merge, use the final reported drift to run `uv run contextcanon build --all .`, commit exactly that generated output, then require the exact merge candidate to pass tests plus `uv run contextcanon check --all .` at zero drift.
 
 After the merge, close the small accepted-baseline checkpoint before starting the next coherent development block. This records merge-created facts in the durable repository status; it is separate from compiler/package verification and should not be mixed with the next feature.
 
@@ -217,17 +221,3 @@ Immediately after squash-merging and before starting another product block, clos
 - reconcile `STATE.md` and any README/CHANGELOG project-status wording made stale by the merge;
 - correct stale live-status wording in the merged PR description while preserving its historical review evidence;
 - check the small set of repository status/navigation documents for the old branch/PR/baseline wording.
-
-Keep this closure bookkeeping-only. When repository policy requires a follow-up PR, that small checkpoint PR closes the preceding product block; it does not recursively establish another product baseline merely because the bookkeeping PR itself is merged.
-
-The active LLM-assisted development cadence is additionally governed by the internal Development Workflow Node. In particular, coherent PLAN items are recorded before editing and completed checkboxes are updated as soon as the corresponding step is genuinely complete.
-
-## Pull requests
-
-Keep changes conceptually focused. Explain what changed, why it belongs in deterministic truth or an explicit semantic layer above it, and which practical need or invariant it serves.
-
-GitHub Actions cancels superseded runs for the same PR/ref, so intermediate correction heads do not consume CI after a newer head exists. The exact head intended for merge must complete the full deterministic suite with zero drift; project-owner review can happen earlier when remaining failures are known and disclosed.
-
-Keep the PR open until the project owner explicitly approves the reviewed result. After merge, if its description was written as live status (for example "not merged" or "current review candidate"), make the final merged outcome explicit rather than leaving a historically confusing record.
-
-If a new feature makes compiler semantics depend on hidden transport behavior, generated presentation, an unbound repository snapshot, unvalidated semantic output, or an LLM judgment, redesign the separation before merging.

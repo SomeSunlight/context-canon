@@ -6,11 +6,18 @@ Each actual Context Node lives in its **own node-root directory**. A node-root d
 
 The category directory `library/` is not itself a Context Node.
 
-## Foundation
+## Current reusable Nodes
 
-[`foundation/`](foundation/) is **ContextCanon Foundation**, the common baseline of the ContextCanon Node Library.
+- [`foundation/`](foundation/) — **ContextCanon Foundation**, the reusable baseline for ContextCanon authoring, composition, progressive disclosure, stable identity, harness neutrality, and repository conventions.
+- [`development-workflow/`](development-workflow/) — **Development Workflow**, a reusable recoverable planning/review/merge workflow proven in ContextCanon and `ai-workstation` development. It intentionally remains Foundation-independent so consumers can choose the two Sources separately.
 
-Every reusable Node published in this library must compose Foundation either directly or transitively through another library Node. This keeps the shared framework contract in one place while still allowing specialized Nodes to add only their own delta.
+## Composition policy
+
+A reusable library Node should compose another Source only when its own semantics actually depend on that Source.
+
+Foundation is the natural baseline for Nodes whose meaning depends on ContextCanon authoring/governance conventions, but it is **not a mandatory transitive dependency for every reusable Node**. Independent concerns should remain independent Sources so consumers can compose exactly what they need without removing unrelated inherited context later.
+
+Source dependencies are therefore explicit product decisions, not a library-directory inheritance rule.
 
 ## Adding a reusable Node
 
