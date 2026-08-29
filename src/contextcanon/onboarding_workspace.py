@@ -16,6 +16,10 @@ README_NAME = "README.md"
 STRUCTURE_INSTRUCTION_NAME = "structure-instruction.md"
 STRUCTURE_PROPOSAL_NAME = "structure-proposal.json"
 STRUCTURE_REVIEW_NAME = "structure.md"
+STRUCTURE_PREVIEW_NAME = "structure-preview.md"
+PLACEMENT_INSTRUCTION_NAME = "placement-instruction.md"
+PLACEMENT_PROPOSAL_NAME = "placement-proposal.json"
+PLACEMENT_REVIEW_NAME = "placement.md"
 
 
 @dataclass(frozen=True)
@@ -38,6 +42,22 @@ class OnboardingWorkspace:
     def structure_path(self) -> Path:
         return self.root / STRUCTURE_REVIEW_NAME
 
+    @property
+    def structure_preview_path(self) -> Path:
+        return self.root / STRUCTURE_PREVIEW_NAME
+
+    @property
+    def placement_instruction_path(self) -> Path:
+        return self.root / PLACEMENT_INSTRUCTION_NAME
+
+    @property
+    def placement_proposal_path(self) -> Path:
+        return self.root / PLACEMENT_PROPOSAL_NAME
+
+    @property
+    def placement_path(self) -> Path:
+        return self.root / PLACEMENT_REVIEW_NAME
+
 
 def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
@@ -56,13 +76,17 @@ Freezing does not freeze the live Git repository. ContextCanon copies the select
 
 That has two benefits. First, ContextCanon can detect when a reviewed live file changed before acceptance. Second, onboarding itself becomes restartable: a different semantic assignment, a corrected prompt contract, or another review iteration can reuse the same frozen Evidence instead of rescanning and silently changing the basis of the experiment. Prepare a new snapshot only when you intentionally want a new evidence basis.
 
-## Standard files for the structure-first pass
+## Standard files for structure-first onboarding
 
 - `{STRUCTURE_INSTRUCTION_NAME}` — generated UTF-8 instruction for the external strong reasoning LLM. ContextCanon owns this file; regenerate it rather than editing it.
-- `{STRUCTURE_PROPOSAL_NAME}` — JSON returned by the external LLM. Save the model result here before validation.
-- `{STRUCTURE_REVIEW_NAME}` — human-editable structure review generated from the validated proposal. This is the file to rename, re-indent, add, remove, or reserve Nodes in.
+- `{STRUCTURE_PROPOSAL_NAME}` — JSON returned by the external LLM for coarse structure discovery.
+- `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map. Rename, re-indent, add, remove, or reserve Nodes here.
+- `{STRUCTURE_PREVIEW_NAME}` — deterministic preview of existing protected Nodes and missing Node skeletons before materialization.
+- `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the second semantic pass after the owner has edited the structure.
+- `{PLACEMENT_PROPOSAL_NAME}` — JSON returned by the external LLM describing where existing project knowledge belongs.
+- `{PLACEMENT_REVIEW_NAME}` — readable evidence-rich placement review showing source excerpt, destination/action, and proposed canonical wording.
 
-Later onboarding passes may add more named files here. None of these working files become canonical Context merely because they exist.
+The structure file is the human-owned coarse map. The placement pass is not allowed to redesign it. None of these working files become canonical Context merely because they exist.
 
 ## Ownership
 
@@ -106,7 +130,7 @@ def open_onboarding_workspace(
     *,
     create: bool,
 ) -> OnboardingWorkspace:
-    root = (workspace_root.resolve() if workspace_root is not None else _default_workspace_root(snapshot_root))
+    root = workspace_root.resolve() if workspace_root is not None else _default_workspace_root(snapshot_root)
     workspace = OnboardingWorkspace(root)
 
     if root.exists() or root.is_symlink():
