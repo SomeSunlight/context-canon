@@ -57,6 +57,8 @@ That gives you a simple but important advantage: **the LLM and the later human r
 
 The frozen snapshot is therefore a review anchor, not a repository freeze. Your normal project can continue changing; an outdated review simply has to be prepared again.
 
+The same property is useful while the onboarding method itself evolves. A different semantic pass, a corrected instruction, or another human review can deliberately reuse the **same Evidence digest** and therefore compare interpretations against one stable project basis instead of rescanning the live repository each time. Prepare a new snapshot when you intentionally want the evidence basis to change, not merely because another onboarding step or experiment starts.
+
 ### What is expected to be in the project directory?
 
 A normal Git repository is enough. ContextCanon looks conservatively for likely context carriers such as:
