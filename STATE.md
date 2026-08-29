@@ -1,229 +1,153 @@
 # Current State
 
-ContextCanon has a stable deterministic core and, since PR #9, a complete first-adoption path from an existing Git repository to **human-reviewed, explicitly accepted canonical Context**.
+ContextCanon now has a stable deterministic core plus a structure-first onboarding path that has been exercised on the materially larger `SomeSunlight/ai-workstation` project.
 
-The current project-owner accepted product baseline on `main` is PR #9, squash-merged as:
+The current project-owner accepted `main` baseline is PR #12, squash-merged as:
 
-`f7afe5c82942ecb9e3a04696455f8c960cc9b144`
+`bac1f52048b3d82cedb00b04fccd114607c4c915`
 
-PR #9 added the human review/acceptance mechanics and a substantial self-hosting cleanup around repository orientation, documentation ownership and recoverable LLM-assisted development.
+PR #12 replaced the earlier leaf-first onboarding assumption with a two-pass model:
 
-> [!NOTE]
-> **Project-owner accepted** means the project owner, acting as ContextCanon's first user/reviewer, reviewed a development stage and approved it as the new project baseline. That is different from `contextcanon source accept` and `contextcanon onboard accept`, where a human operator explicitly accepts one concrete reviewed artifact.
+1. discover and human-review the coarse Context structure;
+2. only after those shelves are accepted, place existing project knowledge onto them.
 
-## Where we are now
+Before merge, exact review head `0eafad15e0cddd4a79f5088cd51e7db9dbde4880` passed GitHub Actions run #372 with **112/112 tests** and zero generated drift for Gateway, Framework Development, Development Workflow, and Foundation.
 
-PR #9 is accepted and merged. Its exact merge candidate completed the mechanical gate with **92/92 deterministic/repository tests** and zero generated drift in GitHub Actions run #333 before the squash merge.
+## What the real `ai-workstation` test proved
 
-The merge exposed one process gap in ContextCanon's own development workflow: the workflow described the exact pre-merge gate but stopped at `squash-merge to main`. It did not require a small checkpoint immediately afterwards to record facts that only exist after the merge, such as the actual merged state and final baseline identity. That allowed `STATE.md`, `PLAN.md`, README project status, CHANGELOG and the historical PR description to retain pre-merge wording even though `main` had already advanced.
+The first structure proposal reconstructed a useful coarse project shape from the original frozen Evidence. The project owner then edited that hierarchy directly in `contextcanon-onboarding/structure.md`, including removing the speculative reserved local-model Node because the Evidence established deferral but did not establish a future Compose-based implementation boundary.
 
-The workflow now includes that explicit **post-merge accepted-baseline/state checkpoint**. The correction is deliberately procedural: close the previous block's durable status before beginning a new coherent development block; do not invent compiler machinery until real use shows that deterministic automation would add value.
+That human correction was the desired gate rather than a failure of the semantic pass: the LLM performed strong software archaeology, while future architecture remained owner-owned.
 
-The next major product block remains the **materially larger real 1:1 onboarding test** described in PLAN.
+The subsequent real operator run also succeeded:
 
-## In one minute
+- `structure-preview.md` made the planned filesystem/Node changes understandable before mutation;
+- the already-onboarded root Node remained protected;
+- the missing child/group Node skeletons were materialized successfully;
+- the resulting generated `CONTEXT.md` files now make the accepted structure visible even though their local semantic deltas are intentionally still almost empty.
 
-The accepted `main` baseline can:
+This validates the structure-first direction strongly enough to continue with the second pass.
 
-- compile Context Nodes deterministically;
-- compose reusable immutable Sources with exact identities and offline accepted state;
-- review and explicitly accept Source updates;
-- keep entry context small and route deeper context through Topics;
-- freeze exact onboarding evidence from an existing Git repository;
-- generate the semantic assignment for an external reasoning LLM;
-- validate the returned `proposal.json` against exact frozen evidence;
-- create a human review bound to that exact proposal and evidence;
-- show every finding with rationale, confidence and exact cited evidence;
-- require explicit human `accept` or `reject` decisions;
-- reject stale review or changed live evidence;
-- bind proposed reusable Sources to the exact immutable packages that were reviewed;
-- stage and compile the proposed first Context Node before publication;
-- refuse first adoption when it would seize existing project-owned ContextCanon paths;
-- publish the first canonical `CONTEXT.src.md` only after explicit human acceptance;
-- roll back a failed first publication rather than leave a half-adopted repository;
-- immediately run normal deterministic build/check after publication.
+## Current self-hosted Nodes
 
-It deliberately does **not**:
+ContextCanon currently uses four conceptual roles on its own repository:
 
-- let an LLM publish project truth;
-- invent answers for unresolved questions;
-- silently convert candidate reusable Nodes into library Nodes;
-- splice planning prose into human documents as if prose merging were deterministic;
-- replace an existing `CONTEXT.src.md` through first-onboarding acceptance v0;
-- silently substitute another reusable Source package after semantic review.
+### ContextCanon Gateway
 
-## Four self-hosted Context Nodes, four different jobs
+The repository root is the compact entry point and routes deeper work through Topics.
 
-ContextCanon uses four real Context Nodes on its own repository.
+### ContextCanon Foundation
 
-### 1. ContextCanon Gateway
+`nodes/library/foundation/` is the reusable ContextCanon baseline. It owns the reusable authoring/Official-Context/Topic/Source-composition semantics.
 
-The repository root is the deliberately small Gateway. It owns first-contact orientation and routes deeper work through Topics.
+### Development Workflow
 
-### 2. ContextCanon Foundation
+`nodes/library/development-workflow/` is now a reusable Library Node with the same stable identity that previously lived under `nodes/internal/`.
 
-`nodes/library/foundation/` is the reusable baseline for the ContextCanon Node Library.
+It is intentionally independent from Foundation. Consumers that want both compose both explicitly; a reusable workflow does not force Foundation transitively merely because it is reusable.
 
-Foundation owns its own reusable authored documentation:
+### ContextCanon Framework Development
 
-- source/authoring format;
-- Official Context package semantics;
-- Topics and progressive disclosure;
-- Source composition and exact accepted-package semantics;
-- harness-adapter principles.
+`nodes/internal/framework-development/` composes Foundation and Development Workflow separately, then adds only ContextCanon-specific architecture, implementation, onboarding, test/CI, and development guidance.
 
-Foundation is therefore independently understandable and publishable. Framework Development may consume those resources, but it is no longer their hidden authoring owner.
+ContextCanon-specific `uv` installation guidance remains a local Framework Development delta rather than leaking into the reusable workflow.
 
-### 3. ContextCanon Development Workflow
+## Current onboarding model
 
-`nodes/internal/development-workflow/` is an internal self-hosted Node for the development method itself.
-
-Its Rules make the working method explicit:
-
-- put coherent work in `PLAN.md` before editing;
-- checkpoint completed steps immediately;
-- keep recovery-critical knowledge in the repository;
-- after a short explicit continuation with no reported intervening edits, resume from the last established repository state instead of re-proving that nothing changed;
-- batch related edits instead of regenerating generated Context packages after every micro-change;
-- allow a coherent candidate to reach project-owner review with understood/disclosed CI drift;
-- require exact-head full green CI and zero drift only at the final merge gate;
-- never merge without explicit project-owner approval;
-- after a successful merge, close the accepted-baseline/state checkpoint before beginning the next coherent development block.
-
-This Node remains internal until unrelated projects demonstrate that the workflow is genuinely reusable.
-
-### 4. ContextCanon Framework Development
-
-`nodes/internal/framework-development/` composes Foundation plus Development Workflow and adds only ContextCanon-framework-specific context.
-
-It owns compiler implementation, architecture, onboarding internals/reference material, tests/CI documentation, framework state concepts and the project-specific use-case walkthrough.
-
-## Why the extra README files matter
-
-Important physical directories explain themselves when opened directly in GitHub.
-
-The authored README files are not decorative. They make ownership and purpose visible before a reader has to understand the whole ContextCanon architecture. In particular they distinguish:
+The preferred real-project path is now:
 
 ```text
-owning Node / docs/...              human-authored source documentation
-        ↓ deterministic materialization
-owning/consuming Node / CONTEXT/... generated self-contained package material
+existing repository
+    ↓
+freeze exact Evidence once
+    ↓
+structure-discovery instruction
+    ↓
+strong reasoning LLM
+    ↓
+strict structure proposal
+    ↓
+human-editable structure.md
+    ↓
+preview missing/protected Nodes
+    ↓
+materialize only accepted Node skeletons
+    ↓
+placement instruction bound to Evidence + edited structure
+    ↓
+strong reasoning LLM
+    ↓
+strict placement proposal
+    ↓
+evidence-rich placement.md review
+    ↓
+[publication/cleanup still to be completed]
 ```
 
-Generated non-empty `CONTEXT/` directories also receive a compiler-generated `README.md` explaining that `references/` contains package copies rather than another authoring surface.
+The visible `contextcanon-onboarding/` directory is human working material. Immutable machine Evidence remains under `.context/onboarding/<digest>/`.
 
-This preserves a self-contained immutable package without creating a second place where humans are expected to maintain the same documentation. It also lets precise detail live close to the narrow context where it belongs while higher-level overviews stay compact.
+Frozen Evidence has proven useful for more than stale-review safety: the same exact project bytes can now be reused for changed semantic methods without re-running discovery from an accidentally different repository state.
 
-The larger real onboarding test will separately observe a related human-UX question: whether project-owned Node-root README files, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md` should be distinguished more explicitly as a general ContextCanon convention. That observation remains a test hypothesis, not a new Foundation rule.
+## Placement semantics already implemented
 
-## How onboarding works now
+The second semantic pass is bound to both the exact frozen Evidence and the exact edited structure digest.
 
-Onboarding uses a strong reasoning AI as a **semantic sorting assistant** for one bounded step.
+It can propose:
 
-An existing repository rarely presents its useful context in clean categories. Durable Rules may be mixed with README prose, configuration, CI, architecture decisions, temporary plans, reusable conventions and contradictory descriptions.
+- `rule`
+- `topic-resource`
+- `ordinary-documentation`
+- `state`
+- `plan`
+- `authority-mapping`
+- `unresolved`
 
-The workflow is deliberately split by actor:
+and distinguishes placement operations:
+
+- `keep`
+- `move`
+- `reference`
+- `map`
+
+When wording is carried forward, provenance is explicit:
+
+- `exact`
+- `lightly-edited`
+- `synthesized`
+
+The semantic instruction tells the model to prefer exact source wording when it is already clear. This intentionally changes the model's role from semantic rewriter to semantic curator/placer.
+
+Placement can also compare generic project guidance with explicitly supplied verified reusable Source packages, including the promoted Development Workflow, so a project does not need a second copied workflow Node.
+
+## Important boundaries that remain
+
+ContextCanon still does **not** let an LLM publish project truth.
+
+The merged PR #12 deliberately stops before destructive placement publication. In particular it does not yet:
+
+- write reviewed placement decisions into all destination `CONTEXT.src.md` files;
+- install/pin placement-selected Sources into their target Nodes;
+- remove duplicated canonical rule text from README/CONTRIBUTING/other project documents;
+- splice state/planning prose into arbitrary human documents;
+- solve owner-selected Sources that arise during architecture review but were not themselves inferred from frozen Evidence;
+- generalize cross-cutting graph relationships, authority corpora, or a browser UI beyond what real projects have demonstrated.
+
+## Immediate next step
+
+Continue the real `ai-workstation` onboarding rather than designing publication in isolation.
+
+Use the already accepted `structure.md` and the original frozen Evidence to run the second placement LLM pass. Offer the reusable Development Workflow as an exact catalog package so the real result shows whether generic workflow guidance is reused rather than duplicated locally.
+
+The next framework block should then make the reviewed placement result human-editable and deterministically previewable before writing Node authoring. The likely publication boundary is:
 
 ```text
-[ContextCanon · deterministic]
-freeze exact repository evidence
-        ↓
-[ContextCanon · deterministic]
-generate the semantic assignment
-        ↓
-[External strong reasoning LLM · semantic]
-classify and organize the frozen evidence
-return exactly one proposal.json
-        ↓
-[ContextCanon · deterministic]
-validate structure and provenance
-        ↓
-[ContextCanon + Human]
-show each finding beside exact evidence
-record accept/reject decisions
-        ↓
-[Human · explicit action]
-contextcanon onboard accept
-        ↓
-[ContextCanon · deterministic]
-preflight → stage → compile → publish → build/check
+placement-proposal.json
+    ↓
+placement.md human review/correction
+    ↓
+placement preview of exact CONTEXT.src.md / Source changes
+    ↓
+explicit human publication
 ```
 
-ContextCanon does not choose or call the model. The operator supplies the framework-generated instruction and frozen evidence to a suitable model or harness.
-
-A strong reasoning-capable model is recommended because deterministic validation proves JSON structure and provenance, not whether semantic classification was intelligent.
-
-## What explicit onboarding acceptance protects
-
-A valid LLM proposal is still untrusted semantic interpretation.
-
-`contextcanon onboard review` binds human review state to exact proposal/evidence identity. Every finding starts pending and must become explicit `accept` or `reject` before publication.
-
-`contextcanon onboard accept` then protects four important first-adoption boundaries:
-
-1. **Live evidence must still match review.** Changed reviewed files stop acceptance.
-2. **Reusable Source identity stays exact.** The accepted package must be the same immutable package that semantic review and human review saw.
-3. **First adoption does not seize project files.** ContextCanon stages the proposed Node and derives its real generated outputs before touching canonical project state.
-4. **Failed first publication is rolled back.** Newly created canonical/generated state and newly installed Source packages from a failed attempt are removed while pre-existing accepted state is preserved.
-
-## Evidence is not automatically truth
-
-Onboarding selects likely high-value context carriers such as README, CONTRIBUTING, architecture/development documentation, manifests, CI configuration and agent instructions. Ordinary source code is not blindly added to the first semantic pass.
-
-Those files may disagree or be stale. The generated assignment therefore tells the reasoning model:
-
-- no familiar filename is automatically authoritative;
-- for **currently implemented behavior**, direct implementation/configuration/manifest/CI/test evidence has more weight when it clearly contradicts descriptive documentation;
-- documentation and meaningful source comments remain important evidence for intent, rationale, constraints, workflow, history and target design;
-- unclear "is versus should become" conflicts stay visible as unresolved questions or planning state.
-
-## What is stable on main
-
-The accepted baseline through PR #9 includes:
-
-- deterministic Context Node compilation and generated drift checking;
-- compact Gateway context plus Topic-based progressive disclosure;
-- stable Node/Rule identity and inherited Rule Remove/Override;
-- immutable external Source packages and offline normal builds;
-- deterministic Source review and explicit operator acceptance;
-- generic Git candidate transport;
-- deterministic onboarding evidence preparation;
-- framework-owned, harness-neutral semantic assignment;
-- strict provenance-rich onboarding proposal validation;
-- human onboarding review bound to exact proposal/evidence identity;
-- explicit accept/reject decisions and explicit `contextcanon onboard accept` publication;
-- exact reusable Source package binding across semantic review and final acceptance;
-- staged first-adoption compilation, project-path collision refusal and rollback-safe publication;
-- user-facing onboarding walkthrough and first-user usability hardening;
-- four self-hosted Context Nodes with explicit documentation ownership and folder orientation;
-- a recoverable Development Workflow with separate review-ready and merge-ready gates.
-
-## PR #9 merge gate
-
-PR #9 was project-owner approved and mechanically finalized before merge. Its final verification head `4bc0e2ff586c606479e66eb72e275f5ac1a0e4e8` passed GitHub Actions run #333 with:
-
-- **92/92 tests passed**;
-- `contextcanon check --all .` clean for Gateway, Development Workflow, Framework Development and Foundation;
-- no generated-drift artifact because no drift remained;
-- the final 93-path diff checked for accidental temporary/placeholder files.
-
-GitHub then squash-merged PR #9 to `main` as `f7afe5c82942ecb9e3a04696455f8c960cc9b144`.
-
-## What comes next
-
-ContextCanon should now be used on a **materially larger existing project** with no pre-curated ContextCanon files.
-
-That exercise is deliberately two tests at once:
-
-1. **Onboarding usability and trust:** Does prepare → semantic proposal → review → explicit acceptance remain understandable and comfortable at real size?
-2. **ContextCanon in actual use:** Once accepted, does the resulting structure genuinely help humans and agents clean up scattered project knowledge into sensible local Nodes, reusable Sources, Rules and Topics?
-
-The real test should also answer the intentionally open baseline question: should normal first onboarding offer/recommend ContextCanon Foundation as a reusable starting Source, remain fully opt-in, or use another convention? The repository Gateway is not the reusable baseline.
-
-A separate later lifecycle question is how to **clean up or strip down onboarding state without throwing away useful Context**. The intended direction is a deterministic preview of transient artifacts that are ready to delete, explicit human confirmation, and preservation of canonical/generated Context and useful nested Nodes by default.
-
-## Later refinement: important context hidden in source code
-
-Do **not** turn first bootstrap into a blind whole-repository source scan.
-
-After coarse ContextCanon structure exists, investigate a second bounded semantic pass over human-written comments/docstrings. Look for high-value invariants, non-obvious constraints, compatibility reasons, architectural decisions and warnings; compare them against accepted Rules/Topics/Sources; preserve exact source provenance; and require human review before centralizing anything.
+Ordinary project documentation should remain in its natural home unless a later reviewed cleanup identifies true duplicate canonical rule text. State/plan/unresolved findings must remain durably recoverable even when they are not automatically spliced into prose documents.
