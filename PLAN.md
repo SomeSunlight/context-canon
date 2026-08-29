@@ -183,7 +183,7 @@ Goal: make a proposal inspectable against exact evidence, record explicit human 
 - [x] Resolve every accepted `existing-source` to an exact verified immutable package plus explicit visible Source locator.
 - [x] Install/pin accepted Source packages exactly and prove normal builds remain offline after the original Source repository is removed.
 - [x] Render proposed canonical `CONTEXT.src.md` in a staging Node before publication.
-- [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the package.
+- [x] Stage only frozen reviewed evidence so Topic Markdown closure cannot pull unreviewed local files into the accepted package.
 - [x] Compile the staged Node before writing canonical source.
 - [x] Preflight the staged compiler's exact first-adoption output paths and refuse to overwrite existing project-owned paths such as `CONTEXT.md` or `CONTEXT/`.
 - [x] Create the first canonical `CONTEXT.src.md` only after the staged compile and collision preflight succeed.
@@ -254,7 +254,7 @@ Purpose: restore `main` as a coherent reference point and add the smallest durab
 
 - [x] Record the post-merge lifecycle finding and this correction block before changing other status/workflow surfaces.
 - [x] Reconcile the accepted baseline and post-merge status across `STATE.md`, `PLAN.md`, root `README.md`, and `CHANGELOG.md`, and correct PR #9's description so it reads coherently as a merged historical record.
-- [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
+- [x] Extend ContextCanon Development Workflow with an explicit post-merge accepted-baseline/state checkpoint before the next coherent development block begins; keep the correction procedural unless real use proves deterministic tooling necessary.
 - [x] Record for the later real onboarding test the distinction between a project-owned Node-root `README.md`, authored folder landing/orientation README files, and compiler-generated `CONTEXT/README.md`; observe whether folder landing pages should later become an onboarding recommendation or managed feature without overwriting existing project README files.
 - [x] After authored context settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and zero-drift check on the exact review head, inspect the diff, and open a review PR without merging; exact head `74489182ce359703a00d821eeb61cc05657f0dd5` passed all **92 tests** and `contextcanon check --all .` at zero drift in GitHub Actions run #336, and the diff against `main` contained exactly 16 intended paths: 9 authored/status surfaces plus 7 deterministic generated-package updates, with no compiler or test-code changes.
 
@@ -357,3 +357,20 @@ The first real operator run exposed two practical issues that are worth fixing b
 - [x] Make the structure-discovery instruction write UTF-8 directly to its standard workspace file by default, avoiding shell capture; retain an explicit stdout mode for scripting/harnesses.
 - [x] Let the new structure validate/review commands use standard workspace paths by default while retaining explicit path overrides for automation and unusual layouts.
 - [x] Cover workspace ownership/collision behavior, exact UTF-8 writes, standard-path CLI flow, and explicit stdout/path overrides with deterministic tests on the platform-independent Python layer; GitHub Actions run #352 on `a75096024bd31a4d4654bd09b3b4a79d3c744a0c` passed all **102 tests**. The remaining workflow failure was only the deliberately deferred self-hosted generated-package drift from these authored documentation/context changes.
+
+### Real structure review: useful owner correction and reusable workflow pressure
+
+The first real `ai-workstation` structure proposal succeeded at the level that matters: it reconstructed a strong coarse project shape from frozen Evidence and immediately triggered useful project-owner architecture review. The owner renamed/grouped the proposed shelves and removed the reserved `Local model integration` Node because the proposal had placed an intentionally deferred future concern under `compose` even though the Evidence does not establish that future implementation boundary. This is the intended human gate: software archaeology may propose a plausible structure, but future architecture remains owner-owned.
+
+The same review also exposed a real reuse opportunity. `ai-workstation` should use essentially the same recoverable, review-gated development workflow already proven while developing ContextCanon, rather than receive a second copied version. ContextCanon currently keeps that workflow under `nodes/internal/`, while the library convention currently says every reusable Node must compose Foundation. Real use shows that blanket convention is too strong: a reusable workflow should not force Foundation transitively on consumers that may want the workflow independently.
+
+- [x] Record the successful structure-review outcome, the owner's removal of the speculative `compose/local-model-integration` reservation, and the newly proven value of human coarse-structure review before continuing Part 2.
+- [ ] Promote the existing Development Workflow by **moving rather than copying** its stable Node identity into the reusable Node Library; generalize only ContextCanon-specific wording that would be wrong for another project, and keep ContextCanon-only development tooling guidance as Framework Development delta.
+- [ ] Relax the Node Library convention from "every reusable Node composes Foundation" to "compose Foundation only when the reusable Node semantically depends on it"; do not invent whole-Source exclusion merely to compensate for an unnecessarily coupled library Node.
+- [ ] Preserve the existing explicit per-Rule `Remove`/`Override` model as the consumer exception mechanism; do not add Source-subtree exclusion unless another real case proves that separate capability necessary.
+- [ ] Finish Part 1 against the owner-edited `structure.md`: preserve the existing `ai-workstation` root Node identity, preview the six missing child/group Node skeletons, and materialize only those missing skeletons without overwriting the already-onboarded root.
+- [ ] Add a framework-owned **placement instruction** bound to the exact frozen Evidence plus the exact edited structure digest. The LLM's job is primarily destination selection, not rewriting: preserve exact wording when it is already clear and distinguish at least keep, move, reference, and authority/compliance mapping.
+- [ ] Let the placement pass compare proposed generic guidance against explicitly supplied reusable Source packages, including the promoted Development Workflow, so `ai-workstation` can reuse the same Node instead of receiving duplicate local workflow Rules.
+- [ ] Define and validate a compact placement proposal with exact Evidence provenance, destination Node identity/path, semantic kind, action, wording origin (`exact`, `lightly-edited`, `synthesized`) and rationale; keep JSON as the machine contract.
+- [ ] Render a visible `contextcanon-onboarding/placement.md` review artifact that shows source excerpt → proposed destination/action → proposed canonical wording, while keeping the owner-edited structure as the accepted shelf map.
+- [ ] Stop before destructive cleanup: first inspect the real `ai-workstation` placement result. Only after that review decide how canonical moves, ordinary documents, cross-cutting project resources, and duplicate-removal references should be materialized safely.
