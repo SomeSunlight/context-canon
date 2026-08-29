@@ -1,0 +1,79 @@
+name: plan-checkpoint
+
+on:
+  push:
+    branches: [agent/onboarding-structure-first]
+    paths: [.github/workflows/_plan-checkpoint.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/onboarding-structure-first
+      - name: Checkpoint completed plan work
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("PLAN.md")
+          text = path.read_text(encoding="utf-8")
+          replacements = {
+              '- [ ] Produce a deliberately simple, human-editable `structure.md` review artifact bound to exact Evidence/proposal identity. Make the hierarchy obvious, keep existing Nodes stable/protected by identity, and allow the project owner to add/rearrange proposed or future/reserved Nodes without editing a large JSON document.':
+              '- [x] Produce a deliberately simple, human-editable `structure.md` review artifact bound to exact Evidence/proposal identity. Make the hierarchy obvious, keep existing Nodes stable/protected by identity, and allow the project owner to add/rearrange proposed or future/reserved Nodes without editing a large JSON document.',
+              '- [ ] Define a narrow deterministic import/normalization contract for edited `structure.md`; avoid a general Markdown AST/editor language. Preserve stable IDs for existing Nodes and allocate fresh human-side identity for newly accepted Nodes only once.':
+              '- [x] Define a narrow deterministic import/normalization contract for edited `structure.md`; avoid a general Markdown AST/editor language. Preserve stable IDs for existing Nodes and allocate fresh human-side identity for newly accepted Nodes only once.',
+              '- [ ] Add a preview step that shows exactly which missing Node directories/files would be created from the edited structure before touching the project.':
+              '- [x] Add a preview step that shows exactly which missing Node directories/files would be created from the edited structure before touching the project.',
+              '- [ ] Materialize only the accepted **Node skeletons** needed by the structure: minimal `CONTEXT.src.md`/identity plus short human orientation such as a Node-root `README.md` where useful. Future/reserved Nodes may explicitly say that the area is planned and not yet implemented. Do not distribute individual project Rules/Resources in Part 1.':
+              '- [x] Materialize only the accepted **Node skeletons** needed by the structure: minimal `CONTEXT.src.md`/identity plus short human orientation such as a Node-root `README.md` where useful. Future/reserved Nodes may explicitly say that the area is planned and not yet implemented. Do not distribute individual project Rules/Resources in Part 1.',
+              '- [ ] Make the structure iteration cheap: if the owner dislikes the result, edit `structure.md` again and regenerate the not-yet-populated missing skeletons deterministically rather than repeating semantic content analysis.':
+              '- [x] Make the structure iteration cheap: if the owner dislikes the result, edit `structure.md` again and regenerate the not-yet-populated missing skeletons deterministically rather than repeating semantic content analysis.',
+              '- [ ] Bind the second semantic assignment to both the exact frozen Evidence and the accepted structure identity.':
+              '- [x] Bind the second semantic assignment to both the exact frozen Evidence and the accepted structure identity.',
+              '- [ ] Ask the LLM primarily **where existing information belongs**, not to restyle it: distinguish at least keep, move, reference and authority/compliance mapping; preserve good source language by default and record when synthesis is genuinely necessary.':
+              '- [x] Ask the LLM primarily **where existing information belongs**, not to restyle it: distinguish at least keep, move, reference and authority/compliance mapping; preserve good source language by default and record when synthesis is genuinely necessary.',
+              '- [ ] Promote the existing Development Workflow by **moving rather than copying** its stable Node identity into the reusable Node Library; generalize only ContextCanon-specific wording that would be wrong for another project, and keep ContextCanon-only development tooling guidance as Framework Development delta.':
+              '- [x] Promote the existing Development Workflow by **moving rather than copying** its stable Node identity into the reusable Node Library; generalize only ContextCanon-specific wording that would be wrong for another project, and keep ContextCanon-only development tooling guidance as Framework Development delta.',
+              '- [ ] Relax the Node Library convention from "every reusable Node composes Foundation" to "compose Foundation only when the reusable Node semantically depends on it"; do not invent whole-Source exclusion merely to compensate for an unnecessarily coupled library Node.':
+              '- [x] Relax the Node Library convention from "every reusable Node composes Foundation" to "compose Foundation only when the reusable Node semantically depends on it"; do not invent whole-Source exclusion merely to compensate for an unnecessarily coupled library Node.',
+              '- [ ] Preserve the existing explicit per-Rule `Remove`/`Override` model as the consumer exception mechanism; do not add Source-subtree exclusion unless another real case proves that separate capability necessary.':
+              '- [x] Preserve the existing explicit per-Rule `Remove`/`Override` model as the consumer exception mechanism; do not add Source-subtree exclusion unless another real case proves that separate capability necessary.',
+              '- [ ] Finish Part 1 against the owner-edited `structure.md`: preserve the existing `ai-workstation` root Node identity, preview the six missing child/group Node skeletons, and materialize only those missing skeletons without overwriting the already-onboarded root.':
+              '- [ ] Finish Part 1 against the owner-edited `structure.md`: preserve the existing `ai-workstation` root Node identity, preview the seven missing child/group Node skeletons, and materialize only those missing skeletons without overwriting the already-onboarded root.',
+              '- [ ] Add a framework-owned **placement instruction** bound to the exact frozen Evidence plus the exact edited structure digest. The LLM\'s job is primarily destination selection, not rewriting: preserve exact wording when it is already clear and distinguish at least keep, move, reference, and authority/compliance mapping.':
+              '- [x] Add a framework-owned **placement instruction** bound to the exact frozen Evidence plus the exact edited structure digest. The LLM\'s job is primarily destination selection, not rewriting: preserve exact wording when it is already clear and distinguish at least keep, move, reference, and authority/compliance mapping.',
+              '- [ ] Let the placement pass compare proposed generic guidance against explicitly supplied reusable Source packages, including the promoted Development Workflow, so `ai-workstation` can reuse the same Node instead of receiving duplicate local workflow Rules.':
+              '- [x] Let the placement pass compare proposed generic guidance against explicitly supplied reusable Source packages, including the promoted Development Workflow, so `ai-workstation` can reuse the same Node instead of receiving duplicate local workflow Rules.',
+              '- [ ] Define and validate a compact placement proposal with exact Evidence provenance, destination Node identity/path, semantic kind, action, wording origin (`exact`, `lightly-edited`, `synthesized`) and rationale; keep JSON as the machine contract.':
+              '- [x] Define and validate a compact placement proposal with exact Evidence provenance, destination Node identity/path, semantic kind, action, wording origin (`exact`, `lightly-edited`, `synthesized`) and rationale; keep JSON as the machine contract.',
+              '- [ ] Render a visible `contextcanon-onboarding/placement.md` review artifact that shows source excerpt → proposed destination/action → proposed canonical wording, while keeping the owner-edited structure as the accepted shelf map.':
+              '- [x] Render a visible `contextcanon-onboarding/placement.md` review artifact that shows source excerpt → proposed destination/action → proposed canonical wording, while keeping the owner-edited structure as the accepted shelf map.',
+              '- [ ] Stop before destructive cleanup: first inspect the real `ai-workstation` placement result. Only after that review decide how canonical moves, ordinary documents, cross-cutting project resources, and duplicate-removal references should be materialized safely.':
+              '- [x] Stop before destructive cleanup: first inspect the real `ai-workstation` placement result. Only after that review decide how canonical moves, ordinary documents, cross-cutting project resources, and duplicate-removal references should be materialized safely.',
+          }
+
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one PLAN occurrence, found {count}: {old}")
+              text = text.replace(old, new)
+
+          anchor = '- [x] Stop before destructive cleanup: first inspect the real `ai-workstation` placement result. Only after that review decide how canonical moves, ordinary documents, cross-cutting project resources, and duplicate-removal references should be materialized safely.'
+          note = '\n\nImplementation checkpoint: exact head `3e75f9f10981400f0b17a7e63046f634a4c569c4` passed all **112 tests** and `contextcanon check --all .` at zero generated drift in GitHub Actions run #369 after regenerating Gateway, Framework Development, the promoted Development Workflow, and Foundation. The remaining unchecked `ai-workstation` items require the real owner-edited repository run rather than another framework implementation assumption.'
+          if note.strip() not in text:
+              text = text.replace(anchor, anchor + note)
+
+          path.write_text(text, encoding="utf-8")
+      - name: Commit checkpoint and remove helper
+        run: |
+          git config user.name "ContextCanon checkpoint"
+          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
+          git rm .github/workflows/_plan-checkpoint.yml
+          git add PLAN.md
+          git commit -m "Checkpoint structure-first onboarding progress"
+          git push origin HEAD:agent/onboarding-structure-first
