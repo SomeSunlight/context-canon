@@ -22,6 +22,15 @@ from contextcanon.onboarding_structure import (
     load_structure_markdown,
 )
 from contextcanon.onboarding_structure_instruction import build_onboarding_structure_instruction
+from contextcanon.onboarding_workspace import (
+    DEFAULT_WORKSPACE_NAME,
+    STRUCTURE_INSTRUCTION_NAME,
+    STRUCTURE_PROPOSAL_NAME,
+    STRUCTURE_REVIEW_NAME,
+    WORKSPACE_MARKER,
+    open_onboarding_workspace,
+    write_utf8,
+)
 from contextcanon.parser import ContextCanonError
 
 
@@ -114,8 +123,9 @@ class OnboardingStructureTests(unittest.TestCase):
             "source_reuses": [],
         }
 
-    def write_proposal(self, prepared, entry):
-        path = Path(tempfile.mkdtemp()) / "structure-proposal.json"
+    def write_proposal(self, prepared, entry, path: Path | None = None):
+        path = path or (Path(tempfile.mkdtemp()) / STRUCTURE_PROPOSAL_NAME)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.proposal_dict(prepared, entry), indent=2), encoding="utf-8")
         return path
 
@@ -170,7 +180,7 @@ class OnboardingStructureTests(unittest.TestCase):
     def test_structure_markdown_is_editable_tree_with_evidence_details(self):
         _, prepared, entry = self.make_snapshot()
         proposal_path = self.write_proposal(prepared, entry)
-        structure_path = Path(tempfile.mkdtemp()) / "structure.md"
+        structure_path = Path(tempfile.mkdtemp()) / STRUCTURE_REVIEW_NAME
 
         plan, proposal, _, created = create_or_load_structure_markdown(
             prepared.snapshot_root,
@@ -207,7 +217,7 @@ class OnboardingStructureTests(unittest.TestCase):
     def test_structure_markdown_rejects_stale_proposal_binding(self):
         _, prepared, entry = self.make_snapshot()
         proposal_path = self.write_proposal(prepared, entry)
-        structure_path = Path(tempfile.mkdtemp()) / "structure.md"
+        structure_path = Path(tempfile.mkdtemp()) / STRUCTURE_REVIEW_NAME
         _, proposal, _, _ = create_or_load_structure_markdown(
             prepared.snapshot_root,
             proposal_path,
@@ -219,18 +229,85 @@ class OnboardingStructureTests(unittest.TestCase):
         with self.assertRaisesRegex(ContextCanonError, "proposal_digest does not match"):
             load_structure_markdown(structure_path, proposal)
 
-    def test_cli_structure_commands_form_one_visible_first_pass(self):
-        _, prepared, entry = self.make_snapshot()
-        proposal_path = self.write_proposal(prepared, entry)
-        structure_path = Path(tempfile.mkdtemp()) / "structure.md"
+    def test_visible_workspace_is_owned_and_utf8_without_shell_redirection(self):
+        repo, prepared, _ = self.make_snapshot()
+        workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
+
+        self.assertEqual(workspace.root, repo / DEFAULT_WORKSPACE_NAME)
+        readme = workspace.readme_path.read_text(encoding="utf-8")
+        self.assertIn(WORKSPACE_MARKER, readme)
+        self.assertIn("Why frozen Evidence exists", readme)
+        self.assertIn(STRUCTURE_INSTRUCTION_NAME, readme)
+        self.assertIn(STRUCTURE_PROPOSAL_NAME, readme)
+        self.assertIn(STRUCTURE_REVIEW_NAME, readme)
+
+        text = "Grüezi – äöü – UTF-8\n"
+        write_utf8(workspace.structure_instruction_path, text)
+        raw = workspace.structure_instruction_path.read_bytes()
+        self.assertEqual(raw, text.encode("utf-8"))
+        self.assertFalse(raw.startswith(b"\xef\xbb\xbf"))
+
+    def test_workspace_refuses_existing_unowned_directory(self):
+        repo, prepared, _ = self.make_snapshot()
+        root = repo / DEFAULT_WORKSPACE_NAME
+        root.mkdir()
+        (root / "README.md").write_text("# Project-owned directory\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(ContextCanonError, "Refusing to take over existing directory"):
+            open_onboarding_workspace(prepared.snapshot_root, create=True)
+
+    def test_cli_structure_commands_use_standard_workspace_without_redirects(self):
+        repo, prepared, entry = self.make_snapshot()
+        workspace_root = repo / DEFAULT_WORKSPACE_NAME
 
         stdout = io.StringIO()
         stderr = io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             result = main(["onboard", "structure-instruction", str(prepared.snapshot_root)])
         self.assertEqual(result, 0)
+        self.assertEqual(stderr.getvalue(), "")
+        instruction_path = workspace_root / STRUCTURE_INSTRUCTION_NAME
+        proposal_path = workspace_root / STRUCTURE_PROPOSAL_NAME
+        structure_path = workspace_root / STRUCTURE_REVIEW_NAME
+        self.assertTrue(instruction_path.exists())
+        self.assertTrue(instruction_path.read_text(encoding="utf-8").startswith(
+            "# ContextCanon Onboarding Structure Discovery Instruction\n"
+        ))
+        self.assertNotIn("# ContextCanon Onboarding Structure Discovery Instruction", stdout.getvalue())
+        self.assertIn(str(proposal_path), stdout.getvalue())
+
+        self.write_proposal(prepared, entry, proposal_path)
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = main(["onboard", "structure-validate", str(prepared.snapshot_root)])
+        self.assertEqual(result, 0)
+        self.assertIn("validated onboarding structure proposal", stdout.getvalue())
+        self.assertIn(str(proposal_path), stdout.getvalue())
+        self.assertIn("Proposed Nodes: 4", stdout.getvalue())
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = main(["onboard", "structure-review", str(prepared.snapshot_root)])
+        self.assertEqual(result, 0)
+        self.assertTrue(structure_path.exists())
+        self.assertIn("created onboarding structure", stdout.getvalue())
+        self.assertIn(str(structure_path), stdout.getvalue())
+        self.assertIn("Nodes in edited tree: 4", stdout.getvalue())
+
+    def test_cli_stdout_and_explicit_paths_remain_available(self):
+        _, prepared, entry = self.make_snapshot()
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            result = main(["onboard", "structure-instruction", str(prepared.snapshot_root), "--stdout"])
+        self.assertEqual(result, 0)
         self.assertTrue(stdout.getvalue().startswith("# ContextCanon Onboarding Structure Discovery Instruction\n"))
         self.assertIn("structure instruction digest", stderr.getvalue())
+
+        proposal_path = self.write_proposal(prepared, entry)
+        structure_path = Path(tempfile.mkdtemp()) / "custom-structure.md"
 
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
@@ -238,8 +315,6 @@ class OnboardingStructureTests(unittest.TestCase):
                 ["onboard", "structure-validate", str(prepared.snapshot_root), str(proposal_path)]
             )
         self.assertEqual(result, 0)
-        self.assertIn("validated onboarding structure proposal", stdout.getvalue())
-        self.assertIn("Proposed Nodes: 4", stdout.getvalue())
 
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
@@ -254,8 +329,6 @@ class OnboardingStructureTests(unittest.TestCase):
             )
         self.assertEqual(result, 0)
         self.assertTrue(structure_path.exists())
-        self.assertIn("created onboarding structure", stdout.getvalue())
-        self.assertIn("Nodes in edited tree: 4", stdout.getvalue())
 
 
 if __name__ == "__main__":
