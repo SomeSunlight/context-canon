@@ -25,6 +25,12 @@ Internal self-hosted context for carrying ContextCanon development safely across
   Why: In the current single-developer workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption.
   <!-- ctx:rule id="CCW-007" -->
 
+### Development tooling
+
+- **Prefer uv for ContextCanon development and tool installation:** Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.
+  Why: A uv-managed tool install has proven more repeatable for the real ContextCanon operator workflow and avoids repeatedly reintroducing environment-specific `pip` setup across development sessions, while the framework itself must remain usable on other operating systems and shells.
+  <!-- ctx:rule id="CCW-009" -->
+
 ### Proportional verification
 
 - **Batch related edits before generated-package regeneration:** For one coherent correction block, make the related authoring/code changes and run proportionate deterministic tests first; do not regenerate ContextCanon's compiler-owned self-hosted package output after every micro-edit.
@@ -51,7 +57,7 @@ Internal self-hosted context for carrying ContextCanon development safely across
 
 ### Executing a development block
 
-When planning, resuming, checkpointing, testing, regenerating self-hosted Context packages, or preparing a ContextCanon change block for project-owner review:
+When planning, resuming, checkpointing, testing, regenerating self-hosted Context packages, installing a development build, or preparing a ContextCanon change block for project-owner review:
 
 Required:
 - Resource: `docs/change-workflow.md`
