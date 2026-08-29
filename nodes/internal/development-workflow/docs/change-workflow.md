@@ -39,7 +39,21 @@ When the project owner returns after a short pause, explicitly says to continue,
 
 Re-check the exact mutable state when there is a concrete reason: the project owner reports another edit, GitHub rejects a write because the head moved, a tool result contradicts the last checkpoint, or the next operation itself requires an exact current identity.
 
-## 3. Work in coherent edits, not micro-cycles
+## 3. Prefer uv for development/tool installation
+
+When installing a ContextCanon development build or review branch as a command-line tool, use `uv` when the concrete workflow supports it instead of falling back to direct `pip` installation by habit.
+
+The current Windows operator convention is to open a dedicated PowerShell 7.x window and install the exact review branch or commit as an available tool, for example:
+
+```powershell
+uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"
+```
+
+Prefer an exact commit when reproducibility matters; a review branch is convenient while actively iterating on that branch. Re-running the command with `--force` replaces the previously installed development tool cleanly.
+
+This is an **operator convention, not a platform requirement**. ContextCanon code, paths, tests, and documentation should remain portable across Windows, Linux, macOS, and ordinary shells. Use a different installer only when `uv` is unavailable or unsuitable for the specific task, and state that exception instead of silently reintroducing `pip` as the default development path.
+
+## 4. Work in coherent edits, not micro-cycles
 
 A full regeneration cycle for ContextCanon's own generated Context packages after every tiny wording edit is unnecessary.
 
@@ -77,7 +91,7 @@ If a change introduces new deterministic behavior, test that behavior before rel
 
 The important distinction is that **review-ready and merge-ready are different states**. A successful merge is then followed by one small closure step because the merge itself creates facts that a pre-merge candidate cannot truthfully record.
 
-## 4. What CI proves and what it does not
+## 5. What CI proves and what it does not
 
 A green CI run proves that the tested deterministic contracts and committed generated output agree on that exact Git head.
 
@@ -92,13 +106,13 @@ Those remain human review questions.
 
 During project-owner review, CI may therefore still be red when the remaining failure is understood and explicitly disclosed — for example, intentionally stale generated Context packages after authored context changed. Unknown failures still need investigation; "review can happen before green" is not permission to ignore unexplained breakage.
 
-## 5. Keep obsolete CI work cheap
+## 6. Keep obsolete CI work cheap
 
 The GitHub Actions workflow uses concurrency cancellation. When a newer commit arrives on the same PR/ref, an older still-running test job is cancelled because it can no longer become the merge head.
 
 This makes intermediate review work cheaper. The strict requirement moves to the **merge gate**: after project-owner approval, the exact head that is intended for `main` must complete the full deterministic suite and `contextcanon check --all .` with zero drift.
 
-## 6. Review-ready boundary
+## 7. Review-ready boundary
 
 A block can be handed to the project owner for review when:
 
@@ -110,7 +124,7 @@ A block can be handed to the project owner for review when:
 
 The reviewer should be able to judge the **large line** without waiting for repeated generated-package regeneration that may be invalidated by the next review correction.
 
-## 7. Merge-ready boundary
+## 8. Merge-ready boundary
 
 After the project owner explicitly approves the reviewed result, finish the mechanical publication gate:
 
@@ -125,7 +139,7 @@ Only then squash-merge to `main`.
 
 Merge-ready is not the final recovery checkpoint. The merge creates new repository facts — most obviously the actual merged state and, for a squash merge, the final `main` commit identity — that could not be checkpointed honestly on the pre-merge branch.
 
-## 8. Close the accepted baseline after merge
+## 9. Close the accepted baseline after merge
 
 Immediately after a reviewed PR has been merged, and **before starting the next coherent development block**, reconcile the durable status surfaces that were necessarily written from the pre-merge point of view.
 
