@@ -23,8 +23,25 @@ jobs:
       - name: Install current ContextCanon
         run: python -m pip install -e .
       - name: Generate real v1 review
-        run: python tools/_real_aiw_review.py
+        id: generate
+        shell: bash
+        run: |
+          set +e
+          python tools/_real_aiw_review.py > real-aiw-review-diagnostic.txt 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          cat real-aiw-review-diagnostic.txt
+          exit 0
+      - name: Commit diagnostic on failure
+        if: steps.generate.outputs.exit_code != '0'
+        run: |
+          git config user.name "ContextCanon fast-run"
+          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
+          git add real-aiw-review-diagnostic.txt
+          git commit -m "Record real AI Workstation review diagnostic"
+          git push origin HEAD:agent/onboarding-placement-publication
       - name: Commit temporary inspection artifacts
+        if: steps.generate.outputs.exit_code == '0'
         run: |
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
