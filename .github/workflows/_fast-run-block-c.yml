@@ -19,6 +19,8 @@ jobs:
           ref: agent/onboarding-placement-publication
       - name: Apply Block C
         run: python tools/_fast_run_block_c.py
+      - name: Repair fixed-authority fixture
+        run: python tools/_repair_block_c_fixture.py
       - name: Run focused tests
         id: tests
         shell: bash
@@ -44,7 +46,7 @@ jobs:
           git push origin HEAD:agent/onboarding-placement-publication
       - name: Remove temporary helpers
         if: steps.tests.outputs.exit_code == '0'
-        run: rm -f tools/_fast_run_block_c.py block-c-diagnostic.txt .github/workflows/_fast-run-block-c.yml
+        run: rm -f tools/_fast_run_block_c.py tools/_repair_block_c_fixture.py block-c-diagnostic.txt .github/workflows/_fast-run-block-c.yml
       - name: Commit Block C
         if: steps.tests.outputs.exit_code == '0'
         run: |
