@@ -18,33 +18,14 @@ jobs:
         with:
           ref: agent/onboarding-placement-publication
       - name: Repair staged Block B tests
-        run: python tools/_repair_fast_run_block_b.py
+        run: python tools/_repair_fast_run_block_b_v2.py
       - name: Apply Block B
         run: python tools/_fast_run_block_b.py
-      - name: Run focused tests with diagnostic
-        id: tests
-        shell: bash
-        run: |
-          printf 'diagnostic run for %s\n' "$GITHUB_SHA" > block-b-diagnostic.txt
-          set +e
-          python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review >> block-b-diagnostic.txt 2>&1
-          code=$?
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          cat block-b-diagnostic.txt
-          exit 0
-      - name: Commit diagnostic on test failure
-        if: steps.tests.outputs.exit_code != '0'
-        run: |
-          git config user.name "ContextCanon fast-run"
-          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add block-b-diagnostic.txt
-          git commit -m "Record Block B test diagnostic"
-          git push origin HEAD:agent/onboarding-placement-publication
+      - name: Run focused tests
+        run: python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review
       - name: Remove temporary helpers
-        if: steps.tests.outputs.exit_code == '0'
-        run: rm -f tools/_fast_run_block_b.py tools/_repair_fast_run_block_b.py block-b-diagnostic.txt .github/workflows/_fast-run-block-b.yml
+        run: rm -f tools/_fast_run_block_b.py tools/_repair_fast_run_block_b.py tools/_repair_fast_run_block_b_v2.py block-b-diagnostic.txt .github/workflows/_fast-run-block-b.yml
       - name: Commit Block B
-        if: steps.tests.outputs.exit_code == '0'
         run: |
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
