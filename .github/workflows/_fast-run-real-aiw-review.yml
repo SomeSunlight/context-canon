@@ -26,7 +26,8 @@ jobs:
         run: |
           python tools/_repair_real_aiw_diagnostic.py
           python tools/_repair_real_aiw_workspace.py
-      - name: Generate real v1 review
+          python tools/_repair_real_aiw_semantics.py
+      - name: Generate corrected real v1 review
         id: generate
         shell: bash
         run: |
@@ -45,11 +46,12 @@ jobs:
           git add real-aiw-review-diagnostic.txt
           git commit -m "Record real AI Workstation review diagnostic"
           git push origin HEAD:agent/onboarding-placement-publication
-      - name: Commit temporary inspection artifacts
+      - name: Commit corrected inspection artifacts
         if: steps.generate.outputs.exit_code == '0'
         run: |
+          rm -f real-aiw-review-diagnostic.txt
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add _real-ai-workstation-placement-review.md _real-ai-workstation-placement-review.json
-          git commit -m "Capture real AI Workstation v1 placement review"
+          git add -A _real-ai-workstation-placement-review.md _real-ai-workstation-placement-review.json real-aiw-review-diagnostic.txt
+          git commit -m "Correct real AI Workstation v1 placement review"
           git push origin HEAD:agent/onboarding-placement-publication
