@@ -418,11 +418,11 @@ The project owner approved implementing the whole real-placement correction with
 
 #### Block A — placement semantics and document ownership
 
-- [ ] Evolve the experimental placement contract from current-location sorting to future ownership: `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, `unresolved`; actions `keep`, `promote`, `reference`, `map`.
-- [ ] Make the placement instruction explicitly minimize future redundancy, distinguish README/state/plan/architecture responsibilities, and forbid `reference` from becoming maintained text duplication.
-- [ ] Add Markdown document policy (`mutable` / `fixed`) to the structure discovery/review boundary and reject unsupported non-Markdown knowledge bodies in this v1 experiment instead of inventing conversion semantics.
-- [ ] Tell the semantic pass to preserve high-value Evidence findings across the two-pass split and surface unresolved contradictions rather than allowing a better hierarchy to become semantically poorer.
-- [ ] Cover the real `ai-workstation` patterns in focused regression tests: README scope/plan pressure, Node responsibility as Overview, canonical repository Rule, mutable architecture split, fixed authority mapping, local CONTRIBUTING deltas, and unresolved version discrepancy.
+- [x] Evolve the experimental placement contract from current-location sorting to future ownership: `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, `unresolved`; actions `keep`, `promote`, `reference`, `map`.
+- [x] Make the placement instruction explicitly minimize future redundancy, distinguish README/state/plan/architecture responsibilities, and forbid `reference` from becoming maintained text duplication.
+- [x] Add Markdown document policy (`mutable` / `fixed`) to the structure discovery/review boundary and reject unsupported non-Markdown knowledge bodies in this v1 experiment instead of inventing conversion semantics.
+- [x] Tell the semantic pass to preserve high-value Evidence findings across the two-pass split and surface unresolved contradictions rather than allowing a better hierarchy to become semantically poorer.
+- [x] Cover the real `ai-workstation` patterns in focused regression tests: README scope/plan pressure, Node responsibility as Overview, canonical repository Rule, mutable architecture split, fixed authority mapping, local CONTRIBUTING deltas, and unresolved version discrepancy.
 
 #### Block B — editable human placement gate
 

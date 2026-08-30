@@ -49,6 +49,20 @@ def _render_structure(structure: HumanStructurePlan) -> list[str]:
         lifecycle = " [reserved]" if node.lifecycle == "reserved" else ""
         lines.append(f"{indent}- `{node.key}` — **{node.name}** (`{node.path}`){lifecycle}")
     lines.append("")
+    lines.extend(["## Accepted Markdown document policy", ""])
+    if structure.fixed_markdown:
+        lines.append("Fixed Markdown — preserve its authority/wording; do not plan destructive cleanup:")
+        for path in structure.fixed_markdown:
+            lines.append(f"- `{path}`")
+    else:
+        lines.append("No proposed Markdown knowledge body is marked fixed.")
+    lines.extend(
+        [
+            "",
+            "Other project Markdown may be treated as mutable: ownership may move into ContextCanon and a later, separate cleanup may shorten/remove redundant prose after human review. Non-Markdown document authorities are unsupported in this placement version.",
+            "",
+        ]
+    )
     return lines
 
 
@@ -102,23 +116,25 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
     return [
         "## Required semantic work",
         "",
-        "This is the **second onboarding pass: place the books onto the already accepted shelves**. Read every frozen Evidence file, then identify durable pieces of project knowledge and propose where each one belongs. The structure is fixed for this pass.",
+        "This is the **second onboarding pass: place the books onto the already accepted shelves**. Read every frozen Evidence file, then decide where each durable piece of project knowledge should be **maintained in the future**, not merely where it happens to be written today. The accepted Node hierarchy and Markdown fixed/mutable policy are fixed inputs for this pass.",
         "",
         "1. Preserve good existing project language. When a clear, self-contained source statement already says the right thing, use it verbatim and set `wording_origin` to `exact`.",
         "2. Use `lightly-edited` only when small changes are necessary to make a fragment self-contained, remove accidental surrounding context, or combine adjacent wording without changing meaning. Use `synthesized` only when no good source wording exists and the semantic idea genuinely needs a new formulation.",
-        "3. The primary question is **where does this information live?**, not how can it be made more abstract. Do not beautify terminology merely because you can.",
-        "4. Use action `move` when project-owned canonical governance or state is currently buried in an accidental location and should become canonical at the destination Node. A later cleanup pass may replace the old duplicate text with a reference; do not perform that cleanup now.",
-        "5. Use action `reference` when a document/resource is already in a natural authoritative or task-oriented location and the destination Node should route to it rather than copy it.",
-        "6. Use action `keep` for ordinary documentation or unresolved information that should remain where it is and does not need canonical Node authoring merely to justify its existence.",
-        "7. Use action `map` only for `authority-mapping`: preserve the authoritative text and describe the relationship from project context to that authority rather than rewriting the authority as local truth.",
-        "8. Do not split or rename Nodes, add future architecture, or move a finding to a Node that does not exist in the supplied structure. If the structure is insufficient, return an `unresolved` item explaining the problem instead of redesigning it.",
-        "9. Treat README, CONTRIBUTING, architecture notes, implementation/configuration, CI, tests, security policy, state/planning text, and imported documentation according to their actual semantic role. Conventional files can be stale; prefer direct implementation/configuration/CI/test evidence for current behavior when it clearly conflicts with prose.",
-        "10. Preserve project state and planning findings explicitly. Do not let reviewed state/plan semantics disappear merely because they are not Rules.",
-        "11. Compare likely generic practices with every supplied reusable Source package before proposing a duplicate local Rule. A Source reuse is a separate proposal entry, bound to the exact immutable package; do not rewrite its inherited Rules locally.",
-        "12. A Source may be useful even when it is independent of other Sources. Do not infer Foundation or any other transitive dependency unless it is actually present in the supplied package semantics.",
-        "13. Use only frozen Evidence as evidence about this project. Do not use the live repository, web search, chat history, or model memory to fill project gaps.",
-        "14. Every placement item and Source reuse must cite exact Evidence path/hash/line ranges supporting the proposal.",
-        "15. Do not create, edit, move, or delete project files. Return a proposal only. ContextCanon will render an evidence-rich review before any canonical placement or cleanup is designed.",
+        "3. The primary question is **where should this meaning be maintained from now on?** Minimize future redundancy. Do not preserve a poor current file boundary merely because the text happens to live there, and do not beautify terminology merely because you can.",
+        "4. Use kind `overview` plus action `promote` for short durable orientation about what one Node owns or is responsible for. Overview is stable local presentation, not temporary project `state` and not inherited governance.",
+        "5. Use action `promote` when project-owned canonical Overview, Rule, State, or Plan meaning should be maintained at the destination ContextCanon surface. Promotion does not delete the old prose now; a later cleanup preview may remove a true duplicate only for mutable Markdown.",
+        "6. Use action `reference` only for `topic-resource`: the referenced Markdown remains maintained at its natural location. The Node stores the routing condition/path, not a second maintained copy of the referenced prose.",
+        "7. Use action `keep` only for ordinary documentation or unresolved information that intentionally stays outside canonical Node authoring.",
+        "8. Use action `map` only for `authority-mapping`: the fixed Markdown remains authoritative, while the destination Node may state a clear local interpretation of what that authority means here. Do not rewrite the authority itself.",
+        "9. Do not split or rename Nodes, add future architecture, or place a finding at a Node that does not exist in the supplied structure. If the structure is insufficient, return an `unresolved` item explaining the problem instead of redesigning it.",
+        "10. Treat README as first-contact orientation/navigation rather than the default store for volatile state, future plan, detailed architecture, or every implementation invariant. Use `state` for current local situation, `plan` for future work, `overview` for stable Node responsibility, Rules for durable governance, and Topics/Resources for deeper task material.",
+        "11. Treat CONTRIBUTING, architecture notes, implementation/configuration, CI, tests, security policy, state/planning text, and imported documentation according to their actual semantic role. Conventional files can be stale; prefer direct implementation/configuration/CI/test evidence for current behavior when it clearly conflicts with prose.",
+        "12. Preserve project state, planning, important local development constraints, and unresolved contradictions explicitly. Before returning, check that the better structure did not silently drop high-value semantics visible elsewhere in the same frozen Evidence.",
+        "13. Compare likely generic practices with every supplied reusable Source package before proposing a duplicate local Rule. A Source reuse is a separate Evidence-derived proposal entry; project-specific deltas may still remain local.",
+        "14. A Source may be useful even when it is independent of other Sources. Do not infer Foundation or any other transitive dependency unless it is actually present in the supplied package semantics.",
+        "15. Use only frozen Evidence as evidence about this project. Do not use the live repository, web search, chat history, or model memory to fill project gaps. An explicit owner-selected Source, when supplied later by the human review workflow, is design input and is deliberately not something you must pretend to derive from Evidence.",
+        "16. Every placement item and Evidence-derived Source reuse must cite exact Evidence path/hash/line ranges supporting the proposal.",
+        "17. Do not create, edit, move, or delete project files. Return a proposal only. ContextCanon will render an evidence-rich review before any canonical placement or cleanup is designed.",
         "",
         "## Output contract",
         "",
@@ -128,7 +144,7 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "",
         "```json",
         "{",
-        '  "schema": "contextcanon/onboarding-placement-proposal/v0",',
+        '  "schema": "contextcanon/onboarding-placement-proposal/v1",',
         f'  "evidence_digest": "{evidence_digest}",',
         f'  "structure_digest": "{structure_digest}",',
         '  "items": [],',
@@ -152,19 +168,20 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "}",
         "```",
         "",
-        "`kind` is exactly one of `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, `unresolved`. `action` is exactly one of `keep`, `move`, `reference`, `map`. `confidence` is exactly `high`, `medium`, or `low`.",
+        "`kind` is exactly one of `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, `unresolved`. `action` is exactly one of `keep`, `promote`, `reference`, `map`. `confidence` is exactly `high`, `medium`, or `low`.",
         "",
-        "`destination_node_key` must be one key from the human-edited structure. It is required for `rule`, `topic-resource`, `state`, `plan`, and `authority-mapping`; it may be `null` for ordinary documentation or unresolved information that stays outside Node authoring.",
+        "`destination_node_key` must be one key from the human-edited structure. It is required for `overview`, `rule`, `topic-resource`, `state`, `plan`, and `authority-mapping`; it may be `null` for ordinary documentation or unresolved information that stays outside Node authoring.",
         "",
         "Payloads are kind-specific and exact:",
         "",
-        '- `rule`: `{"statement": "...", "why": "...", "wording_origin": "exact|lightly-edited|synthesized"}`',
-        '- `topic-resource`: `{"condition": "...", "resource_paths": ["docs/file.md"]}`',
-        '- `ordinary-documentation`: `{"document_paths": ["README.md"], "reason": "..."}`',
-        '- `state`: `{"text": "...", "wording_origin": "exact|lightly-edited|synthesized"}`',
-        '- `plan`: `{"text": "...", "wording_origin": "exact|lightly-edited|synthesized"}`',
+        '- `overview`: `{"text": "...", "wording_origin": "exact|lightly-edited|synthesized"}` and action must be `promote`',
+        '- `rule`: `{"statement": "...", "why": "...", "wording_origin": "exact|lightly-edited|synthesized"}` and action must be `promote`',
+        '- `topic-resource`: `{"condition": "...", "resource_paths": ["docs/file.md"]}` and action must be `reference`',
+        '- `ordinary-documentation`: `{"document_paths": ["README.md"], "reason": "..."}` and action must be `keep`',
+        '- `state`: `{"text": "...", "wording_origin": "exact|lightly-edited|synthesized"}` and action must be `promote`',
+        '- `plan`: `{"text": "...", "wording_origin": "exact|lightly-edited|synthesized"}` and action must be `promote`',
         '- `authority-mapping`: `{"authority_paths": ["policy.md"], "mapping": "...", "wording_origin": "exact|lightly-edited|synthesized"}` and action must be `map`',
-        '- `unresolved`: `{"question": "..."}`',
+        '- `unresolved`: `{"question": "..."}` and action must be `keep`',
         "",
         "All resource/document/authority paths must exist in the frozen Evidence for this v0 experiment.",
         "",

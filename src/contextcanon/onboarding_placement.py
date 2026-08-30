@@ -13,8 +13,9 @@ from .onboarding_structure import HumanStructurePlan, load_onboarding_structure_
 from .parser import ContextCanonError
 
 
-PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v0"
+PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v1"
 PLACEMENT_KINDS = {
+    "overview",
     "rule",
     "topic-resource",
     "ordinary-documentation",
@@ -23,7 +24,7 @@ PLACEMENT_KINDS = {
     "authority-mapping",
     "unresolved",
 }
-PLACEMENT_ACTIONS = {"keep", "move", "reference", "map"}
+PLACEMENT_ACTIONS = {"keep", "promote", "reference", "map"}
 WORDING_ORIGINS = {"exact", "lightly-edited", "synthesized"}
 CONFIDENCE_LEVELS = {"high", "medium", "low"}
 
@@ -217,7 +218,7 @@ def _parse_payload(kind: str, raw: object, label: str, snapshot: EvidenceSnapsho
             "document_paths": _path_list(payload["document_paths"], f"{label}.document_paths", snapshot),
             "reason": _string(payload["reason"], f"{label}.reason"),
         }
-    if kind in {"state", "plan"}:
+    if kind in {"overview", "state", "plan"}:
         _exact_keys(payload, {"text", "wording_origin"}, label)
         return {
             "text": _string(payload["text"], f"{label}.text"),
@@ -286,10 +287,29 @@ def load_onboarding_placement_proposal(
         destination = _optional_string(raw_item["destination_node_key"], f"items[{index}].destination_node_key")
         if destination is not None and destination not in node_keys:
             raise _error(f"items[{index}] references unknown destination Node {destination}")
-        if kind in {"rule", "topic-resource", "state", "plan", "authority-mapping"} and destination is None:
+        if kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping"} and destination is None:
             raise _error(f"items[{index}] kind {kind} requires destination_node_key")
-        if kind == "authority-mapping" and action != "map":
-            raise _error(f"items[{index}] authority-mapping must use action 'map'")
+        allowed_actions = {
+            "overview": {"promote"},
+            "rule": {"promote"},
+            "topic-resource": {"reference"},
+            "ordinary-documentation": {"keep"},
+            "state": {"promote"},
+            "plan": {"promote"},
+            "authority-mapping": {"map"},
+            "unresolved": {"keep"},
+        }
+        if action not in allowed_actions[str(kind)]:
+            expected = ", ".join(sorted(allowed_actions[str(kind)]))
+            raise _error(f"items[{index}] kind {kind} must use action {expected}")
+        payload = _parse_payload(str(kind), raw_item["payload"], f"items[{index}].payload", snapshot)
+        if kind == "authority-mapping":
+            fixed = set(structure.fixed_markdown)
+            for path in payload["authority_paths"]:
+                if path not in fixed:
+                    raise _error(
+                        f"items[{index}] authority path {path!r} is not marked fixed in the accepted structure"
+                    )
         items.append(
             PlacementItem(
                 id=item_id,
@@ -300,7 +320,7 @@ def load_onboarding_placement_proposal(
                 rationale=_string(raw_item["rationale"], f"items[{index}].rationale"),
                 confidence=_confidence(raw_item["confidence"], f"items[{index}].confidence"),
                 evidence=_references(raw_item["evidence"], f"items[{index}].evidence", snapshot),
-                payload=_parse_payload(str(kind), raw_item["payload"], f"items[{index}].payload", snapshot),
+                payload=payload,
             )
         )
 

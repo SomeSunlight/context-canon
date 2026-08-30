@@ -1,4 +1,0 @@
-  File "/home/runner/work/context-canon/context-canon/tools/_fast_run_block_a.py", line 129
-    '        '  "action": "move",',\n',
-                        ^
-SyntaxError: invalid syntax

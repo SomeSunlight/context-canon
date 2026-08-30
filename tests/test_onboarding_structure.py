@@ -142,6 +142,8 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertIn("project's apparent mental model", first.text)
         self.assertIn("non-Node knowledge bodies", first.text)
         self.assertIn("authoritative-reference", first.text)
+        self.assertIn("Markdown knowledge-body paths only", first.text)
+        self.assertIn("Non-Markdown authorities such as PDF", first.text)
         self.assertIn("Individual Rules, Topics, state/planning items", first.text)
         self.assertIn('"schema": "contextcanon/onboarding-structure-proposal/v0"', first.text)
 
@@ -194,6 +196,8 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertIn("- **AI Workstation** (`.`) <!-- cc:key=N-001 -->", text)
         self.assertIn("  - **AI Tools** (`nodes/ai-tools`) <!-- cc:key=N-003 -->", text)
         self.assertIn("    - **Goose** (`nodes/ai-tools/goose`) <!-- cc:key=N-004 -->", text)
+        self.assertIn("## Fixed Markdown", text)
+        self.assertIn("<!-- contextcanon-fixed-markdown:start -->", text)
         self.assertIn("## Proposal details", text)
         self.assertIn("3: Goose runs as an isolated container.", text)
         self.assertEqual(plan.proposal_digest, proposal.proposal_digest)
@@ -204,8 +208,14 @@ class OnboardingStructureTests(unittest.TestCase):
             "    - **Hermes** (`nodes/ai-tools/hermes`) [reserved]",
         )
         structure_path.write_text(edited, encoding="utf-8")
+        edited = edited.replace(
+            "<!-- contextcanon-fixed-markdown:start -->\n<!-- contextcanon-fixed-markdown:end -->",
+            "<!-- contextcanon-fixed-markdown:start -->\n- `README.md`\n<!-- contextcanon-fixed-markdown:end -->",
+        )
+        structure_path.write_text(edited, encoding="utf-8")
         changed = load_structure_markdown(structure_path, proposal)
 
+        self.assertEqual(changed.fixed_markdown, ("README.md",))
         self.assertEqual(len(changed.nodes), 5)
         hermes = changed.nodes[-1]
         self.assertEqual(hermes.name, "Hermes")

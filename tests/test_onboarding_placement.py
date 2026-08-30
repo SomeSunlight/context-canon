@@ -106,7 +106,7 @@ class OnboardingPlacementTests(unittest.TestCase):
                     "id": "P-001",
                     "title": "Repository is the installation specification",
                     "kind": "rule",
-                    "action": "move",
+                    "action": "promote",
                     "destination_node_key": "N-001",
                     "rationale": "This is durable repository-wide governance and the existing wording is already precise.",
                     "confidence": "high",
@@ -157,6 +157,9 @@ class OnboardingPlacementTests(unittest.TestCase):
             catalog_package_roots=[source_root],
         )
         self.assertIn("place the books onto the already accepted shelves", instruction.text)
+        self.assertIn("where each durable piece of project knowledge should be **maintained in the future**", instruction.text)
+        self.assertIn("README as first-contact orientation/navigation", instruction.text)
+        self.assertIn("Use action `reference` only for `topic-resource`", instruction.text)
         self.assertIn("Do not redesign it in this pass", instruction.text)
         self.assertIn("wording_origin", instruction.text)
         self.assertIn("use it verbatim", instruction.text)
@@ -224,11 +227,40 @@ class OnboardingPlacementTests(unittest.TestCase):
             catalog_package_roots=[source_root],
         )
         review = render_placement_review(proposal, prepared.snapshot_root)
-        self.assertIn("action: `move`", review)
+        self.assertIn("action: `promote`", review)
         self.assertIn("Destination: AI Workstation (`.`)", review)
         self.assertIn("Wording origin: **exact**", review)
         self.assertIn("The repository is the installation specification.", review)
         self.assertIn("reuse Development Workflow", review)
+
+    def test_overview_is_distinct_from_state_and_rule_reference_is_rejected(self):
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["items"].insert(0, {
+            "id": "P-000",
+            "title": "Stable root responsibility",
+            "kind": "overview",
+            "action": "promote",
+            "destination_node_key": "N-001",
+            "rationale": "This is stable orientation, not temporary project state.",
+            "confidence": "high",
+            "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 1, "end_line": 1}],
+            "payload": {"text": "AI Workstation owns reproducible workstation setup.", "wording_origin": "synthesized"},
+        })
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+            workspace.structure_path, catalog_package_roots=[source_root],
+        )
+        self.assertEqual(proposal.items[0].kind, "overview")
+
+        raw["items"][1]["action"] = "reference"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "kind rule must use action promote"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
 
     def test_cli_writes_instruction_validates_and_renders_review_without_redirects(self):
         _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
