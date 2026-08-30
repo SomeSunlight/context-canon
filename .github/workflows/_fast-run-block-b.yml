@@ -1,0 +1,32 @@
+name: fast-run-block-b
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+    paths:
+      - .github/workflows/_fast-run-block-b.yml
+
+permissions:
+  contents: write
+
+jobs:
+  block-b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/onboarding-placement-publication
+      - name: Apply Block B
+        run: python tools/_fast_run_block_b.py
+      - name: Run focused tests
+        run: python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review
+      - name: Remove temporary helpers
+        run: rm tools/_fast_run_block_b.py .github/workflows/_fast-run-block-b.yml
+      - name: Commit Block B
+        run: |
+          git config user.name "ContextCanon fast-run"
+          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
+          git add -A
+          git commit -m "Add editable placement review gate"
+          git push origin HEAD:agent/onboarding-placement-publication
