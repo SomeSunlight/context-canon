@@ -442,9 +442,9 @@ The project owner approved implementing the whole real-placement correction with
 
 #### Block D — resumable onboarding UX and final real-project validation
 
-- [ ] Make the visible onboarding workspace self-describing enough that a human or capable LLM can enter through one local file and reconstruct Evidence identity, accepted structure, current placement-review stage and next command without chat history.
-- [ ] Document the distinction between one-time migration onboarding and ContextCanon-native project growth/maintenance; keep future context-audit ideas separate from initial onboarding.
-- [ ] Record reusable Node distribution as an explicit later UX decision without selecting a repository/registry architecture in this block.
+- [x] Make the visible onboarding workspace self-describing enough that a human or capable LLM can enter through one local file and reconstruct Evidence identity, accepted structure, current placement-review stage and next command without chat history.
+- [x] Document the distinction between one-time migration onboarding and ContextCanon-native project growth/maintenance; keep future context-audit ideas separate from initial onboarding.
+- [x] Record reusable Node distribution as an explicit later UX decision without selecting a repository/registry architecture in this block.
 - [ ] Re-run the corrected placement pass against the real frozen `ai-workstation` Evidence and owner-edited structure, including owner-selected Development Workflow, and inspect the new editable review before publication.
 - [ ] Validate preview/publication vertically on the real materialized `ai-workstation` Nodes with at least one Overview, root Rule, child-local Rule, Topic/Resource, fixed-authority mapping, mutable-document follow-up and reusable Development Workflow Source.
 - [ ] After the coherent implementation settles, regenerate affected self-hosted Context packages, run the complete deterministic suite and `contextcanon check --all .` on the exact review head, inspect the PR diff for temporary/generated drift, and update PR #13 for project-owner review. Do not merge without explicit approval.

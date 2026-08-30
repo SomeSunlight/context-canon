@@ -11,6 +11,8 @@ from .parser import ContextCanonError, find_repo_root
 WORKSPACE_SCHEMA = "contextcanon/onboarding-workspace/v0"
 DEFAULT_WORKSPACE_NAME = "contextcanon-onboarding"
 WORKSPACE_MARKER = f'<!-- contextcanon:onboarding-workspace schema="{WORKSPACE_SCHEMA}" -->'
+CHECKPOINT_START = "<!-- contextcanon-onboarding-checkpoint:start -->"
+CHECKPOINT_END = "<!-- contextcanon-onboarding-checkpoint:end -->"
 
 README_NAME = "README.md"
 STRUCTURE_INSTRUCTION_NAME = "structure-instruction.md"
@@ -100,6 +102,14 @@ That has two benefits. First, ContextCanon can detect when a reviewed live file 
 
 The structure file is the human-owned coarse map. The placement pass is not allowed to redesign it. None of these working files become canonical Context merely because they exist; only explicit `placement-publish` changes reviewed Context Node authoring.
 
+## Current checkpoint
+
+{CHECKPOINT_START}
+No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
+{CHECKPOINT_END}
+
+The checkpoint above is the **last state ContextCanon validated**, not a file watcher. If you edit `structure.md` or `placement.md`, the edit becomes authoritative human input only after the next ContextCanon command validates it and advances this checkpoint.
+
 ## Ownership
 
 ContextCanon recognizes this directory by the marker directly below the H1 above. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
@@ -125,6 +135,78 @@ def write_utf8(path: Path, text: str) -> None:
         temporary.unlink(missing_ok=True)
         raise
 
+
+
+def _snapshot_label(snapshot_root: Path) -> str:
+    snapshot = snapshot_root.resolve()
+    project = find_repo_root(snapshot)
+    try:
+        return snapshot.relative_to(project).as_posix()
+    except ValueError:
+        return str(snapshot)
+
+
+def update_workspace_checkpoint(
+    workspace: OnboardingWorkspace,
+    snapshot_root: Path,
+    *,
+    stage: str,
+    next_action: str,
+    structure_digest: str | None = None,
+    placement_proposal_digest: str | None = None,
+    placement_review_digest: str | None = None,
+    placement_review_complete: bool | None = None,
+    acceptance_digest: str | None = None,
+    source_catalog: tuple[str, ...] = (),
+) -> None:
+    """Rewrite only the framework-owned checkpoint inside the visible README."""
+
+    try:
+        text = workspace.readme_path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ContextCanonError(f"Missing onboarding workspace README: {workspace.readme_path}") from exc
+    if WORKSPACE_MARKER not in text:
+        raise ContextCanonError(f"Refusing to update unowned onboarding workspace README: {workspace.readme_path}")
+
+    lines = [
+        f"- Evidence: `{snapshot_root.resolve().name}`",
+        f"- Snapshot: `{_snapshot_label(snapshot_root)}`",
+        f"- Stage: **{stage}**",
+    ]
+    if structure_digest is not None:
+        lines.append(f"- Accepted structure: `{structure_digest}`")
+    if placement_proposal_digest is not None:
+        lines.append(f"- Placement proposal: `{placement_proposal_digest}`")
+    if placement_review_digest is not None:
+        state = "complete" if placement_review_complete else "still has pending decisions"
+        lines.append(f"- Placement review: `{placement_review_digest}` — {state}")
+    if source_catalog:
+        lines.append("- Exact reusable Source catalog:")
+        lines.extend(f"  - `{item}`" for item in source_catalog)
+    if acceptance_digest is not None:
+        lines.append(f"- Placement acceptance: `{acceptance_digest}`")
+    lines.extend(["", "**Next:**", "", next_action])
+    block = CHECKPOINT_START + "\n" + "\n".join(lines) + "\n" + CHECKPOINT_END
+
+    if CHECKPOINT_START in text or CHECKPOINT_END in text:
+        if text.count(CHECKPOINT_START) != 1 or text.count(CHECKPOINT_END) != 1:
+            raise ContextCanonError(f"Malformed onboarding checkpoint markers in {workspace.readme_path}")
+        start = text.index(CHECKPOINT_START)
+        end = text.index(CHECKPOINT_END, start) + len(CHECKPOINT_END)
+        text = text[:start] + block + text[end:]
+    else:
+        anchor = "\n## Ownership\n"
+        if anchor not in text:
+            raise ContextCanonError(f"Cannot add onboarding checkpoint to unexpected README layout: {workspace.readme_path}")
+        text = text.replace(
+            anchor,
+            "\n## Current checkpoint\n\n" + block +
+            "\n\nThe checkpoint above is the **last state ContextCanon validated**, not a file watcher. "
+            "If you edit `structure.md` or `placement.md`, the edit becomes authoritative human input only after "
+            "the next ContextCanon command validates it and advances this checkpoint.\n" + anchor,
+            1,
+        )
+    write_utf8(workspace.readme_path, text)
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
     project_root = find_repo_root(snapshot_root)

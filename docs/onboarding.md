@@ -193,73 +193,51 @@ At this point **the shelves exist, but the books have not been distributed yet**
 
 ## 5. Generate the content-placement assignment
 
-The second semantic pass is bound to both:
-
-- the exact frozen Evidence digest;
-- the exact digest of the human-edited `structure.md`.
-
-Generate it with:
-
-```text
-contextcanon onboard placement-instruction \
-  .context/onboarding/<evidence-digest>
-```
-
-ContextCanon writes:
-
-```text
-contextcanon-onboarding/placement-instruction.md
-```
-
-The placement LLM is explicitly told **not to redesign the structure**. Its primary question is:
-
-> Where should this existing information live?
-
-rather than:
-
-> How can I rewrite this into more abstract ContextCanon prose?
-
-The proposal distinguishes at least these operations:
-
-- **keep** — leave ordinary documentation or unresolved information where it naturally lives;
-- **move** — project-owned canonical governance/state is buried in an accidental location and should later become canonical at a destination Node;
-- **reference** — a document/resource is already in the right natural location; the Node should route to it rather than duplicate it;
-- **map** — preserve an authoritative policy/standard and explicitly map project context to it rather than rewriting the authority as local truth.
-
-For Rules, State, Plan, or authority mappings the model also records wording origin:
-
-- `exact` — good source wording is retained verbatim;
-- `lightly-edited` — only small changes are necessary to make the fragment self-contained;
-- `synthesized` — no good existing wording exists and a new formulation is genuinely required.
-
-Clear existing language should normally stay clear existing language.
-
-## 6. Reuse exact Sources instead of creating duplicates
-
-Reusable immutable Source packages can be shown to the placement reviewer explicitly:
+The second semantic pass is bound to both the exact frozen Evidence digest and the digest of the human-edited `structure.md`:
 
 ```text
 contextcanon onboard placement-instruction \
   .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root-a> \
-  --catalog-package <package-root-b>
+  --catalog-package <package-root-a>
 ```
 
-The LLM may propose a Source reuse only when frozen project Evidence supports the match. The proposal is bound to the exact Source Node ID, name, version, normalized digest, and package digest that the reviewer saw.
+ContextCanon writes `contextcanon-onboarding/placement-instruction.md`. Give that instruction and **only the same frozen `evidence/` tree** to a strong reasoning LLM. Save its single JSON response as `contextcanon-onboarding/placement-proposal.json`.
 
-A reusable Node does not automatically imply ContextCanon Foundation or another Source. Dependencies are properties of the reusable package itself. Independent Sources stay independently selectable.
+The placement question is no longer "where is this text today?". It is:
 
-If the project owner wants a Source for architectural reasons that are **not represented in the frozen Evidence**, the semantic reviewer must not manufacture evidence from chat memory. That is a legitimate human follow-up requirement rather than permission to weaken provenance. The larger real-project experiment is being used to determine the cleanest owner-facing mechanism for such explicit Source selection.
+> **Where should this meaning be maintained from now on?**
 
-## 7. Validate and inspect the placement proposal
+The v1 proposal distinguishes:
 
-Give `placement-instruction.md` plus the same frozen `evidence/` directory to the reasoning LLM. Save its JSON response as:
+- `overview` — short stable orientation about what a Node owns;
+- `rule` — durable project-local governance;
+- `topic-resource` — deeper Markdown that remains maintained at its natural repository path and is routed to by a Topic;
+- `state` / `plan` — current situation or future work, kept distinct from inherited governance;
+- `ordinary-documentation` — useful documents that remain ordinary documents;
+- `authority-mapping` — a local interpretation of Markdown deliberately marked fixed/authoritative in `structure.md`;
+- `unresolved` — ambiguity that must remain visible.
 
-```text
-contextcanon-onboarding/placement-proposal.json
-```
+Actions are deliberately narrow:
 
-Validate it using the same Source catalog, when one was supplied to the LLM:
+- `promote` — maintain the reviewed meaning canonically at the destination ContextCanon surface;
+- `reference` — only for `topic-resource`; keep the referenced Markdown as the maintenance surface and store routing, not a copied second meaning;
+- `keep` — intentionally remain outside canonical Node authoring;
+- `map` — preserve fixed Markdown as authority while recording the reviewed local relationship to it.
+
+Clear source wording should normally remain `exact`; use `lightly-edited` only for small self-containment changes and `synthesized` only when new wording is genuinely required.
+
+### Mutable and fixed Markdown
+
+During structure review, all proposed Markdown knowledge bodies are mutable by default. The owner may list selected proposed Markdown paths under `## Fixed Markdown` in `structure.md`.
+
+- **mutable** means ContextCanon may become the future owner of promoted meaning, but the first publication still does not delete or rewrite the old document;
+- **fixed** means the document remains authoritative and may only be referenced/mapped by this onboarding flow.
+
+Non-Markdown document authorities such as PDF/Word are deliberately unsupported in this version rather than hidden behind an implicit conversion mechanism.
+
+## 6. Validate and edit `placement.md`
+
+Validate the LLM result using the same Source catalog:
 
 ```text
 contextcanon onboard placement-validate \
@@ -267,7 +245,7 @@ contextcanon onboard placement-validate \
   --catalog-package <package-root-a>
 ```
 
-Then render the evidence-rich human review:
+Then create the human review:
 
 ```text
 contextcanon onboard placement-review \
@@ -275,42 +253,98 @@ contextcanon onboard placement-review \
   --catalog-package <package-root-a>
 ```
 
-ContextCanon writes:
+`placement.md` is the **human-owned decision file**, not merely a rendered report. Each finding is destination-first:
 
 ```text
-contextcanon-onboarding/placement.md
+Destination
+Decision: pending | accept | reject
+Kind / Action
+Maintained meaning
+Proposal rationale
+Exact Evidence excerpts
 ```
 
-For every finding it shows:
+The owner may edit destination, decision, title, kind/action within the supported semantics, maintained wording, and review note directly in this Markdown. ContextCanon allocates authoring identity for future Rules/Topics once and preserves it across reloads even when human-facing titles or wording change.
+
+An existing `placement.md` is never silently regenerated over human edits. If the semantic proposal changes, ContextCanon requires a new review path instead of inventing a merge engine.
+
+### Explicit owner-selected reusable Sources
+
+An LLM may propose Source reuse only when frozen project Evidence supports it. A project owner may nevertheless choose an exact reusable Source for architectural reasons outside that Evidence:
 
 ```text
-exact source excerpt
-        ↓
-proposed destination Node
-        ↓
-keep / move / reference / map
-        ↓
-proposed canonical wording + wording origin
+contextcanon onboard placement-review \
+  .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root> \
+  --owner-source N-001=<source-node-id>
 ```
 
-Reusable Source matches are shown separately with exact package identity and the project Evidence that motivated the match.
+The review labels that Source `owner-selected`; it does not pretend the choice came from project Evidence. Both Evidence-derived and owner-selected Sources remain bound to the exact immutable package identity.
 
-## 8. Current experimental stop point
+## 7. Preview exact publication before mutation
 
-**The structure-first experiment deliberately stops after `placement.md`.**
+Once every placement decision is resolved:
 
-There is not yet a command that automatically:
+```text
+contextcanon onboard placement-preview \
+  .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root-a>
+```
 
-- rewrites existing project documentation;
-- removes duplicate old Rules;
-- writes the placement proposal into every Node;
-- installs a proposed external Source;
-- splices prose automatically into STATE/PLAN;
-- performs destructive cleanup.
+The command writes `contextcanon-onboarding/placement-preview.md` and changes no project file. The preview shows:
 
-That boundary is intentional. The first real `ai-workstation` placement result should be reviewed before ContextCanon hardens publication semantics for moving, referencing, mapping, or cleaning up real project knowledge.
+- the exact `CONTEXT.src.md` delta for every affected Node;
+- exact reusable Source package/Git provenance that would be installed and pinned;
+- accepted findings intentionally retained outside today's Node authoring grammar;
+- mutable Markdown that may later be a duplicate-cleanup candidate, without applying that cleanup.
 
-This is vertical validation before framework hardening: first prove that the resulting structure and placement are useful to the project owner, then automate exactly the repetitive part that real use shows is safe.
+Preview verifies the live Evidence-covered project bytes and the current Node source bytes. Publication later refuses if those inputs changed after the preview.
+
+## 8. Explicitly publish the reviewed placement
+
+After reviewing the preview:
+
+```text
+contextcanon onboard placement-publish \
+  .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root-a>
+```
+
+Publication currently materializes only semantics the ContextCanon source grammar can represent cleanly:
+
+- accepted Overview additions;
+- accepted local Rules;
+- accepted Topics/Resources;
+- accepted exact reusable Sources.
+
+Existing Node identity and unrelated authored Node content are preserved. A child Node may reference a repository resource outside its own directory; ContextCanon converts repository-relative Evidence paths into safe Node-relative locators such as `../../docs/architecture.md` while still forbidding repository escape.
+
+Accepted `state`, `plan`, `ordinary-documentation`, `authority-mapping`, and `unresolved` findings are **not lost** and are not forced into arbitrary prose. They remain in the exact machine acceptance record and in visible `placement-followup.md` for deliberate later handling.
+
+The first publication also leaves README/CONTRIBUTING/architecture and other mutable Markdown untouched. Removing proven duplicate prose is a separate future cleanup operation with its own preview/review boundary.
+
+Reusable Source packages are copied into the target Node's accepted local `.context/sources/<package-digest>/` state. The authored Source declaration carries durable Git origin, exact commit SHA and Node path derived from the clean supplied Source checkout; a transient developer checkout path is never written into project truth.
+
+Publication is transaction-like and idempotent: it recompiles touched Nodes, writes generated outputs, records exact resulting package/source digests, rolls back on failure, and a second unchanged preview/publication produces no additional source delta.
+
+## Migration onboarding versus normal ContextCanon-native growth
+
+The structure-first flow above is primarily a **migration/onboarding workflow for an existing knowledge-rich repository**. It performs repository archaeology, proposes a shelf map, redistributes existing meaning, and records what remains outside current canonical authoring.
+
+Once a project is ContextCanon-native, ordinary growth should usually be much simpler:
+
+```text
+new project knowledge
+→ edit the relevant existing CONTEXT.src.md / Topic resource / project state surface
+→ normal review
+→ contextcanon build/check
+```
+
+Do not rerun full migration onboarding for every normal feature. A future "context audit" may intentionally re-examine accumulated repository knowledge, drift or changed structure, but that is a separate lifecycle operation and should not be smuggled into initial onboarding semantics.
+
+### Reusable Node distribution remains an explicit later UX decision
+
+This work proves immutable reusable Source packages, exact Git provenance, owner selection and local accepted package state. It deliberately does **not** choose how a wider Node library should be discovered/distributed in the long term (single Git repository, multiple repositories, registry, catalog service, or another mechanism). That distribution UX needs its own real use cases before ContextCanon hardens an architecture.
 
 ## Visible workspace versus machine state
 
@@ -330,6 +364,8 @@ contextcanon-onboarding/
     placement-instruction.md
     placement-proposal.json
     placement.md
+    placement-preview.md
+    placement-followup.md
 ```
 
 The visible workspace has a ContextCanon ownership marker. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over; use `--workspace <path>` instead.

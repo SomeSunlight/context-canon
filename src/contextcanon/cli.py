@@ -35,7 +35,7 @@ from .onboarding_structure_materialize import (
     preview_structure_materialization,
     render_structure_materialization_preview,
 )
-from .onboarding_workspace import open_onboarding_workspace, write_utf8
+from .onboarding_workspace import open_onboarding_workspace, update_workspace_checkpoint, write_utf8
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -66,6 +66,20 @@ def _compile_one(path: Path):
 
 def _workspace_path(value: str | None) -> Path | None:
     return Path(value) if value is not None else None
+
+
+def _snapshot_cli(snapshot: Path) -> str:
+    try:
+        return snapshot.resolve().relative_to(find_repo_root(snapshot)).as_posix()
+    except ValueError:
+        return str(snapshot)
+
+
+def _catalog_labels(packages) -> tuple[str, ...]:
+    return tuple(
+        f"{package.metadata.id} · {package.metadata.name} · {package.metadata.version} · {package.package_digest}"
+        for package in packages
+    )
 
 
 def _add_workspace(parser: argparse.ArgumentParser) -> None:
@@ -395,6 +409,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Instruction digest: {instruction.instruction_digest}")
                 print(f"Evidence snapshot: {instruction.evidence_digest}")
                 print(f"Expected LLM output: {workspace.structure_proposal_path}")
+                update_workspace_checkpoint(
+                    workspace, snapshot,
+                    stage="structure instruction ready",
+                    next_action=(
+                        "Give `structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
+                        "Save its single JSON result as `structure-proposal.json`, then run "
+                        f"`contextcanon onboard structure-validate {_snapshot_cli(snapshot)}`."
+                    ),
+                )
                 return 0
 
             if args.onboard_command == "structure-validate":
@@ -410,6 +433,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Proposed Nodes: {len(proposal.nodes)}")
                 print(f"Knowledge bodies: {len(proposal.knowledge_bodies)}")
                 print(f"Source reuses: {len(proposal.source_reuses)}")
+                if args.proposal is None:
+                    update_workspace_checkpoint(
+                        workspace, snapshot,
+                        stage="structure proposal validated",
+                        next_action=f"Run `contextcanon onboard structure-review {_snapshot_cli(snapshot)}` and edit `structure.md`.",
+                    )
                 return 0
 
             if args.onboard_command == "structure-review":
@@ -424,6 +453,13 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Structure file: {structure_path}")
                 print(f"Structure proposal: {proposal.proposal_digest}")
                 print(f"Nodes in edited tree: {len(plan.nodes)}")
+                if workspace is not None:
+                    update_workspace_checkpoint(
+                        workspace, snapshot,
+                        stage="human structure validated",
+                        structure_digest=plan.structure_digest,
+                        next_action=f"Run `contextcanon onboard structure-preview {_snapshot_cli(snapshot)}`.",
+                    )
                 return 0
 
             if args.onboard_command in {"structure-preview", "structure-materialize"}:
@@ -444,11 +480,25 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Existing protected Nodes: {existing}")
                 print(f"Missing Node skeletons: {missing}")
                 if args.onboard_command == "structure-preview":
+                    next_action = (
+                        f"Run `contextcanon onboard structure-materialize {_snapshot_cli(snapshot)}` after reviewing `structure-preview.md`."
+                        if missing else
+                        f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`."
+                    )
+                    update_workspace_checkpoint(
+                        workspace, snapshot, stage="structure previewed",
+                        structure_digest=preview.structure_digest, next_action=next_action,
+                    )
                     return 0
                 created = materialize_structure_skeletons(preview)
                 print(f"Materialized Node skeletons: {len(created)}")
                 for path in created:
                     print(f"  - {path}")
+                update_workspace_checkpoint(
+                    workspace, snapshot, stage="structure materialized",
+                    structure_digest=preview.structure_digest,
+                    next_action=f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`.",
+                )
                 return 0
 
             if args.onboard_command in {
@@ -484,6 +534,15 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Evidence snapshot: {instruction.evidence_digest}")
                     print(f"Structure digest: {instruction.structure_digest}")
                     print(f"Expected LLM output: {workspace.placement_proposal_path}")
+                    update_workspace_checkpoint(
+                        workspace, snapshot, stage="placement instruction ready",
+                        structure_digest=instruction.structure_digest,
+                        next_action=(
+                            "Give `placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
+                            "Save its single JSON result as `placement-proposal.json`, then run "
+                            f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        ),
+                    )
                     return 0
 
                 proposal_path = Path(args.proposal) if args.proposal is not None else workspace.placement_proposal_path
@@ -501,6 +560,16 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Structure digest: {proposal.structure_digest}")
                     print(f"Placement items: {len(proposal.items)}")
                     print(f"Source reuses: {len(proposal.source_reuses)}")
+                    update_workspace_checkpoint(
+                        workspace, snapshot, stage="placement proposal validated",
+                        structure_digest=proposal.structure_digest,
+                        placement_proposal_digest=proposal.proposal_digest,
+                        source_catalog=_catalog_labels(proposal.catalog_packages),
+                        next_action=(
+                            f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs. "
+                            "Add any explicit owner choice with `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID`."
+                        ),
+                    )
                     return 0
 
                 review_path = Path(args.review) if args.review is not None else workspace.placement_path
@@ -515,6 +584,21 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{verb} onboarding placement review {review.review_digest}")
                     print(f"Review file: {review_path}")
                     print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    next_action = (
+                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        if review.is_complete else
+                        "Edit `placement.md`: set every Decision to `accept` or `reject` and correct destination/maintained meaning where needed. "
+                        f"Then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                    )
+                    update_workspace_checkpoint(
+                        workspace, snapshot, stage="human placement review",
+                        structure_digest=proposal.structure_digest,
+                        placement_proposal_digest=proposal.proposal_digest,
+                        placement_review_digest=review.review_digest,
+                        placement_review_complete=review.is_complete,
+                        source_catalog=_catalog_labels(proposal.catalog_packages),
+                        next_action=next_action,
+                    )
                     return 0
 
                 review = load_placement_review(review_path, proposal, snapshot)
@@ -531,6 +615,20 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Review: {preview.review_digest} · complete: {preview.review_complete}")
                 print(f"Touched Context Nodes: {len(preview.nodes)} · follow-ups: {len(preview.followups)}")
                 if args.onboard_command == "placement-preview":
+                    next_action = (
+                        f"Review `placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        if preview.review_complete else
+                        "Return to `placement.md`, resolve all pending decisions, and preview again."
+                    )
+                    update_workspace_checkpoint(
+                        workspace, snapshot, stage="placement publication previewed",
+                        structure_digest=preview.structure_digest,
+                        placement_proposal_digest=preview.proposal_digest,
+                        placement_review_digest=preview.review_digest,
+                        placement_review_complete=preview.review_complete,
+                        source_catalog=_catalog_labels(proposal.catalog_packages),
+                        next_action=next_action,
+                    )
                     return 0
 
                 acceptance_path = (
@@ -549,6 +647,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Acceptance digest: {result.acceptance_digest}")
                 print(f"Changed Context sources: {len(result.changed_sources)}")
                 print(f"Follow-up: {workspace.placement_followup_path}")
+                update_workspace_checkpoint(
+                    workspace, snapshot, stage="placement published",
+                    structure_digest=preview.structure_digest,
+                    placement_proposal_digest=preview.proposal_digest,
+                    placement_review_digest=preview.review_digest,
+                    placement_review_complete=True,
+                    acceptance_digest=result.acceptance_digest,
+                    source_catalog=_catalog_labels(proposal.catalog_packages),
+                    next_action=(
+                        "Review `placement-followup.md`. Mutable-Markdown duplicate cleanup is deliberately a separate later operation; "
+                        "ordinary ContextCanon-native project growth now happens by editing the relevant Node sources directly, not by rerunning migration onboarding."
+                    ),
+                )
                 return 0
 
             if args.onboard_command == "instruction":
