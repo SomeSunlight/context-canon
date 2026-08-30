@@ -8,13 +8,13 @@ Decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a p
 schema: contextcanon/onboarding-placement-review/v1
 evidence_digest: 2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d
 structure_digest: 7e347d22fe33f251677f85b44e8ce7ba753acd0a06061dbfaf3939665b85aa04
-proposal_digest: dc99c59bf03c7705f0de5765c8bd6eb8c40a35205c5198aa0bf9bfc38ef50930
+proposal_digest: e6d8122fa93852d0c9d111071693015ef7f18633a58008ca461aa9678403e94a
 -->
 
 # Placement findings
 
 ## P-001 — Project responsibility
-<!-- cc:placement-item id="P-001" authoring-id="ONB-5CA17C143ACE" -->
+<!-- cc:placement-item id="P-001" authoring-id="ONB-F75FB865470D" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -43,7 +43,7 @@ Original confidence: `high`
   ```
 
 ## P-002 — Current project scope
-<!-- cc:placement-item id="P-002" authoring-id="ONB-F4584521DDFE" -->
+<!-- cc:placement-item id="P-002" authoring-id="ONB-0CFB8BBE1C25" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -73,7 +73,7 @@ Original confidence: `high`
   ```
 
 ## P-003 — Local model integration deferred
-<!-- cc:placement-item id="P-003" authoring-id="ONB-8BEEE2FBC75A" -->
+<!-- cc:placement-item id="P-003" authoring-id="ONB-295903612F1A" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -88,7 +88,7 @@ Wording: `exact`
 
 ### Proposal rationale
 
-The evidence explicitly marks this as later work; the owner removed the speculative reserved Node from structure, so the plan stays project-level.
+The frozen Evidence explicitly marks this as later work, while the accepted structure has no dedicated local-model Node; keep the reviewed plan visible at project level.
 
 Original confidence: `high`
 
@@ -103,7 +103,7 @@ Original confidence: `high`
   ```
 
 ## P-004 — Repository is the installation specification
-<!-- cc:placement-item id="P-004" authoring-id="ONB-189AC6F85312" -->
+<!-- cc:placement-item id="P-004" authoring-id="ONB-9AEAEFEB2000" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -132,7 +132,7 @@ Original confidence: `high`
   ```
 
 ## P-005 — Synchronize version definitions documentation and tests
-<!-- cc:placement-item id="P-005" authoring-id="ONB-A92D15407422" -->
+<!-- cc:placement-item id="P-005" authoring-id="ONB-8AC1F695DA8A" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -161,7 +161,7 @@ Original confidence: `high`
   ```
 
 ## P-006 — Run release check before committing
-<!-- cc:placement-item id="P-006" authoring-id="ONB-DACA1E1490D2" -->
+<!-- cc:placement-item id="P-006" authoring-id="ONB-32298340F3E1" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -190,7 +190,7 @@ Original confidence: `high`
   ```
 
 ## P-007 — Bootstrap responsibility
-<!-- cc:placement-item id="P-007" authoring-id="ONB-A4B9F965D4A8" -->
+<!-- cc:placement-item id="P-007" authoring-id="ONB-FB52F5DFB5A1" -->
 
 Destination: `N-002` — **Bootstrap** (`bootstrap`)
 Decision: `pending`
@@ -245,7 +245,7 @@ Original confidence: `high`
   ```
 
 ## P-008 — Keep installation entry points thin
-<!-- cc:placement-item id="P-008" authoring-id="ONB-9083739DA04F" -->
+<!-- cc:placement-item id="P-008" authoring-id="ONB-B71E5191611C" -->
 
 Destination: `N-002` — **Bootstrap** (`bootstrap`)
 Decision: `pending`
@@ -275,7 +275,7 @@ Original confidence: `high`
   ```
 
 ## P-009 — Preserve idempotent installation
-<!-- cc:placement-item id="P-009" authoring-id="ONB-AD29E6ED41EF" -->
+<!-- cc:placement-item id="P-009" authoring-id="ONB-192829393671" -->
 
 Destination: `N-002` — **Bootstrap** (`bootstrap`)
 Decision: `pending`
@@ -318,7 +318,7 @@ Original confidence: `high`
   ```
 
 ## P-010 — Never automate destructive migration
-<!-- cc:placement-item id="P-010" authoring-id="ONB-9DF07FDF29CE" -->
+<!-- cc:placement-item id="P-010" authoring-id="ONB-992F09214147" -->
 
 Destination: `N-002` — **Bootstrap** (`bootstrap`)
 Decision: `pending`
@@ -370,7 +370,7 @@ Original confidence: `high`
   ```
 
 ## P-011 — Windows and WSL responsibility
-<!-- cc:placement-item id="P-011" authoring-id="ONB-05884330B201" -->
+<!-- cc:placement-item id="P-011" authoring-id="ONB-FA1EB1920740" -->
 
 Destination: `N-003` — **Windows and WSL bootstrap** (`bootstrap/windows`)
 Decision: `pending`
@@ -400,7 +400,7 @@ Original confidence: `high`
   ```
 
 ## P-012 — Linux bootstrap responsibility
-<!-- cc:placement-item id="P-012" authoring-id="ONB-AF038B9593C2" -->
+<!-- cc:placement-item id="P-012" authoring-id="ONB-B811AC3012EB" -->
 
 Destination: `N-004` — **Linux bootstrap** (`bootstrap/linux`)
 Decision: `pending`
@@ -430,7 +430,7 @@ Original confidence: `high`
   ```
 
 ## P-013 — Develop active Linux tree inside WSL filesystem
-<!-- cc:placement-item id="P-013" authoring-id="ONB-8061C7ED0835" -->
+<!-- cc:placement-item id="P-013" authoring-id="ONB-5301E1B33420" -->
 
 Destination: `N-004` — **Linux bootstrap** (`bootstrap/linux`)
 Decision: `pending`
@@ -471,7 +471,7 @@ Original confidence: `high`
   ```
 
 ## P-014 — aiw responsibility
-<!-- cc:placement-item id="P-014" authoring-id="ONB-8EC0F4687BAE" -->
+<!-- cc:placement-item id="P-014" authoring-id="ONB-E2509705F160" -->
 
 Destination: `N-005` — **aiw operator interface** (`bin`)
 Decision: `pending`
@@ -525,7 +525,7 @@ Original confidence: `high`
   ```
 
 ## P-015 — Container runtime responsibility
-<!-- cc:placement-item id="P-015" authoring-id="ONB-AF0FDF511FF4" -->
+<!-- cc:placement-item id="P-015" authoring-id="ONB-3A0C4146672B" -->
 
 Destination: `N-006` — **Containerized application runtimes** (`compose`)
 Decision: `pending`
@@ -554,7 +554,7 @@ Original confidence: `high`
   ```
 
 ## P-016 — Keep runtime secrets out of repositories and images
-<!-- cc:placement-item id="P-016" authoring-id="ONB-023A0A1BDE7E" -->
+<!-- cc:placement-item id="P-016" authoring-id="ONB-773B7E4334EA" -->
 
 Destination: `N-006` — **Containerized application runtimes** (`compose`)
 Decision: `pending`
@@ -609,7 +609,7 @@ Original confidence: `high`
   ```
 
 ## P-017 — Do not give application containers Docker control
-<!-- cc:placement-item id="P-017" authoring-id="ONB-FBEA01B70D7D" -->
+<!-- cc:placement-item id="P-017" authoring-id="ONB-46DC44336E1D" -->
 
 Destination: `N-006` — **Containerized application runtimes** (`compose`)
 Decision: `pending`
@@ -641,7 +641,7 @@ Original confidence: `high`
   ```
 
 ## P-018 — Goose responsibility
-<!-- cc:placement-item id="P-018" authoring-id="ONB-9055322EEB33" -->
+<!-- cc:placement-item id="P-018" authoring-id="ONB-DB440CB9252D" -->
 
 Destination: `N-007` — **Goose** (`compose/goose`)
 Decision: `pending`
@@ -697,7 +697,7 @@ Original confidence: `high`
   ```
 
 ## P-019 — Constrain Goose to the selected workspace
-<!-- cc:placement-item id="P-019" authoring-id="ONB-AA958966BAEA" -->
+<!-- cc:placement-item id="P-019" authoring-id="ONB-42C7095EBC59" -->
 
 Destination: `N-007` — **Goose** (`compose/goose`)
 Decision: `pending`
@@ -739,7 +739,7 @@ Original confidence: `high`
   ```
 
 ## P-020 — Open WebUI responsibility
-<!-- cc:placement-item id="P-020" authoring-id="ONB-A95033C95DD2" -->
+<!-- cc:placement-item id="P-020" authoring-id="ONB-D3B631788199" -->
 
 Destination: `N-008` — **Open WebUI** (`compose/open-webui`)
 Decision: `pending`
@@ -824,7 +824,7 @@ Original confidence: `high`
   ```
 
 ## P-021 — Keep Open WebUI local and authenticated by default
-<!-- cc:placement-item id="P-021" authoring-id="ONB-7CF7CEA3500E" -->
+<!-- cc:placement-item id="P-021" authoring-id="ONB-D0C135E42AEB" -->
 
 Destination: `N-008` — **Open WebUI** (`compose/open-webui`)
 Decision: `pending`
@@ -864,7 +864,7 @@ Original confidence: `high`
   ```
 
 ## P-022 — Architecture reference
-<!-- cc:placement-item id="P-022" authoring-id="ONB-6E7BEFE4BB0A" -->
+<!-- cc:placement-item id="P-022" authoring-id="ONB-8C43D2E1046E" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -903,7 +903,7 @@ Original confidence: `high`
   ```
 
 ## P-023 — CI validation reference
-<!-- cc:placement-item id="P-023" authoring-id="ONB-DC2109DAA0BB" -->
+<!-- cc:placement-item id="P-023" authoring-id="ONB-D348DAB3B477" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -974,7 +974,7 @@ Original confidence: `high`
   ```
 
 ## P-024 — Bootstrap recovery reference
-<!-- cc:placement-item id="P-024" authoring-id="ONB-7FE918F02739" -->
+<!-- cc:placement-item id="P-024" authoring-id="ONB-8B98F94581BF" -->
 
 Destination: `N-002` — **Bootstrap** (`bootstrap`)
 Decision: `pending`
@@ -1189,7 +1189,7 @@ Original confidence: `high`
   ```
 
 ## P-025 — aiw operator guide
-<!-- cc:placement-item id="P-025" authoring-id="ONB-D2EADCE94D0E" -->
+<!-- cc:placement-item id="P-025" authoring-id="ONB-CCBB9C8D55F4" -->
 
 Destination: `N-005` — **aiw operator interface** (`bin`)
 Decision: `pending`
@@ -1283,7 +1283,7 @@ Original confidence: `high`
   ```
 
 ## P-026 — Goose operator guide
-<!-- cc:placement-item id="P-026" authoring-id="ONB-7652AADA5766" -->
+<!-- cc:placement-item id="P-026" authoring-id="ONB-02A6330F07FB" -->
 
 Destination: `N-007` — **Goose** (`compose/goose`)
 Decision: `pending`
@@ -1355,7 +1355,7 @@ Original confidence: `high`
   ```
 
 ## P-027 — Open WebUI operator guide
-<!-- cc:placement-item id="P-027" authoring-id="ONB-6992C1214193" -->
+<!-- cc:placement-item id="P-027" authoring-id="ONB-B21B9AC7FD23" -->
 
 Destination: `N-008` — **Open WebUI** (`compose/open-webui`)
 Decision: `pending`
@@ -1434,7 +1434,7 @@ Original confidence: `high`
   ```
 
 ## P-028 — Runtime security reference
-<!-- cc:placement-item id="P-028" authoring-id="ONB-B4E38A4DDCF8" -->
+<!-- cc:placement-item id="P-028" authoring-id="ONB-FC910063F7C2" -->
 
 Destination: `N-006` — **Containerized application runtimes** (`compose`)
 Decision: `pending`
@@ -1506,7 +1506,7 @@ Original confidence: `high`
   ```
 
 ## P-029 — Repository creation record
-<!-- cc:placement-item id="P-029" authoring-id="ONB-67F3088D943A" -->
+<!-- cc:placement-item id="P-029" authoring-id="ONB-92326F6CED10" -->
 
 Destination: none / outside Node authoring
 Decision: `pending`
@@ -1593,7 +1593,7 @@ Original confidence: `high`
   ```
 
 ## P-030 — Release history
-<!-- cc:placement-item id="P-030" authoring-id="ONB-1A1EE71028DE" -->
+<!-- cc:placement-item id="P-030" authoring-id="ONB-D1B148C1C6B3" -->
 
 Destination: none / outside Node authoring
 Decision: `pending`
@@ -1708,7 +1708,7 @@ Original confidence: `high`
   ```
 
 ## P-031 — Historical patch note
-<!-- cc:placement-item id="P-031" authoring-id="ONB-91DB0D6DA9C8" -->
+<!-- cc:placement-item id="P-031" authoring-id="ONB-99088B457BF2" -->
 
 Destination: none / outside Node authoring
 Decision: `pending`
@@ -1744,7 +1744,7 @@ Original confidence: `high`
   ```
 
 ## P-032 — Supported host baseline
-<!-- cc:placement-item id="P-032" authoring-id="ONB-1D6603C2935D" -->
+<!-- cc:placement-item id="P-032" authoring-id="ONB-FAA86CC3D5C0" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -1765,21 +1765,18 @@ Original confidence: `high`
 
 ### Evidence
 
-- `README.md` lines 337-345 · `32f00926fa7ea3d2a228424ae6062b61ca58a7f30c965197ee56478d2ebd67b8`
+- `README.md` lines 348-353 · `32f00926fa7ea3d2a228424ae6062b61ca58a7f30c965197ee56478d2ebd67b8`
   ```text
-    337: ## Safety model
-    338: 
-    339: - No existing WSL distribution is unregistered or deleted.
-    340: - Conflicting Docker packages are reported, not removed automatically.
-    341: - Docker listens only on its local Unix socket.
-    342: - The interactive Linux user joins the powerful `docker` group.
-    343: - Goose receives one explicitly selected writable workspace and no Docker socket.
-    344: - Goose containers use a read-only root filesystem and are removed after use.
-    345: - Open WebUI is bound to localhost and receives no host workspace or Docker socket.
+    348: ## Supported host
+    349: 
+    350: - Windows 11 with current Store WSL
+    351: - PowerShell 7.4 or newer
+    352: - Ubuntu 24.04 under WSL 2
+    353: - x86-64 Windows and WSL architecture
   ```
 
 ## P-033 — Clarify repository versus Python project versioning
-<!-- cc:placement-item id="P-033" authoring-id="ONB-E3527CC5E3FA" -->
+<!-- cc:placement-item id="P-033" authoring-id="ONB-F46403C6AF75" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
@@ -1828,8 +1825,8 @@ Original confidence: `high`
 
 # Reusable Sources
 
-## Source O-358CC0DA11 — Development Workflow
-<!-- cc:placement-source id="O-358CC0DA11" origin="owner-selected" source-id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" normalized-digest="761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81" package-digest="1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb" -->
+## Source O-0FF30F633E — Development Workflow
+<!-- cc:placement-source id="O-0FF30F633E" origin="owner-selected" source-id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" normalized-digest="761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81" package-digest="1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb" -->
 
 Destination: `N-001` — **AI Workstation** (`.`)
 Decision: `pending`
