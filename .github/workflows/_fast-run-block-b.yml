@@ -17,12 +17,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/onboarding-placement-publication
+      - name: Repair staged Block B tests
+        run: python tools/_repair_fast_run_block_b.py
       - name: Apply Block B
         run: python tools/_fast_run_block_b.py
       - name: Run focused tests with diagnostic
         id: tests
         shell: bash
         run: |
+          rm -f block-b-diagnostic.txt
           set +e
           python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review > block-b-diagnostic.txt 2>&1
           code=$?
@@ -40,7 +43,7 @@ jobs:
           git push origin HEAD:agent/onboarding-placement-publication
       - name: Remove temporary helpers
         if: steps.tests.outputs.exit_code == '0'
-        run: rm -f tools/_fast_run_block_b.py block-b-diagnostic.txt .github/workflows/_fast-run-block-b.yml
+        run: rm -f tools/_fast_run_block_b.py tools/_repair_fast_run_block_b.py block-b-diagnostic.txt .github/workflows/_fast-run-block-b.yml
       - name: Commit Block B
         if: steps.tests.outputs.exit_code == '0'
         run: |
