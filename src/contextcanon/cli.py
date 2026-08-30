@@ -10,7 +10,13 @@ from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_placement import load_onboarding_placement_proposal
-from .onboarding_placement_review import create_or_load_placement_review
+from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from .onboarding_placement_publish import (
+    build_placement_publication_preview,
+    publish_placement_review,
+    render_placement_followups,
+    render_placement_publication_preview,
+)
 from .onboarding_placement_instruction import build_onboarding_placement_instruction
 from .onboarding_proposal import load_onboarding_proposal
 from .onboarding_review import (
@@ -247,6 +253,37 @@ def main(argv: list[str] | None = None) -> int:
         help="explicitly select one exact catalog Source as owner design input when creating a new review; may be repeated",
     )
 
+    for command_name, command_help in (
+        ("placement-preview", "preview exact reviewed placement publication without changing project files"),
+        ("placement-publish", "explicitly publish one complete reviewed placement into existing Context Nodes"),
+    ):
+        command = onboard_sub.add_parser(command_name, help=command_help)
+        command.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+        command.add_argument(
+            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/placement-proposal.json)"
+        )
+        _add_workspace(command)
+        _add_structure_inputs(command)
+        command.add_argument(
+            "--catalog-package",
+            action="append",
+            default=[],
+            metavar="PATH",
+            help="same exact immutable Source catalog used for placement review; may be repeated",
+        )
+        command.add_argument(
+            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/placement.md)"
+        )
+        command.add_argument(
+            "--project", metavar="PATH", help="target Git repository root (default: infer from snapshot)"
+        )
+        if command_name == "placement-publish":
+            command.add_argument(
+                "--acceptance",
+                metavar="PATH",
+                help="exact machine acceptance record (default: <snapshot>/placement-acceptance.json)",
+            )
+
     onboard_instruction = onboard_sub.add_parser(
         "instruction",
         help="render the legacy framework-owned semantic instruction for one exact evidence snapshot",
@@ -414,7 +451,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"  - {path}")
                 return 0
 
-            if args.onboard_command in {"placement-instruction", "placement-validate", "placement-review"}:
+            if args.onboard_command in {
+                "placement-instruction",
+                "placement-validate",
+                "placement-review",
+                "placement-preview",
+                "placement-publish",
+            }:
                 workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
                 structure_proposal_path = (
                     Path(args.structure_proposal) if args.structure_proposal is not None else workspace.structure_proposal_path
@@ -461,16 +504,51 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
 
                 review_path = Path(args.review) if args.review is not None else workspace.placement_path
-                review, created = create_or_load_placement_review(
-                    review_path,
+                if args.onboard_command == "placement-review":
+                    review, created = create_or_load_placement_review(
+                        review_path,
+                        proposal,
+                        snapshot,
+                        owner_source_specs=args.owner_source,
+                    )
+                    verb = "created" if created else "loaded"
+                    print(f"{verb} onboarding placement review {review.review_digest}")
+                    print(f"Review file: {review_path}")
+                    print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    return 0
+
+                review = load_placement_review(review_path, proposal, snapshot)
+                project = Path(args.project) if args.project is not None else None
+                preview = build_placement_publication_preview(
                     proposal,
+                    review,
                     snapshot,
-                    owner_source_specs=args.owner_source,
+                    catalog_package_roots=catalog,
+                    project_root=project,
                 )
-                verb = "created" if created else "loaded"
-                print(f"{verb} onboarding placement review {review.review_digest}")
-                print(f"Review file: {review_path}")
-                print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                write_utf8(workspace.placement_preview_path, render_placement_publication_preview(preview))
+                print(f"wrote placement publication preview {workspace.placement_preview_path}")
+                print(f"Review: {preview.review_digest} · complete: {preview.review_complete}")
+                print(f"Touched Context Nodes: {len(preview.nodes)} · follow-ups: {len(preview.followups)}")
+                if args.onboard_command == "placement-preview":
+                    return 0
+
+                acceptance_path = (
+                    Path(args.acceptance) if args.acceptance is not None else snapshot / "placement-acceptance.json"
+                )
+                result = publish_placement_review(
+                    preview,
+                    review,
+                    snapshot_root=snapshot,
+                    catalog_package_roots=catalog,
+                    acceptance_path=acceptance_path,
+                )
+                write_utf8(workspace.placement_followup_path, render_placement_followups(preview))
+                print(f"published reviewed placement {result.review_digest}")
+                print(f"Acceptance record: {result.acceptance_path}")
+                print(f"Acceptance digest: {result.acceptance_digest}")
+                print(f"Changed Context sources: {len(result.changed_sources)}")
+                print(f"Follow-up: {workspace.placement_followup_path}")
                 return 0
 
             if args.onboard_command == "instruction":

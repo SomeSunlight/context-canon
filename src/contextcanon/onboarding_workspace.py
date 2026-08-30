@@ -20,6 +20,8 @@ STRUCTURE_PREVIEW_NAME = "structure-preview.md"
 PLACEMENT_INSTRUCTION_NAME = "placement-instruction.md"
 PLACEMENT_PROPOSAL_NAME = "placement-proposal.json"
 PLACEMENT_REVIEW_NAME = "placement.md"
+PLACEMENT_PREVIEW_NAME = "placement-preview.md"
+PLACEMENT_FOLLOWUP_NAME = "placement-followup.md"
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,14 @@ class OnboardingWorkspace:
     def placement_path(self) -> Path:
         return self.root / PLACEMENT_REVIEW_NAME
 
+    @property
+    def placement_preview_path(self) -> Path:
+        return self.root / PLACEMENT_PREVIEW_NAME
+
+    @property
+    def placement_followup_path(self) -> Path:
+        return self.root / PLACEMENT_FOLLOWUP_NAME
+
 
 def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
@@ -84,9 +94,11 @@ That has two benefits. First, ContextCanon can detect when a reviewed live file 
 - `{STRUCTURE_PREVIEW_NAME}` — deterministic preview of existing protected Nodes and missing Node skeletons before materialization.
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the second semantic pass after the owner has edited the structure.
 - `{PLACEMENT_PROPOSAL_NAME}` — JSON returned by the external LLM describing where existing project knowledge belongs.
-- `{PLACEMENT_REVIEW_NAME}` — readable evidence-rich placement review showing source excerpt, destination/action, and proposed canonical wording.
+- `{PLACEMENT_REVIEW_NAME}` — human-editable placement decision file. Destination and maintained meaning come first; Evidence remains visible below each finding.
+- `{PLACEMENT_PREVIEW_NAME}` — deterministic exact per-Node source delta and Source-state preview before publication.
+- `{PLACEMENT_FOLLOWUP_NAME}` — generated durable follow-up view for accepted state/plan/mapping/documentation/unresolved findings and deferred mutable-Markdown cleanup candidates.
 
-The structure file is the human-owned coarse map. The placement pass is not allowed to redesign it. None of these working files become canonical Context merely because they exist.
+The structure file is the human-owned coarse map. The placement pass is not allowed to redesign it. None of these working files become canonical Context merely because they exist; only explicit `placement-publish` changes reviewed Context Node authoring.
 
 ## Ownership
 

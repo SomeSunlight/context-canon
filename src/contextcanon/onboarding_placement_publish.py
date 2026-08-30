@@ -324,13 +324,14 @@ def _render_sources(
     return "\n".join(lines).rstrip()
 
 
-def _managed_ids_outside_blocks(text: str) -> tuple[set[str], set[str]]:
+def _managed_ids_outside_blocks(text: str) -> tuple[set[str], set[str], set[str]]:
     stripped = text
     for name in _MANAGED_SECTIONS:
         stripped = _strip_managed_block(stripped, name)
     rule_ids = set(re.findall(r'ctx:rule\s+id="([^"]+)"', stripped))
     topic_ids = set(re.findall(r'ctx:topic\s+id="([^"]+)"', stripped))
-    return rule_ids, topic_ids
+    source_ids = set(re.findall(r'ctx:source\s+id="([^"]+)"', stripped))
+    return rule_ids, topic_ids, source_ids
 
 
 def _render_node_source(
@@ -344,13 +345,19 @@ def _render_node_source(
     overviews = [item for item in items if item.kind == "overview"]
     rules = [item for item in items if item.kind == "rule"]
     topics = [item for item in items if item.kind == "topic-resource"]
-    outside_rule_ids, outside_topic_ids = _managed_ids_outside_blocks(before)
+    outside_rule_ids, outside_topic_ids, outside_source_ids = _managed_ids_outside_blocks(before)
     for item in rules:
         if item.authoring_id in outside_rule_ids:
             raise _error(f"Rule authoring ID collision outside placement-managed block: {item.authoring_id}")
     for item in topics:
         if item.authoring_id in outside_topic_ids:
             raise _error(f"Topic authoring ID collision outside placement-managed block: {item.authoring_id}")
+    for source in sources:
+        if source.source_node_id in outside_source_ids:
+            raise _error(
+                f"Source Node ID collision outside placement-managed block: {source.source_node_id}; "
+                "review the existing authored Source instead of duplicating it"
+            )
 
     text = before
     if overviews or rules or topics or sources:
@@ -681,12 +688,28 @@ def publish_placement_review(
     preview: PlacementPublicationPreview,
     review: OnboardingPlacementReview,
     *,
+    snapshot_root: Path,
     catalog_package_roots: Iterable[Path] = (),
     acceptance_path: Path,
 ) -> PlacementPublicationResult:
-    if not preview.review_complete:
+    if review.review_digest != preview.review_digest:
+        raise _error("review changed after publication preview; build a fresh preview")
+    if (
+        review.evidence_digest != preview.evidence_digest
+        or review.structure_digest != preview.structure_digest
+        or review.proposal_digest != preview.proposal_digest
+    ):
+        raise _error("review identity does not match publication preview")
+    if not preview.review_complete or not review.is_complete:
         raise _error("review still contains pending decisions; publication requires a complete human review")
     project = preview.project_root
+    snapshot = load_evidence_snapshot(snapshot_root)
+    _verify_live_evidence(snapshot, project)
+    for delta in preview.nodes:
+        if not delta.source_path.is_file() or delta.source_path.read_text(encoding="utf-8") != delta.before:
+            raise _error(
+                f"Context Node source changed after publication preview: {delta.source_path}; build a fresh preview"
+            )
     roots = _catalog_roots(catalog_package_roots)
     delta_by_key = {delta.key: delta for delta in preview.nodes}
     node_by_path = {delta.source_path.parent: delta for delta in preview.nodes}
@@ -751,6 +774,10 @@ def publish_placement_review(
 
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        if acceptance_path.is_file() and acceptance_path.read_bytes() != encoded:
+            raise _error(
+                f"placement acceptance record already exists with different exact content: {acceptance_path}"
+            )
         _atomic_write(acceptance_path, encoded)
         digest = _sha256_bytes(encoded)
         return PlacementPublicationResult(
