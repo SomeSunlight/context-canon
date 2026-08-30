@@ -426,11 +426,11 @@ The project owner approved implementing the whole real-placement correction with
 
 #### Block B — editable human placement gate
 
-- [ ] Redesign `placement.md` around the reviewer: destination first, then decision/kind/action, proposed maintained meaning, rationale and Evidence.
-- [ ] Parse only a deliberately small editable Markdown control surface; keep Evidence/provenance rendering outside the editable contract.
-- [ ] Allocate canonical Rule/Topic identities once in human review state and preserve them across repeated load/preview; titles and wording remain editable presentation.
-- [ ] Preserve an existing human-edited placement review instead of overwriting it; fail clearly when a changed proposal requires a new candidate/review decision.
-- [ ] Support explicit owner-selected reusable Sources independently of LLM-derived `source_reuses`, while retaining exact immutable package identity and project-specific local deltas.
+- [x] Redesign `placement.md` around the reviewer: destination first, then decision/kind/action, proposed maintained meaning, rationale and Evidence.
+- [x] Parse only a deliberately small editable Markdown control surface; keep Evidence/provenance rendering outside the editable contract.
+- [x] Allocate canonical Rule/Topic identities once in human review state and preserve them across repeated load/preview; titles and wording remain editable presentation.
+- [x] Preserve an existing human-edited placement review instead of overwriting it; fail clearly when a changed proposal requires a new candidate/review decision.
+- [x] Support explicit owner-selected reusable Sources independently of LLM-derived `source_reuses`, while retaining exact immutable package identity and project-specific local deltas.
 
 #### Block C — deterministic placement preview and publication
 

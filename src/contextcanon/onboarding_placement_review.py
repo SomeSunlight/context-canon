@@ -9,7 +9,13 @@ from pathlib import Path
 from typing import Iterable
 
 from .model import CompiledPackage
-from .onboarding_placement import OnboardingPlacementProposal, PlacementItem
+from .onboarding_placement import (
+    PLACEMENT_ACTIONS,
+    PLACEMENT_KINDS,
+    WORDING_ORIGINS,
+    OnboardingPlacementProposal,
+    PlacementItem,
+)
 from .onboarding_proposal import EvidenceReference, EvidenceSnapshot, load_evidence_snapshot
 from .parser import ContextCanonError
 
@@ -433,6 +439,65 @@ def _payload_from_block(kind: str, block: list[str]) -> dict[str, object]:
     raise _error(f"unsupported kind {kind!r}")
 
 
+def _validate_item_edit(
+    item_id: str,
+    kind: str,
+    action: str,
+    destination: str | None,
+    payload: dict[str, object],
+    proposal: OnboardingPlacementProposal,
+    snapshot: EvidenceSnapshot,
+) -> None:
+    if kind not in PLACEMENT_KINDS:
+        raise _error(f"item {item_id} has unsupported Kind {kind!r}")
+    if action not in PLACEMENT_ACTIONS:
+        raise _error(f"item {item_id} has unsupported Action {action!r}")
+    allowed_actions = {
+        "overview": {"promote"},
+        "rule": {"promote"},
+        "topic-resource": {"reference"},
+        "ordinary-documentation": {"keep"},
+        "state": {"promote"},
+        "plan": {"promote"},
+        "authority-mapping": {"map"},
+        "unresolved": {"keep"},
+    }
+    if action not in allowed_actions[kind]:
+        expected = ", ".join(sorted(allowed_actions[kind]))
+        raise _error(f"item {item_id} Kind {kind} must use Action {expected}")
+    requires_destination = kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping"}
+    if requires_destination and destination is None:
+        raise _error(f"item {item_id} Kind {kind} requires a Destination")
+    evidence_paths = set(snapshot.by_path)
+    if kind in {"overview", "state", "plan"}:
+        if payload.get("wording_origin") not in WORDING_ORIGINS or not str(payload.get("text", "")).strip():
+            raise _error(f"item {item_id} has invalid {kind} maintained meaning")
+    elif kind == "rule":
+        if payload.get("wording_origin") not in WORDING_ORIGINS:
+            raise _error(f"item {item_id} has invalid Rule wording origin")
+        if not str(payload.get("statement", "")).strip() or not str(payload.get("why", "")).strip():
+            raise _error(f"item {item_id} Rule requires Statement and Why")
+    elif kind == "topic-resource":
+        if not str(payload.get("condition", "")).strip():
+            raise _error(f"item {item_id} Topic requires Condition")
+        for path in payload.get("resource_paths", []):
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} Resource path is not frozen Evidence: {path}")
+    elif kind == "ordinary-documentation":
+        for path in payload.get("document_paths", []):
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} document path is not frozen Evidence: {path}")
+    elif kind == "authority-mapping":
+        if payload.get("wording_origin") not in WORDING_ORIGINS:
+            raise _error(f"item {item_id} has invalid mapping wording origin")
+        fixed = set(proposal.structure.fixed_markdown)
+        for path in payload.get("authority_paths", []):
+            if path not in fixed:
+                raise _error(f"item {item_id} authority is not fixed Markdown in the accepted structure: {path}")
+    elif kind == "unresolved" and not str(payload.get("question", "")).strip():
+        raise _error(f"item {item_id} unresolved finding requires Question")
+
+
 def _normalize_review(
     proposal: OnboardingPlacementProposal,
     items: tuple[PlacementReviewItem, ...],
@@ -456,7 +521,9 @@ def _normalize_review(
     )
 
 
-def load_placement_review(path: Path, proposal: OnboardingPlacementProposal) -> OnboardingPlacementReview:
+def load_placement_review(
+    path: Path, proposal: OnboardingPlacementProposal, snapshot_root: Path
+) -> OnboardingPlacementReview:
     try:
         text = path.resolve().read_text(encoding="utf-8")
     except FileNotFoundError as exc:
@@ -477,6 +544,7 @@ def load_placement_review(path: Path, proposal: OnboardingPlacementProposal) -> 
             "proposal_digest does not match the existing human placement review; create a new review path for a new LLM candidate rather than overwriting human edits"
         )
 
+    snapshot = load_evidence_snapshot(snapshot_root)
     lines = text.splitlines()
     proposal_by_id = {item.id: item for item in proposal.items}
     node_keys = {node.key for node in proposal.structure.nodes}
@@ -508,6 +576,9 @@ def load_placement_review(path: Path, proposal: OnboardingPlacementProposal) -> 
         destination = _destination(block, allow_none=True)
         if destination is not None and destination not in node_keys:
             raise _error(f"item {item_id} references unknown destination Node {destination}")
+        payload = _payload_from_block(kind, block)
+        _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
+        note = _find_line(block, "Review note: ", "Review note")
         parsed_items.append(
             PlacementReviewItem(
                 proposal_id=item_id,
@@ -517,8 +588,8 @@ def load_placement_review(path: Path, proposal: OnboardingPlacementProposal) -> 
                 destination_node_key=destination,
                 kind=kind,
                 action=action,
-                payload=_payload_from_block(kind, block),
-                review_note="" if _find_line(block, "Review note: ", "Review note") == "-" else _find_line(block, "Review note: ", "Review note"),
+                payload=payload,
+                review_note="" if note == "-" else note,
             )
         )
     if seen != set(proposal_by_id):
@@ -611,11 +682,11 @@ def create_or_load_placement_review(
             raise _error(
                 "--owner-source is only used when placement.md is first created; edit the existing human review instead of silently changing it"
             )
-        return load_placement_review(path, proposal), False
+        return load_placement_review(path, proposal, snapshot_root), False
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         render_placement_review(proposal, snapshot_root, owner_source_specs=owner_source_specs),
         encoding="utf-8",
         newline="\n",
     )
-    return load_placement_review(path, proposal), True
+    return load_placement_review(path, proposal, snapshot_root), True

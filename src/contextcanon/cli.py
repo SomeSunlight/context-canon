@@ -9,7 +9,8 @@ from .diff import diff_compiled, render_diff
 from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
-from .onboarding_placement import load_onboarding_placement_proposal, render_placement_review
+from .onboarding_placement import load_onboarding_placement_proposal
+from .onboarding_placement_review import create_or_load_placement_review
 from .onboarding_placement_instruction import build_onboarding_placement_instruction
 from .onboarding_proposal import load_onboarding_proposal
 from .onboarding_review import (
@@ -233,6 +234,18 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="same exact immutable Source package catalog shown to the placement reviewer; may be repeated",
     )
+    onboard_placement_review.add_argument(
+        "--review",
+        metavar="PATH",
+        help="human-editable placement Markdown (default: <workspace>/placement.md)",
+    )
+    onboard_placement_review.add_argument(
+        "--owner-source",
+        action="append",
+        default=[],
+        metavar="TARGET_NODE_KEY=SOURCE_NODE_ID",
+        help="explicitly select one exact catalog Source as owner design input when creating a new review; may be repeated",
+    )
 
     onboard_instruction = onboard_sub.add_parser(
         "instruction",
@@ -447,10 +460,17 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Source reuses: {len(proposal.source_reuses)}")
                     return 0
 
-                write_utf8(workspace.placement_path, render_placement_review(proposal, snapshot))
-                print(f"wrote onboarding placement review {workspace.placement_path}")
-                print(f"Placement proposal: {proposal.proposal_digest}")
-                print(f"Items: {len(proposal.items)} · Source reuses: {len(proposal.source_reuses)}")
+                review_path = Path(args.review) if args.review is not None else workspace.placement_path
+                review, created = create_or_load_placement_review(
+                    review_path,
+                    proposal,
+                    snapshot,
+                    owner_source_specs=args.owner_source,
+                )
+                verb = "created" if created else "loaded"
+                print(f"{verb} onboarding placement review {review.review_digest}")
+                print(f"Review file: {review_path}")
+                print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
                 return 0
 
             if args.onboard_command == "instruction":

@@ -296,7 +296,7 @@ class OnboardingPlacementTests(unittest.TestCase):
             ])
         self.assertEqual(result, 0)
         self.assertTrue(workspace.placement_path.is_file())
-        self.assertIn("Wording origin: **exact**", workspace.placement_path.read_text(encoding="utf-8"))
+        self.assertIn("Wording: `exact`", workspace.placement_path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
