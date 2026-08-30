@@ -1,0 +1,10 @@
+{
+  "ai_workstation_commit": "4106fec3f7726d6c9bfedd70d30d9ed025b7c166",
+  "evidence_digest": "2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d",
+  "note": "Temporary inspection artifact. No AI Workstation repository mutation was published by this review-generation step.",
+  "owner_selected_source": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+  "placement_items": 33,
+  "root_node_id": "aea56adf-2a26-43f0-b712-3bbeab7a3097",
+  "source_package_digest": "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb",
+  "structure_digest": "7e347d22fe33f251677f85b44e8ce7ba753acd0a06061dbfaf3939665b85aa04"
+}
