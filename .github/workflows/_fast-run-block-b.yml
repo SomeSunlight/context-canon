@@ -25,9 +25,9 @@ jobs:
         id: tests
         shell: bash
         run: |
-          rm -f block-b-diagnostic.txt
+          printf 'diagnostic run for %s\n' "$GITHUB_SHA" > block-b-diagnostic.txt
           set +e
-          python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review > block-b-diagnostic.txt 2>&1
+          python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement tests.test_onboarding_placement_review >> block-b-diagnostic.txt 2>&1
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           cat block-b-diagnostic.txt
@@ -37,7 +37,6 @@ jobs:
         run: |
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git checkout -- .
           git add block-b-diagnostic.txt
           git commit -m "Record Block B test diagnostic"
           git push origin HEAD:agent/onboarding-placement-publication
