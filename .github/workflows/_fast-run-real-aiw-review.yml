@@ -1,0 +1,33 @@
+name: fast-run-real-aiw-review
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+    paths:
+      - .github/workflows/_fast-run-real-aiw-review.yml
+
+permissions:
+  contents: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/onboarding-placement-publication
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install current ContextCanon
+        run: python -m pip install -e .
+      - name: Generate real v1 review
+        run: python tools/_real_aiw_review.py
+      - name: Commit temporary inspection artifacts
+        run: |
+          git config user.name "ContextCanon fast-run"
+          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
+          git add _real-ai-workstation-placement-review.md _real-ai-workstation-placement-review.json
+          git commit -m "Capture real AI Workstation v1 placement review"
+          git push origin HEAD:agent/onboarding-placement-publication
