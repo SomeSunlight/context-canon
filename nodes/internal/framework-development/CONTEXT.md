@@ -106,6 +106,10 @@ When the project owner resumes work after a short conversational interruption, e
 
 For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
 
+#### `CCW-009` — Use owner-approved fast-run blocks without weakening the final gate
+
+When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, keep durable PLAN/recovery checkpoints and focused verification inside bounded work blocks, but defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate.
+
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.

@@ -77,6 +77,12 @@ If a change introduces new deterministic behavior, test that behavior before rel
 
 The important distinction is that **review-ready and merge-ready are different states**. A successful merge is followed by one small closure step because the merge itself creates facts that a pre-merge candidate cannot truthfully record.
 
+### Owner-approved fast-run blocks
+
+Sometimes the project owner has already reviewed the product direction and explicitly delegates a coherent implementation phase without wanting to approve every intermediate block. In that case, keep the recovery map and meaningful focused checks, but do not manufacture repeated PR handoffs, full CI cycles, generated-output refreshes, or status-polish commits merely because normal review would have happened between those blocks.
+
+Fast-run changes **cadence, not authority**: the work still stays on a review branch, PLAN remains current enough to resume after interruption, unknown failures are investigated, and the resulting coherent candidate still requires project-owner review followed by the ordinary exact-head merge gate.
+
 ## 4. What automated verification proves and what it does not
 
 A green CI or local verification run proves only that the checks configured by the project passed on that exact revision.

@@ -22,6 +22,7 @@ local:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "group": "Recoverable planning"}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "group": "Recoverable planning"}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "group": "Proportional verification"}
+    - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "group": "Human review gate"}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "group": "Accepted baseline"}
@@ -37,6 +38,7 @@ official:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -58,5 +60,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463"
-  package_digest: "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a"
+  normalized_digest: "761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81"
+  package_digest: "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb"

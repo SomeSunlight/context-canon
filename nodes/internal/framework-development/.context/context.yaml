@@ -23,8 +23,8 @@ sources:
     name: "Development Workflow"
     version: "0.2.0-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463"
-    package_digest: "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a"
+    normalized_digest: "761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81"
+    package_digest: "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -70,6 +70,7 @@ official:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -164,5 +165,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "86130e850646b598067b03a59f160c608f26ec57fbf3bbbbc5caea67a6f1b456"
-  package_digest: "7631141a9e5d1588384cd9bb6d29235726dc2ae6079be70d8bfab8c664bed226"
+  normalized_digest: "3adee7a5adfb77102cf59b1c5b25cff9fdec33fcb50a355bf19e8b585ae381c2"
+  package_digest: "a4a13bb675c72b0e4b5e0d602d351345c6d096477a1981e80dceb542d8b818ad"

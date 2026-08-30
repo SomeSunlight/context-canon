@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463",
-    "package": "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a"
+    "normalized": "761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81",
+    "package": "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "0fba1f72ec64d5e8fb331b6b634d69ea6b14787f664a0ada43af5d5db3ca9a40",
-      "size": 4400
+      "sha256": "374ed112c45dac676dd2735e7e34baa231430096524130802dcf788df747f296",
+      "size": 4854
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md",
-      "sha256": "fc8b969e1dc2643bf5d89f45d9fd12d412bb7e0c799acbf232f453c66ba3e846",
-      "size": 8079
+      "sha256": "58e141ce0e28fee845833c1b32a73820b897fd0b14e12a70f364c498c3edcb41",
+      "size": 8850
     }
   ],
   "node": {
@@ -78,6 +78,16 @@
       "statement": "For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.",
       "title": "Batch related edits before expensive final verification",
       "why": "Final verification is valuable, but repeating it on superseded intermediate heads adds ceremony without increasing confidence in the candidate that will actually be reviewed or merged."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-009",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, keep durable PLAN/recovery checkpoints and focused verification inside bounded work blocks, but defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate.",
+      "title": "Use owner-approved fast-run blocks without weakening the final gate",
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability, final human review, or exact-head merge verification."
     },
     {
       "group": "Proportional verification",
