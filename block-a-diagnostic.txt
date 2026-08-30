@@ -1,0 +1,1 @@
+src/contextcanon/onboarding_placement_instruction.py: expected one replacement target, found 0: "        '`kind` is exactly one of `rule`, `topic-resource`, `ordinary-documentat"
