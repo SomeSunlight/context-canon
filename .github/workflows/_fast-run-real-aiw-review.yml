@@ -22,6 +22,42 @@ jobs:
           python-version: "3.12"
       - name: Install current ContextCanon
         run: python -m pip install -e .
+      - name: Preserve reviewed Source provenance in publication preview
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/contextcanon/onboarding_placement_publish.py")
+          text = path.read_text(encoding="utf-8")
+          old = '''class SourceGitProvenance:\n    source_node_id: str\n    locator: str\n    ref: str\n    node_path: str\n    package_root: Path\n'''
+          new = '''class SourceGitProvenance:\n    source_node_id: str\n    source_name: str\n    source_version: str\n    source_package_digest: str\n    origin: str\n    locator: str\n    ref: str\n    node_path: str\n    package_root: Path\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"SourceGitProvenance target count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = '''    return SourceGitProvenance(source.source_node_id, locator, ref, node_path, package_root)\n'''
+          new = '''    return SourceGitProvenance(\n        source_node_id=source.source_node_id,\n        source_name=source.source_name,\n        source_version=source.source_version,\n        source_package_digest=source.source_package_digest,\n        origin=source.origin,\n        locator=locator,\n        ref=ref,\n        node_path=node_path,\n        package_root=package_root,\n    )\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"SourceGitProvenance construction target count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = '''            [\n                f"- `{source.source_node_id}` from `{source.locator}`",\n                f"  - ref: `{source.ref}`",\n                f"  - node-path: `{source.node_path}`",\n                "  - the exact reviewed immutable package will be copied into the consumer Node's local `.context/sources/` store",\n            ]\n'''
+          new = '''            [\n                f"- **{source.source_name}** — origin: `{source.origin}`",\n                f"  - Source Node: `{source.source_node_id}`",\n                f"  - version: `{source.source_version}`",\n                f"  - package: `{source.source_package_digest}`",\n                f"  - Git: `{source.locator}` @ `{source.ref}`",\n                f"  - node-path: `{source.node_path}`",\n                "  - the exact reviewed immutable package will be copied into the consumer Node's local `.context/sources/` store",\n            ]\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"preview Source rendering target count={text.count(old)}")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+          test = Path("tests/test_onboarding_placement_publish.py")
+          text = test.read_text(encoding="utf-8")
+          old = '''        self.assertIn(head, text)\n        self.assertTrue(preview.mutable_cleanup_candidates)\n'''
+          new = '''        self.assertIn(head, text)\n        self.assertIn("Development Workflow", text)\n        self.assertIn("origin: `evidence-derived`", text)\n        self.assertIn(proposal.source_reuses[0].source_package_digest, text)\n        self.assertTrue(preview.mutable_cleanup_candidates)\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"preview regression target count={text.count(old)}")
+          test.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+          PY
+      - name: Run focused publication regressions
+        run: python -m unittest tests.test_onboarding_placement_publish -v
       - name: Prepare real harness
         run: |
           python tools/_repair_real_aiw_diagnostic.py
@@ -51,12 +87,16 @@ jobs:
           git add real-aiw-publication-diagnostic.txt
           git commit -m "Record real AI Workstation publication diagnostic"
           git push origin HEAD:agent/onboarding-placement-publication
-      - name: Commit real validation report
+      - name: Commit product correction and real validation report
         if: steps.validate.outputs.exit_code == '0'
         run: |
           rm -f real-aiw-publication-diagnostic.txt
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add -A _real-ai-workstation-publication-report.json real-aiw-publication-diagnostic.txt
-          git commit -m "Validate real AI Workstation placement publication"
+          git add -A \
+            src/contextcanon/onboarding_placement_publish.py \
+            tests/test_onboarding_placement_publish.py \
+            _real-ai-workstation-publication-report.json \
+            real-aiw-publication-diagnostic.txt
+          git commit -m "Preserve Source origin through placement publication"
           git push origin HEAD:agent/onboarding-placement-publication
