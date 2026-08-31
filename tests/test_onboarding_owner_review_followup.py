@@ -123,18 +123,22 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         self.assertIn("concise human orientation plus a link/reference", instruction.text)
         self.assertIn("Do not plan to maintain the same full rule or explanation in both places", instruction.text)
 
-    def test_workspace_readme_is_numbered_and_checkpoint_keeps_source_inputs_visible(self):
+    def test_workspace_readme_orients_and_plan_tracks_steps_and_source_inputs(self):
         _, prepared, workspace = self.make_project()
         readme = workspace.readme_path.read_text(encoding="utf-8")
-        self.assertIn("## Runbook — do these in order", readme)
-        self.assertIn("### 1. Freeze Evidence", readme)
-        self.assertIn("### 8. Publish the reviewed placement", readme)
-        self.assertIn("LLM handoff 1", readme)
-        self.assertIn("LLM handoff 2", readme)
-        self.assertIn("Human gate 1", readme)
-        self.assertIn("Human gate 2", readme)
-        self.assertIn("may name a directory that does not exist yet", readme)
-        self.assertIn("duplicate source prose created by migration is transitional", readme)
+        plan = workspace.plan_path.read_text(encoding="utf-8")
+
+        self.assertIn("stable orientation page", readme)
+        self.assertIn("PLAN.md", readme)
+        self.assertNotIn("## Checklist", readme)
+        self.assertIn("## Checklist", plan)
+        self.assertIn("- [ ] 1. Freeze Evidence", plan)
+        self.assertIn("- [ ] 8. Publish placement", plan)
+        self.assertIn("LLM handoff 1", plan)
+        self.assertIn("LLM handoff 2", plan)
+        self.assertIn("Human gate 1", plan)
+        self.assertIn("Human gate 2", plan)
+        self.assertIn("directories that did not exist", readme)
 
         update_workspace_checkpoint(
             workspace,
@@ -144,7 +148,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
             source_catalog_inputs=("C:/contextcanon/development-workflow",),
             owner_source_specs=("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40",),
         )
-        checkpoint = workspace.readme_path.read_text(encoding="utf-8")
+        checkpoint = workspace.plan_path.read_text(encoding="utf-8")
         self.assertIn("Reuse these exact `--catalog-package` inputs", checkpoint)
         self.assertIn("C:/contextcanon/development-workflow", checkpoint)
         self.assertIn("do not repeat on preview/publish", checkpoint)
