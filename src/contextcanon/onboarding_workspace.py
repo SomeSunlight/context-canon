@@ -75,32 +75,120 @@ def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
 {WORKSPACE_MARKER}
 
-This directory is the **visible human working area** for ContextCanon onboarding. Files here are meant to be opened, reviewed, handed to a reasoning model, or edited by a human while onboarding is in progress.
+This directory is the **visible human working area** for one structure-first ContextCanon onboarding. Open this README when returning after a pause: the numbered runbook explains the complete sequence, and **Current checkpoint** below says which validated step comes next.
 
 It is intentionally separate from `.context/`:
 
 - `.context/onboarding/<evidence-digest>/` contains immutable machine-owned frozen Evidence and review/acceptance state;
 - `{DEFAULT_WORKSPACE_NAME}/` contains human-facing working artifacts that should remain easy to find in an IDE or file browser.
 
+## Runbook — do these in order
+
+The workflow has two deliberately visible LLM handoffs and two human review gates. ContextCanon owns the deterministic steps around them.
+
+### 1. Freeze Evidence
+
+```text
+contextcanon onboard prepare .
+```
+
+Keep the resulting `.context/onboarding/<evidence-digest>` path. Reuse the same snapshot while you intentionally want to review the same source bytes; do not refreeze merely because you restart the experiment.
+
+### 2. Generate the structure assignment
+
+```text
+contextcanon onboard structure-instruction .context/onboarding/<evidence-digest>
+```
+
+Add any reusable catalog package with repeated `--catalog-package <package-root>` when you want the structure reviewer to compare it.
+
+**LLM handoff 1:** give `{STRUCTURE_INSTRUCTION_NAME}` and only the frozen snapshot's `evidence/` tree to a strong reasoning LLM. Save its single JSON result as `{STRUCTURE_PROPOSAL_NAME}`.
+
+### 3. Validate and human-review the shelves
+
+```text
+contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
+contextcanon onboard structure-review .context/onboarding/<evidence-digest>
+```
+
+**Human gate 1:** edit `{STRUCTURE_REVIEW_NAME}` until the Node hierarchy matches the project's mental model. Nodes are semantic landing points, not aliases for today's directory tree. An accepted Node path may name a directory that does not exist yet; materialization can create it safely.
+
+The same file also lets the owner mark Markdown as fixed/authoritative instead of mutable migration material.
+
+### 4. Preview and materialize the accepted shelves
+
+```text
+contextcanon onboard structure-preview .context/onboarding/<evidence-digest>
+contextcanon onboard structure-materialize .context/onboarding/<evidence-digest>
+```
+
+Review `{STRUCTURE_PREVIEW_NAME}` before materializing. Missing accepted Node directories/skeletons are created; existing Context Nodes and ordinary project files are preserved.
+
+### 5. Generate the placement assignment
+
+```text
+contextcanon onboard placement-instruction .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root>
+```
+
+Use the same exact reusable Source catalog for the placement commands that follow.
+
+**LLM handoff 2:** give `{PLACEMENT_INSTRUCTION_NAME}` and only the same frozen `evidence/` tree to the reasoning LLM. Save its single JSON result as `{PLACEMENT_PROPOSAL_NAME}`.
+
+### 6. Validate and human-review where meaning belongs
+
+```text
+contextcanon onboard placement-validate .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root>
+
+contextcanon onboard placement-review .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root> \
+  --owner-source N-001=<source-node-id>
+```
+
+`--owner-source` is optional and is used **only when creating the human review** to add a deliberate owner-selected Source. Once written into `{PLACEMENT_REVIEW_NAME}`, that choice is part of the review and is not repeated on preview/publish commands.
+
+**Human gate 2:** edit `{PLACEMENT_REVIEW_NAME}`. Resolve every Decision and correct destination, kind/action, title, or maintained wording where necessary.
+
+### 7. Preview exact publication
+
+```text
+contextcanon onboard placement-preview .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root>
+```
+
+Review `{PLACEMENT_PREVIEW_NAME}`. It shows exact Context source changes and reusable Source state before project mutation.
+
+### 8. Publish the reviewed placement
+
+```text
+contextcanon onboard placement-publish .context/onboarding/<evidence-digest> \
+  --catalog-package <package-root>
+```
+
+Publication makes reviewed ContextCanon authoring canonical. It does **not** immediately rewrite ordinary README/CONTRIBUTING/docs prose. Any duplicate source prose created by migration is transitional and must later be removed or reduced to concise orientation/reference through a separate reviewed cleanup operation.
+
+After publication, inspect `{PLACEMENT_FOLLOWUP_NAME}` for accepted state/plan/documentation/unresolved work that intentionally remains outside current Node authoring.
+
+## Standard files
+
+- `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for LLM handoff 1.
+- `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
+- `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
+- `{STRUCTURE_PREVIEW_NAME}` — deterministic preview before Node skeleton creation.
+- `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for LLM handoff 2.
+- `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
+- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.
+- `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
+- `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
+
+None of these working files become canonical Context merely because they exist; only explicit publication changes reviewed Context Node authoring.
+
 ## Why frozen Evidence exists
 
-Freezing does not freeze the live Git repository. ContextCanon copies the selected evidence into a content-addressed snapshot so every semantic pass and every human review can be tied to the **same exact project bytes**.
+Freezing does not freeze the live Git repository. ContextCanon copies selected evidence into a content-addressed snapshot so every semantic pass and human review can be tied to the **same exact project bytes**.
 
-That has two benefits. First, ContextCanon can detect when a reviewed live file changed before acceptance. Second, onboarding itself becomes restartable: a different semantic assignment, a corrected prompt contract, or another review iteration can reuse the same frozen Evidence instead of rescanning and silently changing the basis of the experiment. Prepare a new snapshot only when you intentionally want a new evidence basis.
-
-## Standard files for structure-first onboarding
-
-- `{STRUCTURE_INSTRUCTION_NAME}` — generated UTF-8 instruction for the external strong reasoning LLM. ContextCanon owns this file; regenerate it rather than editing it.
-- `{STRUCTURE_PROPOSAL_NAME}` — JSON returned by the external LLM for coarse structure discovery.
-- `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map. Rename, re-indent, add, remove, or reserve Nodes here.
-- `{STRUCTURE_PREVIEW_NAME}` — deterministic preview of existing protected Nodes and missing Node skeletons before materialization.
-- `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the second semantic pass after the owner has edited the structure.
-- `{PLACEMENT_PROPOSAL_NAME}` — JSON returned by the external LLM describing where existing project knowledge belongs.
-- `{PLACEMENT_REVIEW_NAME}` — human-editable placement decision file. Destination and maintained meaning come first; Evidence remains visible below each finding.
-- `{PLACEMENT_PREVIEW_NAME}` — deterministic exact per-Node source delta and Source-state preview before publication.
-- `{PLACEMENT_FOLLOWUP_NAME}` — generated durable follow-up view for accepted state/plan/mapping/documentation/unresolved findings and deferred mutable-Markdown cleanup candidates.
-
-The structure file is the human-owned coarse map. The placement pass is not allowed to redesign it. None of these working files become canonical Context merely because they exist; only explicit `placement-publish` changes reviewed Context Node authoring.
+That gives two benefits. ContextCanon can detect when a reviewed live file changed before acceptance, and an onboarding iteration can reuse the same Evidence rather than rescanning and silently changing the comparison basis. Prepare a new snapshot only when you intentionally want a new evidence basis.
 
 ## Current checkpoint
 
@@ -108,13 +196,13 @@ The structure file is the human-owned coarse map. The placement pass is not allo
 No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
 {CHECKPOINT_END}
 
-The checkpoint above is the **last state ContextCanon validated**, not a file watcher. If you edit `structure.md` or `placement.md`, the edit becomes authoritative human input only after the next ContextCanon command validates it and advances this checkpoint.
+The checkpoint above is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, the edit becomes validated human input only after the next ContextCanon command loads it successfully and advances this checkpoint.
 
 ## Ownership
 
 ContextCanon recognizes this directory by the marker directly below the H1 above. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
 
-This workspace may be kept while onboarding is active. Cleanup of transient onboarding material remains an explicit later operation; do not delete frozen Evidence or accepted provenance merely because the visible workspace is no longer needed.
+This workspace may be kept while onboarding is active. Cleanup of transient onboarding material remains explicit; do not delete frozen Evidence or accepted provenance merely because the visible workspace is no longer needed.
 """
 
 
@@ -158,6 +246,8 @@ def update_workspace_checkpoint(
     placement_review_complete: bool | None = None,
     acceptance_digest: str | None = None,
     source_catalog: tuple[str, ...] = (),
+    source_catalog_inputs: tuple[str, ...] = (),
+    owner_source_specs: tuple[str, ...] = (),
 ) -> None:
     """Rewrite only the framework-owned checkpoint inside the visible README."""
 
@@ -183,6 +273,12 @@ def update_workspace_checkpoint(
     if source_catalog:
         lines.append("- Exact reusable Source catalog:")
         lines.extend(f"  - `{item}`" for item in source_catalog)
+    if source_catalog_inputs:
+        lines.append("- Reuse these exact `--catalog-package` inputs on the next placement command:")
+        lines.extend(f"  - `{item}`" for item in source_catalog_inputs)
+    if owner_source_specs:
+        lines.append("- Owner-selected Source choices already recorded in `placement.md` (do not repeat on preview/publish):")
+        lines.extend(f"  - `{item}`" for item in owner_source_specs)
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")
     lines.extend(["", "**Next:**", "", next_action])
@@ -207,6 +303,7 @@ def update_workspace_checkpoint(
             1,
         )
     write_utf8(workspace.readme_path, text)
+
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
     project_root = find_repo_root(snapshot_root)
