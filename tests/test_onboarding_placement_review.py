@@ -98,6 +98,26 @@ class EditablePlacementReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ContextCanonError, "Kind rule must use Action promote"):
             load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
+    def test_invalid_or_duplicate_stable_authoring_id_is_rejected_early(self):
+        prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
+        first_id = review.items[0].authoring_id
+        second_id = review.items[1].authoring_id
+
+        text = workspace.placement_path.read_text(encoding="utf-8")
+        workspace.placement_path.write_text(
+            text.replace(f'authoring-id="{first_id}"', 'authoring-id="bad id"', 1),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ContextCanonError, "invalid stable authoring ID"):
+            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+
+        workspace.placement_path.write_text(
+            text.replace(f'authoring-id="{second_id}"', f'authoring-id="{first_id}"', 1),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ContextCanonError, "duplicate stable authoring ID"):
+            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+
 
 if __name__ == "__main__":
     unittest.main()

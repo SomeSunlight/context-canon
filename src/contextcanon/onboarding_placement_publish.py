@@ -745,7 +745,6 @@ def publish_placement_review(
         accepted_sources_by_node = _sources_by_node(review)
         provenance_by_id = {source.source_node_id: source for source in preview.sources}
         for key, sources in accepted_sources_by_node.items():
-            node = next(node for node in review.items if False) if False else None
             delta = delta_by_key.get(key)
             if delta is None:
                 raise _error(f"internal error: accepted Source target {key} has no publication delta")

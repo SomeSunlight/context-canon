@@ -43,6 +43,7 @@ _SOURCE_COMMENT_RE = re.compile(
 _DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
 _SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin): `(?P<value>[^`]+)`$")
 _PATH_RE = re.compile(r"`([^`]+)`")
+_AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
 @dataclass(frozen=True)
@@ -550,6 +551,7 @@ def load_placement_review(
     node_keys = {node.key for node in proposal.structure.nodes}
     parsed_items: list[PlacementReviewItem] = []
     seen: set[str] = set()
+    authoring_ids: set[str] = set()
     for start, end in _section_blocks(lines, "## "):
         heading = _ITEM_HEADING_RE.match(lines[start])
         if heading is None:
@@ -568,6 +570,12 @@ def load_placement_review(
         assert attrs is not None
         if attrs.group("id") != item_id:
             raise _error(f"item {item_id} comment ID differs from heading")
+        authoring_id = attrs.group("authoring")
+        if _AUTHORING_ID_RE.fullmatch(authoring_id) is None:
+            raise _error(f"item {item_id} has invalid stable authoring ID {authoring_id!r}")
+        if authoring_id in authoring_ids:
+            raise _error(f"placement.md contains duplicate stable authoring ID {authoring_id}")
+        authoring_ids.add(authoring_id)
         decision = _simple_value(block, "Decision")
         if decision not in REVIEW_DECISIONS:
             raise _error(f"item {item_id} Decision must be pending, accept, or reject")
@@ -582,7 +590,7 @@ def load_placement_review(
         parsed_items.append(
             PlacementReviewItem(
                 proposal_id=item_id,
-                authoring_id=attrs.group("authoring"),
+                authoring_id=authoring_id,
                 title=heading.group("title").strip(),
                 decision=decision,
                 destination_node_key=destination,

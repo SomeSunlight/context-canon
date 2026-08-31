@@ -579,7 +579,7 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
             "",
             "## Fixed Markdown",
             "",
-            "All Markdown knowledge bodies are mutable by default. List only project Markdown that must remain fixed/authoritative; the later placement pass may reference or map it but must not plan destructive cleanup of it.",
+            "Ordinary project-documentation Markdown is mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` are preselected below as fixed candidates; review this list directly and keep only Markdown that must remain fixed/authoritative. The later placement pass may reference or map fixed Markdown but must not plan destructive cleanup of it.",
             "",
             _FIXED_MARKDOWN_START,
         ]
