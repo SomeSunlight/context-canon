@@ -27,6 +27,7 @@ jobs:
           python tools/_repair_real_aiw_diagnostic.py
           python tools/_repair_real_aiw_workspace.py
           python tools/_repair_real_aiw_semantics.py
+          python tools/_repair_real_aiw_publish_manifest.py
       - name: Run corrected review and publication validation
         id: validate
         shell: bash
@@ -56,6 +57,6 @@ jobs:
           rm -f real-aiw-publication-diagnostic.txt
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add _real-ai-workstation-publication-report.json
+          git add -A _real-ai-workstation-publication-report.json real-aiw-publication-diagnostic.txt
           git commit -m "Validate real AI Workstation placement publication"
           git push origin HEAD:agent/onboarding-placement-publication
