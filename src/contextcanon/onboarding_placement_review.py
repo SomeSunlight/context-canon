@@ -135,6 +135,10 @@ def _fresh_authoring_id() -> str:
     return "ONB-" + uuid.uuid4().hex[:12].upper()
 
 
+def _node_entry_link(node_path: str) -> str:
+    return "../CONTEXT.md" if node_path == "." else f"../{node_path}/CONTEXT.md"
+
+
 def _evidence_excerpt(reference: EvidenceReference, snapshot: EvidenceSnapshot) -> list[str]:
     evidence_file = snapshot.root / "evidence" / reference.path
     text = evidence_file.read_text(encoding="utf-8").splitlines()
@@ -183,7 +187,9 @@ def _render_item(
     nodes = {node.key: node for node in proposal.structure.nodes}
     destination = nodes.get(review_item.destination_node_key) if review_item.destination_node_key else None
     destination_text = (
-        f"`{destination.key}` — **{destination.name}** (`{destination.path}`)" if destination else "none / outside Node authoring"
+        f"`{destination.key}` — [**{destination.name}**]({_node_entry_link(destination.path)}) (`{destination.path}`)"
+        if destination
+        else "none / outside Node authoring"
     )
     lines = [
         f"## {review_item.proposal_id} — {review_item.title}",
@@ -305,6 +311,8 @@ def render_placement_review(
         "",
         "Edit this file directly. **Destination comes first** because future ownership is the primary review decision. Change `Decision`, destination, kind/action, title, or maintained wording where necessary. Evidence and proposal rationale below each item are review support, not a second decision file.",
         "",
+        "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
+        "",
         "Decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review.",
         "",
         "<!-- contextcanon-placement-review",
@@ -335,7 +343,7 @@ def render_placement_review(
                     f"## Source {source.review_id} — {source.source_name}",
                     f'<!-- cc:placement-source id="{source.review_id}" origin="{source.origin}" source-id="{source.source_node_id}" version="{source.source_version}" normalized-digest="{source.source_normalized_digest}" package-digest="{source.source_package_digest}" -->',
                     "",
-                    f"Destination: `{target.key}` — **{target.name}** (`{target.path}`)",
+                    f"Destination: `{target.key}` — [**{target.name}**]({_node_entry_link(target.path)}) (`{target.path}`)",
                     f"Decision: `{source.decision}`",
                     f"Origin: `{source.origin}`",
                     f"Review note: {source.review_note or '-'}",
