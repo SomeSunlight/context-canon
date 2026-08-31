@@ -11,10 +11,14 @@ from .parser import ContextCanonError, find_repo_root
 WORKSPACE_SCHEMA = "contextcanon/onboarding-workspace/v0"
 DEFAULT_WORKSPACE_NAME = "contextcanon-onboarding"
 WORKSPACE_MARKER = f'<!-- contextcanon:onboarding-workspace schema="{WORKSPACE_SCHEMA}" -->'
+PLAN_MARKER = f'<!-- contextcanon:onboarding-plan schema="{WORKSPACE_SCHEMA}" -->'
 CHECKPOINT_START = "<!-- contextcanon-onboarding-checkpoint:start -->"
 CHECKPOINT_END = "<!-- contextcanon-onboarding-checkpoint:end -->"
+CHECKLIST_START = "<!-- contextcanon-onboarding-checklist:start -->"
+CHECKLIST_END = "<!-- contextcanon-onboarding-checklist:end -->"
 
 README_NAME = "README.md"
+PLAN_NAME = "PLAN.md"
 STRUCTURE_INSTRUCTION_NAME = "structure-instruction.md"
 STRUCTURE_PROPOSAL_NAME = "structure-proposal.json"
 STRUCTURE_REVIEW_NAME = "structure.md"
@@ -33,6 +37,10 @@ class OnboardingWorkspace:
     @property
     def readme_path(self) -> Path:
         return self.root / README_NAME
+
+    @property
+    def plan_path(self) -> Path:
+        return self.root / PLAN_NAME
 
     @property
     def structure_instruction_path(self) -> Path:
@@ -75,120 +83,65 @@ def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
 {WORKSPACE_MARKER}
 
-This directory is the **visible human working area** for one structure-first ContextCanon onboarding. Open this README when returning after a pause: the numbered runbook explains the complete sequence, and **Current checkpoint** below says which validated step comes next.
+This directory is the **visible human working area** for one structure-first ContextCanon onboarding.
 
-It is intentionally separate from `.context/`:
+Start with [`{PLAN_NAME}`]({PLAN_NAME}) when continuing the onboarding. It is the operational checklist: it shows what ContextCanon has already validated, what comes next, and the exact invocation details that must survive a pause. This README is deliberately only the stable orientation page.
 
-- `.context/onboarding/<evidence-digest>/` contains immutable machine-owned frozen Evidence and review/acceptance state;
-- `{DEFAULT_WORKSPACE_NAME}/` contains human-facing working artifacts that should remain easy to find in an IDE or file browser.
+## Mental model
 
-## Runbook — do these in order
+ContextCanon separates three jobs:
 
-The workflow has two deliberately visible LLM handoffs and two human review gates. ContextCanon owns the deterministic steps around them.
+- `.context/onboarding/<evidence-digest>/` keeps immutable machine-owned frozen Evidence and acceptance/provenance state;
+- this directory keeps the human/LLM review artifacts;
+- the actual Context Nodes remain in their accepted repository locations and may use directories that did not exist before onboarding.
 
-### 1. Freeze Evidence
+The repository's old directory tree is evidence about the project, not a taxonomy ContextCanon must preserve. Structure review designs the shelves first; placement review then decides where the existing meaning belongs.
 
-```text
-contextcanon onboard prepare .
-```
+## Human-facing artifacts
 
-Keep the resulting `.context/onboarding/<evidence-digest>` path. Reuse the same snapshot while you intentionally want to review the same source bytes; do not refreeze merely because you restart the experiment.
-
-### 2. Generate the structure assignment
-
-```text
-contextcanon onboard structure-instruction .context/onboarding/<evidence-digest>
-```
-
-Add any reusable catalog package with repeated `--catalog-package <package-root>` when you want the structure reviewer to compare it.
-
-**LLM handoff 1:** give `{STRUCTURE_INSTRUCTION_NAME}` and only the frozen snapshot's `evidence/` tree to a strong reasoning LLM. Save its single JSON result as `{STRUCTURE_PROPOSAL_NAME}`.
-
-### 3. Validate and human-review the shelves
-
-```text
-contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
-contextcanon onboard structure-review .context/onboarding/<evidence-digest>
-```
-
-**Human gate 1:** edit `{STRUCTURE_REVIEW_NAME}` until the Node hierarchy matches the project's mental model. Nodes are semantic landing points, not aliases for today's directory tree. An accepted Node path may name a directory that does not exist yet; materialization can create it safely.
-
-The same file also lets the owner mark Markdown as fixed/authoritative instead of mutable migration material.
-
-### 4. Preview and materialize the accepted shelves
-
-```text
-contextcanon onboard structure-preview .context/onboarding/<evidence-digest>
-contextcanon onboard structure-materialize .context/onboarding/<evidence-digest>
-```
-
-Review `{STRUCTURE_PREVIEW_NAME}` before materializing. Missing accepted Node directories/skeletons are created; existing Context Nodes and ordinary project files are preserved.
-
-### 5. Generate the placement assignment
-
-```text
-contextcanon onboard placement-instruction .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root>
-```
-
-Use the same exact reusable Source catalog for the placement commands that follow.
-
-**LLM handoff 2:** give `{PLACEMENT_INSTRUCTION_NAME}` and only the same frozen `evidence/` tree to the reasoning LLM. Save its single JSON result as `{PLACEMENT_PROPOSAL_NAME}`.
-
-### 6. Validate and human-review where meaning belongs
-
-```text
-contextcanon onboard placement-validate .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root>
-
-contextcanon onboard placement-review .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root> \
-  --owner-source N-001=<source-node-id>
-```
-
-`--owner-source` is optional and is used **only when creating the human review** to add a deliberate owner-selected Source. Once written into `{PLACEMENT_REVIEW_NAME}`, that choice is part of the review and is not repeated on preview/publish commands.
-
-**Human gate 2:** edit `{PLACEMENT_REVIEW_NAME}`. Resolve every Decision and correct destination, kind/action, title, or maintained wording where necessary.
-
-### 7. Preview exact publication
-
-```text
-contextcanon onboard placement-preview .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root>
-```
-
-Review `{PLACEMENT_PREVIEW_NAME}`. It shows exact Context source changes and reusable Source state before project mutation.
-
-### 8. Publish the reviewed placement
-
-```text
-contextcanon onboard placement-publish .context/onboarding/<evidence-digest> \
-  --catalog-package <package-root>
-```
-
-Publication makes reviewed ContextCanon authoring canonical. It does **not** immediately rewrite ordinary README/CONTRIBUTING/docs prose. Any duplicate source prose created by migration is transitional and must later be removed or reduced to concise orientation/reference through a separate reviewed cleanup operation.
-
-After publication, inspect `{PLACEMENT_FOLLOWUP_NAME}` for accepted state/plan/documentation/unresolved work that intentionally remains outside current Node authoring.
-
-## Standard files
-
-- `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for LLM handoff 1.
+- `{PLAN_NAME}` — generated operational checklist and current validated checkpoint.
+- `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for the coarse-structure reasoning pass.
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
-- `{STRUCTURE_PREVIEW_NAME}` — deterministic preview before Node skeleton creation.
-- `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for LLM handoff 2.
+- `{STRUCTURE_PREVIEW_NAME}` — deterministic preview before missing Node skeletons/directories are created.
+- `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
 - `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
 
-None of these working files become canonical Context merely because they exist; only explicit publication changes reviewed Context Node authoring.
+None of these working files become canonical Context merely because they exist. Explicit publication changes reviewed Context Node authoring.
 
-## Why frozen Evidence exists
+## Frozen Evidence
 
-Freezing does not freeze the live Git repository. ContextCanon copies selected evidence into a content-addressed snapshot so every semantic pass and human review can be tied to the **same exact project bytes**.
+Freezing does not lock the live Git repository. ContextCanon copies selected review material into a content-addressed snapshot so the LLM, human review, preview and publication can all refer to the **same exact project bytes**. Prepare a new snapshot only when you intentionally want a new evidence basis.
 
-That gives two benefits. ContextCanon can detect when a reviewed live file changed before acceptance, and an onboarding iteration can reuse the same Evidence rather than rescanning and silently changing the comparison basis. Prepare a new snapshot only when you intentionally want a new evidence basis.
+## Ownership
+
+ContextCanon recognizes this workspace by the marker directly below the H1. Files such as this README and `{PLAN_NAME}` are framework-owned operating surfaces; `structure.md` and `placement.md` are the human-editable review gates.
+
+If a directory with the same name already exists without the marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
+"""
+
+
+def _workspace_plan() -> str:
+    return f"""# ContextCanon onboarding plan
+{PLAN_MARKER}
+
+This is the **operational checklist** for the current onboarding. ContextCanon updates the framework-owned checklist/checkpoint after it validates a stage. Human review still happens in `{STRUCTURE_REVIEW_NAME}` and `{PLACEMENT_REVIEW_NAME}`.
+
+## Checklist
+
+{CHECKLIST_START}
+- [ ] 1. Freeze Evidence — `contextcanon onboard prepare .`
+- [ ] 2. Structure proposal — generate `{STRUCTURE_INSTRUCTION_NAME}`, run LLM handoff 1, validate `{STRUCTURE_PROPOSAL_NAME}`.
+- [ ] 3. Structure review — edit and validate `{STRUCTURE_REVIEW_NAME}`.
+- [ ] 4. Materialize shelves — review `{STRUCTURE_PREVIEW_NAME}` and create any missing accepted Node directories/skeletons.
+- [ ] 5. Placement proposal — generate `{PLACEMENT_INSTRUCTION_NAME}`, run LLM handoff 2, validate `{PLACEMENT_PROPOSAL_NAME}`.
+- [ ] 6. Placement review — edit `{PLACEMENT_REVIEW_NAME}` until every decision is resolved.
+- [ ] 7. Publication preview — review exact `{PLACEMENT_PREVIEW_NAME}` changes.
+- [ ] 8. Publish placement — publish reviewed canonical Context and inspect `{PLACEMENT_FOLLOWUP_NAME}`.
+{CHECKLIST_END}
 
 ## Current checkpoint
 
@@ -196,13 +149,16 @@ That gives two benefits. ContextCanon can detect when a reviewed live file chang
 No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
 {CHECKPOINT_END}
 
-The checkpoint above is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, the edit becomes validated human input only after the next ContextCanon command loads it successfully and advances this checkpoint.
+The checkpoint is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, the edit becomes validated human input only after the next ContextCanon command loads it successfully.
 
-## Ownership
+## Review gates
 
-ContextCanon recognizes this directory by the marker directly below the H1 above. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
+- **LLM handoff 1:** `{STRUCTURE_INSTRUCTION_NAME}` + only the frozen `evidence/` tree → `{STRUCTURE_PROPOSAL_NAME}`.
+- **Human gate 1:** review/edit `{STRUCTURE_REVIEW_NAME}`.
+- **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
+- **Human gate 2:** review/edit `{PLACEMENT_REVIEW_NAME}`.
 
-This workspace may be kept while onboarding is active. Cleanup of transient onboarding material remains explicit; do not delete frozen Evidence or accepted provenance merely because the visible workspace is no longer needed.
+`--owner-source` is a one-time choice when a new `{PLACEMENT_REVIEW_NAME}` is created. Once recorded there, it is not repeated on preview/publish. Exact `--catalog-package` inputs that must be reused are retained in the checkpoint below.
 """
 
 
@@ -224,7 +180,6 @@ def write_utf8(path: Path, text: str) -> None:
         raise
 
 
-
 def _snapshot_label(snapshot_root: Path) -> str:
     snapshot = snapshot_root.resolve()
     project = find_repo_root(snapshot)
@@ -232,6 +187,72 @@ def _snapshot_label(snapshot_root: Path) -> str:
         return snapshot.relative_to(project).as_posix()
     except ValueError:
         return str(snapshot)
+
+
+def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[int]:
+    completed = {1}
+    if stage in {
+        "structure proposal validated",
+        "human structure validated",
+        "structure previewed",
+        "structure materialized",
+        "placement instruction ready",
+        "placement proposal validated",
+        "human placement review",
+        "placement publication previewed",
+        "placement published",
+    }:
+        completed.add(2)
+    if stage in {
+        "human structure validated",
+        "structure previewed",
+        "structure materialized",
+        "placement instruction ready",
+        "placement proposal validated",
+        "human placement review",
+        "placement publication previewed",
+        "placement published",
+    }:
+        completed.add(3)
+    if stage in {
+        "structure materialized",
+        "placement instruction ready",
+        "placement proposal validated",
+        "human placement review",
+        "placement publication previewed",
+        "placement published",
+    }:
+        completed.add(4)
+    if stage in {
+        "placement proposal validated",
+        "human placement review",
+        "placement publication previewed",
+        "placement published",
+    }:
+        completed.add(5)
+    if stage in {"placement publication previewed", "placement published"} or (
+        stage == "human placement review" and placement_review_complete is True
+    ):
+        completed.add(6)
+    if stage == "placement published":
+        completed.update({7, 8})
+    elif stage == "placement publication previewed":
+        completed.add(7)
+    return completed
+
+
+def _rewrite_checklist(text: str, completed: set[int], path: Path) -> str:
+    if text.count(CHECKLIST_START) != 1 or text.count(CHECKLIST_END) != 1:
+        raise ContextCanonError(f"Malformed onboarding checklist markers in {path}")
+    start = text.index(CHECKLIST_START)
+    end = text.index(CHECKLIST_END, start) + len(CHECKLIST_END)
+    template = _workspace_plan()
+    template_start = template.index(CHECKLIST_START)
+    template_end = template.index(CHECKLIST_END, template_start) + len(CHECKLIST_END)
+    block = template[template_start:template_end]
+    for step in completed:
+        block = block.replace(f"- [ ] {step}.", f"- [x] {step}.")
+    return text[:start] + block + text[end:]
 
 
 def update_workspace_checkpoint(
@@ -249,15 +270,17 @@ def update_workspace_checkpoint(
     source_catalog_inputs: tuple[str, ...] = (),
     owner_source_specs: tuple[str, ...] = (),
 ) -> None:
-    """Rewrite only the framework-owned checkpoint inside the visible README."""
+    """Rewrite only the framework-owned checklist/checkpoint inside PLAN.md."""
 
     try:
-        text = workspace.readme_path.read_text(encoding="utf-8")
-    except FileNotFoundError as exc:
-        raise ContextCanonError(f"Missing onboarding workspace README: {workspace.readme_path}") from exc
-    if WORKSPACE_MARKER not in text:
-        raise ContextCanonError(f"Refusing to update unowned onboarding workspace README: {workspace.readme_path}")
+        text = workspace.plan_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        write_utf8(workspace.plan_path, _workspace_plan())
+        text = workspace.plan_path.read_text(encoding="utf-8")
+    if PLAN_MARKER not in text:
+        raise ContextCanonError(f"Refusing to update unowned onboarding plan: {workspace.plan_path}")
 
+    text = _rewrite_checklist(text, _completed_steps(stage, placement_review_complete), workspace.plan_path)
     lines = [
         f"- Evidence: `{snapshot_root.resolve().name}`",
         f"- Snapshot: `{_snapshot_label(snapshot_root)}`",
@@ -284,25 +307,12 @@ def update_workspace_checkpoint(
     lines.extend(["", "**Next:**", "", next_action])
     block = CHECKPOINT_START + "\n" + "\n".join(lines) + "\n" + CHECKPOINT_END
 
-    if CHECKPOINT_START in text or CHECKPOINT_END in text:
-        if text.count(CHECKPOINT_START) != 1 or text.count(CHECKPOINT_END) != 1:
-            raise ContextCanonError(f"Malformed onboarding checkpoint markers in {workspace.readme_path}")
-        start = text.index(CHECKPOINT_START)
-        end = text.index(CHECKPOINT_END, start) + len(CHECKPOINT_END)
-        text = text[:start] + block + text[end:]
-    else:
-        anchor = "\n## Ownership\n"
-        if anchor not in text:
-            raise ContextCanonError(f"Cannot add onboarding checkpoint to unexpected README layout: {workspace.readme_path}")
-        text = text.replace(
-            anchor,
-            "\n## Current checkpoint\n\n" + block +
-            "\n\nThe checkpoint above is the **last state ContextCanon validated**, not a file watcher. "
-            "If you edit `structure.md` or `placement.md`, the edit becomes authoritative human input only after "
-            "the next ContextCanon command validates it and advances this checkpoint.\n" + anchor,
-            1,
-        )
-    write_utf8(workspace.readme_path, text)
+    if text.count(CHECKPOINT_START) != 1 or text.count(CHECKPOINT_END) != 1:
+        raise ContextCanonError(f"Malformed onboarding checkpoint markers in {workspace.plan_path}")
+    start = text.index(CHECKPOINT_START)
+    end = text.index(CHECKPOINT_END, start) + len(CHECKPOINT_END)
+    text = text[:start] + block + text[end:]
+    write_utf8(workspace.plan_path, text)
 
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
@@ -313,6 +323,19 @@ def _default_workspace_root(snapshot_root: Path) -> Path:
             "run from/use a snapshot inside its Git repository or pass --workspace explicitly"
         )
     return project_root / DEFAULT_WORKSPACE_NAME
+
+
+def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace) -> None:
+    write_utf8(workspace.readme_path, _workspace_readme())
+    if not workspace.plan_path.exists():
+        write_utf8(workspace.plan_path, _workspace_plan())
+        return
+    try:
+        plan = workspace.plan_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
+    if PLAN_MARKER not in plan:
+        raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
 
 
 def open_onboarding_workspace(
@@ -339,6 +362,7 @@ def open_onboarding_workspace(
             raise ContextCanonError(
                 f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
             )
+        _refresh_framework_owned_surfaces(workspace)
         return workspace
 
     if not create:
@@ -349,4 +373,5 @@ def open_onboarding_workspace(
 
     root.mkdir(parents=True)
     write_utf8(workspace.readme_path, _workspace_readme())
+    write_utf8(workspace.plan_path, _workspace_plan())
     return workspace
