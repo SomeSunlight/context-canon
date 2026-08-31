@@ -8,9 +8,9 @@ PR #13 on `agent/onboarding-placement-publication` is the active review candidat
 
 ## What is implemented in PR #13
 
-The placement proposal remains the strict machine/LLM contract, while `contextcanon-onboarding/placement.md` is the human gate. The editable review is destination-first and can change acceptance, destination, kind/action, title and maintained wording. Canonical Rule and Topic IDs are allocated once on the human side and remain stable across review/preview cycles.
+The placement proposal remains the strict machine/LLM contract, while `contextcanon-onboarding/placement.md` is the human gate. The editable review is destination-first and can change acceptance, destination, kind/action, title and maintained wording. Canonical Rule and Topic IDs are allocated once on the human side and remain stable across review/preview cycles. Invalid or duplicate stable human-side authoring IDs are rejected when the review is loaded, before preview/publication.
 
-Placement now distinguishes `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping` and `unresolved`, with placement actions appropriate to those semantics. Clear source wording can remain exact; light edits and synthesis stay explicit.
+Placement distinguishes `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping` and `unresolved`, with placement actions appropriate to those semantics. Clear source wording can remain exact; light edits and synthesis stay explicit.
 
 Reusable Sources have two visibly different origins:
 
@@ -23,7 +23,9 @@ Both remain bound to exact Node/version/normalized/package identity. Publication
 
 Initial placement deliberately does not rewrite README, CONTRIBUTING, architecture or other ordinary mutable project Markdown. Accepted state, plan, ordinary-documentation, authority-mapping and unresolved findings that are not safely expressible in current Node authoring remain recoverable in exact acceptance/follow-up state. Duplicate text removal is a separate later cleanup review.
 
-The visible `contextcanon-onboarding/README.md` is now a deterministic resumption checkpoint: it records the last ContextCanon-validated Evidence/structure/placement stage, exact Source catalog identities and next safe command. It does not pretend that an arbitrary human edit has already been validated.
+The structure review treats ordinary `project-documentation` Markdown as mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` are preselected as fixed candidates in the human review and can be corrected there; fixed Markdown may be referenced/mapped but is excluded from destructive cleanup planning.
+
+The visible `contextcanon-onboarding/README.md` is a deterministic resumption checkpoint: it records the last ContextCanon-validated Evidence/structure/placement stage, exact Source catalog identities and next safe command. It does not pretend that an arbitrary human edit has already been validated.
 
 ## Real `ai-workstation` vertical validation
 
@@ -36,7 +38,7 @@ The final real test reused the original project bytes rather than a new live-rep
 - 33 Evidence-based placement findings;
 - owner-selected Development Workflow Source `c4c94726-3cc7-4df6-b779-72bbf9c06f40`, package `1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb`.
 
-The human review also resolved the Evidence-only version ambiguity as owner input: `pyproject.toml` should track the repository release version represented by CHANGELOG rather than leaving two stale independent version streams.
+The human review resolved the Evidence-only version ambiguity as owner input: `pyproject.toml` should track the repository release version represented by CHANGELOG rather than leaving two stale independent version streams.
 
 The disposable-clone publication test proved all of the following in one vertical run:
 
@@ -46,18 +48,22 @@ The disposable-clone publication test proved all of the following in one vertica
 - frozen Evidence-covered project files remained byte-identical;
 - root and child-local Rules, Overviews and cross-directory Topic/Resource routing materialized correctly;
 - Development Workflow was pinned with exact package identity and durable Git provenance;
-- accepted state/plan/ordinary-documentation semantics remained visible as durable follow-ups;
+- accepted state/plan/ordinary-documentation semantics remained visible as 6 durable follow-ups;
 - every resulting Node compiled with zero generated drift;
 - the second preview showed the placement already materialized;
 - the second publication changed 0 Context sources and reproduced acceptance digest `a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4`.
 
-The real run found one product gap that synthetic tests had missed: publication preview originally showed only Source Git transport details and lost the human-review distinction between owner-selected and Evidence-derived reuse. PR #13 now preserves that provenance and exact Source identity through the preview, with a regression test.
+The real frozen Evidence did not produce an accepted authority-mapping finding, so none was invented merely to exercise that feature. Fixed-authority mapping remains covered by deterministic framework validation/tests.
+
+The real run found one product gap that synthetic tests had missed: publication preview originally showed only Source Git transport details and lost the human-review distinction between owner-selected and Evidence-derived reuse. PR #13 preserves that provenance and exact Source identity through the preview, with a regression test.
 
 ## Review-candidate verification
 
-The temporary real-test workflow, harness, reports and diagnostics have been removed from the final PR diff. The cleaned candidate tree was regenerated and passed **129/129 tests** plus `contextcanon check --all .` for Gateway, Framework Development, Development Workflow and Foundation with zero generated drift. The net diff against `main` contains only product code, tests, documentation/planning and their generated Context packages.
+All temporary real-test and quality-hardening workflows, harnesses, reports and diagnostics are removed from the final PR diff.
 
-The first clean commit was produced by the temporary GitHub Actions finalizer, so GitHub attributed its PR synchronization to `github-actions[bot]` and marked that automatic PR run `action_required` without creating a job. A normal repository-authored PLAN/STATE checkpoint now follows to obtain an ordinary exact-current-head PR workflow without changing product semantics.
+The cleaned candidate was first verified with 129 tests plus zero generated drift. A final qualitative review then removed one dead publication-transaction line, corrected the Fixed Markdown explanation to match its actual preselected candidate behavior, and added early stable-authoring-ID validation plus regression coverage. The resulting quality-hardening run completed **130/130 tests** successfully and `contextcanon check --all .` remained green for Gateway, Framework Development, Development Workflow and Foundation.
+
+The repository-authored PLAN/STATE checkpoint after that product hardening changes only durable review documentation. Its purpose is to obtain the ordinary exact-current-head PR workflow on the actual review head rather than relying on a bot-authored synchronization run.
 
 ## Boundaries that intentionally remain
 
@@ -69,4 +75,4 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Obtain the normal exact-current-head PR #13 GitHub Actions result for this review-candidate checkpoint. If it is all green with zero generated drift, present PR #13 for explicit project-owner review. Do not merge, start duplicate-text cleanup, or begin another development block before that review decision.
+Require the normal GitHub PR workflow on this exact repository-authored review head to pass with generated-output verification. If it is green, PR #13 is ready for explicit project-owner review. Do not merge, mark accepted, start duplicate-text cleanup, or begin another development block before that review decision.
