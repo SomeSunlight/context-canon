@@ -1,0 +1,115 @@
+name: final-pr13-quality-hardening
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+    paths:
+      - .github/workflows/_final-quality-pr13.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/onboarding-placement-publication
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Apply final qualitative fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # 1. Remove obvious dead code left in the publication transaction.
+          path = Path("src/contextcanon/onboarding_placement_publish.py")
+          text = path.read_text(encoding="utf-8")
+          old = "            node = next(node for node in review.items if False) if False else None\n"
+          if text.count(old) != 1:
+              raise SystemExit(f"dead-code target count={text.count(old)}")
+          path.write_text(text.replace(old, "", 1), encoding="utf-8", newline="\n")
+
+          # 2. Make the Fixed Markdown explanation match the actual reviewed defaults.
+          path = Path("src/contextcanon/onboarding_structure.py")
+          text = path.read_text(encoding="utf-8")
+          old = (
+              '            "All Markdown knowledge bodies are mutable by default. List only project Markdown that must remain fixed/authoritative; '
+              'the later placement pass may reference or map it but must not plan destructive cleanup of it.",\n'
+          )
+          new = (
+              '            "Ordinary project-documentation Markdown is mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` '
+              'are preselected below as fixed candidates; review this list directly and keep only Markdown that must remain fixed/authoritative. '
+              'The later placement pass may reference or map fixed Markdown but must not plan destructive cleanup of it.",\n'
+          )
+          if text.count(old) != 1:
+              raise SystemExit(f"fixed-markdown wording target count={text.count(old)}")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+          # 3. Validate stable human-side authoring IDs at the placement-review boundary.
+          path = Path("src/contextcanon/onboarding_placement_review.py")
+          text = path.read_text(encoding="utf-8")
+          old = '_PATH_RE = re.compile(r"`([^`]+)`")\n'
+          new = '_PATH_RE = re.compile(r"`([^`]+)`")\n_AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")\n'
+          if text.count(old) != 1:
+              raise SystemExit(f"authoring regex insertion target count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = '    parsed_items: list[PlacementReviewItem] = []\n    seen: set[str] = set()\n'
+          new = '    parsed_items: list[PlacementReviewItem] = []\n    seen: set[str] = set()\n    authoring_ids: set[str] = set()\n'
+          if text.count(old) != 1:
+              raise SystemExit(f"authoring set insertion target count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = '''        if attrs.group("id") != item_id:\n            raise _error(f"item {item_id} comment ID differs from heading")\n        decision = _simple_value(block, "Decision")\n'''
+          new = '''        if attrs.group("id") != item_id:\n            raise _error(f"item {item_id} comment ID differs from heading")\n        authoring_id = attrs.group("authoring")\n        if _AUTHORING_ID_RE.fullmatch(authoring_id) is None:\n            raise _error(f"item {item_id} has invalid stable authoring ID {authoring_id!r}")\n        if authoring_id in authoring_ids:\n            raise _error(f"placement.md contains duplicate stable authoring ID {authoring_id}")\n        authoring_ids.add(authoring_id)\n        decision = _simple_value(block, "Decision")\n'''
+          if text.count(old) != 1:
+              raise SystemExit(f"authoring validation target count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = '                authoring_id=attrs.group("authoring"),\n'
+          new = '                authoring_id=authoring_id,\n'
+          if text.count(old) != 1:
+              raise SystemExit(f"authoring assignment target count={text.count(old)}")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+          # Regression coverage for accidental hidden-ID edits and truthful structure copy.
+          path = Path("tests/test_onboarding_placement_review.py")
+          text = path.read_text(encoding="utf-8")
+          anchor = '''    def test_invalid_human_rule_reference_is_rejected(self):\n        prepared, workspace, source_root, package, proposal, _, _ = self.make_review(owner_source=False)\n        text = workspace.placement_path.read_text(encoding="utf-8").replace("Action: `promote`", "Action: `reference`", 1)\n        workspace.placement_path.write_text(text, encoding="utf-8")\n        with self.assertRaisesRegex(ContextCanonError, "Kind rule must use Action promote"):\n            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)\n\n'''
+          addition = anchor + '''    def test_invalid_or_duplicate_stable_authoring_id_is_rejected_early(self):\n        prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)\n        first_id = review.items[0].authoring_id\n        second_id = review.items[1].authoring_id\n\n        text = workspace.placement_path.read_text(encoding="utf-8")\n        workspace.placement_path.write_text(\n            text.replace(f'authoring-id="{first_id}"', 'authoring-id="bad id"', 1),\n            encoding="utf-8",\n        )\n        with self.assertRaisesRegex(ContextCanonError, "invalid stable authoring ID"):\n            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)\n\n        workspace.placement_path.write_text(\n            text.replace(f'authoring-id="{second_id}"', f'authoring-id="{first_id}"', 1),\n            encoding="utf-8",\n        )\n        with self.assertRaisesRegex(ContextCanonError, "duplicate stable authoring ID"):\n            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)\n\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit(f"placement review test anchor count={text.count(anchor)}")
+          path.write_text(text.replace(anchor, addition, 1), encoding="utf-8", newline="\n")
+
+          path = Path("tests/test_onboarding_structure.py")
+          text = path.read_text(encoding="utf-8")
+          old = '        self.assertIn("## Fixed Markdown", text)\n        self.assertIn("<!-- contextcanon-fixed-markdown:start -->", text)\n'
+          new = '        self.assertIn("## Fixed Markdown", text)\n        self.assertIn("Ordinary project-documentation Markdown is mutable by default", text)\n        self.assertIn("authoritative-reference", text)\n        self.assertIn("imported-corpus", text)\n        self.assertIn("<!-- contextcanon-fixed-markdown:start -->", text)\n'
+          if text.count(old) != 1:
+              raise SystemExit(f"structure wording test target count={text.count(old)}")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+          PY
+      - name: Focused onboarding tests
+        run: |
+          python -m unittest tests.test_onboarding_placement_review tests.test_onboarding_placement_publish tests.test_onboarding_structure -v
+      - name: Full deterministic suite
+        run: python -m unittest discover -s tests -v
+      - name: Verify generated ContextCanon output
+        run: contextcanon check --all .
+      - name: Clean temporary workflow and commit
+        run: |
+          git config user.name "ContextCanon quality hardener"
+          git config user.email "43569752+SomeSunlight@users.noreply.github.com"
+          git rm .github/workflows/_final-quality-pr13.yml
+          git add -A
+          git diff --cached --check
+          git commit -m "Harden final placement review boundaries"
+          git push origin HEAD:agent/onboarding-placement-publication
