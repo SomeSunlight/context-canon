@@ -53,6 +53,12 @@ The disposable-clone publication test proved all of the following in one vertica
 
 The real run found one product gap that synthetic tests had missed: publication preview originally showed only Source Git transport details and lost the human-review distinction between owner-selected and Evidence-derived reuse. PR #13 now preserves that provenance and exact Source identity through the preview, with a regression test.
 
+## Review-candidate verification
+
+The temporary real-test workflow, harness, reports and diagnostics have been removed from the final PR diff. The cleaned candidate tree was regenerated and passed **129/129 tests** plus `contextcanon check --all .` for Gateway, Framework Development, Development Workflow and Foundation with zero generated drift. The net diff against `main` contains only product code, tests, documentation/planning and their generated Context packages.
+
+The first clean commit was produced by the temporary GitHub Actions finalizer, so GitHub attributed its PR synchronization to `github-actions[bot]` and marked that automatic PR run `action_required` without creating a job. A normal repository-authored PLAN/STATE checkpoint now follows to obtain an ordinary exact-current-head PR workflow without changing product semantics.
+
 ## Boundaries that intentionally remain
 
 PR #13 does **not** implement destructive onboarding cleanup. README/CONTRIBUTING/docs remain project-owned and untouched during placement publication. A later cleanup workflow may preview true duplicate canonical text and require explicit confirmation before removing it.
@@ -63,4 +69,4 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Finish PR #13 as a clean review candidate: remove temporary real-test harness/report files, regenerate affected self-hosted packages, run the complete deterministic suite plus `contextcanon check --all .`, inspect the final diff for generated drift or temporary artifacts, and update the PR description with exact-head verification evidence. Keep the PR unmerged until explicit project-owner approval; after approval, the final merge gate still requires an exact-current-head green run and zero generated drift.
+Obtain the normal exact-current-head PR #13 GitHub Actions result for this review-candidate checkpoint. If it is all green with zero generated drift, present PR #13 for explicit project-owner review. Do not merge, start duplicate-text cleanup, or begin another development block before that review decision.
