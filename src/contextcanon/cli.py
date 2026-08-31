@@ -514,6 +514,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 structure_path = Path(args.structure) if args.structure is not None else workspace.structure_path
                 catalog = tuple(Path(path) for path in args.catalog_package)
+                catalog_inputs = tuple(args.catalog_package)
 
                 if args.onboard_command == "placement-instruction":
                     instruction = build_onboarding_placement_instruction(
@@ -537,10 +538,12 @@ def main(argv: list[str] | None = None) -> int:
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement instruction ready",
                         structure_digest=instruction.structure_digest,
+                        source_catalog=_catalog_labels(instruction.catalog_packages),
+                        source_catalog_inputs=catalog_inputs,
                         next_action=(
                             "Give `placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
                             "Save its single JSON result as `placement-proposal.json`, then run "
-                            f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                            f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
                         ),
                     )
                     return 0
@@ -565,9 +568,10 @@ def main(argv: list[str] | None = None) -> int:
                         structure_digest=proposal.structure_digest,
                         placement_proposal_digest=proposal.proposal_digest,
                         source_catalog=_catalog_labels(proposal.catalog_packages),
+                        source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs. "
-                            "Add any explicit owner choice with `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID`."
+                            f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above. "
+                            "Add any explicit owner choice once with `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID`."
                         ),
                     )
                     return 0
@@ -585,10 +589,10 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Review file: {review_path}")
                     print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
                     next_action = (
-                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
                         if review.is_complete else
                         "Edit `placement.md`: set every Decision to `accept` or `reject` and correct destination/maintained meaning where needed. "
-                        f"Then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        f"Then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="human placement review",
@@ -597,6 +601,8 @@ def main(argv: list[str] | None = None) -> int:
                         placement_review_digest=review.review_digest,
                         placement_review_complete=review.is_complete,
                         source_catalog=_catalog_labels(proposal.catalog_packages),
+                        source_catalog_inputs=catalog_inputs,
+                        owner_source_specs=tuple(args.owner_source),
                         next_action=next_action,
                     )
                     return 0
@@ -616,7 +622,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Touched Context Nodes: {len(preview.nodes)} · follow-ups: {len(preview.followups)}")
                 if args.onboard_command == "placement-preview":
                     next_action = (
-                        f"Review `placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}` with the same `--catalog-package` inputs."
+                        f"Review `placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
                         if preview.review_complete else
                         "Return to `placement.md`, resolve all pending decisions, and preview again."
                     )
@@ -627,6 +633,7 @@ def main(argv: list[str] | None = None) -> int:
                         placement_review_digest=preview.review_digest,
                         placement_review_complete=preview.review_complete,
                         source_catalog=_catalog_labels(proposal.catalog_packages),
+                        source_catalog_inputs=catalog_inputs,
                         next_action=next_action,
                     )
                     return 0
@@ -655,6 +662,7 @@ def main(argv: list[str] | None = None) -> int:
                     placement_review_complete=True,
                     acceptance_digest=result.acceptance_digest,
                     source_catalog=_catalog_labels(proposal.catalog_packages),
+                    source_catalog_inputs=catalog_inputs,
                     next_action=(
                         "Review `placement-followup.md`. Mutable-Markdown duplicate cleanup is deliberately a separate later operation; "
                         "ordinary ContextCanon-native project growth now happens by editing the relevant Node sources directly, not by rerunning migration onboarding."
