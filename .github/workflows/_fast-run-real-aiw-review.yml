@@ -23,103 +23,8 @@ jobs:
           python-version: "3.12"
       - name: Install ContextCanon
         run: python -m pip install -e .
-      - name: Checkpoint real validation in PLAN and STATE
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          plan_path = Path("PLAN.md")
-          plan = plan_path.read_text(encoding="utf-8")
-          replacements = {
-              "- [ ] Re-run the corrected placement pass against the real frozen `ai-workstation` Evidence and owner-edited structure, including owner-selected Development Workflow, and inspect the new editable review before publication.":
-              "- [x] Re-run the corrected placement pass against the real frozen `ai-workstation` Evidence and owner-edited structure, including owner-selected Development Workflow, and inspect the new editable review before publication.",
-              "- [ ] Validate preview/publication vertically on the real materialized `ai-workstation` Nodes with at least one Overview, root Rule, child-local Rule, Topic/Resource, fixed-authority mapping, mutable-document follow-up and reusable Development Workflow Source.":
-              "- [x] Validate preview/publication vertically on the real materialized `ai-workstation` Nodes with at least one Overview, root Rule, child-local Rule, Topic/Resource, fixed-authority mapping, mutable-document follow-up and reusable Development Workflow Source.",
-          }
-          for old, new in replacements.items():
-              if plan.count(old) != 1:
-                  raise SystemExit(f"PLAN checkpoint target count={plan.count(old)} for {old[:70]!r}")
-              plan = plan.replace(old, new, 1)
-
-          anchor = "- [x] Validate preview/publication vertically on the real materialized `ai-workstation` Nodes with at least one Overview, root Rule, child-local Rule, Topic/Resource, fixed-authority mapping, mutable-document follow-up and reusable Development Workflow Source.\n"
-          note = """
-
-Real vertical-validation checkpoint: the corrected pass used `ai-workstation@4106fec3f7726d6c9bfedd70d30d9ed025b7c166`, which reproduced frozen Evidence `2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d` exactly. The reviewed v1 placement contained 33 Evidence-based findings plus owner-selected Development Workflow package `1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb`. Publication touched all 8 accepted Context Nodes, retained 6 state/plan/ordinary-documentation follow-ups, preserved the existing root ID and unrelated authored content, kept every frozen Evidence byte unchanged, verified cross-directory Topic routing and exact Git Source provenance, produced zero generated drift across the resulting `ai-workstation` Nodes, and repeated with 0 changed Context sources and the same acceptance digest `a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4`. The real run also exposed and fixed one trust/UX gap: publication preview now keeps Source name, `owner-selected`/`evidence-derived` origin, version and exact package identity visible alongside Git provenance.
-"""
-          if note.strip() not in plan:
-              plan = plan.replace(anchor, anchor + note, 1)
-          plan_path.write_text(plan, encoding="utf-8", newline="\n")
-
-          state = """# Current State
-
-The accepted `main` baseline remains PR #12, squash-merged as:
-
-`bac1f52048b3d82cedb00b04fccd114607c4c915`
-
-PR #13 on `agent/onboarding-placement-publication` is the active review candidate. It completes the second half of structure-first migration onboarding: after humans accept the shelves, reviewed project knowledge can now be placed onto those Nodes, previewed as exact authoring/Source changes, and explicitly published without treating the semantic LLM as project authority.
-
-## What is implemented in PR #13
-
-The placement proposal remains the strict machine/LLM contract, while `contextcanon-onboarding/placement.md` is the human gate. The editable review is destination-first and can change acceptance, destination, kind/action, title and maintained wording. Canonical Rule and Topic IDs are allocated once on the human side and remain stable across review/preview cycles.
-
-Placement now distinguishes `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping` and `unresolved`, with placement actions appropriate to those semantics. Clear source wording can remain exact; light edits and synthesis stay explicit.
-
-Reusable Sources have two visibly different origins:
-
-- `evidence-derived` — the semantic pass found reuse from the supplied exact Source catalog;
-- `owner-selected` — the project owner deliberately adds a supplied exact Source independently of what frozen project Evidence claimed.
-
-Both remain bound to exact Node/version/normalized/package identity. Publication resolves durable Git locator, exact commit and Node path instead of writing a transient local checkout path. The final publication preview keeps the Source name, origin, version, package digest and Git provenance visible before mutation.
-
-`contextcanon onboard placement-preview` renders exact per-Node `CONTEXT.src.md` deltas, Source changes, durable follow-ups and deferred mutable-Markdown cleanup candidates without mutating the project. `contextcanon onboard placement-publish` revalidates frozen Evidence and review identity, refuses stale Node source after preview, installs exact Source packages, compiles touched Nodes before writing generated output, writes an exact acceptance record, and rolls back its own changes on failure.
-
-Initial placement deliberately does not rewrite README, CONTRIBUTING, architecture or other ordinary mutable project Markdown. Accepted state, plan, ordinary-documentation, authority-mapping and unresolved findings that are not safely expressible in current Node authoring remain recoverable in exact acceptance/follow-up state. Duplicate text removal is a separate later cleanup review.
-
-The visible `contextcanon-onboarding/README.md` is now a deterministic resumption checkpoint: it records the last ContextCanon-validated Evidence/structure/placement stage, exact Source catalog identities and next safe command. It does not pretend that an arbitrary human edit has already been validated.
-
-## Real `ai-workstation` vertical validation
-
-The final real test reused the original project bytes rather than a new live-repository interpretation:
-
-- project commit: `4106fec3f7726d6c9bfedd70d30d9ed025b7c166`;
-- reproduced frozen Evidence: `2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d`;
-- accepted existing root Node ID: `aea56adf-2a26-43f0-b712-3bbeab7a3097`;
-- seven accepted child/group Nodes;
-- 33 Evidence-based placement findings;
-- owner-selected Development Workflow Source `c4c94726-3cc7-4df6-b779-72bbf9c06f40`, package `1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb`.
-
-The human review also resolved the Evidence-only version ambiguity as owner input: `pyproject.toml` should track the repository release version represented by CHANGELOG rather than leaving two stale independent version streams.
-
-The disposable-clone publication test proved all of the following in one vertical run:
-
-- all 8 accepted Context Nodes received their reviewed local deltas;
-- existing root identity and unrelated authored root content survived;
-- child Node IDs remained stable;
-- frozen Evidence-covered project files remained byte-identical;
-- root and child-local Rules, Overviews and cross-directory Topic/Resource routing materialized correctly;
-- Development Workflow was pinned with exact package identity and durable Git provenance;
-- accepted state/plan/ordinary-documentation semantics remained visible as durable follow-ups;
-- every resulting Node compiled with zero generated drift;
-- the second preview showed the placement already materialized;
-- the second publication changed 0 Context sources and reproduced acceptance digest `a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4`.
-
-The real run found one product gap that synthetic tests had missed: publication preview originally showed only Source Git transport details and lost the human-review distinction between owner-selected and Evidence-derived reuse. PR #13 now preserves that provenance and exact Source identity through the preview, with a regression test.
-
-## Boundaries that intentionally remain
-
-PR #13 does **not** implement destructive onboarding cleanup. README/CONTRIBUTING/docs remain project-owned and untouched during placement publication. A later cleanup workflow may preview true duplicate canonical text and require explicit confirmation before removing it.
-
-The project also does not yet choose a remote Node-library registry/distribution architecture, invent a special GroupNode type, make navigation hierarchy imply Source inheritance, automatically splice state/planning findings into arbitrary prose, or build a browser UI. Those remain separate questions to answer from further real use.
-
-Normal ContextCanon-native project evolution is distinct from one-time migration onboarding: after adoption, humans edit canonical `CONTEXT.src.md`/project documentation and use normal build/check workflows rather than repeatedly re-running migration Evidence analysis.
-
-## Immediate next step
-
-Finish PR #13 as a clean review candidate: remove temporary real-test harness/report files, regenerate affected self-hosted packages, run the complete deterministic suite plus `contextcanon check --all .`, inspect the final diff for generated drift or temporary artifacts, and update the PR description with exact-head verification evidence. Keep the PR unmerged until explicit project-owner approval; after approval, the final merge gate still requires an exact-current-head green run and zero generated drift.
-"""
-          Path("STATE.md").write_text(state, encoding="utf-8", newline="\n")
-          PY
+      - name: Checkpoint real validation
+        run: python tools/_finalize_pr13.py
       - name: Remove temporary real-test harness and reports
         run: |
           git rm -f --ignore-unmatch \
@@ -134,7 +39,8 @@ Finish PR #13 as a clean review candidate: remove temporary real-test harness/re
             tools/_repair_real_aiw_diagnostic.py \
             tools/_repair_real_aiw_semantics.py \
             tools/_repair_real_aiw_workspace.py \
-            tools/_repair_real_aiw_publish_manifest.py
+            tools/_repair_real_aiw_publish_manifest.py \
+            tools/_finalize_pr13.py
       - name: Regenerate self-hosted Context packages
         run: contextcanon build --all .
       - name: Full deterministic suite
@@ -149,7 +55,7 @@ Finish PR #13 as a clean review candidate: remove temporary real-test harness/re
           git diff --name-only > /tmp/finalizer-paths.txt
           cat /tmp/existing-pr-paths.txt
           cat /tmp/finalizer-paths.txt
-          if { cat /tmp/existing-pr-paths.txt; cat /tmp/finalizer-paths.txt; } | grep -E '(^|/)(_real-aiw|_real_aiw|_repair_real_aiw|_fast-run-real-aiw|real-aiw-)' ; then
+          if { cat /tmp/existing-pr-paths.txt; cat /tmp/finalizer-paths.txt; } | grep -E '(^|/)(_real-aiw|_real_aiw|_repair_real_aiw|_fast-run-real-aiw|real-aiw-|_finalize_pr13)' ; then
             echo "temporary real-test path remains in review diff" >&2
             exit 1
           fi
