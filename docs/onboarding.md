@@ -87,6 +87,8 @@ contextcanon-onboarding/
 └── structure-instruction.md
 ```
 
+`contextcanon-onboarding/README.md` is the operator entry point for the in-progress onboarding. It contains a numbered end-to-end runbook, marks both external-LLM handoffs and both human review gates, and keeps the latest ContextCanon-validated checkpoint visible. When returning after a pause, start there rather than reconstructing the command sequence from memory.
+
 Important onboarding Markdown is written directly as UTF-8 by ContextCanon rather than through shell redirection. This keeps the workflow reliable across shells — in particular Windows PowerShell codepage behavior — while `.context/` remains machine-oriented state.
 
 Give the strong reasoning LLM:
@@ -107,6 +109,8 @@ The structure pass asks for:
 - larger knowledge bodies that should remain documentation, authoritative references, or imported corpora rather than becoming Nodes merely because they contain information;
 - exact reusable Source matches only when a verified Source catalog was supplied;
 - rationale, confidence, and exact frozen-Evidence provenance.
+
+The current repository directory tree is **evidence about the project, not the taxonomy ContextCanon must preserve**. A proposed semantic Node may use an existing directory or a new repository-relative directory that does not exist yet. This matters especially for document-heavy repositories where many distinct knowledge areas currently live together in one folder. The human accepts the shelf map first; materialization can create the missing Node directories safely afterwards.
 
 It deliberately does **not** distribute individual Rules or rewrite project prose yet.
 
@@ -149,7 +153,7 @@ The project owner may:
 - rename proposed Nodes;
 - re-parent them by indentation;
 - remove speculative Nodes;
-- add missing Nodes;
+- add missing Nodes, including at new paths not present in the repository yet;
 - add an explicitly planned future area with `[reserved]`.
 
 The details below the tree retain the LLM rationale and exact Evidence excerpts. They are there to make the proposal reviewable; the hierarchy at the top is the human-owned shelf map.
@@ -187,7 +191,7 @@ contextcanon onboard structure-materialize \
   .context/onboarding/<evidence-digest>
 ```
 
-Materialization creates only missing Node skeletons and their deterministic generated package files. Each new Node receives one fresh stable UUID. Existing Nodes and ordinary project files are not rewritten. Running the command again is idempotent once all Nodes exist.
+Materialization creates missing accepted directories when necessary, then creates only the missing Node skeletons and their deterministic generated package files. Each new Node receives one fresh stable UUID. Existing Nodes and ordinary project files are not rewritten. Running the command again is idempotent once all Nodes exist.
 
 At this point **the shelves exist, but the books have not been distributed yet**.
 
@@ -219,16 +223,18 @@ The v1 proposal distinguishes:
 
 Actions are deliberately narrow:
 
-- `promote` — maintain the reviewed meaning canonically at the destination ContextCanon surface;
+- `promote` — make the destination ContextCanon surface the **single canonical maintenance surface** for the reviewed meaning. Initial publication may temporarily leave the original mutable prose untouched for migration safety, but that duplicate is transitional, not the desired final state;
 - `reference` — only for `topic-resource`; keep the referenced Markdown as the maintenance surface and store routing, not a copied second meaning;
 - `keep` — intentionally remain outside canonical Node authoring;
 - `map` — preserve fixed Markdown as authority while recording the reviewed local relationship to it.
+
+The non-redundancy goal is therefore **one canonical meaning, many useful routes**. After a promoted meaning is safely canonical in its Node, later reviewed cleanup should remove a true duplicate from mutable documentation or replace it with concise orientation and a mechanically derived link to the owning Context Node. Friendly or informal summary wording is fine when it helps the human reader; the same full rule or explanation must not remain maintained in both places.
 
 Clear source wording should normally remain `exact`; use `lightly-edited` only for small self-containment changes and `synthesized` only when new wording is genuinely required.
 
 ### Mutable and fixed Markdown
 
-During structure review, all proposed Markdown knowledge bodies are mutable by default. The owner may list selected proposed Markdown paths under `## Fixed Markdown` in `structure.md`.
+Ordinary `project-documentation` Markdown is mutable by default. Markdown proposed as `authoritative-reference` or `imported-corpus` is preselected as fixed in `structure.md`, and the project owner can correct that list before placement.
 
 - **mutable** means ContextCanon may become the future owner of promoted meaning, but the first publication still does not delete or rewrite the old document;
 - **fixed** means the document remains authoritative and may only be referenced/mapped by this onboarding flow.
@@ -281,6 +287,8 @@ contextcanon onboard placement-review \
 
 The review labels that Source `owner-selected`; it does not pretend the choice came from project Evidence. Both Evidence-derived and owner-selected Sources remain bound to the exact immutable package identity.
 
+`--owner-source` is a **review-creation decision**, not a parameter that must be repeated forever. Once the selection has been written into `placement.md`, preview and publication load it from the human review state. The visible workspace runbook states this explicitly.
+
 ## 7. Preview exact publication before mutation
 
 Once every placement decision is resolved:
@@ -321,7 +329,7 @@ Existing Node identity and unrelated authored Node content are preserved. A chil
 
 Accepted `state`, `plan`, `ordinary-documentation`, `authority-mapping`, and `unresolved` findings are **not lost** and are not forced into arbitrary prose. They remain in the exact machine acceptance record and in visible `placement-followup.md` for deliberate later handling.
 
-The first publication also leaves README/CONTRIBUTING/architecture and other mutable Markdown untouched. Removing proven duplicate prose is a separate future cleanup operation with its own preview/review boundary.
+The first publication also leaves README/CONTRIBUTING/architecture and other mutable Markdown untouched. This is a safety boundary, not a decision to tolerate permanent redundancy. Removing proven duplicate prose is a separate reviewed cleanup operation: it must be bound to the accepted placement and exact source bytes, show the whole resulting document diff, and replace the old copy with orientation/reference or remove it only after explicit human review. The current technical cleanup contract is documented in `nodes/internal/framework-development/docs/onboarding-cleanup.md`; the exact command surface remains intentionally unfrozen until another real onboarding proves the simplest UX.
 
 Reusable Source packages are copied into the target Node's accepted local `.context/sources/<package-digest>/` state. The authored Source declaration carries durable Git origin, exact commit SHA and Node path derived from the clean supplied Source checkout; a transient developer checkout path is never written into project truth.
 
