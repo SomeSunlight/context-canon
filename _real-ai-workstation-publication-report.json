@@ -1,0 +1,37 @@
+{
+  "ai_workstation_commit": "4106fec3f7726d6c9bfedd70d30d9ed025b7c166",
+  "commands": {
+    "preview": "wrote placement publication preview /tmp/ai-workstation-real-review/contextcanon-onboarding/placement-preview.md\nReview: aadb82a4a8f3a632a209c5b59150103647bf0a178929794389a09484958e2cee · complete: True\nTouched Context Nodes: 8 · follow-ups: 6",
+    "publish": "wrote placement publication preview /tmp/ai-workstation-real-review/contextcanon-onboarding/placement-preview.md\nReview: aadb82a4a8f3a632a209c5b59150103647bf0a178929794389a09484958e2cee · complete: True\nTouched Context Nodes: 8 · follow-ups: 6\npublished reviewed placement aadb82a4a8f3a632a209c5b59150103647bf0a178929794389a09484958e2cee\nAcceptance record: /tmp/ai-workstation-real-review/.context/onboarding/2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d/placement-acceptance.json\nAcceptance digest: a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4\nChanged Context sources: 8\nFollow-up: /tmp/ai-workstation-real-review/contextcanon-onboarding/placement-followup.md",
+    "second_publish": "wrote placement publication preview /tmp/ai-workstation-real-review/contextcanon-onboarding/placement-preview.md\nReview: aadb82a4a8f3a632a209c5b59150103647bf0a178929794389a09484958e2cee · complete: True\nTouched Context Nodes: 8 · follow-ups: 6\npublished reviewed placement aadb82a4a8f3a632a209c5b59150103647bf0a178929794389a09484958e2cee\nAcceptance record: /tmp/ai-workstation-real-review/.context/onboarding/2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d/placement-acceptance.json\nAcceptance digest: a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4\nChanged Context sources: 0\nFollow-up: /tmp/ai-workstation-real-review/contextcanon-onboarding/placement-followup.md"
+  },
+  "evidence_digest": "2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d",
+  "placement": {
+    "followup_kinds": [
+      "ordinary-documentation",
+      "plan",
+      "state"
+    ],
+    "human_review_complete": true,
+    "owner_selected_source": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+    "owner_selected_source_package": "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb",
+    "owner_version_question_resolved_as_rule": true,
+    "proposal_items": 33
+  },
+  "publication": {
+    "acceptance_digest": "a206e3423e9ffaccf7c3f7a1a0e2f140251a834f3c6eaf9764cd952b95e509c4",
+    "cross_directory_topic_routing_verified": true,
+    "evidence_bytes_unchanged": true,
+    "root_identity_preserved": true,
+    "second_preview_publish_idempotent": true,
+    "source_git_provenance_verified": true,
+    "unrelated_root_content_preserved": true,
+    "zero_generated_drift": true
+  },
+  "schema": "contextcanon/real-world-validation/v1",
+  "structure": {
+    "child_node_ids_stable": true,
+    "created_child_nodes": 7,
+    "existing_root_id": "aea56adf-2a26-43f0-b712-3bbeab7a3097"
+  }
+}

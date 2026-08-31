@@ -191,6 +191,9 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertIn("Existing authored Goose orientation.", child.after)
         self.assertEqual({item.kind for item in preview.followups}, {"state", "authority-mapping"})
         self.assertIn(head, text)
+        self.assertIn("Development Workflow", text)
+        self.assertIn("origin: `evidence-derived`", text)
+        self.assertIn(proposal.source_reuses[0].source_package_digest, text)
         self.assertTrue(preview.mutable_cleanup_candidates)
 
     def test_publish_preserves_node_identity_and_project_markdown_then_is_idempotent(self):

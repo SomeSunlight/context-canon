@@ -37,6 +37,10 @@ _SKELETON_SENTENCES = (
 @dataclass(frozen=True)
 class SourceGitProvenance:
     source_node_id: str
+    source_name: str
+    source_version: str
+    source_package_digest: str
+    origin: str
     locator: str
     ref: str
     node_path: str
@@ -176,7 +180,17 @@ def _git_provenance(source: PlacementReviewSource, package_root: Path) -> Source
         raise _error(f"Source Git HEAD is not an exact commit SHA: {ref!r}")
     if '"' in locator or '"' in node_path:
         raise _error("Source Git provenance contains unsupported quote characters")
-    return SourceGitProvenance(source.source_node_id, locator, ref, node_path, package_root)
+    return SourceGitProvenance(
+        source_node_id=source.source_node_id,
+        source_name=source.source_name,
+        source_version=source.source_version,
+        source_package_digest=source.source_package_digest,
+        origin=source.origin,
+        locator=locator,
+        ref=ref,
+        node_path=node_path,
+        package_root=package_root,
+    )
 
 
 def _source_provenance(
@@ -528,8 +542,11 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
     for source in preview.sources:
         lines.extend(
             [
-                f"- `{source.source_node_id}` from `{source.locator}`",
-                f"  - ref: `{source.ref}`",
+                f"- **{source.source_name}** — origin: `{source.origin}`",
+                f"  - Source Node: `{source.source_node_id}`",
+                f"  - version: `{source.source_version}`",
+                f"  - package: `{source.source_package_digest}`",
+                f"  - Git: `{source.locator}` @ `{source.ref}`",
                 f"  - node-path: `{source.node_path}`",
                 "  - the exact reviewed immutable package will be copied into the consumer Node's local `.context/sources/` store",
             ]
