@@ -50,13 +50,11 @@ jobs:
       - name: Inspect cleaned review diff
         shell: bash
         run: |
-          git diff --check
-          git diff --name-only origin/main...HEAD > /tmp/existing-pr-paths.txt
-          git diff --name-only > /tmp/finalizer-paths.txt
-          cat /tmp/existing-pr-paths.txt
-          cat /tmp/finalizer-paths.txt
-          if { cat /tmp/existing-pr-paths.txt; cat /tmp/finalizer-paths.txt; } | grep -E '(^|/)(_real-aiw|_real_aiw|_repair_real_aiw|_fast-run-real-aiw|real-aiw-|_finalize_pr13)' ; then
-            echo "temporary real-test path remains in review diff" >&2
+          git diff --check origin/main
+          git diff --name-only origin/main > /tmp/final-review-paths.txt
+          cat /tmp/final-review-paths.txt
+          if grep -E '(^|/)(_real-aiw|_real_aiw|_repair_real_aiw|_fast-run-real-aiw|real-aiw-|_finalize_pr13)' /tmp/final-review-paths.txt ; then
+            echo "temporary real-test path remains in final review diff" >&2
             exit 1
           fi
       - name: Commit cleaned review candidate
