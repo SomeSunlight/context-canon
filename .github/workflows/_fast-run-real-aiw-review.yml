@@ -1,4 +1,4 @@
-name: fast-run-real-aiw-review
+name: fast-run-real-aiw-publication
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  review:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,31 +27,35 @@ jobs:
           python tools/_repair_real_aiw_diagnostic.py
           python tools/_repair_real_aiw_workspace.py
           python tools/_repair_real_aiw_semantics.py
-      - name: Generate corrected real v1 review
-        id: generate
+      - name: Run corrected review and publication validation
+        id: validate
         shell: bash
         run: |
-          printf 'Real AI Workstation review diagnostic for %s\n' "$GITHUB_SHA" > real-aiw-review-diagnostic.txt
+          printf 'Real AI Workstation publication diagnostic for %s\n' "$GITHUB_SHA" > real-aiw-publication-diagnostic.txt
           set +e
-          python tools/_real_aiw_review.py >> real-aiw-review-diagnostic.txt 2>&1
+          python tools/_real_aiw_review.py >> real-aiw-publication-diagnostic.txt 2>&1
           code=$?
+          if [ "$code" -eq 0 ]; then
+            python tools/_real_aiw_publish.py >> real-aiw-publication-diagnostic.txt 2>&1
+            code=$?
+          fi
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          cat real-aiw-review-diagnostic.txt
+          cat real-aiw-publication-diagnostic.txt
           exit 0
       - name: Commit diagnostic on failure
-        if: steps.generate.outputs.exit_code != '0'
+        if: steps.validate.outputs.exit_code != '0'
         run: |
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add real-aiw-review-diagnostic.txt
-          git commit -m "Record real AI Workstation review diagnostic"
+          git add real-aiw-publication-diagnostic.txt
+          git commit -m "Record real AI Workstation publication diagnostic"
           git push origin HEAD:agent/onboarding-placement-publication
-      - name: Commit corrected inspection artifacts
-        if: steps.generate.outputs.exit_code == '0'
+      - name: Commit real validation report
+        if: steps.validate.outputs.exit_code == '0'
         run: |
-          rm -f real-aiw-review-diagnostic.txt
+          rm -f real-aiw-publication-diagnostic.txt
           git config user.name "ContextCanon fast-run"
           git config user.email "43569752+SomeSunlight@users.noreply.github.com"
-          git add -A _real-ai-workstation-placement-review.md _real-ai-workstation-placement-review.json real-aiw-review-diagnostic.txt
-          git commit -m "Correct real AI Workstation v1 placement review"
+          git add _real-ai-workstation-publication-report.json
+          git commit -m "Validate real AI Workstation placement publication"
           git push origin HEAD:agent/onboarding-placement-publication
