@@ -4,7 +4,7 @@ The accepted `main` baseline remains PR #12, squash-merged as:
 
 `bac1f52048b3d82cedb00b04fccd114607c4c915`
 
-PR #13 on `agent/onboarding-placement-publication` is the active review candidate. It completes the second half of structure-first migration onboarding: after humans accept the shelves, reviewed project knowledge can now be placed onto those Nodes, previewed as exact authoring/Source changes, and explicitly published without treating the semantic LLM as project authority.
+PR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval.
 
 ## What is implemented in PR #13
 
@@ -21,15 +21,50 @@ Both remain bound to exact Node/version/normalized/package identity. Publication
 
 `contextcanon onboard placement-preview` renders exact per-Node `CONTEXT.src.md` deltas, Source changes, durable follow-ups and deferred mutable-Markdown cleanup candidates without mutating the project. `contextcanon onboard placement-publish` revalidates frozen Evidence and review identity, refuses stale Node source after preview, installs exact Source packages, compiles touched Nodes before writing generated output, writes an exact acceptance record, and rolls back its own changes on failure.
 
-Initial placement deliberately does not rewrite README, CONTRIBUTING, architecture or other ordinary mutable project Markdown. Accepted state, plan, ordinary-documentation, authority-mapping and unresolved findings that are not safely expressible in current Node authoring remain recoverable in exact acceptance/follow-up state. Duplicate text removal is a separate later cleanup review.
-
 The structure review treats ordinary `project-documentation` Markdown as mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` are preselected as fixed candidates in the human review and can be corrected there; fixed Markdown may be referenced/mapped but is excluded from destructive cleanup planning.
 
-The visible `contextcanon-onboarding/README.md` is a deterministic resumption checkpoint: it records the last ContextCanon-validated Evidence/structure/placement stage, exact Source catalog identities and next safe command. It does not pretend that an arbitrary human edit has already been validated.
+## Owner-review corrections now implemented
+
+The live `ai-workstation` review clarified several UX and semantic requirements that were under-specified in the earlier review candidate.
+
+### Semantic shelves are not repository folders
+
+The structure-discovery instruction now says explicitly that the current repository directory tree is Evidence, **not the taxonomy ContextCanon must preserve**. A non-root Node may use an existing repository directory or a new repository-relative directory that does not exist yet when that is the clearest durable semantic landing point.
+
+This is particularly important for document-heavy projects where many unrelated documents may currently share one folder. The owner first edits the semantic shelf map; structure materialization then creates accepted missing Node directories/skeletons safely. Focused regression coverage exercises a genuinely absent `knowledge/operations` path and proves preview/materialization creates it rather than forcing the Node onto an existing directory.
+
+### The visible onboarding workspace is now the operator runbook
+
+`contextcanon-onboarding/README.md` now presents the workflow as an eight-step numbered sequence from Evidence freeze through placement publication. It visibly marks:
+
+- external LLM handoff 1 — coarse structure;
+- human gate 1 — `structure.md`;
+- external LLM handoff 2 — placement;
+- human gate 2 — `placement.md`.
+
+The checkpoint remains the last ContextCanon-validated state, not a live watcher. Placement checkpoint updates now also retain the exact supplied `--catalog-package` input paths so later commands no longer rely on remembering them from chat/prose. `--owner-source` is explicitly documented as a **one-time review-creation choice**: once written into `placement.md`, preview/publication load that choice from review state and do not require the flag again.
+
+This is intentionally still a visible onboarding workspace rather than pretending a temporary migration workflow is already an ordinary canonical project Context Node. The current correction solves the concrete operator problem with a self-contained runbook/checkpoint without inventing a special transient Node type.
+
+### `promote` means one canonical maintenance surface
+
+The intended steady state is now explicit: when an accepted placement uses `promote`, the destination ContextCanon surface becomes the **single canonical maintenance surface for that meaning**.
+
+Initial placement publication still leaves README/CONTRIBUTING/docs untouched for adoption safety. Any identical source prose that therefore remains is migration debt, not a second authority and not the desired final architecture.
+
+A later cleanup may leave:
+
+- a concise human-facing orientation plus a mechanically derived link to the owning Context Node;
+- a reference only;
+- or nothing when removal keeps the familiar document clear.
+
+Friendly, informal or simplified wording is allowed in the orientation layer when it improves human understanding. What is forbidden as a steady state is maintaining the same complete rule/explanation independently in both the Node and the old document.
+
+The separate technical contract is now recorded in `nodes/internal/framework-development/docs/onboarding-cleanup.md`. It binds cleanup to exact accepted placement/source bytes, requires whole-document diff review, keeps fixed Markdown and Topic/Resource authorities out of destructive cleanup, and separates semantic replacement suggestions from deterministic mutation. Broad automatic deletion is deliberately **not** implemented yet; the command UX remains unfrozen until another real onboarding validates the simplest flow.
 
 ## Real `ai-workstation` vertical validation
 
-The final real test reused the original project bytes rather than a new live-repository interpretation:
+The earlier publication proof reused the original project bytes rather than a new live-repository interpretation:
 
 - project commit: `4106fec3f7726d6c9bfedd70d30d9ed025b7c166`;
 - reproduced frozen Evidence: `2a926bf353b252db4039e5c4b63b39abad6bab46c11982e88b3eb17e19cf203d`;
@@ -55,19 +90,23 @@ The disposable-clone publication test proved all of the following in one vertica
 
 The real frozen Evidence did not produce an accepted authority-mapping finding, so none was invented merely to exercise that feature. Fixed-authority mapping remains covered by deterministic framework validation/tests.
 
-The real run found one product gap that synthetic tests had missed: publication preview originally showed only Source Git transport details and lost the human-review distinction between owner-selected and Evidence-derived reuse. PR #13 preserves that provenance and exact Source identity through the preview, with a regression test.
+## Current verification state
 
-## Review-candidate verification
+Before the owner-review corrections, the exact review candidate passed 130 tests and zero generated drift.
 
-All temporary real-test and quality-hardening workflows, harnesses, reports and diagnostics are removed from the final PR diff.
+The new focused structure/workspace/promotion coverage raises the deterministic suite to **134 tests**. On owner-review correction head `4852a3a46000699d71a0fc74a9dbfdccd5fbed88`, all 134 Unit/repository-consistency tests passed. The only failing CI step was the expected Gateway generated drift caused by the updated canonical onboarding documentation. The workflow drift output identified exactly three files:
 
-The cleaned candidate was first verified with 129 tests plus zero generated drift. A final qualitative review then removed one dead publication-transaction line, corrected the Fixed Markdown explanation to match its actual preselected candidate behavior, and added early stable-authoring-ID validation plus regression coverage. The resulting quality-hardening run completed **130/130 tests** successfully and `contextcanon check --all .` remained green for Gateway, Framework Development, Development Workflow and Foundation.
+- `.context/context.yaml`;
+- `.context/package.json`;
+- `CONTEXT/references/docs/onboarding.md`.
 
-The repository-authored PLAN/STATE checkpoint after that product hardening changes only durable review documentation. Its purpose is to obtain the ordinary exact-current-head PR workflow on the actual review head rather than relying on a bot-authored synchronization run.
+Those exact compiler-produced files were regenerated from the CI drift artifact and committed. No Framework Development, Development Workflow or Foundation generated output changed.
+
+A newer ordinary PR workflow is required on the final repository-authored owner-review checkpoint before this correction block can be called technically clean.
 
 ## Boundaries that intentionally remain
 
-PR #13 does **not** implement destructive onboarding cleanup. README/CONTRIBUTING/docs remain project-owned and untouched during placement publication. A later cleanup workflow may preview true duplicate canonical text and require explicit confirmation before removing it.
+PR #13 still does **not** perform destructive onboarding cleanup. Initial publication remains non-destructive. The later cleanup contract is now explicit, but implementation awaits another real review of the desired user experience rather than growing a second long ceremony prematurely.
 
 The project also does not yet choose a remote Node-library registry/distribution architecture, invent a special GroupNode type, make navigation hierarchy imply Source inheritance, automatically splice state/planning findings into arbitrary prose, or build a browser UI. Those remain separate questions to answer from further real use.
 
@@ -75,4 +114,4 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Require the normal GitHub PR workflow on this exact repository-authored review head to pass with generated-output verification. If it is green, PR #13 is ready for explicit project-owner review. Do not merge, mark accepted, start duplicate-text cleanup, or begin another development block before that review decision.
+Obtain the ordinary GitHub PR workflow on the exact current owner-review checkpoint with all 134 tests and zero generated drift. If green, keep PR #13 draft/unmerged and let the project owner continue the real `ai-workstation` placement review. Do not merge or silently begin destructive duplicate cleanup without explicit owner approval.
