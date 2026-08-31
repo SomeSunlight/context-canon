@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.onboarding import prepare_onboarding_evidence
+from contextcanon.onboarding_placement_instruction import build_onboarding_placement_instruction
 from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_or_load_structure_markdown
 from contextcanon.onboarding_structure_instruction import build_onboarding_structure_instruction
 from contextcanon.onboarding_structure_materialize import (
@@ -107,6 +108,20 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         created = materialize_structure_skeletons(preview)
         self.assertIn(repo / "knowledge" / "operations" / "CONTEXT.src.md", created)
         self.assertTrue((repo / "knowledge" / "operations" / "CONTEXT.md").is_file())
+
+    def test_promote_instruction_requires_one_canonical_maintenance_surface(self):
+        _, prepared, workspace = self.make_project()
+        instruction = build_onboarding_placement_instruction(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+
+        self.assertIn("one canonical maintenance surface", instruction.text)
+        self.assertIn("single canonical maintenance surface for that meaning", instruction.text)
+        self.assertIn("temporary duplicate may exist during migration", instruction.text)
+        self.assertIn("concise human orientation plus a link/reference", instruction.text)
+        self.assertIn("Do not plan to maintain the same full rule or explanation in both places", instruction.text)
 
     def test_workspace_readme_is_numbered_and_checkpoint_keeps_source_inputs_visible(self):
         _, prepared, workspace = self.make_project()
