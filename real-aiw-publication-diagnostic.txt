@@ -1,8 +1,2 @@
-Real AI Workstation publication diagnostic for e0ed559d15af402921bbea48444f6290af4f5cdc
-Traceback (most recent call last):
-  File "/home/runner/work/context-canon/context-canon/tools/_real_aiw_publish.py", line 301, in <module>
-    main()
-  File "/home/runner/work/context-canon/context-canon/tools/_real_aiw_publish.py", line 91, in main
-    evidence_before = {entry["path"]: digest(AIW / entry["path"]) for entry in manifest["files"]}
-                                                                               ~~~~~~~~^^^^^^^^^
-KeyError: 'files'
+Real AI Workstation publication diagnostic for 8c03b53527de3885febd8e883adb4173c4ef75cb
+publication preview lost owner-selected Source provenance
