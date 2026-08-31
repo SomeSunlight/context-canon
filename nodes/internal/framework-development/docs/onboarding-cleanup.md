@@ -75,9 +75,10 @@ A strong reasoning model may:
 - decide whether the accepted promoted meaning is a true duplicate in the mutable document;
 - propose a short human-facing orientation sentence;
 - decide whether a plain reference or removal is clearer;
+- deliberately use simpler, friendlier, or more conversational wording when that improves the familiar document;
 - identify cases that are too entangled to rewrite safely.
 
-It may use only the accepted/frozen review material supplied for this cleanup task. It does not mutate files.
+It may use only the accepted/frozen review material supplied for this cleanup task. It does not mutate files. The exact original source excerpt remains visible in the human cleanup review beside the proposal.
 
 ### Human
 
@@ -92,17 +93,44 @@ The project owner:
 Deterministic tooling:
 
 1. binds the cleanup proposal to the exact accepted placement and exact source bytes;
-2. renders a complete before/after diff;
-3. refuses stale or changed source files;
-4. applies only explicitly reviewed replacements;
-5. verifies that fixed/authority/resource boundaries were not crossed;
-6. performs the mutation transaction-like and records exactly what changed.
+2. derives the destination link mechanically from the accepted Node path rather than trusting an LLM-typed locator;
+3. renders a complete before/after diff;
+4. refuses stale or changed source files;
+5. applies only explicitly reviewed replacements;
+6. verifies that fixed/authority/resource boundaries were not crossed;
+7. performs the mutation transaction-like and records exactly what changed.
 
 ## Link target
 
 The cleanup link should point to the **human-facing canonical Context Node entry**, not to `.context/` bookkeeping and not to a transient onboarding artifact. Repository-relative links are preferred when the document and Node live in the same repository.
 
-The exact rendered link format should be derived mechanically from the accepted destination Node path. A human or LLM should not have to type or maintain a second locator by hand.
+The exact rendered link target should be derived mechanically from the accepted destination Node path. A human or LLM should be free to edit the surrounding phrase — including something as short as "See here" — without having to type or maintain a second locator by hand.
+
+## Git checkpoint before document mutation
+
+Once placement has created or changed real Context Nodes, Git becomes the natural safety boundary for the next phase.
+
+Before any duplicate-cleanup mutation, ContextCanon should require or strongly verify a **clean, committed working state** for the reviewed placement result. The intended sequence is:
+
+```text
+reviewed placement published
+        ↓
+review / commit the canonical Node changes
+        ↓
+start cleanup from that clean Git state
+        ↓
+LLM proposes document handoffs
+        ↓
+human reviews whole-document diffs
+        ↓
+ContextCanon applies only approved changes
+        ↓
+review / commit the cleaned version
+```
+
+ContextCanon should not silently create commits for the owner. Git is the recoverable version boundary; ContextCanon should detect a dirty or changed base before destructive cleanup and refuse to pretend it is still applying the reviewed transformation to the same state.
+
+This also leaves a visible historical marker in the original document change: Git shows exactly where detailed prose was replaced by an orientation/reference to canonical Context. The owner can later simplify or remove that presentation link like any other ordinary documentation edit without changing the canonical Node meaning.
 
 ## UX constraint
 
@@ -110,6 +138,8 @@ Do not turn cleanup into another long penalty-box workflow. The operator should 
 
 ```text
 placement published
+        ↓
+clean Git checkpoint of canonical Nodes
         ↓
 cleanup candidates prepared from accepted promoted excerpts
         ↓
@@ -129,6 +159,7 @@ Placement establishes **future ownership**. Cleanup changes familiar project doc
 Keeping those as separate review boundaries gives the owner a safe sequence:
 
 1. first verify that ContextCanon captured the right meaning in the right Node;
-2. only then remove or shorten the old copy.
+2. commit that reviewed canonical state as a recoverable Git checkpoint;
+3. only then remove or shorten the old copy.
 
 This preserves trust while still making non-redundancy the required final architecture rather than an optional cosmetic improvement.
