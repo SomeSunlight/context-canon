@@ -112,7 +112,7 @@ The repository's old directory tree is evidence about the project, not a taxonom
 
 None of these working files become canonical Context merely because they exist. Explicit publication changes reviewed Context Node authoring.
 
-## Frozen Evidence
+## Why frozen Evidence exists
 
 Freezing does not lock the live Git repository. ContextCanon copies selected review material into a content-addressed snapshot so the LLM, human review, preview and publication can all refer to the **same exact project bytes**. Prepare a new snapshot only when you intentionally want a new evidence basis.
 
