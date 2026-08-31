@@ -1,2 +1,2 @@
-Real AI Workstation publication diagnostic for 8c03b53527de3885febd8e883adb4173c4ef75cb
-publication preview lost owner-selected Source provenance
+Real AI Workstation publication diagnostic for 74a974e4bfc0383a38f944023603cc715bc2c254
+representative publication assertions missing: ['Keep project version in `pyproject.toml` aligned']
