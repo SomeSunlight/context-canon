@@ -36,6 +36,7 @@ from .onboarding_structure_materialize import (
     render_structure_materialization_preview,
 )
 from .onboarding_workspace import open_onboarding_workspace, update_workspace_checkpoint, write_utf8
+from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
 from .sources import accept_source_candidate, review_source_candidate
@@ -123,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
         help="create a deterministic content-addressed evidence snapshot from a Git repository",
     )
     onboard_prepare.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    add_reset_parser(onboard_sub)
+
     onboard_prepare.add_argument(
         "--include",
         action="append",
@@ -392,6 +395,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Excluded candidates: {len(prepared.excluded)}")
                 return 0
 
+            if args.onboard_command == "reset":
+                result = handle_reset_args(args)
+                print(f"reset onboarding from step {result['from_step']}")
+                print(f"Journal records reversed: {result['journal_records_reversed']}")
+                print(f"Project files restored/removed: {len(result['project_files_restored_or_removed'])}")
+                print(f"Workspace files removed: {len(result['workspace_files_removed'])}")
+                print("Frozen Evidence: preserved")
+                return 0
+
             if args.onboard_command == "structure-instruction":
                 instruction = build_onboarding_structure_instruction(
                     snapshot,
@@ -412,6 +424,8 @@ def main(argv: list[str] | None = None) -> int:
                 update_workspace_checkpoint(
                     workspace, snapshot,
                     stage="structure instruction ready",
+                    source_catalog=_catalog_labels(instruction.catalog_packages),
+                    source_catalog_inputs=tuple(args.catalog_package),
                     next_action=(
                         "Give `structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
                         "Save its single JSON result as `structure-proposal.json`, then run "
@@ -589,10 +603,10 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Review file: {review_path}")
                     print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
                     next_action = (
-                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
+                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
-                        "Edit `placement.md`: set every Decision to `accept` or `reject` and correct destination/maintained meaning where needed. "
-                        f"Then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
+                        f"Edit `{workspace.placement_path.name}`: set every Decision to `accept` or `reject` and correct destination/maintained meaning where needed. "
+                        f"Then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` to validate the edited human gate before preview."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="human placement review",

@@ -156,7 +156,7 @@ def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
         lines.append(f"Why: {_one_line(payload['why'])}")
         lines.append(f"Wording: `{payload['wording_origin']}`")
     elif kind in {"overview", "state", "plan"}:
-        lines.append(f"Text: {_one_line(payload['text'])}")
+        lines.append(f"Summary: {_one_line(payload['text'])}")
         lines.append(f"Wording: `{payload['wording_origin']}`")
     elif kind == "topic-resource":
         lines.append(f"Condition: {_one_line(payload['condition'])}")
@@ -423,8 +423,16 @@ def _payload_from_block(kind: str, block: list[str]) -> dict[str, object]:
             "wording_origin": _simple_value(block, "Wording"),
         }
     if kind in {"overview", "state", "plan"}:
+        summary_lines = [line[len("Summary: ") :] for line in block if line.startswith("Summary: ")]
+        text_lines = [line[len("Text: ") :] for line in block if line.startswith("Text: ")]
+        if len(summary_lines) == 1 and not text_lines:
+            maintained = summary_lines[0].strip()
+        elif len(text_lines) == 1 and not summary_lines:
+            maintained = text_lines[0].strip()
+        else:
+            raise _error("Summary must appear exactly once (legacy Text is accepted only when Summary is absent)")
         return {
-            "text": _find_line(block, "Text: ", "Text"),
+            "text": maintained,
             "wording_origin": _simple_value(block, "Wording"),
         }
     if kind == "topic-resource":

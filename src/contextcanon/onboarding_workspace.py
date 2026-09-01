@@ -99,7 +99,7 @@ def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
 {WORKSPACE_MARKER}
 
-This directory is the **visible human working area** for one structure-first ContextCanon onboarding.
+This directory is the **visible human working area** for one structure-first ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.
 
 Start with [`{PLAN_NAME}`]({PLAN_NAME}). It is deliberately written as an operator runbook: the numbered flow, exact copy/paste commands for this Evidence snapshot, current validated checkpoint, and reset commands all live there. You should not need chat history or ContextCanon source-code archaeology to remember how to continue.
 
@@ -499,10 +499,10 @@ def update_workspace_checkpoint(
         raise ContextCanonError(f"Refusing to update unowned onboarding plan: {workspace.plan_path}")
 
     remembered_catalog = _remembered_values(
-        text, "- Exact `--catalog-package` inputs retained for copy/paste commands:"
+        text, "- Reuse these exact `--catalog-package` inputs for copy/paste commands:"
     )
     remembered_owner = _remembered_values(
-        text, "- Owner-selected Source choices already recorded in the human review:"
+        text, "- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):"
     )
     catalog_inputs = source_catalog_inputs or remembered_catalog
     owner_specs = owner_source_specs or remembered_owner
@@ -526,10 +526,10 @@ def update_workspace_checkpoint(
         lines.append("- Exact reusable Source catalog:")
         lines.extend(f"  - `{item}`" for item in source_catalog)
     if catalog_inputs:
-        lines.append("- Exact `--catalog-package` inputs retained for copy/paste commands:")
+        lines.append("- Reuse these exact `--catalog-package` inputs for copy/paste commands:")
         lines.extend(f"  - `{item}`" for item in catalog_inputs)
     if owner_specs:
-        lines.append("- Owner-selected Source choices already recorded in the human review:")
+        lines.append("- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):")
         lines.extend(f"  - `{item}`" for item in owner_specs)
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")

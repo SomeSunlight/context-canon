@@ -277,7 +277,7 @@ def _render_overviews(items: list[PlacementReviewItem]) -> str:
     lines: list[str] = []
     for item in items:
         text = _safe_line(item.payload["text"], f"item {item.proposal_id} overview")
-        lines.extend([f'<!-- cc:placement-overview id="{item.authoring_id}" -->', text, ""])
+        lines.extend([f'<!-- cc:placement-overview id="{item.authoring_id}" -->', f"- {text}", ""])
     return "\n".join(lines).rstrip()
 
 

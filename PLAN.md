@@ -102,3 +102,16 @@ Purpose: incorporate findings from the project owner's live `ai-workstation` onb
 - [x] Add focused regression coverage for the changed structure/workspace/promotion semantics, then checkpoint STATE/PR review wording. Full merge-gate regeneration/CI remains deferred until the owner has reviewed the corrected experience.
 
 Owner-review correction checkpoint: the live test clarified three design points. First, the repository path tree is only Evidence; accepted semantic Nodes may introduce missing repository-relative directories, and a focused materialization test proves ContextCanon creates such a path safely. Second, the visible workspace now presents the whole onboarding as an eight-step runbook and records exact `--catalog-package` inputs in placement checkpoints; `--owner-source` is explicitly a one-time review-creation choice. Third, `promote` now means one canonical maintenance surface, with any initial duplicate treated as migration debt. A separate technical cleanup contract defines orientation/reference/removal as the steady-state cleanup outcomes while deliberately deferring destructive implementation. The focused additions brought the deterministic suite to 134 tests. PR workflow #462 / run `33443846928` passed both Unit/repository consistency and generated-output verification with no drift artifact; the remaining repository-authored PLAN checkpoint only records that completed proof and requires one final exact-head PR workflow before owner review continues.
+
+
+#### Block F — owner-testing UX hardening
+
+Purpose: remove operator reconstruction work exposed by the second live `ai-workstation` onboarding. ContextCanon should make a difficult semantic migration easier to execute, not require the operator to memorize similar CLI spellings, long digests, artifact names, or hidden validation steps.
+
+- [x] Make placement validation an explicit numbered step between LLM placement proposal and human placement review.
+- [x] Turn the workspace PLAN into a snapshot-bound copy/paste console with exact commands, persisted Source-catalog arguments, and reset commands for each restart point.
+- [x] Prefix workflow artifacts with their step number so alphabetic file order matches the human onboarding flow; migrate unambiguous legacy workspace filenames safely.
+- [x] Add safe `onboard reset --from N`: journal ContextCanon-managed project mutations, verify current bytes before rollback, preserve frozen Evidence, and conservatively remove untouched pre-journal onboarding skeleton Nodes.
+- [x] Make semantic condensation part of the placement reasoning pass itself: present Overview/State/Plan wording as `Summary`, move volatile compatibility detail out of stable Overview, prefer atomic findings/bullets over snake sentences, and do not preserve architecture documents as Resources when their durable meaning belongs canonically in Nodes.
+- [x] Require edited placement review to be revalidated through `placement-review` before advancing to publication preview.
+- [x] Add focused regression coverage for runbook numbering/copy-paste commands, reset safety, legacy skeleton cleanup, and the sharper placement instruction.

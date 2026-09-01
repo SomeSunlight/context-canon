@@ -54,7 +54,8 @@ class WorkspaceCheckpointTests(unittest.TestCase):
         self.assertIn("C:/catalog/workflow", first)
         self.assertIn("placement-preview", first)
         self.assertIn("- [x] 5. Placement proposal", first)
-        self.assertIn("- [ ] 6. Placement review", first)
+        self.assertIn("- [x] 6. Placement validate", first)
+        self.assertIn("- [ ] 7. Placement review", first)
 
         update_workspace_checkpoint(
             workspace,
@@ -73,7 +74,7 @@ class WorkspaceCheckpointTests(unittest.TestCase):
         self.assertIn("placement published", second)
         self.assertIn("6" * 64, second)
         self.assertIn("placement-followup.md", second)
-        self.assertIn("- [x] 8. Publish placement", second)
+        self.assertIn("- [x] 9. Publish placement", second)
 
     def test_existing_owned_workspace_gains_plan_without_recreating_human_review_files(self):
         repo = Path(tempfile.mkdtemp())
