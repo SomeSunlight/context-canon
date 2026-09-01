@@ -345,13 +345,11 @@ def reset_onboarding(
         raise _error("--from must be a numbered onboarding step from 2 through 9; frozen Evidence is intentionally preserved")
     snapshot = snapshot_root.resolve()
     project = (project_root or find_repo_root(snapshot)).resolve()
-    workspace = _workspace_root(snapshot, workspace_root)
-    if workspace.exists():
-        workspace = open_onboarding_workspace(
-            snapshot,
-            workspace_root,
-            create=False,
-        ).root
+    workspace = open_onboarding_workspace(
+        snapshot,
+        workspace_root,
+        create=True,
+    ).root
 
     selected_steps, project_files = _restore_journal(snapshot, project, from_step)
     legacy_files: list[str] = []
