@@ -70,6 +70,8 @@ The visible workspace now makes `PLAN.md` the executable operator console. It ha
 
 `contextcanon onboard reset <snapshot> --from N` is now a safe testing primitive. Structure materialization and placement publication journal the ContextCanon-managed before/after bytes. Reset verifies the recorded after-state before rollback, preserves frozen Evidence, and refuses to overwrite later human edits. Older pre-journal runs get only a conservative cleanup of unmistakable untouched onboarding skeletons. Opening/resetting an older owned workspace refreshes its framework-owned PLAN to the current runbook rather than leaving stale step numbers behind.
 
+If the visible workspace has been deleted entirely, reset now recreates the ContextCanon-owned workspace as well. The recreated `PLAN.md` is immediately bound to the preserved Evidence snapshot, marks the requested restart checkpoint, and contains the concrete restart/reset commands instead of an empty command placeholder. A foreign existing directory is still never taken over.
+
 The placement reasoning pass also performs the semantic condensation now, while the owner is already thinking about the meaning: stable Overviews are concise summaries rather than copies of volatile version/platform prose; version/compatibility belongs in state; long snake sentences should be split into atomic findings/bullets; and architecture documents are not retained as Resources merely because of their filename when their durable semantics belong canonically in Nodes. Overview/State/Plan wording is presented to the human as `Summary` in the placement review.
 
 ## Real `ai-workstation` vertical validation
@@ -102,11 +104,15 @@ The real frozen Evidence did not produce an accepted authority-mapping finding, 
 
 ## Current verification state
 
-The owner-testing hardening candidate has **141 deterministic tests** after adding focused coverage for numbered CLI help and stale-PLAN refresh during reset. The preceding temporary hardening workflow already proved the 139-test implementation slice plus zero generated drift and removed its own temporary files before product commit `ee4c63772d0fe648347359f5e725b61c44452d54`.
+The owner-testing hardening candidate now has **142 deterministic tests** after adding focused coverage for numbered CLI help and stale-PLAN refresh during reset. The preceding temporary hardening workflow already proved the 139-test implementation slice plus zero generated drift and removed its own temporary files before product commit `ee4c63772d0fe648347359f5e725b61c44452d54`.
 
-This final documentation/help polish is validated by a temporary self-deleting workflow that runs Python compilation, all 141 tests, `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check` before it is allowed to create the clean product commit. The temporary workflow and helper script are removed from that commit.
+This final documentation/help polish is validated by a temporary self-deleting workflow that runs Python compilation, all 142 tests, `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check` before it is allowed to create the clean product commit. The temporary workflow and helper script are removed from that commit.
 
 Because bot-authored commits can produce GitHub's `action_required` result for the normal pull-request workflow, the clean product tree must then receive a repository-authored no-content checkpoint commit and a normal exact-head PR workflow. That final CI result, not the temporary harness alone, is the review proof.
+
+## Latest reset recovery verification
+
+The missing-workspace reset correction is covered by a direct regression test and passed ordinary PR workflow #482 / run `33498482979`. The final repository-authored checkpoint must retain the same product behavior, zero generated drift, and no temporary finalizer files before the owner reinstalls for the next `ai-workstation` run.
 
 ## Boundaries that intentionally remain
 

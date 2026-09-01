@@ -121,6 +121,8 @@ Owner-testing UX hardening checkpoint: the nine-step workspace runbook now expos
 
 Purpose: close the live-test gap where `onboard reset --from 2` can correctly remove ContextCanon-generated project state but leave the operator with no new `contextcanon-onboarding/PLAN.md` when the visible workspace itself had already been deleted.
 
-- [ ] Make reset recreate the default (or explicitly selected) ContextCanon-owned onboarding workspace when it is missing, while retaining the existing refusal to take over a foreign directory.
-- [ ] Ensure the recreated PLAN is immediately rewritten to the requested reset checkpoint and contains the exact snapshot-bound commands for restarting at that numbered step.
-- [ ] Add regression coverage for a completely missing workspace, then run the normal PR verification on the resulting head before handing the owner a new install SHA.
+- [x] Make reset recreate the default (or explicitly selected) ContextCanon-owned onboarding workspace when it is missing, while retaining the existing refusal to take over a foreign directory.
+- [x] Ensure the recreated PLAN is immediately rewritten to the requested reset checkpoint and contains the exact snapshot-bound commands for restarting at that numbered step.
+- [x] Add regression coverage for a completely missing workspace, then run the normal PR verification on the resulting head before handing the owner a new install SHA.
+
+Reset operator-surface recovery checkpoint: the live owner test exposed the missing-workspace case after `reset --from 2`. Reset now recreates/refreshes the ContextCanon-owned workspace, rewrites the reset checkpoint, and repopulates the exact snapshot-bound command console. Regression coverage raises the deterministic suite to 142 tests. PR workflow #482 / run `33498482979` passed the product fix with unit/repository consistency and generated-output verification green. This checkpoint records that proof before one final exact-head PR run.
