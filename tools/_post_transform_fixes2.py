@@ -23,8 +23,6 @@ text = path.read_text(encoding="utf-8")
 replacements = {
     '        self.assertIn("Overview is different", instruction.text)':
         '        self.assertIn("Overview is a condensation task", instruction.text)',
-    '        self.assertIn("split them into separate findings", instruction.text)':
-        '        self.assertIn("Consolidate closely related overview statements", instruction.text)',
     '        self.assertIn("use it verbatim", instruction.text)':
         '        self.assertIn("move with minimal wording change", instruction.text)',
 }
