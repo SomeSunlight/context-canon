@@ -103,7 +103,6 @@ Purpose: incorporate findings from the project owner's live `ai-workstation` onb
 
 Owner-review correction checkpoint: the live test clarified three design points. First, the repository path tree is only Evidence; accepted semantic Nodes may introduce missing repository-relative directories, and a focused materialization test proves ContextCanon creates such a path safely. Second, the visible workspace now presents the whole onboarding as an eight-step runbook and records exact `--catalog-package` inputs in placement checkpoints; `--owner-source` is explicitly a one-time review-creation choice. Third, `promote` now means one canonical maintenance surface, with any initial duplicate treated as migration debt. A separate technical cleanup contract defines orientation/reference/removal as the steady-state cleanup outcomes while deliberately deferring destructive implementation. The focused additions brought the deterministic suite to 134 tests. PR workflow #462 / run `33443846928` passed both Unit/repository consistency and generated-output verification with no drift artifact; the remaining repository-authored PLAN checkpoint only records that completed proof and requires one final exact-head PR workflow before owner review continues.
 
-
 #### Block F — owner-testing UX hardening
 
 Purpose: remove operator reconstruction work exposed by the second live `ai-workstation` onboarding. ContextCanon should make a difficult semantic migration easier to execute, not require the operator to memorize similar CLI spellings, long digests, artifact names, or hidden validation steps.
@@ -117,3 +116,11 @@ Purpose: remove operator reconstruction work exposed by the second live `ai-work
 - [x] Add focused regression coverage for runbook numbering/copy-paste commands, reset safety, legacy skeleton cleanup, and the sharper placement instruction.
 
 Owner-testing UX hardening checkpoint: the nine-step workspace runbook now exposes Placement Validate as Step 6, exact snapshot-bound commands live in the generated PLAN, artifacts sort in workflow order, reset can safely roll back ContextCanon-managed test mutations, and placement performs the semantic condensation while the owner is already reviewing meaning. Final polish also aligns CLI `--help` and the durable onboarding walkthrough with the numbered artifacts and refreshes stale framework-owned PLAN files on upgrade/reset. Focused coverage brings the complete deterministic suite to 141 tests. A self-deleting finalization workflow must pass the full suite plus build/check with zero generated drift before creating the clean product commit; a repository-authored identical-tree checkpoint then exists only to obtain the normal exact-head PR workflow for continued owner testing.
+
+#### Block G — reset must always restore the operator surface
+
+Purpose: close the live-test gap where `onboard reset --from 2` can correctly remove ContextCanon-generated project state but leave the operator with no new `contextcanon-onboarding/PLAN.md` when the visible workspace itself had already been deleted.
+
+- [ ] Make reset recreate the default (or explicitly selected) ContextCanon-owned onboarding workspace when it is missing, while retaining the existing refusal to take over a foreign directory.
+- [ ] Ensure the recreated PLAN is immediately rewritten to the requested reset checkpoint and contains the exact snapshot-bound commands for restarting at that numbered step.
+- [ ] Add regression coverage for a completely missing workspace, then run the normal PR verification on the resulting head before handing the owner a new install SHA.
