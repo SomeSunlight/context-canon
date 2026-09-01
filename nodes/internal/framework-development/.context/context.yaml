@@ -28,6 +28,8 @@ sources:
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules:
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "group": "Compiler architecture"}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "group": "Compiler architecture"}

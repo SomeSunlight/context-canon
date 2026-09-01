@@ -16,6 +16,8 @@ sources: []
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules:
     - {"id": "CC-001", "title": "One official package", "group": "Canonical context"}
     - {"id": "CC-002", "title": "Edit source, not generated output", "group": "Canonical context"}

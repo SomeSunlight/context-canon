@@ -16,6 +16,8 @@ sources: []
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules:
     - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "group": "Recoverable planning"}
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "group": "Recoverable planning"}

@@ -16,6 +16,8 @@ sources: []
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules: []
   changes: []
   topics:
@@ -49,4 +51,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f"
-  package_digest: "ffed663288d179d9aa28efba59f121e8ee34173f43c357b59abfe971296abb35"
+  package_digest: "25cb332d78043568983aa7480a176aacb3a0a81eb975574302143477294c0d9b"

@@ -30,6 +30,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
+from .onboarding_proposal import load_evidence_snapshot
 from .outputs import expected_outputs
 from .parser import ContextCanonError, find_repo_root
 
@@ -102,7 +103,7 @@ def _write_journal(snapshot_root: Path, records: list[dict[str, object]]) -> Non
     write_utf8(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
-def _managed_state(project_root: Path) -> dict[str, bytes | None]:
+def _managed_state(project_root: Path, extra_paths: Iterable[str] = ()) -> dict[str, bytes | None]:
     project = project_root.resolve()
     result: dict[str, bytes | None] = {}
     compiler = Compiler(project)
@@ -119,6 +120,9 @@ def _managed_state(project_root: Path) -> dict[str, bytes | None]:
             for path in source_store.rglob("*"):
                 if path.is_file():
                     result[path.relative_to(project).as_posix()] = path.read_bytes()
+    for rel in extra_paths:
+        path = project / rel
+        result[rel] = path.read_bytes() if path.is_file() else None
     return result
 
 
@@ -166,11 +170,16 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
             return delegate(argv)
         project_arg = Path(argv[index + 1])
     project = (project_arg or find_repo_root(snapshot)).resolve()
-    before = _managed_state(project)
+    extra_paths: tuple[str, ...] = ()
+    if argv[1] == "placement-publish":
+        extra_paths = tuple(
+            entry.path for entry in load_evidence_snapshot(snapshot).entries if entry.path.lower().endswith(".md")
+        )
+    before = _managed_state(project, extra_paths)
     result = delegate(argv)
     if result != 0:
         return result
-    after = _managed_state(project)
+    after = _managed_state(project, extra_paths)
     step = 4 if argv[1] == "structure-materialize" else 9
     record_transition(snapshot, project, step=step, command=list(argv), before=before, after=after)
     return result

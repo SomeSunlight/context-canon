@@ -71,6 +71,8 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
 
     sections = _section_ranges(lines)
     overview = _parse_overview(lines, sections.get("Overview"))
+    state = _parse_overview(lines, sections.get("State"))
+    plan = _parse_overview(lines, sections.get("Plan"))
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
     rules = _parse_rules(lines, sections.get("Rules"), source_path, metadata)
     topics = _parse_topics(lines, sections.get("Topics"), source_path, metadata)
@@ -90,7 +92,9 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
         tuple(rules),
         tuple(topics),
         tuple(changes),
-        overview,
+        overview=overview,
+        state=state,
+        plan=plan,
     )
 
 

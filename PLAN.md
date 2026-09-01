@@ -149,3 +149,31 @@ Purpose: close the next live `ai-workstation` Step-4 restart gap: a child Node s
 - [x] Add regressions for a recoverable generated child Node and a child `.context` namespace containing foreign state, then run the complete suite/build/check and normal exact-head PR CI before returning a new test SHA.
 
 Child-node recovery checkpoint: the live `bootstrap` failure proved that restart recovery must be Node-local rather than root-special. Any accepted Node path can now recover a missing `CONTEXT.src.md` only when its own generated package/machine state proves one unambiguous stable Node identity; root acceptance records remain root-only evidence. Foreign child `.context` entries and unverified `CONTEXT/` bytes still abort before mutation. The focused additions raise the deterministic suite from 144 to 146 tests.
+
+#### Block J — placement transformation cockpit and canonical-source cleanup
+
+Purpose: make the human placement gate show the complete reviewed transformation rather than only the destination meaning, so onboarding can actually reduce duplicate canonical knowledge instead of merely creating a second copy.
+
+- [x] Make every promoted finding show the exact editable destination meaning under an honest `Into Node` label when it is actually published into Node authoring; label State/Plan honestly as node-local follow-up until their publication surface is designed.
+- [x] Extend the semantic placement contract with reviewed mutable-Markdown source edits: exact frozen range, linked promoted findings, and a proposed concise replacement/orientation that remains close to source wording when meaning is uncertain.
+- [x] Render `Source before — frozen Evidence` and editable `Source after promotion` in `STEP-07-placement.md`, with one shared edit owning overlapping/multi-finding source ranges so the same replacement is never edited twice.
+- [x] Validate source-edit ranges deterministically: mutable Markdown only, exact frozen hash/range, promoted linked findings only, complete Evidence coverage, and no overlapping edits in one source file.
+- [x] Include accepted source-document deltas in publication preview and apply them transactionally with Context Node changes; accept either original frozen bytes or the exact already-published reviewed result for idempotent reruns.
+- [x] Persist Source-catalog and owner-selected Source run inputs in machine-owned snapshot state so reset/workspace recreation cannot forget them.
+- [x] Tighten placement guidance toward plain source-shaped wording, consolidated Node overviews, and aggressively readable source summaries only when meaning is unambiguous; avoid academic/corporate abstraction and preserve wording when uncertain.
+- [x] Add focused regressions for cockpit rendering/edit round-trip, shared source edits, overlap/authority safety, transactional document publication/idempotency, and run-input recovery; then run the complete suite plus build/check.
+
+#### Block K — publish State and Plan as local Node authoring
+
+Purpose: finish onboarding as a real operational starting point by making reviewed current state and future plan first-class local Context content instead of migration follow-up.
+
+- [x] Parse local `## State` and `## Plan` sections from `CONTEXT.src.md` as first-class authored Node content.
+- [x] Render State and Plan into generated `CONTEXT.md` and expose them in deterministic local machine state without inheriting them through reusable Sources.
+- [x] Publish accepted placement `state` and `plan` findings into placement-managed State/Plan blocks in the destination Node.
+- [x] Show State/Plan honestly as `Into Node — editable` in `STEP-07-placement.md`; remove them from publication follow-up once accepted.
+- [x] Keep normalized reusable semantics stable when only Overview/State/Plan presentation changes, while exact package identity changes with generated `CONTEXT.md` bytes.
+- [x] Cover parser/compiler behavior, onboarding preview/publication, idempotency, and existing reset safety with regressions; then rerun the complete suite plus build/check.
+
+Placement transformation cockpit checkpoint: owner testing showed that showing only a synthesized "maintained meaning" hid the actual migration. `STEP-07-placement.md` now makes the A → Node + A′ transformation explicit: destination wording is editable, frozen source-before Evidence is visible, and shared exact mutable-Markdown Source After edits are editable once and linked to every promoted finding they cover. Accepted source edits are range/hash bound, non-overlapping, previewed as document diffs, and published/rolled back in the same transaction as Context Node changes. Exact already-published A′ bytes are accepted for idempotent reruns; unrelated Evidence drift still stops publication. Run inputs now persist in snapshot-owned `run-inputs.json`, so reset/workspace recreation retains exact catalog and owner-Source choices. The semantic instruction also favors source-shaped plain language, consolidated overviews, and readable orientation over inflated abstraction while remaining conservative under uncertainty.
+
+State/Plan publication checkpoint: reviewed `state` and `plan` findings are now first-class local Node authoring. Placement writes them into managed `## State` / `## Plan` blocks in `CONTEXT.src.md`; generated `CONTEXT.md` carries the same operational content, and machine state exposes it locally. They are no longer placement follow-up. Reusable Sources do not inherit State/Plan, and normalized reusable semantics remain stable when only Overview/State/Plan presentation changes; exact package identity still follows the generated package bytes.

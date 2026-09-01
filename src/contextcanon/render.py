@@ -30,6 +30,12 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
     if compiled.parsed.overview:
         lines.extend(["## Overview", "", *compiled.parsed.overview.splitlines(), ""])
 
+    if compiled.parsed.state:
+        lines.extend(["## State", "", *compiled.parsed.state.splitlines(), ""])
+
+    if compiled.parsed.plan:
+        lines.extend(["## Plan", "", *compiled.parsed.plan.splitlines(), ""])
+
     if compiled.inherited_rules or compiled.local_rules or compiled.local_topics:
         lines.extend(["## How to use this context", ""])
         if compiled.inherited_rules or compiled.local_rules:
@@ -166,6 +172,8 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
         lines.append("sources: []")
 
     lines.extend(["", "# Elements authored in this Node's CONTEXT.src.md.", "local:"])
+    lines.append("  state: " + (q(compiled.parsed.state) if compiled.parsed.state else "null"))
+    lines.append("  plan: " + (q(compiled.parsed.plan) if compiled.parsed.plan else "null"))
     if compiled.local_rules:
         lines.append("  rules:")
         for rule in compiled.local_rules:

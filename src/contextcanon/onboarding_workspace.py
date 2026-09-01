@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import shlex
@@ -20,6 +21,8 @@ CHECKLIST_START = "<!-- contextcanon-onboarding-checklist:start -->"
 CHECKLIST_END = "<!-- contextcanon-onboarding-checklist:end -->"
 COMMANDS_START = "<!-- contextcanon-onboarding-commands:start -->"
 COMMANDS_END = "<!-- contextcanon-onboarding-commands:end -->"
+RUN_INPUTS_SCHEMA = "contextcanon/onboarding-run-inputs/v0"
+RUN_INPUTS_NAME = "run-inputs.json"
 
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
@@ -494,6 +497,48 @@ def _remembered_values(text: str, heading: str) -> tuple[str, ...]:
     return tuple(result)
 
 
+def _run_inputs_path(snapshot_root: Path) -> Path:
+    return snapshot_root.resolve() / RUN_INPUTS_NAME
+
+
+def _load_run_inputs(snapshot_root: Path) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    path = _run_inputs_path(snapshot_root)
+    if not path.is_file():
+        return (), ()
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ContextCanonError(f"Invalid onboarding run input state: {path}") from exc
+    if not isinstance(value, dict) or set(value) != {"schema", "catalog_package_inputs", "owner_source_specs"}:
+        raise ContextCanonError(f"Invalid onboarding run input state shape: {path}")
+    if value.get("schema") != RUN_INPUTS_SCHEMA:
+        raise ContextCanonError(f"Unsupported onboarding run input state schema: {value.get('schema')!r}")
+    catalog = value.get("catalog_package_inputs")
+    owners = value.get("owner_source_specs")
+    if not isinstance(catalog, list) or not all(isinstance(item, str) and item for item in catalog):
+        raise ContextCanonError(f"Invalid catalog inputs in onboarding run state: {path}")
+    if not isinstance(owners, list) or not all(isinstance(item, str) and item for item in owners):
+        raise ContextCanonError(f"Invalid owner Source inputs in onboarding run state: {path}")
+    return tuple(catalog), tuple(owners)
+
+
+def remember_run_inputs(
+    snapshot_root: Path, *, catalog_inputs: tuple[str, ...] = (), owner_source_specs: tuple[str, ...] = ()
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    remembered_catalog, remembered_owner = _load_run_inputs(snapshot_root)
+    catalog = catalog_inputs or remembered_catalog
+    owners = owner_source_specs or remembered_owner
+    if not catalog and not owners and not _run_inputs_path(snapshot_root).exists():
+        return (), ()
+    payload = {
+        "schema": RUN_INPUTS_SCHEMA,
+        "catalog_package_inputs": list(catalog),
+        "owner_source_specs": list(owners),
+    }
+    write_utf8(_run_inputs_path(snapshot_root), json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    return catalog, owners
+
+
 def update_workspace_checkpoint(
     workspace: OnboardingWorkspace,
     snapshot_root: Path,
@@ -525,8 +570,13 @@ def update_workspace_checkpoint(
     remembered_owner = _remembered_values(
         text, "- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):"
     )
-    catalog_inputs = source_catalog_inputs or remembered_catalog
-    owner_specs = owner_source_specs or remembered_owner
+    machine_catalog, machine_owner = _load_run_inputs(snapshot_root)
+    catalog_inputs = source_catalog_inputs or machine_catalog or remembered_catalog
+    owner_specs = owner_source_specs or machine_owner or remembered_owner
+    if source_catalog_inputs or owner_source_specs or machine_catalog or machine_owner:
+        catalog_inputs, owner_specs = remember_run_inputs(
+            snapshot_root, catalog_inputs=catalog_inputs, owner_source_specs=owner_specs
+        )
 
     text = _rewrite_checklist(text, _completed_steps(stage, placement_review_complete), workspace.plan_path)
     text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs)
@@ -636,6 +686,10 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_r
     write_utf8(workspace.readme_path, _workspace_readme())
     if not workspace.plan_path.exists():
         write_utf8(workspace.plan_path, _workspace_plan())
+        plan = workspace.plan_path.read_text(encoding="utf-8")
+        catalog_inputs, owner_specs = _load_run_inputs(snapshot_root)
+        plan = _replace_commands(plan, workspace, snapshot_root, catalog_inputs, owner_specs)
+        write_utf8(workspace.plan_path, plan)
         return
     try:
         plan = workspace.plan_path.read_text(encoding="utf-8")
@@ -647,20 +701,25 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_r
     checkpoint = _checkpoint_block(plan, workspace.plan_path)
     stage = _checkpoint_stage(checkpoint)
     review_complete = _checkpoint_review_complete(checkpoint)
-    catalog_inputs = _remember_first(
+    machine_catalog, machine_owner = _load_run_inputs(snapshot_root)
+    catalog_inputs = machine_catalog or _remember_first(
         plan,
         (
             "- Reuse these exact `--catalog-package` inputs for copy/paste commands:",
             "- Reuse these exact `--catalog-package` inputs on the next placement command:",
         ),
     )
-    owner_specs = _remember_first(
+    owner_specs = machine_owner or _remember_first(
         plan,
         (
             "- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):",
             "- Owner-selected Source choices already recorded in `placement.md` (do not repeat on preview/publish):",
         ),
     )
+    if (catalog_inputs or owner_specs) and not (machine_catalog or machine_owner):
+        catalog_inputs, owner_specs = remember_run_inputs(
+            snapshot_root, catalog_inputs=catalog_inputs, owner_source_specs=owner_specs
+        )
 
     refreshed = _workspace_plan()
     if checkpoint is not None:

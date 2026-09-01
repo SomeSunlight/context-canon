@@ -14,7 +14,7 @@ from typing import Iterable
 
 from .compiler import Compiler
 from .onboarding_placement import OnboardingPlacementProposal
-from .onboarding_placement_review import OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource
+from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, load_package
@@ -23,7 +23,7 @@ from .parser import ContextCanonError, find_repo_root, parse_node
 
 PLACEMENT_ACCEPTANCE_SCHEMA = "contextcanon/onboarding-placement-acceptance/v1"
 
-_MANAGED_SECTIONS = ("overview", "sources", "rules", "topics")
+_MANAGED_SECTIONS = ("overview", "state", "plan", "sources", "rules", "topics")
 _MARKER_START = {name: f"<!-- contextcanon-placement-{name}:start -->" for name in _MANAGED_SECTIONS}
 _MARKER_END = {name: f"<!-- contextcanon-placement-{name}:end -->" for name in _MANAGED_SECTIONS}
 
@@ -71,6 +71,19 @@ class PlacementNodeDelta:
 
 
 @dataclass(frozen=True)
+class PlacementDocumentDelta:
+    path: str
+    source_path: Path
+    before: str
+    after: str
+    source_edit_ids: tuple[str, ...]
+
+    @property
+    def changed(self) -> bool:
+        return self.before != self.after
+
+
+@dataclass(frozen=True)
 class PlacementPublicationPreview:
     project_root: Path
     evidence_digest: str
@@ -82,7 +95,7 @@ class PlacementPublicationPreview:
     nodes: tuple[PlacementNodeDelta, ...]
     sources: tuple[SourceGitProvenance, ...]
     followups: tuple[PlacementReviewItem, ...]
-    mutable_cleanup_candidates: tuple[dict[str, object], ...]
+    documents: tuple[PlacementDocumentDelta, ...]
 
 
 @dataclass(frozen=True)
@@ -123,8 +136,48 @@ def _atomic_write(path: Path, content: bytes) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def _verify_live_evidence(snapshot: EvidenceSnapshot, project_root: Path) -> None:
+def _apply_line_edits(original: str, edits: list[PlacementReviewSourceEdit]) -> str:
+    lines = original.splitlines(keepends=True)
+    for edit in sorted(edits, key=lambda item: item.start_line, reverse=True):
+        segment = lines[edit.start_line - 1 : edit.end_line]
+        needs_newline = bool(segment and segment[-1].endswith(("\n", "\r"))) or edit.end_line < len(lines)
+        replacement = edit.replacement
+        if replacement and needs_newline and not replacement.endswith("\n"):
+            replacement += "\n"
+        lines[edit.start_line - 1 : edit.end_line] = [replacement] if replacement else []
+    return "".join(lines)
+
+
+def _accepted_source_edits(review: OnboardingPlacementReview) -> dict[str, list[PlacementReviewSourceEdit]]:
+    result: dict[str, list[PlacementReviewSourceEdit]] = {}
+    for edit in review.source_edits:
+        if edit.decision == "accept":
+            result.setdefault(edit.path, []).append(edit)
+    return result
+
+
+def _expected_document_deltas(
+    snapshot: EvidenceSnapshot, project_root: Path, review: OnboardingPlacementReview
+) -> tuple[PlacementDocumentDelta, ...]:
+    accepted = _accepted_source_edits(review)
+    result: list[PlacementDocumentDelta] = []
+    for path, edits in sorted(accepted.items()):
+        entry = snapshot.by_path[path]
+        frozen = (snapshot.root / "evidence" / Path(*PurePosixPath(path).parts)).read_text(encoding="utf-8")
+        expected = _apply_line_edits(frozen, edits)
+        live_path = project_root / Path(*PurePosixPath(path).parts)
+        if not live_path.is_file():
+            raise _error(f"frozen Evidence path is missing from the live project: {path}")
+        live = live_path.read_text(encoding="utf-8")
+        if live not in {frozen, expected}:
+            raise _error(
+                f"frozen Evidence changed outside the reviewed source transformation: {path}; prepare/review again rather than publishing stale placement"
+            )
+        result.append(PlacementDocumentDelta(path, live_path, live, expected, tuple(edit.proposal_id for edit in edits)))
+    edited_paths = set(accepted)
     for entry in snapshot.entries:
+        if entry.path in edited_paths:
+            continue
         live = project_root / Path(*PurePosixPath(entry.path).parts)
         if not live.is_file():
             raise _error(f"frozen Evidence path is missing from the live project: {entry.path}")
@@ -132,7 +185,7 @@ def _verify_live_evidence(snapshot: EvidenceSnapshot, project_root: Path) -> Non
             raise _error(
                 f"frozen Evidence changed after semantic review: {entry.path}; prepare a new snapshot rather than publishing stale placement"
             )
-
+    return tuple(result)
 
 def _catalog_roots(catalog_package_roots: Iterable[Path]) -> dict[str, Path]:
     result: dict[str, Path] = {}
@@ -281,6 +334,14 @@ def _render_overviews(items: list[PlacementReviewItem]) -> str:
     return "\n".join(lines).rstrip()
 
 
+def _render_summaries(items: list[PlacementReviewItem], kind: str) -> str:
+    lines: list[str] = []
+    for item in items:
+        text = _safe_line(item.payload["text"], f"item {item.proposal_id} {kind}")
+        lines.extend([f'<!-- cc:placement-{kind} id="{item.authoring_id}" -->', f"- {text}", ""])
+    return "\n".join(lines).rstrip()
+
+
 def _render_rules(items: list[PlacementReviewItem]) -> str:
     if not items:
         return ""
@@ -357,6 +418,8 @@ def _render_node_source(
     provenance_by_id: dict[str, SourceGitProvenance],
 ) -> str:
     overviews = [item for item in items if item.kind == "overview"]
+    states = [item for item in items if item.kind == "state"]
+    plans = [item for item in items if item.kind == "plan"]
     rules = [item for item in items if item.kind == "rule"]
     topics = [item for item in items if item.kind == "topic-resource"]
     outside_rule_ids, outside_topic_ids, outside_source_ids = _managed_ids_outside_blocks(before)
@@ -374,9 +437,11 @@ def _render_node_source(
             )
 
     text = before
-    if overviews or rules or topics or sources:
+    if overviews or states or plans or rules or topics or sources:
         text = _remove_skeleton_placeholder(text)
     text = _replace_managed_section(text, "Overview", "overview", _render_overviews(overviews))
+    text = _replace_managed_section(text, "State", "state", _render_summaries(states, "state"))
+    text = _replace_managed_section(text, "Plan", "plan", _render_summaries(plans, "plan"))
     text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id))
     text = _replace_managed_section(text, "Rules", "rules", _render_rules(rules))
     text = _replace_managed_section(text, "Topics", "topics", _render_topics(topics, project_root, node_root))
@@ -388,7 +453,7 @@ def _accepted_by_node(review: OnboardingPlacementReview) -> dict[str, list[Place
     for item in review.items:
         if item.decision != "accept" or item.destination_node_key is None:
             continue
-        if item.kind not in {"overview", "rule", "topic-resource"}:
+        if item.kind not in {"overview", "rule", "topic-resource", "state", "plan"}:
             continue
         result.setdefault(item.destination_node_key, []).append(item)
     return result
@@ -406,33 +471,8 @@ def _followups(review: OnboardingPlacementReview) -> tuple[PlacementReviewItem, 
     return tuple(
         item
         for item in review.items
-        if item.decision == "accept" and item.kind in {"state", "plan", "ordinary-documentation", "authority-mapping", "unresolved"}
+        if item.decision == "accept" and item.kind in {"ordinary-documentation", "authority-mapping", "unresolved"}
     )
-
-
-def _mutable_cleanup_candidates(
-    review: OnboardingPlacementReview, proposal: OnboardingPlacementProposal
-) -> tuple[dict[str, object], ...]:
-    fixed = set(proposal.structure.fixed_markdown)
-    proposal_by_id = {item.id: item for item in proposal.items}
-    result: list[dict[str, object]] = []
-    for item in review.items:
-        if item.decision != "accept" or item.action != "promote":
-            continue
-        original = proposal_by_id[item.proposal_id]
-        paths = sorted({reference.path for reference in original.evidence if reference.path.endswith(".md") and reference.path not in fixed})
-        if not paths:
-            continue
-        result.append(
-            {
-                "proposal_id": item.proposal_id,
-                "authoring_id": item.authoring_id,
-                "title": item.title,
-                "paths": paths,
-                "note": "Potential duplicate cleanup only; no Markdown cleanup is performed by placement publication.",
-            }
-        )
-    return tuple(result)
 
 
 def build_placement_publication_preview(
@@ -447,7 +487,7 @@ def build_placement_publication_preview(
     project = (project_root or find_repo_root(snapshot_root)).resolve()
     if not (project / ".git").exists():
         raise _error(f"target project root is not a Git repository: {project}")
-    _verify_live_evidence(snapshot, project)
+    documents = _expected_document_deltas(snapshot, project, review)
     provenance = _source_provenance(review, proposal, catalog_package_roots)
     provenance_by_id = {item.source_node_id: item for item in provenance}
     items_by_node = _accepted_by_node(review)
@@ -489,7 +529,7 @@ def build_placement_publication_preview(
         nodes=tuple(deltas),
         sources=provenance,
         followups=_followups(review),
-        mutable_cleanup_candidates=_mutable_cleanup_candidates(review, proposal),
+        documents=documents,
     )
 
 
@@ -500,7 +540,7 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
         f"Review: `{preview.review_digest}`",
         f"Review complete: **{'yes' if preview.review_complete else 'no'}**",
         "",
-        "No project file was changed by this preview. Existing README, architecture, CONTRIBUTING and other mutable Markdown remain untouched; possible duplicate cleanup is a separate later review.",
+        "No project file was changed by this preview. Accepted mutable-Markdown Source After edits are shown below and will be published transactionally with the reviewed Context changes.",
         "",
     ]
     if preview.pending_ids:
@@ -511,7 +551,7 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
 
     lines.extend(["## Context Node source deltas", ""])
     if not preview.nodes:
-        lines.extend(["No accepted Overview, Rule, Topic/Resource or Source changes currently touch a Context Node.", ""])
+        lines.extend(["No accepted Overview, State, Plan, Rule, Topic/Resource or Source changes currently touch a Context Node.", ""])
     for node in preview.nodes:
         lines.extend(
             [
@@ -564,14 +604,21 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
             )
         lines.append("")
 
-    lines.extend(["## Mutable Markdown cleanup candidates — deferred", ""])
-    if not preview.mutable_cleanup_candidates:
-        lines.extend(["None.", ""])
-    else:
-        for candidate in preview.mutable_cleanup_candidates:
-            paths = ", ".join(f"`{path}`" for path in candidate["paths"])
-            lines.append(f"- `{candidate['proposal_id']}` — {paths}: {candidate['note']}")
-        lines.append("")
+    lines.extend(["## Reviewed source-document deltas", ""])
+    if not preview.documents:
+        lines.extend(["No Source After edits are accepted in the current review.", ""])
+    for document in preview.documents:
+        lines.extend([f"### `{document.path}`", "", f"Source edits: {', '.join(f'`{item}`' for item in document.source_edit_ids)}", ""])
+        diff = list(
+            difflib.unified_diff(
+                document.before.splitlines(), document.after.splitlines(),
+                fromfile=f"current/{document.path}", tofile=f"reviewed/{document.path}", lineterm="",
+            )
+        )
+        if diff:
+            lines.extend(["```diff", *diff, "```", ""])
+        else:
+            lines.extend(["No document delta; this reviewed Source After transformation is already materialized.", ""])
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -670,7 +717,15 @@ def _acceptance_payload(
         "nodes": node_digests,
         "sources": accepted_sources,
         "followups": [item.to_dict() for item in preview.followups],
-        "mutable_cleanup_candidates": list(preview.mutable_cleanup_candidates),
+        "source_edits": [edit.to_dict() for edit in review.source_edits if edit.decision == "accept"],
+        "documents": [
+            {
+                "path": document.path,
+                "source_edit_ids": list(document.source_edit_ids),
+                "after_sha256": _sha256_bytes(document.after.encode("utf-8")),
+            }
+            for document in preview.documents
+        ],
     }
 
 
@@ -691,13 +746,13 @@ def render_placement_followups(preview: PlacementPublicationPreview) -> str:
         lines.extend([f"## {title}", ""])
         for item in items:
             lines.extend([f"### {item.proposal_id} — {item.title}", "", "```json", json.dumps(item.payload, ensure_ascii=False, indent=2, sort_keys=True), "```", ""])
-    lines.extend(["## Mutable Markdown cleanup candidates — not applied", ""])
-    if not preview.mutable_cleanup_candidates:
+    lines.extend(["## Reviewed mutable-Markdown transformations", ""])
+    if not preview.documents:
         lines.append("None.")
     else:
-        for candidate in preview.mutable_cleanup_candidates:
-            paths = ", ".join(f"`{path}`" for path in candidate["paths"])
-            lines.append(f"- `{candidate['proposal_id']}` — {paths}")
+        for document in preview.documents:
+            state = "changed" if document.changed else "already materialized"
+            lines.append(f"- `{document.path}` — {state}; Source edits: {', '.join(document.source_edit_ids)}")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -721,16 +776,22 @@ def publish_placement_review(
         raise _error("review still contains pending decisions; publication requires a complete human review")
     project = preview.project_root
     snapshot = load_evidence_snapshot(snapshot_root)
-    _verify_live_evidence(snapshot, project)
+    expected_documents = _expected_document_deltas(snapshot, project, review)
+    if expected_documents != preview.documents:
+        raise _error("reviewed source documents changed after publication preview; build a fresh preview")
     for delta in preview.nodes:
         if not delta.source_path.is_file() or delta.source_path.read_text(encoding="utf-8") != delta.before:
             raise _error(
                 f"Context Node source changed after publication preview: {delta.source_path}; build a fresh preview"
             )
+    for document in preview.documents:
+        if not document.source_path.is_file() or document.source_path.read_text(encoding="utf-8") != document.before:
+            raise _error(f"Source document changed after publication preview: {document.path}; build a fresh preview")
     roots = _catalog_roots(catalog_package_roots)
     delta_by_key = {delta.key: delta for delta in preview.nodes}
     node_by_path = {delta.source_path.parent: delta for delta in preview.nodes}
     original_sources = {delta.source_path: delta.before.encode("utf-8") for delta in preview.nodes}
+    original_documents = {document.source_path: document.before.encode("utf-8") for document in preview.documents}
     new_package_dirs: list[Path] = []
     generated_snapshots: dict[Path, dict[str, bytes | None]] = {}
     generated_new_rels: dict[Path, set[str]] = {}
@@ -741,6 +802,9 @@ def publish_placement_review(
         for delta in preview.nodes:
             if delta.changed:
                 _atomic_write(delta.source_path, delta.after.encode("utf-8"))
+        for document in preview.documents:
+            if document.changed:
+                _atomic_write(document.source_path, document.after.encode("utf-8"))
 
         accepted_sources_by_node = _sources_by_node(review)
         provenance_by_id = {source.source_node_id: source for source in preview.sources}
@@ -806,6 +870,8 @@ def publish_placement_review(
         for root, snapshot in generated_snapshots.items():
             _restore_files(root, snapshot, generated_new_rels.get(root, set()))
         for path, content in original_sources.items():
+            _atomic_write(path, content)
+        for path, content in original_documents.items():
             _atomic_write(path, content)
         for directory in reversed(new_package_dirs):
             if directory.exists():

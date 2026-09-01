@@ -197,6 +197,38 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertIn("STEP-07-placement.md", refreshed)
         self.assertIn("contextcanon onboard reset", refreshed)
 
+    def test_machine_run_inputs_survive_missing_workspace_plan(self):
+        repo, prepared = self.make_repo()
+        workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
+        from contextcanon.onboarding_workspace import remember_run_inputs
+        remember_run_inputs(
+            prepared.snapshot_root,
+            catalog_inputs=("C:/catalog/development-workflow",),
+            owner_source_specs=("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40",),
+        )
+        workspace.plan_path.unlink()
+        reopened = open_onboarding_workspace(prepared.snapshot_root, create=False)
+        plan = reopened.plan_path.read_text(encoding="utf-8")
+        self.assertIn("C:/catalog/development-workflow", plan)
+        self.assertIn("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40", plan)
+
+    def test_step9_journal_restores_reviewed_source_document(self):
+        repo, prepared = self.make_repo()
+        source_before = (repo / "README.md").read_bytes()
+
+        def fake_publish(_argv):
+            (repo / "README.md").write_text("# Project\n\nShort orientation after promotion.\n", encoding="utf-8")
+            return 0
+
+        result = run_journaled(
+            ["onboard", "placement-publish", str(prepared.snapshot_root)],
+            fake_publish,
+        )
+        self.assertEqual(result, 0)
+        self.assertNotEqual((repo / "README.md").read_bytes(), source_before)
+        reset_onboarding(prepared.snapshot_root, from_step=9)
+        self.assertEqual((repo / "README.md").read_bytes(), source_before)
+
 
 if __name__ == "__main__":
     unittest.main()

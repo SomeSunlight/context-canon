@@ -132,6 +132,19 @@ class OnboardingPlacementTests(unittest.TestCase):
                     },
                 },
             ],
+            "source_edits": [
+                {
+                    "id": "E-001",
+                    "path": "docs/architecture.md",
+                    "sha256": architecture.sha256,
+                    "start_line": 2,
+                    "end_line": 2,
+                    "linked_item_ids": ["P-001"],
+                    "replacement": "Installation authority is maintained in [AI Workstation Context](../CONTEXT.md).",
+                    "rationale": "Keep architecture orientation without maintaining the promoted rule twice.",
+                    "confidence": "high",
+                }
+            ],
             "source_reuses": [
                 {
                     "id": "S-001",
@@ -159,13 +172,15 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertIn("place the books onto the already accepted shelves", instruction.text)
         self.assertIn("where each durable piece of project knowledge should be **maintained in the future**", instruction.text)
         self.assertIn("README as first-contact orientation/navigation", instruction.text)
-        self.assertIn("Overview is different", instruction.text)
-        self.assertIn("split them into separate findings", instruction.text)
+        self.assertIn("Overview is a condensation task", instruction.text)
+        self.assertIn("Consolidate closely related overview statements", instruction.text)
+        self.assertIn("source_edits", instruction.text)
+        self.assertIn("one shared source edit", instruction.text)
         self.assertIn("do **not** keep `architecture.md` as a Topic/Resource merely because", instruction.text)
         self.assertIn("Use action `reference` only for `topic-resource`", instruction.text)
         self.assertIn("Do not redesign it in this pass", instruction.text)
         self.assertIn("wording_origin", instruction.text)
-        self.assertIn("use it verbatim", instruction.text)
+        self.assertIn("move with minimal wording change", instruction.text)
         self.assertIn("Development Workflow", instruction.text)
         self.assertIn(instruction.structure_digest, instruction.text)
 
@@ -190,6 +205,7 @@ class OnboardingPlacementTests(unittest.TestCase):
         )
         self.assertEqual(first.proposal_digest, second.proposal_digest)
         self.assertEqual(first.items[0].payload["wording_origin"], "exact")
+        self.assertEqual(first.source_edits[0].linked_item_ids, ("P-001",))
         self.assertEqual(first.source_reuses[0].source_node_id, package.metadata.id)
 
     def test_placement_rejects_stale_structure_and_unsupplied_source(self):
@@ -289,6 +305,7 @@ class OnboardingPlacementTests(unittest.TestCase):
             ])
         self.assertEqual(result, 0)
         self.assertIn("Placement items: 2", stdout.getvalue())
+        self.assertIn("Source edits: 1", stdout.getvalue())
         self.assertIn("Source reuses: 1", stdout.getvalue())
 
         stdout = io.StringIO()
@@ -299,7 +316,11 @@ class OnboardingPlacementTests(unittest.TestCase):
             ])
         self.assertEqual(result, 0)
         self.assertTrue(workspace.placement_path.is_file())
-        self.assertIn("Wording: `exact`", workspace.placement_path.read_text(encoding="utf-8"))
+        review_text = workspace.placement_path.read_text(encoding="utf-8")
+        self.assertIn("Wording: `exact`", review_text)
+        self.assertIn("### Into Node — editable", review_text)
+        self.assertIn("### Source before — frozen Evidence", review_text)
+        self.assertIn("### Source after promotion", review_text)
 
 
 if __name__ == "__main__":

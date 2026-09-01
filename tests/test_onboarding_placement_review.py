@@ -49,7 +49,9 @@ class EditablePlacementReviewTests(unittest.TestCase):
         rationale = text.index("### Proposal rationale", item)
         self.assertLess(destination, decision)
         self.assertLess(decision, rationale)
-        self.assertIn("### Maintained meaning", text)
+        self.assertIn("### Into Node — editable", text)
+        self.assertIn("### Source before — frozen Evidence", text)
+        self.assertIn("### Source after promotion", text)
         self.assertIn('origin="owner-selected"', text)
         self.assertEqual(len(review.sources), 1)
         self.assertEqual(review.sources[0].origin, "owner-selected")
@@ -74,6 +76,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
             second.items[0].payload["statement"],
             "The repository is the canonical installation specification.",
         )
+        self.assertEqual(len(second.source_edits), 1)
 
     def test_existing_human_review_is_loaded_not_overwritten(self):
         prepared, workspace, source_root, package, proposal, first, _ = self.make_review(owner_source=False)
@@ -117,6 +120,37 @@ class EditablePlacementReviewTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ContextCanonError, "duplicate stable authoring ID"):
             load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+
+    def test_source_after_is_editable_and_round_trips(self):
+        prepared, workspace, source_root, package, proposal, _, _ = self.make_review(owner_source=False)
+        text = workspace.placement_path.read_text(encoding="utf-8")
+        old = "Installation authority is maintained in [AI Workstation Context](../CONTEXT.md)."
+        new = "Architecture starts here; maintained installation authority lives in [AI Workstation Context](../CONTEXT.md)."
+        text = text.replace(old, new, 1).replace("Source edit decision: `pending`", "Source edit decision: `accept`", 1)
+        text = text.replace("Decision: `pending`", "Decision: `accept`", 1)
+        workspace.placement_path.write_text(text, encoding="utf-8")
+        loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertEqual(loaded.source_edits[0].replacement, new)
+        self.assertEqual(loaded.source_edits[0].decision, "accept")
+
+    def test_source_edit_cannot_be_accepted_when_linked_finding_is_rejected(self):
+        prepared, workspace, source_root, package, proposal, _, _ = self.make_review(owner_source=False)
+        text = workspace.placement_path.read_text(encoding="utf-8")
+        text = text.replace("Decision: `pending`", "Decision: `reject`", 1)
+        text = text.replace("Source edit decision: `pending`", "Source edit decision: `accept`", 1)
+        workspace.placement_path.write_text(text, encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "cannot be accepted until all linked promoted findings are accepted"):
+            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+
+    def test_state_and_plan_are_rendered_as_into_node(self):
+        prepared, workspace, source_root, package, proposal, _, _ = self.make_review(owner_source=False)
+        rendered = workspace.placement_path.read_text(encoding="utf-8")
+        # The shared fixture may not contain State/Plan, so verify the renderer's
+        # classification contract directly through its source-visible heading rule.
+        from contextcanon.onboarding_placement_review import _render_payload
+        for kind in ("state", "plan"):
+            lines = _render_payload(kind, {"text": "Example", "wording_origin": "synthesized"})
+            self.assertEqual(lines[0], "### Into Node — editable")
 
 
 if __name__ == "__main__":

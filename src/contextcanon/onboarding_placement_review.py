@@ -15,6 +15,7 @@ from .onboarding_placement import (
     WORDING_ORIGINS,
     OnboardingPlacementProposal,
     PlacementItem,
+    PlacementSourceEdit,
 )
 from .onboarding_proposal import EvidenceReference, EvidenceSnapshot, load_evidence_snapshot
 from .parser import ContextCanonError
@@ -44,6 +45,12 @@ _DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
 _SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin): `(?P<value>[^`]+)`$")
 _PATH_RE = re.compile(r"`([^`]+)`")
 _AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_SOURCE_EDIT_COMMENT_RE = re.compile(
+    r'^<!-- cc:source-edit id="(?P<id>[^"]+)" path="(?P<path>[^"]+)" sha256="(?P<sha>[0-9a-f]{64})" '
+    r'start-line="(?P<start>[0-9]+)" end-line="(?P<end>[0-9]+)" linked-items="(?P<linked>[^"]+)" -->$'
+)
+_SOURCE_AFTER_START_RE = re.compile(r'^<!-- cc:source-after id="(?P<id>[^"]+)":start -->$')
+_SOURCE_AFTER_END_RE = re.compile(r'^<!-- cc:source-after id="(?P<id>[^"]+)":end -->$')
 
 
 @dataclass(frozen=True)
@@ -68,6 +75,32 @@ class PlacementReviewItem:
             "kind": self.kind,
             "action": self.action,
             "payload": self.payload,
+            "review_note": self.review_note,
+        }
+
+
+@dataclass(frozen=True)
+class PlacementReviewSourceEdit:
+    proposal_id: str
+    decision: str
+    path: str
+    sha256: str
+    start_line: int
+    end_line: int
+    linked_item_ids: tuple[str, ...]
+    replacement: str
+    review_note: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "proposal_id": self.proposal_id,
+            "decision": self.decision,
+            "path": self.path,
+            "sha256": self.sha256,
+            "start_line": self.start_line,
+            "end_line": self.end_line,
+            "linked_item_ids": list(self.linked_item_ids),
+            "replacement": self.replacement,
             "review_note": self.review_note,
         }
 
@@ -108,13 +141,16 @@ class OnboardingPlacementReview:
     structure_digest: str
     proposal_digest: str
     items: tuple[PlacementReviewItem, ...]
+    source_edits: tuple[PlacementReviewSourceEdit, ...]
     sources: tuple[PlacementReviewSource, ...]
     review_digest: str
 
     @property
     def is_complete(self) -> bool:
-        return all(item.decision != "pending" for item in self.items) and all(
-            source.decision != "pending" for source in self.sources
+        return (
+            all(item.decision != "pending" for item in self.items)
+            and all(edit.decision != "pending" for edit in self.source_edits)
+            and all(source.decision != "pending" for source in self.sources)
         )
 
 
@@ -150,7 +186,11 @@ def _evidence_excerpt(reference: EvidenceReference, snapshot: EvidenceSnapshot) 
 
 
 def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
-    lines = ["### Maintained meaning", ""]
+    if kind in {"overview", "rule", "topic-resource", "state", "plan"}:
+        heading = "### Into Node — editable"
+    else:
+        heading = "### Reviewed handling — editable"
+    lines = [heading, ""]
     if kind == "rule":
         lines.append(f"Statement: {_one_line(payload['statement'])}")
         lines.append(f"Why: {_one_line(payload['why'])}")
@@ -178,11 +218,46 @@ def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
     return lines
 
 
+def _source_edit_excerpt(edit: PlacementSourceEdit, snapshot: EvidenceSnapshot) -> list[str]:
+    reference = EvidenceReference(edit.path, edit.sha256, edit.start_line, edit.end_line)
+    return _evidence_excerpt(reference, snapshot)
+
+
+def _render_source_edit(edit: PlacementReviewSourceEdit, proposal_edit: PlacementSourceEdit, snapshot: EvidenceSnapshot) -> list[str]:
+    linked = ", ".join(proposal_edit.linked_item_ids)
+    lines = [
+        f'<a id="source-edit-{edit.proposal_id.lower()}"></a>',
+        f"#### Source edit {edit.proposal_id}",
+        f'<!-- cc:source-edit id="{edit.proposal_id}" path="{edit.path}" sha256="{edit.sha256}" start-line="{edit.start_line}" end-line="{edit.end_line}" linked-items="{linked}" -->',
+        "",
+        f"Source edit decision: `{edit.decision}`",
+        f"Source edit note: {edit.review_note or '-'}",
+        f"Linked promoted findings: {', '.join(f'`{item}`' for item in edit.linked_item_ids)}",
+        "",
+        "**Exact range being replaced:**",
+        "",
+    ]
+    lines.extend(_source_edit_excerpt(proposal_edit, snapshot))
+    lines.extend(
+        [
+            "",
+            "**Proposed replacement — edit the text between the markers:**",
+            "",
+            f'<!-- cc:source-after id="{edit.proposal_id}":start -->',
+        ]
+    )
+    if edit.replacement:
+        lines.extend(edit.replacement.split("\n"))
+    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "", f"Why this source edit: {proposal_edit.rationale}", ""])
+    return lines
+
+
 def _render_item(
     item: PlacementItem,
     review_item: PlacementReviewItem,
     proposal: OnboardingPlacementProposal,
     snapshot: EvidenceSnapshot,
+    source_edits: tuple[PlacementReviewSourceEdit, ...],
 ) -> list[str]:
     nodes = {node.key: node for node in proposal.structure.nodes}
     destination = nodes.get(review_item.destination_node_key) if review_item.destination_node_key else None
@@ -203,6 +278,34 @@ def _render_item(
         "",
     ]
     lines.extend(_render_payload(review_item.kind, review_item.payload))
+    lines.extend(["", "### Source before — frozen Evidence", ""])
+    for reference in item.evidence:
+        lines.extend(_evidence_excerpt(reference, snapshot))
+    linked_edits = [edit for edit in source_edits if review_item.proposal_id in edit.linked_item_ids]
+    if linked_edits:
+        proposal_edits = {edit.id: edit for edit in proposal.source_edits}
+        lines.extend(["", "### Source after promotion", ""])
+        for edit in linked_edits:
+            proposal_edit = proposal_edits[edit.proposal_id]
+            if proposal_edit.linked_item_ids[0] == review_item.proposal_id:
+                lines.extend(_render_source_edit(edit, proposal_edit, snapshot))
+            else:
+                owner = proposal_edit.linked_item_ids[0]
+                lines.extend(
+                    [
+                        f"Shared source edit [`{edit.proposal_id}`](#source-edit-{edit.proposal_id.lower()}) also covers this finding and is edited once under `{owner}`.",
+                        "",
+                    ]
+                )
+    elif review_item.action == "promote":
+        lines.extend(
+            [
+                "",
+                "### Source after promotion",
+                "",
+                "No mutable-Markdown rewrite is proposed for this finding. The cited source either remains independently useful/authoritative, is not mutable Markdown, or no duplicate-maintenance cleanup was justified.",
+            ]
+        )
     lines.extend(
         [
             "",
@@ -212,13 +315,8 @@ def _render_item(
             "",
             f"Original confidence: `{item.confidence}`",
             "",
-            "### Evidence",
-            "",
         ]
     )
-    for reference in item.evidence:
-        lines.extend(_evidence_excerpt(reference, snapshot))
-    lines.append("")
     return lines
 
 
@@ -305,15 +403,29 @@ def render_placement_review(
         )
         for item in proposal.items
     )
+    source_edits = tuple(
+        PlacementReviewSourceEdit(
+            proposal_id=edit.id,
+            decision="pending",
+            path=edit.path,
+            sha256=edit.sha256,
+            start_line=edit.start_line,
+            end_line=edit.end_line,
+            linked_item_ids=edit.linked_item_ids,
+            replacement=edit.replacement,
+            review_note="",
+        )
+        for edit in proposal.source_edits
+    )
     sources = _initial_sources(proposal, owner_source_specs)
     lines = [
         "# ContextCanon onboarding placement review",
         "",
-        "Edit this file directly. **Destination comes first** because future ownership is the primary review decision. Change `Decision`, destination, kind/action, title, or maintained wording where necessary. Evidence and proposal rationale below each item are review support, not a second decision file.",
+        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, kind/action, title, destination wording, Source edit decision/replacement, or review notes where necessary.",
         "",
         "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
         "",
-        "Decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review.",
+        "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted.",
         "",
         "<!-- contextcanon-placement-review",
         f"schema: {PLACEMENT_REVIEW_SCHEMA}",
@@ -327,7 +439,7 @@ def render_placement_review(
     ]
     by_id = {item.id: item for item in proposal.items}
     for review_item in review_items:
-        lines.extend(_render_item(by_id[review_item.proposal_id], review_item, proposal, snapshot))
+        lines.extend(_render_item(by_id[review_item.proposal_id], review_item, proposal, snapshot, source_edits))
 
     lines.extend(["# Reusable Sources", ""])
     if not sources:
@@ -369,7 +481,19 @@ def render_placement_review(
 
 
 def _section_blocks(lines: list[str], prefix: str) -> list[tuple[int, int]]:
-    starts = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+    starts: list[int] = []
+    source_after_id: str | None = None
+    for index, line in enumerate(lines):
+        start_match = _SOURCE_AFTER_START_RE.match(line)
+        if start_match is not None:
+            source_after_id = start_match.group("id")
+            continue
+        end_match = _SOURCE_AFTER_END_RE.match(line)
+        if end_match is not None and source_after_id == end_match.group("id"):
+            source_after_id = None
+            continue
+        if source_after_id is None and line.startswith(prefix):
+            starts.append(index)
     result: list[tuple[int, int]] = []
     for index, start in enumerate(starts):
         end = starts[index + 1] if index + 1 < len(starts) else len(lines)
@@ -518,6 +642,7 @@ def _validate_item_edit(
 def _normalize_review(
     proposal: OnboardingPlacementProposal,
     items: tuple[PlacementReviewItem, ...],
+    source_edits: tuple[PlacementReviewSourceEdit, ...],
     sources: tuple[PlacementReviewSource, ...],
 ) -> OnboardingPlacementReview:
     value = {
@@ -526,6 +651,7 @@ def _normalize_review(
         "structure_digest": proposal.structure_digest,
         "proposal_digest": proposal.proposal_digest,
         "items": [item.to_dict() for item in items],
+        "source_edits": [edit.to_dict() for edit in source_edits],
         "sources": [source.to_dict() for source in sources],
     }
     return OnboardingPlacementReview(
@@ -533,6 +659,7 @@ def _normalize_review(
         structure_digest=proposal.structure_digest,
         proposal_digest=proposal.proposal_digest,
         items=items,
+        source_edits=source_edits,
         sources=sources,
         review_digest=_digest(value),
     )
@@ -620,6 +747,72 @@ def load_placement_review(
         missing = sorted(set(proposal_by_id) - seen)
         raise _error(f"placement.md is missing proposal items: {', '.join(missing)}")
 
+    proposal_source_edits = {edit.id: edit for edit in proposal.source_edits}
+    parsed_source_edits: list[PlacementReviewSourceEdit] = []
+    seen_source_edits: set[str] = set()
+    for index, line in enumerate(lines):
+        match = _SOURCE_EDIT_COMMENT_RE.match(line)
+        if match is None:
+            continue
+        edit_id = match.group("id")
+        proposed = proposal_source_edits.get(edit_id)
+        if proposed is None:
+            raise _error(f"placement.md contains unknown Source edit {edit_id}")
+        if edit_id in seen_source_edits:
+            raise _error(f"placement.md contains duplicate Source edit {edit_id}")
+        seen_source_edits.add(edit_id)
+        linked = tuple(part.strip() for part in match.group("linked").split(",") if part.strip())
+        immutable = (
+            match.group("path"), match.group("sha"), int(match.group("start")), int(match.group("end")), linked
+        )
+        expected = (proposed.path, proposed.sha256, proposed.start_line, proposed.end_line, proposed.linked_item_ids)
+        if immutable != expected:
+            raise _error(f"Source edit {edit_id} immutable Evidence binding was changed")
+        next_item = next(
+            (i for i in range(index + 1, len(lines)) if _ITEM_HEADING_RE.match(lines[i]) or _SOURCE_HEADING_RE.match(lines[i])),
+            len(lines),
+        )
+        block = lines[index:next_item]
+        decision_line = next((entry for entry in block if entry.startswith("Source edit decision:")), None)
+        if decision_line is None:
+            raise _error(f"Source edit {edit_id} is missing Source edit decision")
+        decision_match = re.match(r"^Source edit decision: `([^`]+)`$", decision_line)
+        if decision_match is None or decision_match.group(1) not in REVIEW_DECISIONS:
+            raise _error(f"Source edit {edit_id} decision must be pending, accept, or reject")
+        note = _find_line(block, "Source edit note: ", "Source edit note")
+        start_marker = f'<!-- cc:source-after id="{edit_id}":start -->'
+        end_marker = f'<!-- cc:source-after id="{edit_id}":end -->'
+        if block.count(start_marker) != 1 or block.count(end_marker) != 1:
+            raise _error(f"Source edit {edit_id} must contain one editable source-after marker pair")
+        source_start = block.index(start_marker)
+        source_end = block.index(end_marker, source_start + 1)
+        replacement = "\n".join(block[source_start + 1 : source_end]).strip("\n")
+        parsed_source_edits.append(
+            PlacementReviewSourceEdit(
+                proposal_id=edit_id,
+                decision=decision_match.group(1),
+                path=proposed.path,
+                sha256=proposed.sha256,
+                start_line=proposed.start_line,
+                end_line=proposed.end_line,
+                linked_item_ids=proposed.linked_item_ids,
+                replacement=replacement,
+                review_note="" if note == "-" else note,
+            )
+        )
+    if seen_source_edits != set(proposal_source_edits):
+        missing = sorted(set(proposal_source_edits) - seen_source_edits)
+        raise _error(f"placement.md is missing Source edits: {', '.join(missing)}")
+
+    item_decisions = {item.proposal_id: item.decision for item in parsed_items}
+    for edit in parsed_source_edits:
+        if edit.decision == "accept":
+            not_accepted = [item_id for item_id in edit.linked_item_ids if item_decisions.get(item_id) != "accept"]
+            if not_accepted:
+                raise _error(
+                    f"Source edit {edit.proposal_id} cannot be accepted until all linked promoted findings are accepted: {', '.join(not_accepted)}"
+                )
+
     packages = _package_by_id(proposal)
     parsed_sources: list[PlacementReviewSource] = []
     source_ids: set[str] = set()
@@ -690,7 +883,7 @@ def load_placement_review(
     if actual_evidence_sources != expected_evidence_sources:
         missing = sorted(expected_evidence_sources - actual_evidence_sources)
         raise _error(f"placement.md is missing Evidence-derived Source reviews: {', '.join(missing)}")
-    return _normalize_review(proposal, tuple(parsed_items), tuple(parsed_sources))
+    return _normalize_review(proposal, tuple(parsed_items), tuple(parsed_source_edits), tuple(parsed_sources))
 
 
 def create_or_load_placement_review(

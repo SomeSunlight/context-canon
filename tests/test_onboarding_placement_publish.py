@@ -123,6 +123,17 @@ class PlacementPublicationTests(unittest.TestCase):
                     "payload": {"text": "Migration is in progress.", "wording_origin": "synthesized"},
                 },
                 {
+                    "id": "P-007",
+                    "title": "Next reviewed work",
+                    "kind": "plan",
+                    "action": "promote",
+                    "destination_node_key": "N-001",
+                    "rationale": "The next intended work belongs in the root Node plan.",
+                    "confidence": "medium",
+                    "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 4, "end_line": 4}],
+                    "payload": {"text": "Continue Goose changes through reviewed pull requests.", "wording_origin": "synthesized"},
+                },
+                {
                     "id": "P-006",
                     "title": "README authority mapping",
                     "kind": "authority-mapping",
@@ -153,7 +164,7 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertTrue(created)
         review_text = workspace.placement_path.read_text(encoding="utf-8").replace(
             "Decision: `pending`", "Decision: `accept`"
-        )
+        ).replace("Source edit decision: `pending`", "Source edit decision: `accept`")
         workspace.placement_path.write_text(review_text, encoding="utf-8")
         review = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
         self.assertTrue(review.is_complete)
@@ -189,12 +200,20 @@ class PlacementPublicationTests(unittest.TestCase):
         child = next(delta for delta in preview.nodes if delta.key == "N-002")
         self.assertIn("Resource: `../../docs/architecture.md`", child.after)
         self.assertIn("Existing authored Goose orientation.", child.after)
-        self.assertEqual({item.kind for item in preview.followups}, {"state", "authority-mapping"})
+        self.assertEqual({item.kind for item in preview.followups}, {"authority-mapping"})
+        root = next(delta for delta in preview.nodes if delta.key == "N-001")
+        self.assertIn("## State", root.after)
+        self.assertIn("Migration is in progress.", root.after)
+        self.assertIn("## Plan", root.after)
+        self.assertIn("Continue Goose changes through reviewed pull requests.", root.after)
         self.assertIn(head, text)
         self.assertIn("Development Workflow", text)
         self.assertIn("origin: `evidence-derived`", text)
         self.assertIn(proposal.source_reuses[0].source_package_digest, text)
-        self.assertTrue(preview.mutable_cleanup_candidates)
+        self.assertEqual(len(preview.documents), 1)
+        self.assertEqual(preview.documents[0].path, "docs/architecture.md")
+        self.assertTrue(preview.documents[0].changed)
+        self.assertIn("Reviewed source-document deltas", text)
 
     def test_publish_preserves_node_identity_and_project_markdown_then_is_idempotent(self):
         repo, prepared, workspace, source_root, proposal, review, head = self.make_case()
@@ -216,25 +235,32 @@ class PlacementPublicationTests(unittest.TestCase):
         )
         self.assertTrue(acceptance.is_file())
         self.assertEqual((repo / "README.md").read_bytes(), readme_before)
-        self.assertEqual((repo / "docs" / "architecture.md").read_bytes(), architecture_before)
+        self.assertNotEqual((repo / "docs" / "architecture.md").read_bytes(), architecture_before)
+        self.assertIn("maintained in [AI Workstation Context]", (repo / "docs" / "architecture.md").read_text(encoding="utf-8"))
         self.assertEqual(parse_node(repo, repo).metadata.id, root_id)
         self.assertEqual(parse_node(child_root, repo).metadata.id, child_id)
         root_text = (repo / "CONTEXT.src.md").read_text(encoding="utf-8")
         child_text = (child_root / "CONTEXT.src.md").read_text(encoding="utf-8")
         self.assertIn("Existing authored root orientation that placement must preserve.", root_text)
         self.assertIn("contextcanon-placement-rules:start", root_text)
+        self.assertIn("contextcanon-placement-state:start", root_text)
+        self.assertIn("contextcanon-placement-plan:start", root_text)
+        parsed_root = parse_node(repo, repo)
+        self.assertIn("Migration is in progress.", parsed_root.state)
+        self.assertIn("Continue Goose changes through reviewed pull requests.", parsed_root.plan)
         self.assertIn('transport="git"', root_text)
         self.assertIn(f'ref="{head}"', root_text)
         self.assertIn("../../docs/architecture.md", child_text)
         Compiler(repo).compile(repo)
         Compiler(repo).compile(child_root)
         payload = json.loads(acceptance.read_text(encoding="utf-8"))
-        self.assertEqual({item["kind"] for item in payload["followups"]}, {"state", "authority-mapping"})
+        self.assertEqual({item["kind"] for item in payload["followups"]}, {"authority-mapping"})
 
         second = build_placement_publication_preview(
             proposal, review, prepared.snapshot_root, catalog_package_roots=[source_root], project_root=repo
         )
         self.assertTrue(all(not delta.changed for delta in second.nodes))
+        self.assertTrue(all(not document.changed for document in second.documents))
         second_result = publish_placement_review(
             second,
             review,

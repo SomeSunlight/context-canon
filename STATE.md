@@ -137,3 +137,11 @@ Focused coverage reproduces the exact failing shape and also proves the foreign-
 ## Latest child-node restart recovery
 
 The next live `ai-workstation` Step-4 run exposed `bootstrap` with a missing `CONTEXT.src.md` but existing `.context` machine state. Recovery is now Node-local: every accepted Node may recover its authoring skeleton only from its own verifiable generated identity/state; only the project root may additionally use prior onboarding acceptance records. This preserves stable child IDs across reset/retest cycles without weakening foreign-path collision protection. Focused regressions cover both successful child recovery and refusal of unknown child `.context` entries.
+
+## Latest placement transformation owner-test correction
+
+The active PR now treats placement review as the complete migration cockpit rather than a destination-only findings report. Promoted mutable-Markdown meaning can carry an exact reviewed Source After transformation in the same semantic proposal and human gate. Publication applies accepted source-document edits transactionally with Context Node authoring and preserves idempotency by recognizing the exact reviewed post-migration bytes. Frozen Evidence remains immutable review input; fixed Markdown, non-Markdown technical authorities and unrelated Evidence remain protected from this cleanup path. Placement now publishes reviewed State/Plan as local `## State` / `## Plan` authoring in the destination `CONTEXT.src.md`; generated `CONTEXT.md` carries them as operational project context, while reusable Sources do not inherit them. Exact Source catalog and owner-selected Source inputs are now also retained in snapshot-owned run state so reset cannot forget them.
+
+## Latest State/Plan publication completion
+
+The active onboarding path now treats State and Plan as first-class local Node content. Accepted placement State/Plan findings are written transactionally with the rest of Node authoring, shown as `Into Node — editable` during human review, included in publication preview, and removed from migration follow-up. They render into Official Context and local machine state but are deliberately excluded from inherited Source semantics.

@@ -35,7 +35,7 @@ from .onboarding_structure_materialize import (
     preview_structure_materialization,
     render_structure_materialization_preview,
 )
-from .onboarding_workspace import open_onboarding_workspace, update_workspace_checkpoint, write_utf8
+from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
@@ -531,6 +531,14 @@ def main(argv: list[str] | None = None) -> int:
                 structure_path = Path(args.structure) if args.structure is not None else workspace.structure_path
                 catalog = tuple(Path(path) for path in args.catalog_package)
                 catalog_inputs = tuple(args.catalog_package)
+                remembered_catalog, remembered_owner = remember_run_inputs(
+                    snapshot,
+                    catalog_inputs=catalog_inputs,
+                    owner_source_specs=tuple(args.owner_source) if hasattr(args, "owner_source") else (),
+                )
+                if not catalog_inputs and remembered_catalog:
+                    catalog_inputs = remembered_catalog
+                    catalog = tuple(Path(path) for path in catalog_inputs)
 
                 if args.onboard_command == "placement-instruction":
                     instruction = build_onboarding_placement_instruction(
@@ -578,6 +586,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Evidence snapshot: {proposal.evidence_digest}")
                     print(f"Structure digest: {proposal.structure_digest}")
                     print(f"Placement items: {len(proposal.items)}")
+                    print(f"Source edits: {len(proposal.source_edits)}")
                     print(f"Source reuses: {len(proposal.source_reuses)}")
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement proposal validated",
@@ -603,11 +612,11 @@ def main(argv: list[str] | None = None) -> int:
                     verb = "created" if created else "loaded"
                     print(f"{verb} onboarding placement review {review.review_digest}")
                     print(f"Review file: {review_path}")
-                    print(f"Items: {len(review.items)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
                     next_action = (
                         f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
-                        f"Edit `{workspace.placement_path.name}`: set every Decision to `accept` or `reject` and correct destination/maintained meaning where needed. "
+                        f"Edit `{workspace.placement_path.name}`: review Into Node, Source Before/After, and set every item/Source-edit/Source Decision to `accept` or `reject`. "
                         f"Then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` to validate the edited human gate before preview."
                     )
                     update_workspace_checkpoint(
@@ -680,7 +689,7 @@ def main(argv: list[str] | None = None) -> int:
                     source_catalog=_catalog_labels(proposal.catalog_packages),
                     source_catalog_inputs=catalog_inputs,
                     next_action=(
-                        "Review `STEP-09-placement-followup.md`. Mutable-Markdown duplicate cleanup is deliberately a separate later operation; "
+                        "Review `STEP-09-placement-followup.md`. Accepted mutable-Markdown Source After transformations were published transactionally with canonical Context; "
                         "ordinary ContextCanon-native project growth now happens by editing the relevant Node sources directly, not by rerunning migration onboarding."
                     ),
                 )
