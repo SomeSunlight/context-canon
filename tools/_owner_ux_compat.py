@@ -8,7 +8,13 @@ old = "This directory is the **visible human working area** for one structure-fi
 new = "This directory is the **visible human working area** for one structure-first ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.\n\nStart with [`{PLAN_NAME}`]({PLAN_NAME}). It is deliberately written as an operator runbook:"
 if text.count(old) != 1:
     raise RuntimeError("workspace orientation anchor missing")
-workspace.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+text = text.replace(old, new, 1)
+old_heading = '- Exact `--catalog-package` inputs retained for copy/paste commands:'
+new_heading = '- Reuse these exact `--catalog-package` inputs for copy/paste commands:'
+if text.count(old_heading) != 2:
+    raise RuntimeError(f"catalog heading anchors missing: {text.count(old_heading)}")
+text = text.replace(old_heading, new_heading)
+workspace.write_text(text, encoding="utf-8", newline="\n")
 
 instruction = root / "src/contextcanon/onboarding_placement_instruction.py"
 text = instruction.read_text(encoding="utf-8")
