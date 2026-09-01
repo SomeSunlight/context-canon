@@ -24,6 +24,7 @@ jobs:
         run: |
           python tools/_apply_transform_cockpit.py apply
           python tools/_post_transform_fixes.py
+          python tools/_post_transform_fixes2.py
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused onboarding tests
@@ -52,6 +53,7 @@ jobs:
         run: |
           rm tools/_apply_transform_cockpit.py
           rm tools/_post_transform_fixes.py
+          rm tools/_post_transform_fixes2.py
           rm .github/workflows/_placement-transform-cockpit.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
