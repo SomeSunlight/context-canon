@@ -126,3 +126,13 @@ Purpose: close the live-test gap where `onboard reset --from 2` can correctly re
 - [x] Add regression coverage for a completely missing workspace, then run the normal PR verification on the resulting head before handing the owner a new install SHA.
 
 Reset operator-surface recovery checkpoint: the live owner test exposed the missing-workspace case after `reset --from 2`. Reset now recreates/refreshes the ContextCanon-owned workspace, rewrites the reset checkpoint, and repopulates the exact snapshot-bound command console. Regression coverage raises the deterministic suite to 142 tests. PR workflow #482 / run `33498482979` passed the product fix with unit/repository consistency and generated-output verification green. This checkpoint records that proof before one final exact-head PR run.
+
+#### Block H — live Step-4 collision and PLAN polish
+
+Purpose: remove the next owner-test blockers without weakening collision safety: make the runbook visually self-explanatory, shorten repeated snapshot paths in commands, and distinguish legitimate ContextCanon-owned root state from project-owned output collisions during structure preview/materialization.
+
+- [ ] Add a one-line cue immediately above the checklist that the exact copy/paste commands are below it.
+- [ ] Render one shell-native snapshot variable once per PLAN and use it in the exact command section instead of repeating the full content-addressed snapshot path in every command.
+- [ ] Fix structure preview/materialization so an existing ContextCanon-generated `CONTEXT/` namespace and root `.context/onboarding/` state are not mistaken for project-owned collisions, while still refusing concrete foreign output files/namespaces.
+- [ ] Preserve/recover the established root Node identity when the authoring source is missing but prior ContextCanon acceptance state proves that identity; do not silently allocate a replacement root UUID.
+- [ ] Add focused regressions for the exact `ai-workstation` Step-4 shape and PLAN rendering, then run full suite/build/check and exact-head PR CI before handing back a new test SHA.
