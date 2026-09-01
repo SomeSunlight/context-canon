@@ -17,3 +17,11 @@ new = "1. Preserve precise existing language for facts, constraints, and Rules w
 if text.count(old) != 1:
     raise RuntimeError("placement wording anchor missing")
 instruction.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+followup_test = root / "tests/test_onboarding_owner_review_followup.py"
+text = followup_test.read_text(encoding="utf-8")
+old = '        self.assertIn("- [ ] 8. Publish placement", plan)\n'
+new = '        self.assertIn("- [ ] 8. Publication preview", plan)\n        self.assertIn("- [ ] 9. Publish placement", plan)\n'
+if text.count(old) != 1:
+    raise RuntimeError("owner followup nine-step assertion anchor missing")
+followup_test.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
