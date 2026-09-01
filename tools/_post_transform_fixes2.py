@@ -45,3 +45,7 @@ for old, new in replacements.items():
         raise RuntimeError(f"legacy instruction assertion not found: {old}")
     text = text.replace(old, new, 1)
 path.write_text(text, encoding="utf-8", newline="\n")
+
+path = root / "PLAN.md"
+text = path.read_text(encoding="utf-8")
+path.write_text(text.rstrip() + "\n", encoding="utf-8", newline="\n")
