@@ -19,17 +19,21 @@ jobs:
         with:
           python-version: '3.12'
       - name: Record development block
-        run: python tools/_apply_transform_cockpit.py plan
+        run: |
+          python tools/_apply_transform_cockpit.py plan
+          python tools/_post_state_plan.py plan
       - name: Apply transformation cockpit implementation
         run: |
           python tools/_apply_transform_cockpit.py apply
           python tools/_post_transform_fixes.py
           python tools/_post_transform_fixes2.py
+          python tools/_post_state_plan.py apply
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused onboarding tests
         run: |
           python -m unittest \
+            tests.test_state_plan \
             tests.test_onboarding_placement \
             tests.test_onboarding_placement_review \
             tests.test_onboarding_placement_publish \
@@ -43,7 +47,9 @@ jobs:
       - name: Verify implementation diff
         run: git diff --check
       - name: Finalize durable PLAN and STATE
-        run: python tools/_apply_transform_cockpit.py finalize
+        run: |
+          python tools/_apply_transform_cockpit.py finalize
+          python tools/_post_state_plan.py finalize
       - name: Recheck generated state after checkpoint
         run: |
           contextcanon build --all .
@@ -54,10 +60,11 @@ jobs:
           rm tools/_apply_transform_cockpit.py
           rm tools/_post_transform_fixes.py
           rm tools/_post_transform_fixes2.py
+          rm tools/_post_state_plan.py
           rm .github/workflows/_placement-transform-cockpit.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --check
-          git commit -m "Make placement review a transformation cockpit"
+          git commit -m "Make placement review a complete transformation cockpit"
           git push origin HEAD:agent/onboarding-placement-publication
