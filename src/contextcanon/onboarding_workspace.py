@@ -574,7 +574,43 @@ def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
         legacy.rename(numbered)
 
 
-def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace) -> None:
+def _checkpoint_block(text: str, path: Path) -> str | None:
+    starts = text.count(CHECKPOINT_START)
+    ends = text.count(CHECKPOINT_END)
+    if starts == 0 and ends == 0:
+        return None
+    if starts != 1 or ends != 1:
+        raise ContextCanonError(f"Malformed onboarding checkpoint markers in {path}")
+    start = text.index(CHECKPOINT_START)
+    end = text.index(CHECKPOINT_END, start) + len(CHECKPOINT_END)
+    return text[start:end]
+
+
+def _checkpoint_stage(block: str | None) -> str | None:
+    if block is None:
+        return None
+    match = re.search(r"^- Stage: \*\*(.+?)\*\*$", block, re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def _checkpoint_review_complete(block: str | None) -> bool | None:
+    if block is None:
+        return None
+    line = next((line for line in block.splitlines() if line.startswith("- Placement review:")), None)
+    if line is None:
+        return None
+    return line.rstrip().endswith("— complete")
+
+
+def _remember_first(text: str, headings: tuple[str, ...]) -> tuple[str, ...]:
+    for heading in headings:
+        values = _remembered_values(text, heading)
+        if values:
+            return values
+    return ()
+
+
+def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_root: Path) -> None:
     _migrate_legacy_artifacts(workspace)
     write_utf8(workspace.readme_path, _workspace_readme())
     if not workspace.plan_path.exists():
@@ -586,6 +622,38 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace) -> None:
         raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
     if PLAN_MARKER not in plan:
         raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
+
+    checkpoint = _checkpoint_block(plan, workspace.plan_path)
+    stage = _checkpoint_stage(checkpoint)
+    review_complete = _checkpoint_review_complete(checkpoint)
+    catalog_inputs = _remember_first(
+        plan,
+        (
+            "- Reuse these exact `--catalog-package` inputs for copy/paste commands:",
+            "- Reuse these exact `--catalog-package` inputs on the next placement command:",
+        ),
+    )
+    owner_specs = _remember_first(
+        plan,
+        (
+            "- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):",
+            "- Owner-selected Source choices already recorded in `placement.md` (do not repeat on preview/publish):",
+        ),
+    )
+
+    refreshed = _workspace_plan()
+    if checkpoint is not None:
+        default_checkpoint = _checkpoint_block(refreshed, workspace.plan_path)
+        assert default_checkpoint is not None
+        refreshed = refreshed.replace(default_checkpoint, checkpoint, 1)
+    if stage is not None:
+        refreshed = _rewrite_checklist(
+            refreshed,
+            _completed_steps(stage, review_complete),
+            workspace.plan_path,
+        )
+    refreshed = _replace_commands(refreshed, workspace, snapshot_root, catalog_inputs, owner_specs)
+    write_utf8(workspace.plan_path, refreshed)
 
 
 def open_onboarding_workspace(
@@ -612,7 +680,7 @@ def open_onboarding_workspace(
             raise ContextCanonError(
                 f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
             )
-        _refresh_framework_owned_surfaces(workspace)
+        _refresh_framework_owned_surfaces(workspace, snapshot_root)
         return workspace
 
     if not create:

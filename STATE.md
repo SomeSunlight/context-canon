@@ -8,7 +8,7 @@ PR #13 on `agent/onboarding-placement-publication` remains the active **draft, u
 
 ## What is implemented in PR #13
 
-The placement proposal remains the strict machine/LLM contract, while `contextcanon-onboarding/placement.md` is the human gate. The editable review is destination-first and can change acceptance, destination, kind/action, title and maintained wording. Canonical Rule and Topic IDs are allocated once on the human side and remain stable across review/preview cycles. Invalid or duplicate stable human-side authoring IDs are rejected when the review is loaded, before preview/publication.
+The placement proposal remains the strict machine/LLM contract, while `contextcanon-onboarding/STEP-07-placement.md` is the human gate. The editable review is destination-first and can change acceptance, destination, kind/action, title and maintained wording. Canonical Rule and Topic IDs are allocated once on the human side and remain stable across review/preview cycles. Invalid or duplicate stable human-side authoring IDs are rejected when the review is loaded, before preview/publication.
 
 Placement distinguishes `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping` and `unresolved`, with placement actions appropriate to those semantics. Clear source wording can remain exact; light edits and synthesis stay explicit.
 
@@ -35,14 +35,14 @@ This is particularly important for document-heavy projects where many unrelated 
 
 ### The visible onboarding workspace is now the operator runbook
 
-`contextcanon-onboarding/README.md` now presents the workflow as an eight-step numbered sequence from Evidence freeze through placement publication. It visibly marks:
+`contextcanon-onboarding/README.md` now presents the workflow as an nine-step numbered sequence from Evidence freeze through placement publication. It visibly marks:
 
 - external LLM handoff 1 — coarse structure;
-- human gate 1 — `structure.md`;
+- human gate 1 — `STEP-03-structure.md`;
 - external LLM handoff 2 — placement;
-- human gate 2 — `placement.md`.
+- human gate 2 — `STEP-07-placement.md`.
 
-The checkpoint remains the last ContextCanon-validated state, not a live watcher. Placement checkpoint updates now also retain the exact supplied `--catalog-package` input paths so later commands no longer rely on remembering them from chat/prose. `--owner-source` is explicitly documented as a **one-time review-creation choice**: once written into `placement.md`, preview/publication load that choice from review state and do not require the flag again.
+The checkpoint remains the last ContextCanon-validated state, not a live watcher. Placement checkpoint updates now also retain the exact supplied `--catalog-package` input paths so later commands no longer rely on remembering them from chat/prose. `--owner-source` is explicitly documented as a **one-time review-creation choice**: once written into `STEP-07-placement.md`, preview/publication load that choice from review state and do not require the flag again.
 
 This is intentionally still a visible onboarding workspace rather than pretending a temporary migration workflow is already an ordinary canonical project Context Node. The current correction solves the concrete operator problem with a self-contained runbook/checkpoint without inventing a special transient Node type.
 
@@ -61,6 +61,16 @@ A later cleanup may leave:
 Friendly, informal or simplified wording is allowed in the orientation layer when it improves human understanding. What is forbidden as a steady state is maintaining the same complete rule/explanation independently in both the Node and the old document.
 
 The separate technical contract is now recorded in `nodes/internal/framework-development/docs/onboarding-cleanup.md`. It binds cleanup to exact accepted placement/source bytes, requires whole-document diff review, keeps fixed Markdown and Topic/Resource authorities out of destructive cleanup, and separates semantic replacement suggestions from deterministic mutation. Broad automatic deletion is deliberately **not** implemented yet; the command UX remains unfrozen until another real onboarding validates the simplest flow.
+
+## Owner-testing UX hardening
+
+The second direct `ai-workstation` test exposed an operator-level failure even though the semantic mechanics were working: the workflow still made a returning user reconstruct similar commands, long digests, Source options, hidden validation steps, and artifact order from memory. That is now treated as a product defect, not user documentation debt.
+
+The visible workspace now makes `PLAN.md` the executable operator console. It has nine numbered steps, includes Placement Validate as explicit Step 6, renders exact snapshot-bound copy/paste commands, remembers Source-catalog inputs and owner-selected Source state, and numbers artifacts so alphabetic file order follows the workflow (`STEP-02a-...` through `STEP-09-...`). CLI `--help` uses those same names.
+
+`contextcanon onboard reset <snapshot> --from N` is now a safe testing primitive. Structure materialization and placement publication journal the ContextCanon-managed before/after bytes. Reset verifies the recorded after-state before rollback, preserves frozen Evidence, and refuses to overwrite later human edits. Older pre-journal runs get only a conservative cleanup of unmistakable untouched onboarding skeletons. Opening/resetting an older owned workspace refreshes its framework-owned PLAN to the current runbook rather than leaving stale step numbers behind.
+
+The placement reasoning pass also performs the semantic condensation now, while the owner is already thinking about the meaning: stable Overviews are concise summaries rather than copies of volatile version/platform prose; version/compatibility belongs in state; long snake sentences should be split into atomic findings/bullets; and architecture documents are not retained as Resources merely because of their filename when their durable semantics belong canonically in Nodes. Overview/State/Plan wording is presented to the human as `Summary` in the placement review.
 
 ## Real `ai-workstation` vertical validation
 
@@ -92,17 +102,11 @@ The real frozen Evidence did not produce an accepted authority-mapping finding, 
 
 ## Current verification state
 
-Before the owner-review corrections, the exact review candidate passed 130 tests and zero generated drift.
+The owner-testing hardening candidate has **141 deterministic tests** after adding focused coverage for numbered CLI help and stale-PLAN refresh during reset. The preceding temporary hardening workflow already proved the 139-test implementation slice plus zero generated drift and removed its own temporary files before product commit `ee4c63772d0fe648347359f5e725b61c44452d54`.
 
-The new focused structure/workspace/promotion coverage raises the deterministic suite to **134 tests**. On owner-review correction head `4852a3a46000699d71a0fc74a9dbfdccd5fbed88`, all 134 Unit/repository-consistency tests passed. The only failing CI step was the expected Gateway generated drift caused by the updated canonical onboarding documentation. The workflow drift output identified exactly three files:
+This final documentation/help polish is validated by a temporary self-deleting workflow that runs Python compilation, all 141 tests, `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check` before it is allowed to create the clean product commit. The temporary workflow and helper script are removed from that commit.
 
-- `.context/context.yaml`;
-- `.context/package.json`;
-- `CONTEXT/references/docs/onboarding.md`.
-
-Those exact compiler-produced files were regenerated from the CI drift artifact and committed. No Framework Development, Development Workflow or Foundation generated output changed.
-
-A newer ordinary PR workflow is required on the final repository-authored owner-review checkpoint before this correction block can be called technically clean.
+Because bot-authored commits can produce GitHub's `action_required` result for the normal pull-request workflow, the clean product tree must then receive a repository-authored no-content checkpoint commit and a normal exact-head PR workflow. That final CI result, not the temporary harness alone, is the review proof.
 
 ## Boundaries that intentionally remain
 
@@ -114,4 +118,4 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Obtain the ordinary GitHub PR workflow on the exact current owner-review checkpoint with all 134 tests and zero generated drift. If green, keep PR #13 draft/unmerged and let the project owner continue the real `ai-workstation` placement review. Do not merge or silently begin destructive duplicate cleanup without explicit owner approval.
+Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.

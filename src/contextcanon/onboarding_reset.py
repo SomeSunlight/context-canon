@@ -26,6 +26,7 @@ from .onboarding_workspace import (
     STRUCTURE_PROPOSAL_NAME,
     STRUCTURE_REVIEW_NAME,
     WORKSPACE_MARKER,
+    open_onboarding_workspace,
     write_utf8,
 )
 from .outputs import expected_outputs
@@ -345,6 +346,12 @@ def reset_onboarding(
     snapshot = snapshot_root.resolve()
     project = (project_root or find_repo_root(snapshot)).resolve()
     workspace = _workspace_root(snapshot, workspace_root)
+    if workspace.exists():
+        workspace = open_onboarding_workspace(
+            snapshot,
+            workspace_root,
+            create=False,
+        ).root
 
     selected_steps, project_files = _restore_journal(snapshot, project, from_step)
     legacy_files: list[str] = []

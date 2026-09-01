@@ -134,5 +134,50 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertTrue((repo / "CONTEXT.src.md").exists())
 
 
+    def test_cli_help_uses_numbered_workspace_artifacts(self):
+        env = dict(**__import__("os").environ)
+        env["PYTHONPATH"] = str(ROOT / "src")
+        cases = [
+            (["onboard", "structure-review", "--help"], ("STEP-02b-structure-proposal.json", "STEP-03-structure.md")),
+            (["onboard", "placement-instruction", "--help"], ("STEP-02b-structure-proposal.json", "STEP-03-structure.md", "STEP-05a-placement-instruction.md")),
+            (["onboard", "placement-review", "--help"], ("STEP-05b-placement-proposal.json", "STEP-07-placement.md")),
+        ]
+        for args, expected in cases:
+            completed = subprocess.run(
+                [sys.executable, "-m", "contextcanon", *args],
+                cwd=ROOT,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            for value in expected:
+                self.assertIn(value, completed.stdout)
+        self.assertNotIn("<workspace>/placement.md", completed.stdout)
+
+    def test_reset_refreshes_stale_owned_plan_before_restarting(self):
+        _, prepared = self.make_repo()
+        workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
+        stale = workspace.plan_path.read_text(encoding="utf-8")
+        stale = stale.replace(
+            "- [ ] 6. Placement validate — validate the LLM proposal against the frozen Evidence, accepted structure, and exact Source catalog.\n",
+            "",
+        )
+        stale = stale.replace("7. Placement review", "6. Placement review")
+        stale = stale.replace("8. Publication preview", "7. Publication preview")
+        stale = stale.replace("9. Publish placement", "8. Publish placement")
+        stale = stale.replace("STEP-07-placement.md", "placement.md")
+        workspace.plan_path.write_text(stale, encoding="utf-8")
+
+        reset_onboarding(prepared.snapshot_root, from_step=5)
+        refreshed = workspace.plan_path.read_text(encoding="utf-8")
+        self.assertIn("6. Placement validate", refreshed)
+        self.assertIn("7. Placement review", refreshed)
+        self.assertIn("STEP-07-placement.md", refreshed)
+        self.assertIn("contextcanon onboard reset", refreshed)
+
+
 if __name__ == "__main__":
     unittest.main()
