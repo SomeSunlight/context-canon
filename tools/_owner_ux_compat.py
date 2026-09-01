@@ -14,6 +14,11 @@ new_heading = '- Reuse these exact `--catalog-package` inputs for copy/paste com
 if text.count(old_heading) != 2:
     raise RuntimeError(f"catalog heading anchors missing: {text.count(old_heading)}")
 text = text.replace(old_heading, new_heading)
+old_owner = '- Owner-selected Source choices already recorded in the human review:'
+new_owner = '- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):'
+if text.count(old_owner) != 2:
+    raise RuntimeError(f"owner-source heading anchors missing: {text.count(old_owner)}")
+text = text.replace(old_owner, new_owner)
 workspace.write_text(text, encoding="utf-8", newline="\n")
 
 instruction = root / "src/contextcanon/onboarding_placement_instruction.py"
