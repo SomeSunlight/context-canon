@@ -1,6 +1,7 @@
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
+
 path = root / "src/contextcanon/cli.py"
 text = path.read_text(encoding="utf-8")
 wrong = '''                print(f"Source edits: {len(proposal.source_edits)}")
@@ -15,4 +16,13 @@ if anchor not in text:
 text = text.replace(anchor, '''                    print(f"Placement items: {len(proposal.items)}")
                     print(f"Source edits: {len(proposal.source_edits)}")
                     print(f"Source reuses: {len(proposal.source_reuses)}")''', 1)
+path.write_text(text, encoding="utf-8", newline="\n")
+
+path = root / "tests/test_onboarding_placement.py"
+text = path.read_text(encoding="utf-8")
+old = '        self.assertIn("Overview is different", instruction.text)'
+new = '        self.assertIn("Overview is a condensation task", instruction.text)'
+if old not in text:
+    raise RuntimeError("legacy Overview assertion not found")
+text = text.replace(old, new, 1)
 path.write_text(text, encoding="utf-8", newline="\n")
