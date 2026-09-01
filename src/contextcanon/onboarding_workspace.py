@@ -153,6 +153,8 @@ def _workspace_plan() -> str:
 
 This is the **operator console** for the current onboarding. Read the numbered steps for meaning; copy commands from **Exact commands for this run** rather than reconstructing IDs/options from memory.
 
+> **Exact commands:** the checklist is the overview; the copy/paste commands are in **Exact commands for this run** below.
+
 ## Checklist
 
 {CHECKLIST_START}
@@ -268,6 +270,19 @@ def _exact_commands(
     workspace_args = _workspace_option(workspace, snapshot_root)
     catalog = _catalog_args(catalog_inputs)
     owner = _owner_args(owner_source_specs)
+    snapshot_literal = _quote_cli(snapshot)
+    if os.name == "nt":
+        snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
+        snapshot_token = "$SNAPSHOT"
+        shell = "powershell"
+    else:
+        snapshot_assignment = f"SNAPSHOT={snapshot_literal}"
+        snapshot_token = '"$SNAPSHOT"'
+        shell = "sh"
+
+    def render(parts: list[str]) -> str:
+        command = _render_command(parts)
+        return command.replace(snapshot_literal, snapshot_token, 1)
 
     def cmd(name: str, *, cat: bool = False, own: bool = False) -> str:
         parts = ["contextcanon", "onboard", name, snapshot, *workspace_args]
@@ -275,11 +290,17 @@ def _exact_commands(
             parts.extend(catalog)
         if own:
             parts.extend(owner)
-        return _render_command(parts)
+        return render(parts)
 
     lines = [
         COMMANDS_START,
         "These are the commands for **this exact snapshot**. Copy them; do not rebuild them from IDs or terminal history.",
+        "",
+        "Set this run variable once in your terminal; every snapshot-bound command below reuses it:",
+        "",
+        f"```{shell}",
+        snapshot_assignment,
+        "```",
         "",
         "### 1. Freeze Evidence",
         "",
@@ -382,7 +403,7 @@ def _exact_commands(
     )
     for step in range(2, 10):
         parts = ["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]
-        lines.append(_render_command(parts))
+        lines.append(render(parts))
     lines.extend(["```", COMMANDS_END])
     return "\n".join(lines)
 

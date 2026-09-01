@@ -489,14 +489,16 @@ def main(argv: list[str] | None = None) -> int:
                 write_utf8(workspace.structure_preview_path, text)
                 print(f"wrote structure materialization preview {workspace.structure_preview_path}")
                 existing = sum(item.status == "existing" for item in preview.items)
+                recovering = sum(item.status == "recover" for item in preview.items)
                 missing = sum(item.status == "create" for item in preview.items)
                 print(f"Structure digest: {preview.structure_digest}")
                 print(f"Existing protected Nodes: {existing}")
+                print(f"Root authoring recoveries: {recovering}")
                 print(f"Missing Node skeletons: {missing}")
                 if args.onboard_command == "structure-preview":
                     next_action = (
                         f"Run `contextcanon onboard structure-materialize {_snapshot_cli(snapshot)}` after reviewing `STEP-04-structure-preview.md`."
-                        if missing else
+                        if missing or recovering else
                         f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`."
                     )
                     update_workspace_checkpoint(
