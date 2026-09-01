@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import re
+import shlex
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,18 +18,32 @@ CHECKPOINT_START = "<!-- contextcanon-onboarding-checkpoint:start -->"
 CHECKPOINT_END = "<!-- contextcanon-onboarding-checkpoint:end -->"
 CHECKLIST_START = "<!-- contextcanon-onboarding-checklist:start -->"
 CHECKLIST_END = "<!-- contextcanon-onboarding-checklist:end -->"
+COMMANDS_START = "<!-- contextcanon-onboarding-commands:start -->"
+COMMANDS_END = "<!-- contextcanon-onboarding-commands:end -->"
 
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
-STRUCTURE_INSTRUCTION_NAME = "structure-instruction.md"
-STRUCTURE_PROPOSAL_NAME = "structure-proposal.json"
-STRUCTURE_REVIEW_NAME = "structure.md"
-STRUCTURE_PREVIEW_NAME = "structure-preview.md"
-PLACEMENT_INSTRUCTION_NAME = "placement-instruction.md"
-PLACEMENT_PROPOSAL_NAME = "placement-proposal.json"
-PLACEMENT_REVIEW_NAME = "placement.md"
-PLACEMENT_PREVIEW_NAME = "placement-preview.md"
-PLACEMENT_FOLLOWUP_NAME = "placement-followup.md"
+STRUCTURE_INSTRUCTION_NAME = "STEP-02a-structure-instruction.md"
+STRUCTURE_PROPOSAL_NAME = "STEP-02b-structure-proposal.json"
+STRUCTURE_REVIEW_NAME = "STEP-03-structure.md"
+STRUCTURE_PREVIEW_NAME = "STEP-04-structure-preview.md"
+PLACEMENT_INSTRUCTION_NAME = "STEP-05a-placement-instruction.md"
+PLACEMENT_PROPOSAL_NAME = "STEP-05b-placement-proposal.json"
+PLACEMENT_REVIEW_NAME = "STEP-07-placement.md"
+PLACEMENT_PREVIEW_NAME = "STEP-08-placement-preview.md"
+PLACEMENT_FOLLOWUP_NAME = "STEP-09-placement-followup.md"
+
+LEGACY_ARTIFACT_NAMES = {
+    "structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
+    "structure-proposal.json": STRUCTURE_PROPOSAL_NAME,
+    "structure.md": STRUCTURE_REVIEW_NAME,
+    "structure-preview.md": STRUCTURE_PREVIEW_NAME,
+    "placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
+    "placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
+    "placement.md": PLACEMENT_REVIEW_NAME,
+    "placement-preview.md": PLACEMENT_PREVIEW_NAME,
+    "placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
+}
 
 
 @dataclass(frozen=True)
@@ -85,32 +101,39 @@ def _workspace_readme() -> str:
 
 This directory is the **visible human working area** for one structure-first ContextCanon onboarding.
 
-Start with [`{PLAN_NAME}`]({PLAN_NAME}) when continuing the onboarding. It is the operational checklist: it shows what ContextCanon has already validated, what comes next, and the exact invocation details that must survive a pause. This README is deliberately only the stable orientation page.
+Start with [`{PLAN_NAME}`]({PLAN_NAME}). It is deliberately written as an operator runbook: the numbered flow, exact copy/paste commands for this Evidence snapshot, current validated checkpoint, and reset commands all live there. You should not need chat history or ContextCanon source-code archaeology to remember how to continue.
 
 ## Mental model
 
 ContextCanon separates three jobs:
 
 - `.context/onboarding/<evidence-digest>/` keeps immutable machine-owned frozen Evidence and acceptance/provenance state;
-- this directory keeps the human/LLM review artifacts;
+- this directory keeps human/LLM review artifacts in workflow order;
 - the actual Context Nodes remain in their accepted repository locations and may use directories that did not exist before onboarding.
 
 The repository's old directory tree is evidence about the project, not a taxonomy ContextCanon must preserve. Structure review designs the shelves first; placement review then decides where the existing meaning belongs.
 
-## Human-facing artifacts
+## Human-facing artifacts — sorted in workflow order
 
-- `{PLAN_NAME}` — generated operational checklist and current validated checkpoint.
+- `{PLAN_NAME}` — generated operator runbook and current validated checkpoint.
 - `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for the coarse-structure reasoning pass.
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
 - `{STRUCTURE_PREVIEW_NAME}` — deterministic preview before missing Node skeletons/directories are created.
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
+- Step 06 is validation-only and therefore intentionally has no separate artifact.
 - `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
 
 None of these working files become canonical Context merely because they exist. Explicit publication changes reviewed Context Node authoring.
+
+## Reset for testing
+
+`contextcanon onboard reset <snapshot> --from N` removes workspace artifacts from step N onward and reverses recorded ContextCanon project mutations from those steps. Frozen Evidence is deliberately preserved.
+
+For newly journaled runs, reset restores exact pre-command bytes and refuses to overwrite a managed file that changed afterward. For pre-journal structure tests, ContextCanon can also remove unmistakable untouched onboarding skeleton Nodes conservatively.
 
 ## Why frozen Evidence exists
 
@@ -118,7 +141,7 @@ Freezing does not lock the live Git repository. ContextCanon copies selected rev
 
 ## Ownership
 
-ContextCanon recognizes this workspace by the marker directly below the H1. Files such as this README and `{PLAN_NAME}` are framework-owned operating surfaces; `structure.md` and `placement.md` are the human-editable review gates.
+ContextCanon recognizes this workspace by the marker directly below the H1. Files such as this README and `{PLAN_NAME}` are framework-owned operating surfaces; `{STRUCTURE_REVIEW_NAME}` and `{PLACEMENT_REVIEW_NAME}` are the human-editable review gates.
 
 If a directory with the same name already exists without the marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
 """
@@ -128,20 +151,27 @@ def _workspace_plan() -> str:
     return f"""# ContextCanon onboarding plan
 {PLAN_MARKER}
 
-This is the **operational checklist** for the current onboarding. ContextCanon updates the framework-owned checklist/checkpoint after it validates a stage. Human review still happens in `{STRUCTURE_REVIEW_NAME}` and `{PLACEMENT_REVIEW_NAME}`.
+This is the **operator console** for the current onboarding. Read the numbered steps for meaning; copy commands from **Exact commands for this run** rather than reconstructing IDs/options from memory.
 
 ## Checklist
 
 {CHECKLIST_START}
-- [ ] 1. Freeze Evidence — `contextcanon onboard prepare .`
-- [ ] 2. Structure proposal — generate `{STRUCTURE_INSTRUCTION_NAME}`, run LLM handoff 1, validate `{STRUCTURE_PROPOSAL_NAME}`.
-- [ ] 3. Structure review — edit and validate `{STRUCTURE_REVIEW_NAME}`.
-- [ ] 4. Materialize shelves — review `{STRUCTURE_PREVIEW_NAME}` and create any missing accepted Node directories/skeletons.
-- [ ] 5. Placement proposal — generate `{PLACEMENT_INSTRUCTION_NAME}`, run LLM handoff 2, validate `{PLACEMENT_PROPOSAL_NAME}`.
-- [ ] 6. Placement review — edit `{PLACEMENT_REVIEW_NAME}` until every decision is resolved.
-- [ ] 7. Publication preview — review exact `{PLACEMENT_PREVIEW_NAME}` changes.
-- [ ] 8. Publish placement — publish reviewed canonical Context and inspect `{PLACEMENT_FOLLOWUP_NAME}`.
+- [ ] 1. Freeze Evidence — create or deliberately reuse one exact Evidence snapshot.
+- [ ] 2. Structure proposal — generate `{STRUCTURE_INSTRUCTION_NAME}`, run LLM handoff 1, save `{STRUCTURE_PROPOSAL_NAME}`, validate it.
+- [ ] 3. Structure review — create/edit `{STRUCTURE_REVIEW_NAME}` and validate the human shelf map.
+- [ ] 4. Materialize shelves — review `{STRUCTURE_PREVIEW_NAME}`, then create only missing accepted Node skeletons.
+- [ ] 5. Placement proposal — generate `{PLACEMENT_INSTRUCTION_NAME}`, run LLM handoff 2, save `{PLACEMENT_PROPOSAL_NAME}`.
+- [ ] 6. Placement validate — validate the LLM proposal against the frozen Evidence, accepted structure, and exact Source catalog.
+- [ ] 7. Placement review — create/edit `{PLACEMENT_REVIEW_NAME}` and rerun the review command until every human decision validates.
+- [ ] 8. Publication preview — review exact `{PLACEMENT_PREVIEW_NAME}` changes.
+- [ ] 9. Publish placement — publish reviewed canonical Context and inspect `{PLACEMENT_FOLLOWUP_NAME}`.
 {CHECKLIST_END}
+
+## Exact commands for this run
+
+{COMMANDS_START}
+The exact snapshot-bound commands appear here after ContextCanon opens this workspace.
+{COMMANDS_END}
 
 ## Current checkpoint
 
@@ -149,16 +179,16 @@ This is the **operational checklist** for the current onboarding. ContextCanon u
 No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
 {CHECKPOINT_END}
 
-The checkpoint is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, the edit becomes validated human input only after the next ContextCanon command loads it successfully.
+The checkpoint is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, rerun that step's validation/review command before advancing.
 
-## Review gates
+## Human gates
 
 - **LLM handoff 1:** `{STRUCTURE_INSTRUCTION_NAME}` + only the frozen `evidence/` tree → `{STRUCTURE_PROPOSAL_NAME}`.
 - **Human gate 1:** review/edit `{STRUCTURE_REVIEW_NAME}`.
 - **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
 - **Human gate 2:** review/edit `{PLACEMENT_REVIEW_NAME}`.
 
-`--owner-source` is a one-time choice when a new `{PLACEMENT_REVIEW_NAME}` is created. Once recorded there, it is not repeated on preview/publish. Exact `--catalog-package` inputs that must be reused are retained in the checkpoint below.
+`--owner-source` is a one-time choice only when a new placement review is first created. The exact Source catalog paths are persisted in this PLAN so subsequent commands can be copied rather than reconstructed.
 """
 
 
@@ -189,55 +219,205 @@ def _snapshot_label(snapshot_root: Path) -> str:
         return str(snapshot)
 
 
+def _quote_cli(value: str) -> str:
+    if os.name == "nt":
+        return "'" + value.replace("'", "''") + "'"
+    return shlex.quote(value)
+
+
+def _workspace_option(workspace: OnboardingWorkspace, snapshot_root: Path) -> list[str]:
+    try:
+        default = (find_repo_root(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
+    except ContextCanonError:
+        return ["--workspace", str(workspace.root)]
+    return [] if workspace.root.resolve() == default else ["--workspace", str(workspace.root)]
+
+
+def _render_command(parts: list[str]) -> str:
+    rendered: list[str] = []
+    for index, part in enumerate(parts):
+        value = str(part)
+        if index < 3 or value.startswith("--"):
+            rendered.append(value)
+        else:
+            rendered.append(_quote_cli(value))
+    return " ".join(rendered)
+
+
+def _catalog_args(inputs: tuple[str, ...]) -> list[str]:
+    result: list[str] = []
+    for item in inputs:
+        result.extend(["--catalog-package", item])
+    return result
+
+
+def _owner_args(inputs: tuple[str, ...]) -> list[str]:
+    result: list[str] = []
+    for item in inputs:
+        result.extend(["--owner-source", item])
+    return result
+
+
+def _exact_commands(
+    workspace: OnboardingWorkspace,
+    snapshot_root: Path,
+    catalog_inputs: tuple[str, ...],
+    owner_source_specs: tuple[str, ...],
+) -> str:
+    snapshot = _snapshot_label(snapshot_root)
+    workspace_args = _workspace_option(workspace, snapshot_root)
+    catalog = _catalog_args(catalog_inputs)
+    owner = _owner_args(owner_source_specs)
+
+    def cmd(name: str, *, cat: bool = False, own: bool = False) -> str:
+        parts = ["contextcanon", "onboard", name, snapshot, *workspace_args]
+        if cat:
+            parts.extend(catalog)
+        if own:
+            parts.extend(owner)
+        return _render_command(parts)
+
+    lines = [
+        COMMANDS_START,
+        "These are the commands for **this exact snapshot**. Copy them; do not rebuild them from IDs or terminal history.",
+        "",
+        "### 1. Freeze Evidence",
+        "",
+        "Only run this when you intentionally need a new Evidence basis. Reusing the current frozen snapshot is valid.",
+        "",
+        "```text",
+        "contextcanon onboard prepare .",
+        "```",
+        "",
+        "### 2. Structure proposal",
+        "",
+        "Generate the instruction:",
+        "",
+        "```text",
+        cmd("structure-instruction", cat=True),
+        "```",
+        "",
+        f"Give `{STRUCTURE_INSTRUCTION_NAME}` plus only the frozen `evidence/` tree to the reasoning LLM. Save its JSON exactly as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
+        "",
+        "```text",
+        cmd("structure-validate"),
+        "```",
+        "",
+        "### 3. Structure review",
+        "",
+        "```text",
+        cmd("structure-review"),
+        "```",
+        "",
+        f"Edit `{STRUCTURE_REVIEW_NAME}` as needed, then run the same command again to validate the edited human gate.",
+        "",
+        "### 4. Materialize shelves",
+        "",
+        "```text",
+        cmd("structure-preview"),
+        cmd("structure-materialize"),
+        "```",
+        "",
+        "### 5. Placement proposal",
+        "",
+        "```text",
+        cmd("placement-instruction", cat=True),
+        "```",
+        "",
+        f"Give `{PLACEMENT_INSTRUCTION_NAME}` plus only the same frozen `evidence/` tree to the reasoning LLM. Save its JSON exactly as `{PLACEMENT_PROPOSAL_NAME}`.",
+        "",
+        "### 6. Placement validate",
+        "",
+        "```text",
+        cmd("placement-validate", cat=True),
+        "```",
+        "",
+        "### 7. Placement review",
+        "",
+        "Create/load the review:",
+        "",
+        "```text",
+        cmd("placement-review", cat=True, own=bool(owner)),
+        "```",
+        "",
+    ]
+    if owner:
+        lines.extend(
+            [
+                "`--owner-source` above is only for first creation. After editing the existing review, validate it with this command **without** `--owner-source`:",
+                "",
+                "```text",
+                cmd("placement-review", cat=True),
+                "```",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                f"Edit `{PLACEMENT_REVIEW_NAME}`. Run the same command again after every edit until all decisions validate. If you deliberately choose an owner Source, add `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID` only when creating the review.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "### 8. Publication preview",
+            "",
+            "```text",
+            cmd("placement-preview", cat=True),
+            "```",
+            "",
+            "### 9. Publish placement",
+            "",
+            "```text",
+            cmd("placement-publish", cat=True),
+            "```",
+            "",
+            "## Reset commands for testing",
+            "",
+            "Frozen Evidence is preserved. Pick the step you want to restart from and copy the corresponding line:",
+            "",
+            "```text",
+        ]
+    )
+    for step in range(2, 10):
+        parts = ["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]
+        lines.append(_render_command(parts))
+    lines.extend(["```", COMMANDS_END])
+    return "\n".join(lines)
+
+
 def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[int]:
     completed = {1}
-    if stage in {
-        "structure proposal validated",
-        "human structure validated",
-        "structure previewed",
-        "structure materialized",
-        "placement instruction ready",
-        "placement proposal validated",
-        "human placement review",
-        "placement publication previewed",
-        "placement published",
-    }:
+    after_structure_proposal = {
+        "structure proposal validated", "human structure validated", "structure previewed", "structure materialized",
+        "placement instruction ready", "placement proposal validated", "human placement review",
+        "placement publication previewed", "placement published",
+    }
+    after_structure_review = after_structure_proposal - {"structure proposal validated"}
+    after_materialize = {
+        "structure materialized", "placement instruction ready", "placement proposal validated",
+        "human placement review", "placement publication previewed", "placement published",
+    }
+    after_placement_validate = {
+        "placement proposal validated", "human placement review", "placement publication previewed", "placement published",
+    }
+    if stage in after_structure_proposal:
         completed.add(2)
-    if stage in {
-        "human structure validated",
-        "structure previewed",
-        "structure materialized",
-        "placement instruction ready",
-        "placement proposal validated",
-        "human placement review",
-        "placement publication previewed",
-        "placement published",
-    }:
+    if stage in after_structure_review:
         completed.add(3)
-    if stage in {
-        "structure materialized",
-        "placement instruction ready",
-        "placement proposal validated",
-        "human placement review",
-        "placement publication previewed",
-        "placement published",
-    }:
+    if stage in after_materialize:
         completed.add(4)
-    if stage in {
-        "placement proposal validated",
-        "human placement review",
-        "placement publication previewed",
-        "placement published",
-    }:
-        completed.add(5)
+    if stage in after_placement_validate:
+        completed.update({5, 6})
     if stage in {"placement publication previewed", "placement published"} or (
         stage == "human placement review" and placement_review_complete is True
     ):
-        completed.add(6)
-    if stage == "placement published":
-        completed.update({7, 8})
-    elif stage == "placement publication previewed":
         completed.add(7)
+    if stage in {"placement publication previewed", "placement published"}:
+        completed.add(8)
+    if stage == "placement published":
+        completed.add(9)
     return completed
 
 
@@ -255,6 +435,44 @@ def _rewrite_checklist(text: str, completed: set[int], path: Path) -> str:
     return text[:start] + block + text[end:]
 
 
+def _replace_commands(
+    text: str,
+    workspace: OnboardingWorkspace,
+    snapshot_root: Path,
+    catalog_inputs: tuple[str, ...],
+    owner_source_specs: tuple[str, ...],
+) -> str:
+    block = _exact_commands(workspace, snapshot_root, catalog_inputs, owner_source_specs)
+    if COMMANDS_START not in text or COMMANDS_END not in text:
+        anchor = "## Current checkpoint"
+        if anchor not in text:
+            raise ContextCanonError(f"Malformed onboarding plan; missing {anchor}")
+        return text.replace(anchor, block + "\n\n" + anchor, 1)
+    start = text.index(COMMANDS_START)
+    end = text.index(COMMANDS_END, start) + len(COMMANDS_END)
+    return text[:start] + block + text[end:]
+
+
+def _remembered_values(text: str, heading: str) -> tuple[str, ...]:
+    lines = text.splitlines()
+    try:
+        start = lines.index(heading)
+    except ValueError:
+        return ()
+    result: list[str] = []
+    for line in lines[start + 1 :]:
+        if line.startswith("- ") and not line.startswith("  - "):
+            break
+        if not line.strip():
+            if result:
+                break
+            continue
+        match = re.match(r"^\s+- `(.+)`$", line)
+        if match:
+            result.append(match.group(1))
+    return tuple(result)
+
+
 def update_workspace_checkpoint(
     workspace: OnboardingWorkspace,
     snapshot_root: Path,
@@ -270,7 +488,7 @@ def update_workspace_checkpoint(
     source_catalog_inputs: tuple[str, ...] = (),
     owner_source_specs: tuple[str, ...] = (),
 ) -> None:
-    """Rewrite only the framework-owned checklist/checkpoint inside PLAN.md."""
+    """Rewrite framework-owned checklist, exact commands, and checkpoint surfaces."""
 
     try:
         text = workspace.plan_path.read_text(encoding="utf-8")
@@ -280,7 +498,18 @@ def update_workspace_checkpoint(
     if PLAN_MARKER not in text:
         raise ContextCanonError(f"Refusing to update unowned onboarding plan: {workspace.plan_path}")
 
+    remembered_catalog = _remembered_values(
+        text, "- Exact `--catalog-package` inputs retained for copy/paste commands:"
+    )
+    remembered_owner = _remembered_values(
+        text, "- Owner-selected Source choices already recorded in the human review:"
+    )
+    catalog_inputs = source_catalog_inputs or remembered_catalog
+    owner_specs = owner_source_specs or remembered_owner
+
     text = _rewrite_checklist(text, _completed_steps(stage, placement_review_complete), workspace.plan_path)
+    text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs)
+
     lines = [
         f"- Evidence: `{snapshot_root.resolve().name}`",
         f"- Snapshot: `{_snapshot_label(snapshot_root)}`",
@@ -296,15 +525,18 @@ def update_workspace_checkpoint(
     if source_catalog:
         lines.append("- Exact reusable Source catalog:")
         lines.extend(f"  - `{item}`" for item in source_catalog)
-    if source_catalog_inputs:
-        lines.append("- Reuse these exact `--catalog-package` inputs on the next placement command:")
-        lines.extend(f"  - `{item}`" for item in source_catalog_inputs)
-    if owner_source_specs:
-        lines.append("- Owner-selected Source choices already recorded in `placement.md` (do not repeat on preview/publish):")
-        lines.extend(f"  - `{item}`" for item in owner_source_specs)
+    if catalog_inputs:
+        lines.append("- Exact `--catalog-package` inputs retained for copy/paste commands:")
+        lines.extend(f"  - `{item}`" for item in catalog_inputs)
+    if owner_specs:
+        lines.append("- Owner-selected Source choices already recorded in the human review:")
+        lines.extend(f"  - `{item}`" for item in owner_specs)
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")
-    lines.extend(["", "**Next:**", "", next_action])
+    lines.extend([
+        "", "**Next:**", "", next_action, "",
+        "The exact runnable command is also shown in **Exact commands for this run** above.",
+    ])
     block = CHECKPOINT_START + "\n" + "\n".join(lines) + "\n" + CHECKPOINT_END
 
     if text.count(CHECKPOINT_START) != 1 or text.count(CHECKPOINT_END) != 1:
@@ -325,7 +557,25 @@ def _default_workspace_root(snapshot_root: Path) -> Path:
     return project_root / DEFAULT_WORKSPACE_NAME
 
 
+def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
+    for legacy_name, numbered_name in LEGACY_ARTIFACT_NAMES.items():
+        legacy = workspace.root / legacy_name
+        numbered = workspace.root / numbered_name
+        if not legacy.exists():
+            continue
+        if numbered.exists():
+            if legacy.read_bytes() == numbered.read_bytes():
+                legacy.unlink()
+                continue
+            raise ContextCanonError(
+                f"Onboarding workspace contains both legacy and numbered artifacts with different bytes: "
+                f"{legacy.name}, {numbered.name}"
+            )
+        legacy.rename(numbered)
+
+
 def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace) -> None:
+    _migrate_legacy_artifacts(workspace)
     write_utf8(workspace.readme_path, _workspace_readme())
     if not workspace.plan_path.exists():
         write_utf8(workspace.plan_path, _workspace_plan())
