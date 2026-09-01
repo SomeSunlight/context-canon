@@ -131,8 +131,10 @@ Reset operator-surface recovery checkpoint: the live owner test exposed the miss
 
 Purpose: remove the next owner-test blockers without weakening collision safety: make the runbook visually self-explanatory, shorten repeated snapshot paths in commands, and distinguish legitimate ContextCanon-owned root state from project-owned output collisions during structure preview/materialization.
 
-- [ ] Add a one-line cue immediately above the checklist that the exact copy/paste commands are below it.
-- [ ] Render one shell-native snapshot variable once per PLAN and use it in the exact command section instead of repeating the full content-addressed snapshot path in every command.
-- [ ] Fix structure preview/materialization so an existing ContextCanon-generated `CONTEXT/` namespace and root `.context/onboarding/` state are not mistaken for project-owned collisions, while still refusing concrete foreign output files/namespaces.
-- [ ] Preserve/recover the established root Node identity when the authoring source is missing but prior ContextCanon acceptance state proves that identity; do not silently allocate a replacement root UUID.
-- [ ] Add focused regressions for the exact `ai-workstation` Step-4 shape and PLAN rendering, then run full suite/build/check and exact-head PR CI before handing back a new test SHA.
+- [x] Add a one-line cue immediately above the checklist that the exact copy/paste commands are below it.
+- [x] Render one shell-native snapshot variable once per PLAN and use it in the exact command section instead of repeating the full content-addressed snapshot path in every command.
+- [x] Fix structure preview/materialization so an existing ContextCanon-generated `CONTEXT/` namespace and root `.context/onboarding/` state are not mistaken for project-owned collisions, while still refusing concrete foreign output files/namespaces.
+- [x] Preserve/recover the established root Node identity when the authoring source is missing but prior ContextCanon acceptance state proves that identity; do not silently allocate a replacement root UUID.
+- [x] Add focused regressions for the exact `ai-workstation` Step-4 shape and PLAN rendering, then run full suite/build/check and exact-head PR CI before handing back a new test SHA.
+
+Live Step-4 owner-test checkpoint: the runbook now points visibly from the checklist to the detailed commands and defines one shell-native `SNAPSHOT` variable instead of repeating the full content-addressed path. Structure preview/materialization distinguishes a provably generated root `CONTEXT/`/`.context` namespace from a foreign collision; if the root authoring source is missing, ContextCanon recovers only when generated machine state or prior acceptance proves one stable root identity, and preserves that ID/name/version. Two focused regressions cover the recovered `ai-workstation` shape and continued refusal of a foreign `CONTEXT/`. The complete deterministic suite is now 144 tests; full build/check and zero-drift verification passed in the self-deleting quality run.

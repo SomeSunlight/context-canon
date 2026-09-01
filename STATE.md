@@ -125,3 +125,11 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 ## Immediate next step
 
 Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.
+
+## Latest live Step-4 owner-test verification
+
+The next direct `ai-workstation` test exposed two additional operator issues and one real Step-4 collision bug. The generated PLAN now places an explicit one-line pointer immediately above the checklist to the detailed copy/paste section, and the exact command section defines one shell-native `SNAPSHOT` variable so the long content-addressed Evidence path is written once rather than repeated through every command.
+
+Structure preview/materialization no longer treats a provably ContextCanon-generated root `CONTEXT/` directory or the root `.context/onboarding/` namespace as a project-owned collision merely because the namespace exists. Recovery remains conservative: a missing root `CONTEXT.src.md` is recoverable only when `.context/package.json`, generated `.context/context.yaml`, or prior ContextCanon acceptance state proves one unambiguous stable root Node ID. Existing generated `CONTEXT.md`/`CONTEXT/` bytes are accepted only when their generated ownership can be verified; a foreign `CONTEXT/` directory still fails before mutation. Root recovery preserves the established Node ID, name, and version rather than allocating a replacement UUID.
+
+Focused coverage reproduces the exact failing shape and also proves the foreign-directory refusal. The complete suite now passes **144/144 tests**, followed by full `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check` with zero generated drift. PR #13 remains draft and unmerged; the next action is continued project-owner testing on a normal exact-head CI checkpoint.
