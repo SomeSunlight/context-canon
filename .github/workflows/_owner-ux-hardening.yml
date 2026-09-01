@@ -19,7 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply owner-testing UX hardening
-        run: python tools/_apply_owner_ux_hardening.py
+        run: |
+          python tools/_apply_owner_ux_hardening.py
+          python tools/_owner_ux_compat.py
 
       - name: Compile Python
         run: python -m compileall -q src tests
@@ -32,7 +34,7 @@ jobs:
 
       - name: Commit clean product result
         run: |
-          rm -f tools/_apply_owner_ux_hardening.py .github/workflows/_owner-ux-hardening.yml
+          rm -f tools/_apply_owner_ux_hardening.py tools/_owner_ux_compat.py .github/workflows/_owner-ux-hardening.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
