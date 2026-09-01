@@ -179,6 +179,50 @@ class StructureMaterializationTests(unittest.TestCase):
         self.assertEqual(recovered.metadata.id, ROOT_ID)
         self.assertEqual(recovered.metadata.version, "0.1.0")
 
+    def test_preview_recovers_missing_child_source_from_generated_contextcanon_state(self):
+        repo, prepared, workspace = self.make_project()
+        initial = preview_structure_materialization(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+        materialize_structure_skeletons(initial)
+        child = repo / "bootstrap"
+        child_id = parse_node(child, repo).metadata.id
+        (child / "CONTEXT.src.md").unlink()
+
+        preview = preview_structure_materialization(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+        item = next(value for value in preview.items if value.path == "bootstrap")
+        self.assertEqual(item.status, "recover")
+        self.assertEqual(item.existing_node_id, child_id)
+
+        created = materialize_structure_skeletons(preview)
+        self.assertEqual(created, (child / "CONTEXT.src.md",))
+        self.assertEqual(parse_node(child, repo).metadata.id, child_id)
+
+    def test_child_recovery_refuses_foreign_machine_namespace(self):
+        repo, prepared, workspace = self.make_project()
+        initial = preview_structure_materialization(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+        materialize_structure_skeletons(initial)
+        child = repo / "bootstrap"
+        (child / "CONTEXT.src.md").unlink()
+        (child / ".context" / "foreign.txt").write_text("project-owned\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(ContextCanonError, ".context contains non-ContextCanon-owned entries"):
+            preview_structure_materialization(
+                prepared.snapshot_root,
+                workspace.structure_proposal_path,
+                workspace.structure_path,
+            )
+
     def test_root_recovery_still_refuses_foreign_context_directory(self):
         repo, prepared, workspace = self.make_project()
         write_outputs(Compiler(repo).compile(repo))

@@ -138,3 +138,14 @@ Purpose: remove the next owner-test blockers without weakening collision safety:
 - [x] Add focused regressions for the exact `ai-workstation` Step-4 shape and PLAN rendering, then run full suite/build/check and exact-head PR CI before handing back a new test SHA.
 
 Live Step-4 owner-test checkpoint: the runbook now points visibly from the checklist to the detailed commands and defines one shell-native `SNAPSHOT` variable instead of repeating the full content-addressed path. Structure preview/materialization distinguishes a provably generated root `CONTEXT/`/`.context` namespace from a foreign collision; if the root authoring source is missing, ContextCanon recovers only when generated machine state or prior acceptance proves one stable root identity, and preserves that ID/name/version. Two focused regressions cover the recovered `ai-workstation` shape and continued refusal of a foreign `CONTEXT/`. The complete deterministic suite is now 144 tests; full build/check and zero-drift verification passed in the self-deleting quality run.
+
+#### Block I — recover generated child Nodes during repeated onboarding
+
+Purpose: close the next live `ai-workstation` Step-4 restart gap: a child Node such as `bootstrap` may already have provably generated `.context`/`CONTEXT` state from an earlier onboarding run while its `CONTEXT.src.md` was removed by reset/cleanup. That is established ContextCanon state, not automatically a foreign collision.
+
+- [x] Generalize safe authoring recovery from the project root to every accepted Node path when that Node's own generated machine/package state proves one stable identity.
+- [x] Keep root-only acceptance-record recovery root-only; child recovery must come from the child's own generated state rather than inherited/project-root evidence.
+- [x] Preserve strict collision safety: foreign `CONTEXT/` content or unknown child `.context` entries must still abort before mutation.
+- [x] Add regressions for a recoverable generated child Node and a child `.context` namespace containing foreign state, then run the complete suite/build/check and normal exact-head PR CI before returning a new test SHA.
+
+Child-node recovery checkpoint: the live `bootstrap` failure proved that restart recovery must be Node-local rather than root-special. Any accepted Node path can now recover a missing `CONTEXT.src.md` only when its own generated package/machine state proves one unambiguous stable Node identity; root acceptance records remain root-only evidence. Foreign child `.context` entries and unverified `CONTEXT/` bytes still abort before mutation. The focused additions raise the deterministic suite from 144 to 146 tests.

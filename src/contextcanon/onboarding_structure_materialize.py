@@ -96,7 +96,7 @@ def _yaml_generated_identity(path: Path) -> _RecoveredNodeIdentity | None:
     return _identity(value, ".context/context.yaml")
 
 
-def _recover_root_identity(root: Path) -> _RecoveredNodeIdentity | None:
+def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _RecoveredNodeIdentity | None:
     candidates: list[_RecoveredNodeIdentity] = []
     manifest = _json_object(root / ".context" / "package.json")
     if manifest is not None and manifest.get("schema") == "contextcanon/package/v0":
@@ -106,30 +106,31 @@ def _recover_root_identity(root: Path) -> _RecoveredNodeIdentity | None:
     yaml_identity = _yaml_generated_identity(root / ".context" / "context.yaml")
     if yaml_identity is not None:
         candidates.append(yaml_identity)
-    accepted = root / ".context" / "onboarding" / "accepted"
-    if accepted.is_dir() and not accepted.is_symlink():
-        for path in sorted(accepted.glob("*/acceptance.json")):
-            raw = _json_object(path)
-            if raw is None or raw.get("schema") != "contextcanon/onboarding-acceptance/v0":
-                continue
-            item = _identity(raw.get("node"), path.relative_to(root).as_posix())
-            if item is not None:
-                candidates.append(item)
+    if include_acceptance:
+        accepted = root / ".context" / "onboarding" / "accepted"
+        if accepted.is_dir() and not accepted.is_symlink():
+            for path in sorted(accepted.glob("*/acceptance.json")):
+                raw = _json_object(path)
+                if raw is None or raw.get("schema") != "contextcanon/onboarding-acceptance/v0":
+                    continue
+                item = _identity(raw.get("node"), path.relative_to(root).as_posix())
+                if item is not None:
+                    candidates.append(item)
     if not candidates:
         return None
     node_ids = {item.id for item in candidates}
     if len(node_ids) != 1:
         origins = ", ".join(f"{item.origin}={item.id}" for item in candidates)
-        raise ContextCanonError(f"Conflicting prior ContextCanon root identities: {origins}")
+        raise ContextCanonError(f"Conflicting prior ContextCanon Node identities: {origins}")
     machine = [item for item in candidates if item.origin in {".context/package.json", ".context/context.yaml"}]
     if machine:
         metadata = {(item.name, item.version) for item in machine}
         if len(metadata) != 1:
-            raise ContextCanonError("Conflicting generated ContextCanon root name/version metadata")
+            raise ContextCanonError("Conflicting generated ContextCanon Node name/version metadata")
         return machine[0]
     metadata = {(item.name, item.version) for item in candidates}
     if len(metadata) != 1:
-        raise ContextCanonError("Prior ContextCanon acceptance records disagree on root name/version")
+        raise ContextCanonError("Prior ContextCanon acceptance records disagree on Node name/version")
     return candidates[0]
 
 
@@ -165,30 +166,34 @@ def _generated_context_namespace(root: Path) -> bool:
     files = [path for path in context.rglob("*") if path.is_file() or path.is_symlink()]
     if not files:
         return True
+    generated_readme = False
     readme = context / "README.md"
     if readme.is_file() and not readme.is_symlink():
         try:
-            if readme.read_text(encoding="utf-8").startswith("# Generated Context package resources\n"):
-                return True
+            generated_readme = readme.read_text(encoding="utf-8").startswith("# Generated Context package resources\n")
         except (OSError, UnicodeDecodeError):
-            pass
+            generated_readme = False
     for path in files:
         if path.is_symlink():
             return False
         rel = path.relative_to(root).as_posix()
+        if rel == "CONTEXT/README.md" and generated_readme:
+            continue
         expected = _manifest_file_hash(root, rel)
         if expected is None or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             return False
     return True
 
 
-def _framework_root_machine_namespace(root: Path) -> bool:
+def _framework_machine_namespace(root: Path, *, allow_onboarding: bool) -> bool:
     machine = root / ".context"
     if not machine.exists() and not machine.is_symlink():
         return True
     if machine.is_symlink() or not machine.is_dir():
         return False
-    allowed = {"onboarding", "context.yaml", "package.json", "sources"}
+    allowed = {"context.yaml", "package.json", "sources"}
+    if allow_onboarding:
+        allowed.add("onboarding")
     for child in machine.iterdir():
         if child.name not in allowed or child.is_symlink():
             return False
@@ -217,8 +222,6 @@ def _preflight_new_node(
                 f"Refusing to materialize Context Node at {root}: pre-existing .context path would be ambiguous"
             )
         return
-    if root.resolve() != project_root.resolve():
-        raise ContextCanonError("Internal onboarding error: authoring recovery is supported only for the established project root")
     if not _matches_generated_manifest(root, "CONTEXT.md"):
         raise ContextCanonError(
             f"Refusing to recover Context Node at {root}: existing CONTEXT.md is not proven generated output"
@@ -227,7 +230,10 @@ def _preflight_new_node(
         raise ContextCanonError(
             f"Refusing to recover Context Node at {root}: project-owned path already exists: CONTEXT"
         )
-    if not _framework_root_machine_namespace(root):
+    if not _framework_machine_namespace(
+        root,
+        allow_onboarding=root.resolve() == project_root.resolve(),
+    ):
         raise ContextCanonError(
             f"Refusing to recover Context Node at {root}: .context contains non-ContextCanon-owned entries"
         )
@@ -266,12 +272,8 @@ def preview_structure_materialization(
                 )
             )
             continue
-        if node.path == ".":
-            recovered = _recover_root_identity(root)
-            if recovered is None:
-                raise ContextCanonError(
-                    "Structure-first continuation found no CONTEXT.src.md at the project root and no unambiguous prior ContextCanon root identity to recover"
-                )
+        recovered = _recover_node_identity(root, include_acceptance=node.path == ".")
+        if recovered is not None:
             _preflight_new_node(root, project_root=project, recovery_identity=recovered)
             items.append(
                 StructureMaterializationItem(
@@ -287,6 +289,10 @@ def preview_structure_materialization(
                 )
             )
             continue
+        if node.path == ".":
+            raise ContextCanonError(
+                "Structure-first continuation found no CONTEXT.src.md at the project root and no unambiguous prior ContextCanon root identity to recover"
+            )
         _preflight_new_node(root, project_root=project)
         items.append(
             StructureMaterializationItem(
