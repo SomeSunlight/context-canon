@@ -27,6 +27,7 @@ from .onboarding_workspace import (
     STRUCTURE_REVIEW_NAME,
     WORKSPACE_MARKER,
     open_onboarding_workspace,
+    update_workspace_checkpoint,
     write_utf8,
 )
 from .outputs import expected_outputs
@@ -345,11 +346,12 @@ def reset_onboarding(
         raise _error("--from must be a numbered onboarding step from 2 through 9; frozen Evidence is intentionally preserved")
     snapshot = snapshot_root.resolve()
     project = (project_root or find_repo_root(snapshot)).resolve()
-    workspace = open_onboarding_workspace(
+    workspace_state = open_onboarding_workspace(
         snapshot,
         workspace_root,
         create=True,
-    ).root
+    )
+    workspace = workspace_state.root
 
     selected_steps, project_files = _restore_journal(snapshot, project, from_step)
     legacy_files: list[str] = []
@@ -360,6 +362,12 @@ def reset_onboarding(
     if 9 in selected_steps:
         (snapshot / "placement-acceptance.json").unlink(missing_ok=True)
 
+    update_workspace_checkpoint(
+        workspace_state,
+        snapshot,
+        stage=f"reset before step {from_step}",
+        next_action=f"Restart at numbered step {from_step} using the exact command in this PLAN.",
+    )
     _rewrite_plan_after_reset(workspace, snapshot, from_step)
     return {
         "from_step": from_step,
