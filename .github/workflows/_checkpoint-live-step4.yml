@@ -1,0 +1,64 @@
+name: Temporary live Step-4 checkpoint
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+    paths:
+      - .github/workflows/_checkpoint-live-step4.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Checkpoint durable PLAN and STATE
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          plan = Path('PLAN.md')
+          text = plan.read_text(encoding='utf-8')
+          marker = '#### Block H — live Step-4 collision and PLAN polish'
+          prefix, block = text.split(marker, 1)
+          block = block.replace('- [ ] ', '- [x] ')
+          note = (
+              '\nLive Step-4 owner-test checkpoint: the runbook now points visibly from the checklist to the detailed commands and defines one shell-native `SNAPSHOT` variable instead of repeating the full content-addressed path. Structure preview/materialization distinguishes a provably generated root `CONTEXT/`/`.context` namespace from a foreign collision; if the root authoring source is missing, ContextCanon recovers only when generated machine state or prior acceptance proves one stable root identity, and preserves that ID/name/version. Two focused regressions cover the recovered `ai-workstation` shape and continued refusal of a foreign `CONTEXT/`. The complete deterministic suite is now 144 tests; full build/check and zero-drift verification passed in the self-deleting quality run.\n'
+          )
+          if 'Live Step-4 owner-test checkpoint:' not in block:
+              block = block.rstrip() + '\n' + note
+          plan.write_text(prefix + marker + block, encoding='utf-8', newline='\n')
+
+          state = Path('STATE.md')
+          state_text = state.read_text(encoding='utf-8')
+          latest = '''\n\n## Latest live Step-4 owner-test verification\n\nThe next direct `ai-workstation` test exposed two additional operator issues and one real Step-4 collision bug. The generated PLAN now places an explicit one-line pointer immediately above the checklist to the detailed copy/paste section, and the exact command section defines one shell-native `SNAPSHOT` variable so the long content-addressed Evidence path is written once rather than repeated through every command.\n\nStructure preview/materialization no longer treats a provably ContextCanon-generated root `CONTEXT/` directory or the root `.context/onboarding/` namespace as a project-owned collision merely because the namespace exists. Recovery remains conservative: a missing root `CONTEXT.src.md` is recoverable only when `.context/package.json`, generated `.context/context.yaml`, or prior ContextCanon acceptance state proves one unambiguous stable root Node ID. Existing generated `CONTEXT.md`/`CONTEXT/` bytes are accepted only when their generated ownership can be verified; a foreign `CONTEXT/` directory still fails before mutation. Root recovery preserves the established Node ID, name, and version rather than allocating a replacement UUID.\n\nFocused coverage reproduces the exact failing shape and also proves the foreign-directory refusal. The complete suite now passes **144/144 tests**, followed by full `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check` with zero generated drift. PR #13 remains draft and unmerged; the next action is continued project-owner testing on a normal exact-head CI checkpoint.\n'''
+          if '## Latest live Step-4 owner-test verification' not in state_text:
+              state.write_text(state_text.rstrip() + latest, encoding='utf-8', newline='\n')
+          PY
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Run complete regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate all ContextCanon output
+        run: contextcanon build --all .
+      - name: Verify zero generated drift
+        run: contextcanon check --all .
+      - name: Verify clean diff
+        run: git diff --check
+      - name: Commit clean checkpoint
+        run: |
+          rm .github/workflows/_checkpoint-live-step4.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Checkpoint live Step-4 owner test fixes"
+          git push origin HEAD:agent/onboarding-placement-publication
