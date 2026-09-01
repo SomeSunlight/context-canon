@@ -133,6 +133,22 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertFalse((child / "CONTEXT.md").exists())
         self.assertTrue((repo / "CONTEXT.src.md").exists())
 
+    def test_reset_recreates_missing_workspace_with_restart_plan(self):
+        repo, prepared = self.make_repo()
+        workspace_root = repo / "contextcanon-onboarding"
+        self.assertFalse(workspace_root.exists())
+
+        reset = reset_onboarding(prepared.snapshot_root, from_step=2)
+
+        self.assertTrue(workspace_root.is_dir())
+        self.assertTrue((workspace_root / "README.md").is_file())
+        self.assertTrue((workspace_root / "PLAN.md").is_file())
+        plan = (workspace_root / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("Stage: **reset before step 2**", plan)
+        self.assertIn("restart at numbered step 2", plan)
+        self.assertIn("contextcanon onboard structure-instruction", plan)
+        self.assertIn(prepared.evidence_digest, plan)
+        self.assertTrue(reset["evidence_preserved"])
 
     def test_cli_help_uses_numbered_workspace_artifacts(self):
         env = dict(**__import__("os").environ)
