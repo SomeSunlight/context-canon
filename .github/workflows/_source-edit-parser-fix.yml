@@ -1,0 +1,53 @@
+name: Temporary shared source-edit parser fix
+
+on:
+  push:
+    branches: [agent/onboarding-placement-publication]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Record development block
+        run: python tools/_fix_source_edit_parser.py plan
+      - name: Apply parser fix and regression
+        run: python tools/_fix_source_edit_parser.py apply
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Focused placement-review regression
+        run: python -m unittest tests.test_onboarding_placement_review -v
+      - name: Complete regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate ContextCanon outputs
+        run: contextcanon build --all .
+      - name: Verify zero generated drift
+        run: contextcanon check --all .
+      - name: Verify implementation diff
+        run: git diff --check
+      - name: Finalize durable PLAN and STATE
+        run: python tools/_fix_source_edit_parser.py finalize
+      - name: Recheck generated state after checkpoint
+        run: |
+          contextcanon build --all .
+          contextcanon check --all .
+          git diff --check
+      - name: Remove temporary harness and commit clean product result
+        run: |
+          rm tools/_fix_source_edit_parser.py
+          rm .github/workflows/_source-edit-parser-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Fix shared Source After review parsing"
+          git push origin HEAD:agent/onboarding-placement-publication
