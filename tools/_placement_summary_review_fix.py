@@ -164,7 +164,11 @@ def apply_tests() -> None:
         self.assertNotIn("Linked promoted findings:", rendered)
 
         replacement = "Architecture in one sentence. Maintained detail lives in [AI Workstation Context](../CONTEXT.md)."
-        rendered = rendered.replace(f'<!-- cc:source-after id="{fallback.proposal_id}":start -->\n# Architecture\nThe repository is the installation specification.\n<!-- cc:source-after', f'<!-- cc:source-after id="{fallback.proposal_id}":start -->\n{replacement}\n<!-- cc:source-after', 1)
+        start_marker = f'<!-- cc:source-after id="{fallback.proposal_id}":start -->'
+        end_marker = f'<!-- cc:source-after id="{fallback.proposal_id}":end -->'
+        start = rendered.index(start_marker) + len(start_marker)
+        end = rendered.index(end_marker, start)
+        rendered = rendered[:start] + "\n" + replacement + "\n" + rendered[end:]
         rendered = rendered.replace("Decision: `pending`", "Decision: `accept`", 1)
         rendered = rendered.replace("Source edit decision: `reject`", "Source edit decision: `accept`", 1)
         workspace.placement_path.write_text(rendered, encoding="utf-8")
