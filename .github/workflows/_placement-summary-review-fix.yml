@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Record development block
-        run: python tools/_placement_summary_review_fix.py plan
+        run: |
+          python tools/_placement_summary_review_fix.py plan
+          python -c "from pathlib import Path; p=Path('PLAN.md'); p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')"
       - name: Apply placement summary and cockpit corrections
         run: python tools/_placement_summary_review_fix.py apply
       - name: Install ContextCanon
@@ -37,7 +39,9 @@ jobs:
       - name: Verify implementation diff
         run: git diff --check
       - name: Finalize durable PLAN and STATE
-        run: python tools/_placement_summary_review_fix.py finalize
+        run: |
+          python tools/_placement_summary_review_fix.py finalize
+          python -c "from pathlib import Path; [(lambda p: p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8'))(Path(name)) for name in ('PLAN.md','STATE.md')]"
       - name: Recheck after durable checkpoint
         run: |
           contextcanon build --all .
