@@ -134,6 +134,17 @@ class PlacementPublicationTests(unittest.TestCase):
                     "payload": {"text": "Continue Goose changes through reviewed pull requests.", "wording_origin": "synthesized"},
                 },
                 {
+                    "id": "P-008",
+                    "title": "Project version semantics remain unresolved",
+                    "kind": "unresolved",
+                    "action": "promote",
+                    "destination_node_key": "N-001",
+                    "rationale": "The open question should survive onboarding without blocking publication.",
+                    "confidence": "medium",
+                    "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 1, "end_line": 1}],
+                    "payload": {"question": "Should the project and release version surfaces be aligned?"},
+                },
+                {
                     "id": "P-006",
                     "title": "README authority mapping",
                     "kind": "authority-mapping",
@@ -204,6 +215,7 @@ class PlacementPublicationTests(unittest.TestCase):
         root = next(delta for delta in preview.nodes if delta.key == "N-001")
         self.assertIn("## State", root.after)
         self.assertIn("Migration is in progress.", root.after)
+        self.assertIn("Open question: Should the project and release version surfaces be aligned?", root.after)
         self.assertIn("## Plan", root.after)
         self.assertIn("Continue Goose changes through reviewed pull requests.", root.after)
         self.assertIn(head, text)
@@ -247,6 +259,7 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertIn("contextcanon-placement-plan:start", root_text)
         parsed_root = parse_node(repo, repo)
         self.assertIn("Migration is in progress.", parsed_root.state)
+        self.assertIn("Open question: Should the project and release version surfaces be aligned?", parsed_root.state)
         self.assertIn("Continue Goose changes through reviewed pull requests.", parsed_root.plan)
         self.assertIn('transport="git"', root_text)
         self.assertIn(f'ref="{head}"', root_text)

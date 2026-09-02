@@ -52,6 +52,9 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertIn("### Into Node — editable", text)
         self.assertIn("### Source before — frozen Evidence", text)
         self.assertIn("### Source after promotion", text)
+        self.assertIn("✏️ EDITABLE CONTROLS — finding", text)
+        self.assertIn("✏️ EDITABLE START — destination content", text)
+        self.assertIn("✏️ EDITABLE START — source replacement", text)
         self.assertIn('origin="owner-selected"', text)
         self.assertEqual(len(review.sources), 1)
         self.assertEqual(review.sources[0].origin, "owner-selected")
@@ -158,6 +161,10 @@ class EditablePlacementReviewTests(unittest.TestCase):
         _, prepared, workspace, readme, architecture, source_root, package = helper.make_case()
         raw = helper.placement_dict(prepared, workspace, readme, architecture, package)
         raw["source_edits"] = []
+        # Put the promoted finding on a mutable gateway line; architecture.md is
+        # retained as the fixture Topic/Resource and therefore must not receive
+        # an automatically invented H-fallback cleanup.
+        raw["items"][0]["evidence"] = [{"path": "README.md", "sha256": readme.sha256, "start_line": 2, "end_line": 2}]
         workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
         proposal = load_onboarding_placement_proposal(
             workspace.placement_proposal_path,
@@ -175,7 +182,8 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertTrue(fallback.proposal_id.startswith("H-"))
         self.assertEqual(fallback.decision, "reject")
         rendered = workspace.placement_path.read_text(encoding="utf-8")
-        self.assertIn("Optional human override", rendered)
+        self.assertIn("Optional source cleanup — independent from promotion", rendered)
+        self.assertIn("Leave this Source edit at `reject` to keep the source unchanged", rendered)
         self.assertIn("Source edit decision: `reject`", rendered)
         self.assertNotIn("Linked promoted findings:", rendered)
 
@@ -192,6 +200,25 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertEqual(loaded.source_edits[0].decision, "accept")
         self.assertEqual(loaded.source_edits[0].replacement, replacement)
 
+
+
+    def test_review_fallback_does_not_offer_cleanup_for_topic_resource(self):
+        helper = placement_fixture.OnboardingPlacementTests()
+        _, prepared, workspace, readme, architecture, source_root, package = helper.make_case()
+        raw = helper.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["source_edits"] = []
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path,
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+            catalog_package_roots=[source_root],
+        )
+        review, created = create_or_load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertTrue(created)
+        self.assertEqual(review.source_edits, ())
+        self.assertNotIn("Optional source cleanup", workspace.placement_path.read_text(encoding="utf-8"))
 
     def test_multiple_source_edits_owned_by_one_finding_parse_independently(self):
         helper = placement_fixture.OnboardingPlacementTests()

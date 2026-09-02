@@ -83,6 +83,22 @@ Sometimes the project owner has already reviewed the product direction and expli
 
 Fast-run changes **cadence, not authority**: the work still stays on a review branch, PLAN remains current enough to resume after interruption, unknown failures are investigated, and the resulting coherent candidate still requires project-owner review followed by the ordinary exact-head merge gate.
 
+Make the boundary visible in PLAN rather than leaving the mode implicit in chat history. A compact form is enough:
+
+```text
+Fast-run status — ACTIVE
+Scope: <delegated coherent work>
+Deferred ceremony: <what is intentionally batched>
+Exit: <owner ends it or named coherent review boundary>
+
+... work/checkpoints ...
+
+Fast-run status — CLOSED
+Result/checkpoint: <where normal cadence resumes>
+```
+
+Do not invent a historical start time after the fact. If a fast-run is already under way when this convention is adopted, record that it is active now, its current scope, and its exit condition. The important property is recoverable mode state, not timestamp theatre.
+
 ## 4. What automated verification proves and what it does not
 
 A green CI or local verification run proves only that the checks configured by the project passed on that exact revision.

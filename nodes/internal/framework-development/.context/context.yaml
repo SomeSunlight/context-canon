@@ -23,8 +23,8 @@ sources:
     name: "Development Workflow"
     version: "0.2.0-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81"
-    package_digest: "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb"
+    normalized_digest: "baee9f20f439021f9d66ee22f2baac71288ad06661aa745af478e3059a951e6b"
+    package_digest: "a5ae5d7b81e9ee1625f84db9cfb3717f8a0700d8348b8150b15f20bed277b854"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -167,5 +167,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "3adee7a5adfb77102cf59b1c5b25cff9fdec33fcb50a355bf19e8b585ae381c2"
-  package_digest: "a4a13bb675c72b0e4b5e0d602d351345c6d096477a1981e80dceb542d8b818ad"
+  normalized_digest: "99ac38a016668cf3785ec68296090062130a8d7add9f190b01b007202f01824e"
+  package_digest: "cde2a034fe8f737156c645b1f8b559b688cdef9ae6d3f14f9c3ade84da03bc7d"

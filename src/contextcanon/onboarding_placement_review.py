@@ -186,11 +186,11 @@ def _evidence_excerpt(reference: EvidenceReference, snapshot: EvidenceSnapshot) 
 
 
 def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
-    if kind in {"overview", "rule", "topic-resource", "state", "plan"}:
+    if kind in {"overview", "rule", "topic-resource", "state", "plan", "unresolved"}:
         heading = "### Into Node — editable"
     else:
         heading = "### Reviewed handling — editable"
-    lines = [heading, ""]
+    lines = [heading, "", "**✏️ EDITABLE START — destination content**", ""]
     if kind == "rule":
         lines.append(f"Statement: {_one_line(payload['statement'])}")
         lines.append(f"Why: {_one_line(payload['why'])}")
@@ -215,6 +215,7 @@ def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
         lines.append(f"Question: {_one_line(payload['question'])}")
     else:
         raise _error(f"unsupported kind {kind!r}")
+    lines.extend(["", "**✏️ EDITABLE END — destination content**"])
     return lines
 
 
@@ -247,12 +248,28 @@ def _review_source_edit_candidates(
     fixed = set(proposal.structure.fixed_markdown)
     item_order = {item.id: index for index, item in enumerate(proposal.items)}
 
+    protected_resources = {
+        str(path)
+        for item in proposal.items
+        if item.kind == "topic-resource"
+        for path in item.payload.get("resource_paths", [])
+    }
+
+    def history_document(path_value: str) -> bool:
+        name = Path(path_value).name.lower()
+        return name.startswith("changelog") or name.startswith("patch-") or "/patch-" in path_value.lower()
+
     grouped: dict[tuple[str, str, int, int], list[str]] = {}
     for item in proposal.items:
         if item.action != "promote" or item.id in linked_by_proposal:
             continue
         for reference in item.evidence:
-            if not reference.path.lower().endswith(".md") or reference.path in fixed:
+            if (
+                not reference.path.lower().endswith(".md")
+                or reference.path in fixed
+                or reference.path in protected_resources
+                or history_document(reference.path)
+            ):
                 continue
             if any(
                 _ranges_overlap(
@@ -324,15 +341,17 @@ def _render_source_edit(
     if edit.proposal_id not in proposal_ids:
         lines.extend(
             [
-                "**Optional human override — the LLM proposed no Source After rewrite here.**",
-                "It defaults to `reject`. Edit the replacement and switch to `accept` only if you want this exact frozen range cleaned up now.",
+                "**Optional source cleanup — independent from promotion.**",
+                "Accepting or rejecting the finding above is separate. Leave this Source edit at `reject` to keep the source unchanged; switch to `accept` only if you want to rewrite this exact frozen range now.",
                 "",
             ]
         )
     lines.extend(
         [
+            "**✏️ EDITABLE CONTROLS — source cleanup**",
             f"Source edit decision: `{edit.decision}`",
             f"Source edit note: {edit.review_note or '-'}",
+            "**✏️ END EDITABLE CONTROLS — source cleanup**",
         ]
     )
     if related:
@@ -346,12 +365,13 @@ def _render_source_edit(
             "",
             "**Proposed replacement — edit the text between the markers:**",
             "",
+            "**✏️ EDITABLE START — source replacement**",
             f'<!-- cc:source-after id="{edit.proposal_id}":start -->',
         ]
     )
     if edit.replacement:
         lines.extend(edit.replacement.split("\n"))
-    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "", f"Why this source edit: {candidate.rationale}", ""])
+    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "**✏️ EDITABLE END — source replacement**", "", f"Why this source edit: {candidate.rationale}", ""])
     return lines
 
 
@@ -373,11 +393,13 @@ def _render_item(
         f"## {review_item.proposal_id} — {review_item.title}",
         f'<!-- cc:placement-item id="{review_item.proposal_id}" authoring-id="{review_item.authoring_id}" -->',
         "",
+        "**✏️ EDITABLE CONTROLS — finding**",
         f"Destination: {destination_text}",
         f"Decision: `{review_item.decision}`",
         f"Kind: `{review_item.kind}`",
         f"Action: `{review_item.action}`",
         f"Review note: {review_item.review_note or '-'}",
+        "**✏️ END EDITABLE CONTROLS — finding**",
         "",
     ]
     lines.extend(_render_payload(review_item.kind, review_item.payload))
@@ -527,7 +549,7 @@ def render_placement_review(
     lines = [
         "# ContextCanon onboarding placement review",
         "",
-        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, kind/action, title, destination wording, Source edit decision/replacement, or review notes where necessary.",
+        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, kind/action, title, destination wording, Source edit decision/replacement, or review notes where necessary. Rendered Markdown deliberately shows `✏️ EDITABLE` boundary labels; the hidden `cc:*` comments remain machine markers and are not the only way to discover editability.",
         "",
         "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
         "",
@@ -707,12 +729,12 @@ def _validate_item_edit(
         "state": {"promote"},
         "plan": {"promote"},
         "authority-mapping": {"map"},
-        "unresolved": {"keep"},
+        "unresolved": {"promote"},
     }
     if action not in allowed_actions[kind]:
         expected = ", ".join(sorted(allowed_actions[kind]))
         raise _error(f"item {item_id} Kind {kind} must use Action {expected}")
-    requires_destination = kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping"}
+    requires_destination = kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping", "unresolved"}
     if requires_destination and destination is None:
         raise _error(f"item {item_id} Kind {kind} requires a Destination")
     evidence_paths = set(snapshot.by_path)

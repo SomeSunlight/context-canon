@@ -342,6 +342,18 @@ def _render_summaries(items: list[PlacementReviewItem], kind: str) -> str:
     return "\n".join(lines).rstrip()
 
 
+def _render_state(items: list[PlacementReviewItem]) -> str:
+    lines: list[str] = []
+    for item in items:
+        if item.kind == "state":
+            text = _safe_line(item.payload["text"], f"item {item.proposal_id} state")
+            lines.extend([f'<!-- cc:placement-state id="{item.authoring_id}" -->', f"- {text}", ""])
+        elif item.kind == "unresolved":
+            question = _safe_line(item.payload["question"], f"item {item.proposal_id} unresolved question")
+            lines.extend([f'<!-- cc:placement-unresolved id="{item.authoring_id}" -->', f"- Open question: {question}", ""])
+    return "\n".join(lines).rstrip()
+
+
 def _render_rules(items: list[PlacementReviewItem]) -> str:
     if not items:
         return ""
@@ -418,7 +430,7 @@ def _render_node_source(
     provenance_by_id: dict[str, SourceGitProvenance],
 ) -> str:
     overviews = [item for item in items if item.kind == "overview"]
-    states = [item for item in items if item.kind == "state"]
+    states = [item for item in items if item.kind in {"state", "unresolved"}]
     plans = [item for item in items if item.kind == "plan"]
     rules = [item for item in items if item.kind == "rule"]
     topics = [item for item in items if item.kind == "topic-resource"]
@@ -440,7 +452,7 @@ def _render_node_source(
     if overviews or states or plans or rules or topics or sources:
         text = _remove_skeleton_placeholder(text)
     text = _replace_managed_section(text, "Overview", "overview", _render_overviews(overviews))
-    text = _replace_managed_section(text, "State", "state", _render_summaries(states, "state"))
+    text = _replace_managed_section(text, "State", "state", _render_state(states))
     text = _replace_managed_section(text, "Plan", "plan", _render_summaries(plans, "plan"))
     text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id))
     text = _replace_managed_section(text, "Rules", "rules", _render_rules(rules))
@@ -453,7 +465,7 @@ def _accepted_by_node(review: OnboardingPlacementReview) -> dict[str, list[Place
     for item in review.items:
         if item.decision != "accept" or item.destination_node_key is None:
             continue
-        if item.kind not in {"overview", "rule", "topic-resource", "state", "plan"}:
+        if item.kind not in {"overview", "rule", "topic-resource", "state", "plan", "unresolved"}:
             continue
         result.setdefault(item.destination_node_key, []).append(item)
     return result
@@ -471,7 +483,7 @@ def _followups(review: OnboardingPlacementReview) -> tuple[PlacementReviewItem, 
     return tuple(
         item
         for item in review.items
-        if item.decision == "accept" and item.kind in {"ordinary-documentation", "authority-mapping", "unresolved"}
+        if item.decision == "accept" and item.kind in {"ordinary-documentation", "authority-mapping"}
     )
 
 
@@ -551,7 +563,7 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
 
     lines.extend(["## Context Node source deltas", ""])
     if not preview.nodes:
-        lines.extend(["No accepted Overview, State, Plan, Rule, Topic/Resource or Source changes currently touch a Context Node.", ""])
+        lines.extend(["No accepted Overview, State/open-question, Plan, Rule, Topic/Resource or Source changes currently touch a Context Node.", ""])
     for node in preview.nodes:
         lines.extend(
             [
@@ -738,7 +750,7 @@ def render_placement_followups(preview: PlacementPublicationPreview) -> str:
         "These accepted findings intentionally were not forced into today's `CONTEXT.src.md` grammar or into arbitrary project prose. They remain bound to the exact reviewed placement and are work for explicit later handling.",
         "",
     ]
-    groups = (("state", "State"), ("plan", "Plan"), ("authority-mapping", "Fixed-authority mappings"), ("ordinary-documentation", "Ordinary documentation"), ("unresolved", "Unresolved"))
+    groups = (("authority-mapping", "Fixed-authority mappings"), ("ordinary-documentation", "Ordinary documentation"))
     for kind, title in groups:
         items = [item for item in preview.followups if item.kind == kind]
         if not items:

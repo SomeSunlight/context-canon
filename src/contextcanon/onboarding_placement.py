@@ -332,7 +332,7 @@ def load_onboarding_placement_proposal(
         destination = _optional_string(raw_item["destination_node_key"], f"items[{index}].destination_node_key")
         if destination is not None and destination not in node_keys:
             raise _error(f"items[{index}] references unknown destination Node {destination}")
-        if kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping"} and destination is None:
+        if kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping", "unresolved"} and destination is None:
             raise _error(f"items[{index}] kind {kind} requires destination_node_key")
         allowed_actions = {
             "overview": {"promote"},
@@ -342,7 +342,7 @@ def load_onboarding_placement_proposal(
             "state": {"promote"},
             "plan": {"promote"},
             "authority-mapping": {"map"},
-            "unresolved": {"keep"},
+            "unresolved": {"promote"},
         }
         if action not in allowed_actions[str(kind)]:
             expected = ", ".join(sorted(allowed_actions[str(kind)]))
@@ -418,6 +418,8 @@ def load_onboarding_placement_proposal(
                 raise _error(f"{label} references unknown placement item {linked_id}")
             if linked_item.action != "promote":
                 raise _error(f"{label} may link only promoted placement items; {linked_id} uses {linked_item.action}")
+            if linked_item.kind == "unresolved":
+                raise _error(f"{label} cannot use unresolved finding {linked_id} to justify source cleanup")
             for reference in linked_item.evidence:
                 if reference.path == edit_path:
                     covered.update(range(reference.start_line, reference.end_line + 1))

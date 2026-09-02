@@ -199,3 +199,33 @@ Purpose: correct the next live `ai-workstation` Step-7 review failure. The secon
 - [x] Add focused regressions for the sharper instruction, optional human Source After override, shared-edit presentation and parser round-trip, then run the complete suite plus build/check/diff-check.
 
 Placement summary/cockpit checkpoint: the placement instruction now requires a real A′ summary plus the Context link, explicitly rejects pointer-only Source After prose at still-useful human surfaces, keeps volatile compatibility out of stable Overview, and treats Overview/State/Plan findings as one bullet-sized fact each. STEP-07 hides self-referential linked-finding noise and exposes a deterministic review-only Source edit when a promoted finding has an unambiguous mutable Markdown range but the LLM omitted cleanup; that fallback defaults to reject and therefore cannot mutate the project unless the owner edits and accepts it. Focused regressions cover the instruction and human fallback round-trip; full suite/build/check/diff-check are green before cleanup.
+
+#### Fast-run status — ACTIVE
+
+The project owner has explicitly delegated the current live `ai-workstation` correction sequence as an owner-approved fast-run. This boundary is now recorded durably instead of living only in conversation.
+
+- **Scope:** corrections discovered while vertically reviewing the real onboarding placement, through the next coherent owner-review candidate.
+- **Reduced intermediate ceremony:** repeated PR-description polish, full CI and generated-output refresh may be deferred between small related corrections; focused verification and recovery checkpoints remain required.
+- **Exit condition:** the project owner explicitly ends the fast-run, or the current placement line reaches a coherent owner-review candidate. At exit, record **Fast-run status — CLOSED** in PLAN before returning to ordinary review cadence.
+- **Authority is unchanged:** fast-run changes cadence only. PR #13 remains review-only and must not be merged without explicit owner approval and the normal exact-head merge gate.
+
+The exact historical instant at which this already-running cadence began is intentionally not invented retroactively; this checkpoint makes the active boundary explicit from here forward.
+
+#### Block N — preserve semantic integrity and make the placement cockpit visibly editable
+
+Purpose: incorporate the next real `ai-workstation` placement-review findings without making the semantic pass brittle. Source cleanup must never silently discard facts, open questions must survive onboarding in the owning Node, and the Markdown cockpit must show human-editable regions even in rendered views.
+
+- [x] Require a per-Source-edit zero-loss audit: every substantive fact removed from the frozen range must remain in A′ or be carried by linked promoted findings that cite that source range; a duplicate elsewhere may not accidentally rescue an incomplete move.
+- [x] Make `unresolved` a destination-bearing promoted local open question and publish it into the destination Node's State so investigation can happen after onboarding without blocking it.
+- [x] Tighten the one-finding/one-fact guidance enough that lists and three-or-more independently maintainable clauses cannot be hidden inside one `includes A, B, C` or semicolon-heavy bullet.
+- [x] Keep review-only H-fallback cleanup away from retained Topic/Resource documents and release-history/patch documents.
+- [x] Make optional source cleanup explicitly independent from accepting the promoted finding, and add visible rendered Markdown markers around every human-editable control/content region.
+- [x] Clarify historical evidence for volatile State: when only changelog/history supports a value, say `last documented` or leave it unresolved rather than presenting it as proven current state.
+- [x] Record the bounded fast-run start/scope/exit contract in the reusable Development Workflow while leaving this currently active fast-run open.
+- [x] Add focused regressions, run the complete deterministic suite, rebuild/check generated ContextCanon output, and leave PR #13 draft/unmerged for continued owner testing.
+
+Placement semantic-integrity checkpoint: the second semantic pass now audits every proposed Source After transformation for zero semantic loss against its exact frozen range; splitting volatile detail out of Overview requires destination State findings to cite that same mixed source. Unresolved findings are destination-bearing promoted open questions and publish into local Node State instead of disappearing into follow-up. The review-only H-fallback no longer offers cleanup for retained Topic/Resource documents or release-history/patch documents, optional cleanup explicitly says it is independent from accepting the finding, and rendered Markdown shows visible ✏️ boundaries around editable controls/content. The Development Workflow now requires an explicit fast-run ACTIVE scope/exit boundary and later CLOSED checkpoint; the current owner-approved fast-run remains ACTIVE. Focused placement regressions, the complete deterministic suite, full build/check and diff hygiene passed before this checkpoint.
+
+### Later documentation follow-up
+
+- [ ] Document the observed onboarding effect that book placement itself surfaces previously hidden responsibilities, boundaries and unresolved questions; concise finding titles become a useful project index before the reader even opens the deeper material.

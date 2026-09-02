@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "3adee7a5adfb77102cf59b1c5b25cff9fdec33fcb50a355bf19e8b585ae381c2",
-    "package": "a4a13bb675c72b0e4b5e0d602d351345c6d096477a1981e80dceb542d8b818ad"
+    "normalized": "99ac38a016668cf3785ec68296090062130a8d7add9f190b01b007202f01824e",
+    "package": "cde2a034fe8f737156c645b1f8b559b688cdef9ae6d3f14f9c3ade84da03bc7d"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "9abd4c17a4d0c772d89913168564feca04d14586a8b6d9a88339b66fd966d8ac",
-      "size": 13541
+      "sha256": "1730e18d19c7e953edd5b215185226dacefc0ab3862f1c4e83483bec8c41c919",
+      "size": 13700
     },
     {
       "path": "CONTEXT/README.md",
@@ -250,9 +250,9 @@
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "origin_node_name": "Development Workflow",
-      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, keep durable PLAN/recovery checkpoints and focused verification inside bounded work blocks, but defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate.",
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.",
       "title": "Use owner-approved fast-run blocks without weakening the final gate",
-      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability, final human review, or exact-head merge verification."
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker fast-run from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
     },
     {
       "group": "Proportional verification",
@@ -397,8 +397,8 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "761b717aca335b5ddd1bf70b5c880de36d1d9f2cdca7828caefa1dd4872e1b81",
-      "package_digest": "1d82c87e4f4140791f354c9d9479df845eb65c13fce1c664ecb05bec9532c8eb",
+      "normalized_digest": "baee9f20f439021f9d66ee22f2baac71288ad06661aa745af478e3059a951e6b",
+      "package_digest": "a5ae5d7b81e9ee1625f84db9cfb3717f8a0700d8348b8150b15f20bed277b854",
       "version": "0.2.0-draft"
     }
   ],

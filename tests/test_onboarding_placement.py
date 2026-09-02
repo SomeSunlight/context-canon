@@ -174,7 +174,12 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertIn("README as first-contact orientation/navigation", instruction.text)
         self.assertIn("Overview is a condensation task", instruction.text)
         self.assertIn("one bullet-sized fact", instruction.text)
+        self.assertIn("three or more independently maintainable claims", instruction.text)
         self.assertIn("short versionless Overview", instruction.text)
+        self.assertIn("Splitting is not permission to drop facts", instruction.text)
+        self.assertIn("Zero semantic loss per Source edit", instruction.text)
+        self.assertIn("last documented", instruction.text)
+        self.assertIn("local open question", instruction.text)
         self.assertIn("real plain-language summary", instruction.text)
         self.assertIn("Pointer-only replacements", instruction.text)
         self.assertIn("A reader should learn the gist without following the link", instruction.text)
@@ -284,6 +289,45 @@ class OnboardingPlacementTests(unittest.TestCase):
                 workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
                 workspace.structure_path, catalog_package_roots=[source_root],
             )
+
+
+    def test_unresolved_requires_destination_and_promotes_for_later_investigation(self):
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["items"].append({
+            "id": "P-003",
+            "title": "Version semantics unclear",
+            "kind": "unresolved",
+            "action": "keep",
+            "destination_node_key": None,
+            "rationale": "The question should survive onboarding.",
+            "confidence": "medium",
+            "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 1, "end_line": 1}],
+            "payload": {"question": "Which version surface is canonical?"},
+        })
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "requires destination_node_key"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
+
+        raw["items"][-1]["destination_node_key"] = "N-001"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "kind unresolved must use action promote"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
+
+        raw["items"][-1]["action"] = "promote"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+            workspace.structure_path, catalog_package_roots=[source_root],
+        )
+        self.assertEqual(proposal.items[-1].kind, "unresolved")
+        self.assertEqual(proposal.items[-1].destination_node_key, "N-001")
 
     def test_cli_writes_instruction_validates_and_renders_review_without_redirects(self):
         _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
