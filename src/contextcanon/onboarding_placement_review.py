@@ -223,21 +223,124 @@ def _source_edit_excerpt(edit: PlacementSourceEdit, snapshot: EvidenceSnapshot) 
     return _evidence_excerpt(reference, snapshot)
 
 
-def _render_source_edit(edit: PlacementReviewSourceEdit, proposal_edit: PlacementSourceEdit, snapshot: EvidenceSnapshot) -> list[str]:
-    linked = ", ".join(proposal_edit.linked_item_ids)
+def _source_reference_text(reference: EvidenceReference, snapshot: EvidenceSnapshot) -> str:
+    evidence_file = snapshot.root / "evidence" / reference.path
+    lines = evidence_file.read_text(encoding="utf-8").splitlines()
+    return "\n".join(lines[reference.start_line - 1 : reference.end_line])
+
+
+def _ranges_overlap(path_a: str, start_a: int, end_a: int, path_b: str, start_b: int, end_b: int) -> bool:
+    return path_a == path_b and max(start_a, start_b) <= min(end_a, end_b)
+
+
+def _review_source_edit_candidates(
+    proposal: OnboardingPlacementProposal, snapshot: EvidenceSnapshot
+) -> tuple[PlacementSourceEdit, ...]:
+    """Return LLM source edits plus conservative review-only edit affordances.
+
+    The fallback exists only when the LLM supplied no source edit for a promoted
+    finding. It is bound to exact mutable frozen Evidence, defaults to reject in
+    the human review, and therefore cannot silently add a cleanup mutation.
+    """
+    proposed = list(proposal.source_edits)
+    linked_by_proposal = {item_id for edit in proposed for item_id in edit.linked_item_ids}
+    fixed = set(proposal.structure.fixed_markdown)
+    item_order = {item.id: index for index, item in enumerate(proposal.items)}
+
+    grouped: dict[tuple[str, str, int, int], list[str]] = {}
+    for item in proposal.items:
+        if item.action != "promote" or item.id in linked_by_proposal:
+            continue
+        for reference in item.evidence:
+            if not reference.path.lower().endswith(".md") or reference.path in fixed:
+                continue
+            if any(
+                _ranges_overlap(
+                    reference.path, reference.start_line, reference.end_line,
+                    edit.path, edit.start_line, edit.end_line,
+                )
+                for edit in proposed
+            ):
+                continue
+            key = (reference.path, reference.sha256, reference.start_line, reference.end_line)
+            grouped.setdefault(key, []).append(item.id)
+
+    keys = list(grouped)
+    ambiguous: set[tuple[str, str, int, int]] = set()
+    for index, left in enumerate(keys):
+        for right in keys[index + 1 :]:
+            if left == right:
+                continue
+            if _ranges_overlap(left[0], left[2], left[3], right[0], right[2], right[3]):
+                ambiguous.add(left)
+                ambiguous.add(right)
+
+    fallbacks: list[PlacementSourceEdit] = []
+    for key in sorted((key for key in keys if key not in ambiguous), key=lambda value: (value[0], value[2], value[3])):
+        path_value, sha256, start_line, end_line = key
+        linked = tuple(sorted(set(grouped[key]), key=item_order.__getitem__))
+        reference = EvidenceReference(path_value, sha256, start_line, end_line)
+        identity = f"{path_value}:{start_line}:{end_line}:{','.join(linked)}"
+        edit_id = "H-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:10].upper()
+        fallbacks.append(
+            PlacementSourceEdit(
+                id=edit_id,
+                path=path_value,
+                sha256=sha256,
+                start_line=start_line,
+                end_line=end_line,
+                linked_item_ids=linked,
+                replacement=_source_reference_text(reference, snapshot),
+                rationale=(
+                    "No LLM Source After rewrite was proposed for this unambiguous mutable Evidence range. "
+                    "ContextCanon exposes it as a review-only fallback so the project owner can optionally "
+                    "replace it without reconstructing the source range by hand."
+                ),
+                confidence="low",
+            )
+        )
+    return tuple(proposed + fallbacks)
+
+
+def _render_source_edit(
+    edit: PlacementReviewSourceEdit,
+    candidate: PlacementSourceEdit,
+    snapshot: EvidenceSnapshot,
+    *,
+    proposal: OnboardingPlacementProposal,
+) -> list[str]:
+    linked = ", ".join(candidate.linked_item_ids)
+    proposal_ids = {item.id for item in proposal.source_edits}
+    item_titles = {item.id: item.title for item in proposal.items}
+    owner = candidate.linked_item_ids[0]
+    related = [item_id for item_id in edit.linked_item_ids if item_id != owner]
+    heading = f"#### Source edit {edit.proposal_id}"
     lines = [
         f'<a id="source-edit-{edit.proposal_id.lower()}"></a>',
-        f"#### Source edit {edit.proposal_id}",
+        heading,
         f'<!-- cc:source-edit id="{edit.proposal_id}" path="{edit.path}" sha256="{edit.sha256}" start-line="{edit.start_line}" end-line="{edit.end_line}" linked-items="{linked}" -->',
         "",
-        f"Source edit decision: `{edit.decision}`",
-        f"Source edit note: {edit.review_note or '-'}",
-        f"Linked promoted findings: {', '.join(f'`{item}`' for item in edit.linked_item_ids)}",
-        "",
-        "**Exact range being replaced:**",
-        "",
     ]
-    lines.extend(_source_edit_excerpt(proposal_edit, snapshot))
+    if edit.proposal_id not in proposal_ids:
+        lines.extend(
+            [
+                "**Optional human override — the LLM proposed no Source After rewrite here.**",
+                "It defaults to `reject`. Edit the replacement and switch to `accept` only if you want this exact frozen range cleaned up now.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            f"Source edit decision: `{edit.decision}`",
+            f"Source edit note: {edit.review_note or '-'}",
+        ]
+    )
+    if related:
+        lines.append(
+            "Also covers: " + ", ".join(f"`{item_id}` — {item_titles[item_id]}" for item_id in related)
+        )
+    lines.extend(["", "**Exact range being replaced:**", ""])
+    lines.extend(_source_edit_excerpt(candidate, snapshot))
     lines.extend(
         [
             "",
@@ -248,7 +351,7 @@ def _render_source_edit(edit: PlacementReviewSourceEdit, proposal_edit: Placemen
     )
     if edit.replacement:
         lines.extend(edit.replacement.split("\n"))
-    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "", f"Why this source edit: {proposal_edit.rationale}", ""])
+    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "", f"Why this source edit: {candidate.rationale}", ""])
     return lines
 
 
@@ -283,17 +386,18 @@ def _render_item(
         lines.extend(_evidence_excerpt(reference, snapshot))
     linked_edits = [edit for edit in source_edits if review_item.proposal_id in edit.linked_item_ids]
     if linked_edits:
-        proposal_edits = {edit.id: edit for edit in proposal.source_edits}
+        candidate_edits = {edit.id: edit for edit in _review_source_edit_candidates(proposal, snapshot)}
+        item_titles = {item.id: item.title for item in proposal.items}
         lines.extend(["", "### Source after promotion", ""])
         for edit in linked_edits:
-            proposal_edit = proposal_edits[edit.proposal_id]
-            if proposal_edit.linked_item_ids[0] == review_item.proposal_id:
-                lines.extend(_render_source_edit(edit, proposal_edit, snapshot))
+            candidate = candidate_edits[edit.proposal_id]
+            if candidate.linked_item_ids[0] == review_item.proposal_id:
+                lines.extend(_render_source_edit(edit, candidate, snapshot, proposal=proposal))
             else:
-                owner = proposal_edit.linked_item_ids[0]
+                owner = candidate.linked_item_ids[0]
                 lines.extend(
                     [
-                        f"Shared source edit [`{edit.proposal_id}`](#source-edit-{edit.proposal_id.lower()}) also covers this finding and is edited once under `{owner}`.",
+                        f"Shared source edit [`{edit.proposal_id}`](#source-edit-{edit.proposal_id.lower()}) also covers this finding and is edited once under `{owner}` — {item_titles[owner]}.",
                         "",
                     ]
                 )
@@ -403,10 +507,12 @@ def render_placement_review(
         )
         for item in proposal.items
     )
+    candidate_edits = _review_source_edit_candidates(proposal, snapshot)
+    proposal_edit_ids = {edit.id for edit in proposal.source_edits}
     source_edits = tuple(
         PlacementReviewSourceEdit(
             proposal_id=edit.id,
-            decision="pending",
+            decision="pending" if edit.id in proposal_edit_ids else "reject",
             path=edit.path,
             sha256=edit.sha256,
             start_line=edit.start_line,
@@ -415,7 +521,7 @@ def render_placement_review(
             replacement=edit.replacement,
             review_note="",
         )
-        for edit in proposal.source_edits
+        for edit in candidate_edits
     )
     sources = _initial_sources(proposal, owner_source_specs)
     lines = [
@@ -425,7 +531,7 @@ def render_placement_review(
         "",
         "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
         "",
-        "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted.",
+        "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted. When the LLM omitted a rewrite for one unambiguous mutable range, ContextCanon may expose a review-only optional Source edit that defaults to `reject`; it exists only so the owner can edit that exact range without reconstructing it later.",
         "",
         "<!-- contextcanon-placement-review",
         f"schema: {PLACEMENT_REVIEW_SCHEMA}",
@@ -747,7 +853,7 @@ def load_placement_review(
         missing = sorted(set(proposal_by_id) - seen)
         raise _error(f"placement.md is missing proposal items: {', '.join(missing)}")
 
-    proposal_source_edits = {edit.id: edit for edit in proposal.source_edits}
+    review_source_edits = {edit.id: edit for edit in _review_source_edit_candidates(proposal, snapshot)}
     parsed_source_edits: list[PlacementReviewSourceEdit] = []
     seen_source_edits: set[str] = set()
     for index, line in enumerate(lines):
@@ -755,7 +861,7 @@ def load_placement_review(
         if match is None:
             continue
         edit_id = match.group("id")
-        proposed = proposal_source_edits.get(edit_id)
+        proposed = review_source_edits.get(edit_id)
         if proposed is None:
             raise _error(f"placement.md contains unknown Source edit {edit_id}")
         if edit_id in seen_source_edits:
@@ -806,8 +912,8 @@ def load_placement_review(
                 review_note="" if note == "-" else note,
             )
         )
-    if seen_source_edits != set(proposal_source_edits):
-        missing = sorted(set(proposal_source_edits) - seen_source_edits)
+    if seen_source_edits != set(review_source_edits):
+        missing = sorted(set(review_source_edits) - seen_source_edits)
         raise _error(f"placement.md is missing Source edits: {', '.join(missing)}")
 
     item_decisions = {item.proposal_id: item.decision for item in parsed_items}

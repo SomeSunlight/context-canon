@@ -187,3 +187,15 @@ Purpose: close the live `ai-workstation` Step-7 failure where one promoted findi
 - [x] Run the focused placement-review tests, complete deterministic suite, build/check, diff-check, cleanup, and exact-head PR CI before returning a new test SHA.
 
 Shared Source-edit parser checkpoint: the live `ai-workstation` proposal contains several legitimate cases where one promoted finding owns multiple non-overlapping Source After transformations. Review parsing now treats the next `cc:source-edit` marker as an explicit block boundary, so each edit keeps exactly one decision, note and editable replacement even when two edits are rendered under the same P-item. A focused regression reproduces that shape; the complete deterministic suite and repository build/check are green.
+
+#### Block M — make Source After a real summary and keep the cockpit recoverable
+
+Purpose: correct the next live `ai-workstation` Step-7 review failure. The second semantic pass must leave a useful human summary where promoted prose used to live, not a content-free pointer, and the review cockpit must still let the owner create a safe source rewrite when the LLM omitted one.
+
+- [x] Tighten the placement instruction so stable Overview omits volatile version/platform detail already represented as State, and Overview/State/Plan findings are bullet-sized rather than comma/semicolon snake sentences.
+- [x] Require Source After replacements to preserve a real plain-language gist of the moved block plus the Context link; explicitly reject pointer-only replacements such as “details live in Project Context” when the old location still has first-contact value.
+- [x] Add a conservative review-only Source After fallback for an unambiguous mutable Markdown range when a promoted finding has no LLM source edit; default it to `reject` so it adds editability without adding publication work.
+- [x] Remove self-referential `Linked promoted findings: P-xxx` cockpit noise; show only genuinely shared findings and keep the existing one-edit shared-placement behavior.
+- [x] Add focused regressions for the sharper instruction, optional human Source After override, shared-edit presentation and parser round-trip, then run the complete suite plus build/check/diff-check.
+
+Placement summary/cockpit checkpoint: the placement instruction now requires a real A′ summary plus the Context link, explicitly rejects pointer-only Source After prose at still-useful human surfaces, keeps volatile compatibility out of stable Overview, and treats Overview/State/Plan findings as one bullet-sized fact each. STEP-07 hides self-referential linked-finding noise and exposes a deterministic review-only Source edit when a promoted finding has an unambiguous mutable Markdown range but the LLM omitted cleanup; that fallback defaults to reject and therefore cannot mutate the project unless the owner edits and accepts it. Focused regressions cover the instruction and human fallback round-trip; full suite/build/check/diff-check are green before cleanup.

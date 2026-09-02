@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f",
-    "package": "25cb332d78043568983aa7480a176aacb3a0a81eb975574302143477294c0d9b"
+    "package": "bbeb8623d07ed937e3c46edba3837d4d8c4128700f8b90cfb40a9ce43d99fa91"
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/docs/onboarding.md",
-      "sha256": "a54e13041dcf72bb8aca9fefeadb9b2e48bd0b921bbdae2b24c884839a40dcfa",
-      "size": 25536
+      "sha256": "e50c802d2af8786d9b3b64152459a9a216ece12f6a1c25006623e8282d7e7d9f",
+      "size": 26227
     },
     {
       "path": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md",

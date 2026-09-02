@@ -153,6 +153,46 @@ class EditablePlacementReviewTests(unittest.TestCase):
             self.assertEqual(lines[0], "### Into Node — editable")
 
 
+    def test_promote_without_llm_source_edit_gets_rejected_editable_human_fallback(self):
+        helper = placement_fixture.OnboardingPlacementTests()
+        _, prepared, workspace, readme, architecture, source_root, package = helper.make_case()
+        raw = helper.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["source_edits"] = []
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path,
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+            catalog_package_roots=[source_root],
+        )
+        review, created = create_or_load_placement_review(
+            workspace.placement_path, proposal, prepared.snapshot_root
+        )
+        self.assertTrue(created)
+        self.assertEqual(len(review.source_edits), 1)
+        fallback = review.source_edits[0]
+        self.assertTrue(fallback.proposal_id.startswith("H-"))
+        self.assertEqual(fallback.decision, "reject")
+        rendered = workspace.placement_path.read_text(encoding="utf-8")
+        self.assertIn("Optional human override", rendered)
+        self.assertIn("Source edit decision: `reject`", rendered)
+        self.assertNotIn("Linked promoted findings:", rendered)
+
+        replacement = "Architecture in one sentence. Maintained detail lives in [AI Workstation Context](../CONTEXT.md)."
+        start_marker = f'<!-- cc:source-after id="{fallback.proposal_id}":start -->'
+        end_marker = f'<!-- cc:source-after id="{fallback.proposal_id}":end -->'
+        start = rendered.index(start_marker) + len(start_marker)
+        end = rendered.index(end_marker, start)
+        rendered = rendered[:start] + "\n" + replacement + "\n" + rendered[end:]
+        rendered = rendered.replace("Decision: `pending`", "Decision: `accept`", 1)
+        rendered = rendered.replace("Source edit decision: `reject`", "Source edit decision: `accept`", 1)
+        workspace.placement_path.write_text(rendered, encoding="utf-8")
+        loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertEqual(loaded.source_edits[0].decision, "accept")
+        self.assertEqual(loaded.source_edits[0].replacement, replacement)
+
+
     def test_multiple_source_edits_owned_by_one_finding_parse_independently(self):
         helper = placement_fixture.OnboardingPlacementTests()
         _, prepared, workspace, readme, architecture, source_root, package = helper.make_case()
@@ -186,6 +226,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertTrue(created)
         rendered = workspace.placement_path.read_text(encoding="utf-8")
         self.assertEqual(rendered.count("Source edit note:"), 2)
+        self.assertNotIn("Linked promoted findings:", rendered)
         loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
         self.assertEqual([edit.proposal_id for edit in loaded.source_edits], ["E-001", "E-002"])
         self.assertEqual(
