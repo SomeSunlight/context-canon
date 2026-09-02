@@ -118,7 +118,7 @@ Shared Source-edit parser checkpoint: the live `ai-workstation` proposal contain
 
 The real `ai-workstation` Step-7 review exposed a parser boundary bug when one promoted finding owns more than one Source After edit. The renderer correctly materialized each Source edit once, but the parser previously scanned from one Source-edit marker until the next placement item/Source heading, so a sibling Source edit under the same finding contributed a second `Source edit note:` and caused validation to fail. Source-edit parsing now stops at the next Source-edit marker as well; multiple non-overlapping edits under one finding round-trip independently.
 """
-    write(path, state + "\n")
+    write(path, state.rstrip() + "\n")
 
 
 if __name__ == "__main__":
