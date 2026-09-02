@@ -145,3 +145,7 @@ The active PR now treats placement review as the complete migration cockpit rath
 ## Latest State/Plan publication completion
 
 The active onboarding path now treats State and Plan as first-class local Node content. Accepted placement State/Plan findings are written transactionally with the rest of Node authoring, shown as `Into Node — editable` during human review, included in publication preview, and removed from migration follow-up. They render into Official Context and local machine state but are deliberately excluded from inherited Source semantics.
+
+## Latest shared Source-edit parsing correction
+
+The real `ai-workstation` Step-7 review exposed a parser boundary bug when one promoted finding owns more than one Source After edit. The renderer correctly materialized each Source edit once, but the parser previously scanned from one Source-edit marker until the next placement item/Source heading, so a sibling Source edit under the same finding contributed a second `Source edit note:` and caused validation to fail. Source-edit parsing now stops at the next Source-edit marker as well; multiple non-overlapping edits under one finding round-trip independently.

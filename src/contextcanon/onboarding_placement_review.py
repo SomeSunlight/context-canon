@@ -769,7 +769,13 @@ def load_placement_review(
         if immutable != expected:
             raise _error(f"Source edit {edit_id} immutable Evidence binding was changed")
         next_item = next(
-            (i for i in range(index + 1, len(lines)) if _ITEM_HEADING_RE.match(lines[i]) or _SOURCE_HEADING_RE.match(lines[i])),
+            (
+                i
+                for i in range(index + 1, len(lines))
+                if _SOURCE_EDIT_COMMENT_RE.match(lines[i])
+                or _ITEM_HEADING_RE.match(lines[i])
+                or _SOURCE_HEADING_RE.match(lines[i])
+            ),
             len(lines),
         )
         block = lines[index:next_item]

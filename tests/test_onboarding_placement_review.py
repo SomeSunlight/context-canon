@@ -153,5 +153,49 @@ class EditablePlacementReviewTests(unittest.TestCase):
             self.assertEqual(lines[0], "### Into Node — editable")
 
 
+    def test_multiple_source_edits_owned_by_one_finding_parse_independently(self):
+        helper = placement_fixture.OnboardingPlacementTests()
+        _, prepared, workspace, readme, architecture, source_root, package = helper.make_case()
+        raw = helper.placement_dict(prepared, workspace, readme, architecture, package)
+        # Let P-001 justify two adjacent but non-overlapping architecture edits.
+        raw["items"][0]["evidence"][0]["start_line"] = 1
+        raw["source_edits"].append(
+            {
+                "id": "E-002",
+                "path": "docs/architecture.md",
+                "sha256": architecture.sha256,
+                "start_line": 1,
+                "end_line": 1,
+                "linked_item_ids": ["P-001"],
+                "replacement": "# Architecture gateway",
+                "rationale": "Keep a compact architecture gateway beside the promoted canonical rule.",
+                "confidence": "high",
+            }
+        )
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path,
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+            catalog_package_roots=[source_root],
+        )
+        review, created = create_or_load_placement_review(
+            workspace.placement_path, proposal, prepared.snapshot_root
+        )
+        self.assertTrue(created)
+        rendered = workspace.placement_path.read_text(encoding="utf-8")
+        self.assertEqual(rendered.count("Source edit note:"), 2)
+        loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertEqual([edit.proposal_id for edit in loaded.source_edits], ["E-001", "E-002"])
+        self.assertEqual(
+            [edit.replacement for edit in loaded.source_edits],
+            [
+                "Installation authority is maintained in [AI Workstation Context](../CONTEXT.md).",
+                "# Architecture gateway",
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
