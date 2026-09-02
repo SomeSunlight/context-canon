@@ -251,3 +251,18 @@ Purpose: fix the live `ai-workstation` production-onboarding gate where snapshot
 - [x] Add a focused regression for missing-vs-existing review behavior and run the complete deterministic/build/check/diff gate.
 
 Owner-Source recovery checkpoint: Step 7 recreation now actually consumes the owner Source already persisted in machine run state. This closes the gap between 'remembered' and 'used' and lets reset-from-7 reproduce the same owner-selected Development Workflow without asking the operator to reconstruct IDs.
+
+#### Block Q — legacy owner-Source migration gap in in-flight onboarding
+
+Purpose: preserve the remaining live `ai-workstation` finding without delaying the owner-approved end-to-end onboarding run. A previously selected Development Workflow owner Source can still disappear from a recreated `STEP-07-placement.md` when the onboarding snapshot predates snapshot-owned `run-inputs.json` persistence. The current code correctly reuses an owner choice that is already present in machine run state; it cannot reconstruct a choice that was lost before that state existed.
+
+**Status: DEFERRED — known defect, not a blocker for the current end-to-end `ai-workstation` run.** Do not reopen the current placement reasoning pass merely to solve this compatibility edge case.
+
+- [ ] Add a regression starting from a legacy/in-flight workspace where the owner Source exists only in the older human/PLAN state and `run-inputs.json` has no owner choice.
+- [ ] Make legacy PLAN-only owner Source values migrate into snapshot-owned machine run state before reset/recreation can remove the last human artifact that contains the choice.
+- [ ] Decide whether recreating Step 7 with an exact Source catalog but a previously expected owner choice that cannot be recovered should emit a visible warning instead of silently rendering `No reusable Source is currently proposed or owner-selected.`
+- [ ] Verify both paths: a fresh onboarding started with current ContextCanon and an upgraded in-flight onboarding that began before run-input persistence existed.
+
+Live reproduction: the real `ai-workstation` snapshot still renders `No reusable Source is currently proposed or owner-selected.` after `reset --from 7`, even after the correction that consumes remembered owner specs when they are present. This strongly indicates a migration/recovery gap in the older in-flight snapshot state rather than a failure of the current fresh-run persistence path.
+
+Fast-run decision: continue the vertical onboarding through human review, publication preview and publication. Revisit this block with another project or a dedicated compatibility test rather than extending the current correction loop.
