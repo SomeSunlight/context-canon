@@ -266,3 +266,33 @@ Purpose: preserve the remaining live `ai-workstation` finding without delaying t
 Live reproduction: the real `ai-workstation` snapshot still renders `No reusable Source is currently proposed or owner-selected.` after `reset --from 7`, even after the correction that consumes remembered owner specs when they are present. This strongly indicates a migration/recovery gap in the older in-flight snapshot state rather than a failure of the current fresh-run persistence path.
 
 Fast-run decision: continue the vertical onboarding through human review, publication preview and publication. Revisit this block with another project or a dedicated compatibility test rather than extending the current correction loop.
+
+#### Block R — first production post-publish UX and parent composition findings
+
+Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
+
+**Status: NEXT — preserve now, implement in coherent follow-up blocks after post-publish inspection. Fast-run remains ACTIVE.**
+
+##### Review surfaces
+
+- [ ] Give Step 03 the same visible edit affordance as Step 07, but use a quieter presentation that preserves the visual dominance of the Node tree. Apply the same lower-noise treatment to Step 07 so editable boundaries are obvious without overwhelming headings/content.
+- [ ] Make Step 07 self-contained about every editable control. Show allowed `Decision` values and a concise Kind/Action glossary directly in the review artifact; an operator inside another repository must not need to know that `docs/onboarding.md` exists in the ContextCanon repository.
+- [ ] Reconsider whether `Action` should be independently editable at all. Current validation effectively derives one action from each kind (`promote`, `reference`, `keep`, `map`); the review UX should expose meaningful choices rather than a pseudo-choice that can only form one valid Kind/Action pair.
+- [ ] Reduce rendered/source switching during review. Evaluate a separate source-file-first transformation review surface for Source After edits, grouped by original file/range and showing exact before/after plus every linked P-finding and final destination Node/content.
+- [ ] Make cross-linked E-edits easy to audit for zero semantic loss: from one source edit, the owner should be able to see where each removed substantive meaning lands without chasing findings from unrelated parts of the document.
+
+##### Normal authoring after onboarding
+
+- [ ] Add first-class authoring ergonomics for new Rules/Topics after onboarding so humans do not have to invent or hand-maintain invisible `ctx:*` identity comments. Preserve stable IDs, but provide an explicit ContextCanon authoring/write command or equivalent safe mechanism that allocates the ID once.
+- [ ] Document the minimal post-onboarding daily loop for ordinary projects: read `CONTEXT.md`, edit `CONTEXT.src.md`/Resources, build, check, and review Source updates when present.
+
+##### Accepted semantic parent relationships
+
+- [ ] Persist the human-accepted Step-03 parent/child hierarchy into the materialized Nodes as an explicit ContextCanon relationship. This must come from the reviewed semantic structure, not from filesystem nesting; repository directories alone still do not imply composition.
+- [ ] Model the accepted semantic parent as a Source-like accepted package edge so a Child uses the exact accepted Parent snapshot. A later Parent change becomes a candidate and does not alter the Child until reviewed/accepted.
+- [ ] Extend compiled inheritance from Rules to Topics. Today Rules compose transitively, while Topics are intentionally local-only; define package locator/resource semantics so accepted Parent/Source Topics and their Resources can be rendered safely in the Child.
+- [ ] Render each Node's `CONTEXT.md` as the complete effective working context: all effective inherited + local Rules and all effective inherited + local Topics, with provenance and accepted-package boundaries preserved.
+- [ ] Use the parent chain to make repository-wide workflow context practical. In `ai-workstation`, once the Development Workflow Source is correctly attached at the intended ancestor, descendants should receive that accepted workflow transitively instead of requiring the Source to be selected independently on every Node.
+- [ ] Revisit Source update UX so projects can discover/fetch newer reusable Node packages without manually tracking remote package identities; updates must remain candidates requiring review/accept, never live implicit pulls.
+
+Post-publish checkpoint: the owner set the current placement decisions to `accept` and completed real publication locally in `ai-workstation`. The resulting project is now being inspected as the first genuinely productive ContextCanon onboarding result. The known legacy owner-Source recovery defect from Block Q remained present, so this run may lack the intended Development Workflow Source; that is recorded test debt, not a reason to discard the published semantic placement.
