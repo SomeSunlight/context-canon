@@ -32,7 +32,7 @@ Purpose: close the live `ai-workstation` Step-7 failure where one promoted findi
 - [ ] Add a regression with two non-overlapping Source After edits owned by the same promoted finding and verify both round-trip independently.
 - [ ] Run the focused placement-review tests, complete deterministic suite, build/check, diff-check, cleanup, and exact-head PR CI before returning a new test SHA.
 """
-    write(path, text + "\n")
+    write(path, text.rstrip() + "\n")
 
 
 def apply() -> None:
