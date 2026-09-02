@@ -229,3 +229,14 @@ Placement semantic-integrity checkpoint: the second semantic pass now audits eve
 ### Later documentation follow-up
 
 - [ ] Document the observed onboarding effect that book placement itself surfaces previously hidden responsibilities, boundaries and unresolved questions; concise finding titles become a useful project index before the reader even opens the deeper material.
+
+#### Block O — allow blank Markdown separators inside reviewed Source edits
+
+Purpose: fix the live `ai-workstation` Step-6 validation failure where one coherent `docs/architecture.md` Source After edit spans a blank separator line between two Evidence-backed semantic blocks.
+
+- [x] Keep Source-edit provenance strict for every non-blank line while allowing blank/whitespace-only Markdown separators inside a contiguous reviewed edit range.
+- [x] Align the placement instruction with that deterministic rule so the LLM is not asked to invent semantic Evidence for formatting-only blank lines.
+- [x] Add a regression proving blank separators are ignored and a substantive uncovered line still fails with its exact missing line number.
+- [x] Run the focused placement test, complete deterministic suite, build/check and diff hygiene, then remove the temporary verification harness.
+
+Blank-separator checkpoint: the live proposal was semantically sound. Its architecture edit covers lines 3–13 while linked findings cover the table (3–10) and source-of-truth statement (12–13); line 11 is only the Markdown separator between them. Validation now requires provenance for every non-blank edited line, not for formatting-only blank separators, while substantive uncovered lines remain a hard error.

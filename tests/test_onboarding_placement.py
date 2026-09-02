@@ -15,7 +15,12 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
-from contextcanon.onboarding_placement import PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal, render_placement_review
+from contextcanon.onboarding_placement import (
+    PLACEMENT_PROPOSAL_SCHEMA,
+    _nonblank_line_numbers,
+    load_onboarding_placement_proposal,
+    render_placement_review,
+)
 from contextcanon.onboarding_placement_instruction import build_onboarding_placement_instruction
 from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_or_load_structure_markdown, load_structure_markdown, load_onboarding_structure_proposal
 from contextcanon.onboarding_workspace import open_onboarding_workspace
@@ -178,6 +183,7 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertIn("short versionless Overview", instruction.text)
         self.assertIn("Splitting is not permission to drop facts", instruction.text)
         self.assertIn("Zero semantic loss per Source edit", instruction.text)
+        self.assertIn("blank Markdown separator lines", instruction.text)
         self.assertIn("last documented", instruction.text)
         self.assertIn("local open question", instruction.text)
         self.assertIn("real plain-language summary", instruction.text)
@@ -192,6 +198,22 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertIn("move with minimal wording change", instruction.text)
         self.assertIn("Development Workflow", instruction.text)
         self.assertIn(instruction.structure_digest, instruction.text)
+
+    def test_source_edit_coverage_ignores_only_blank_separator_lines(self):
+        self.assertEqual(_nonblank_line_numbers("table\n\nrule\n", 1, 3), {1, 3})
+
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["source_edits"][0]["start_line"] = 1
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "missing lines: 1"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path,
+                prepared.snapshot_root,
+                workspace.structure_proposal_path,
+                workspace.structure_path,
+                catalog_package_roots=[source_root],
+            )
 
     def test_placement_validates_exact_evidence_structure_and_catalog(self):
         _, prepared, workspace, readme, architecture, source_root, package = self.make_case()

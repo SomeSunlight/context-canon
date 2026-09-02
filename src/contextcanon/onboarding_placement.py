@@ -179,6 +179,15 @@ def _replacement(value: object, label: str) -> str:
     return value.replace("\r\n", "\n").replace("\r", "\n").strip("\n")
 
 
+def _nonblank_line_numbers(text: str, start_line: int, end_line: int) -> set[int]:
+    lines = text.splitlines()
+    return {
+        line_number
+        for line_number in range(start_line, end_line + 1)
+        if lines[line_number - 1].strip()
+    }
+
+
 def _confidence(value: object, label: str) -> str:
     if value not in CONFIDENCE_LEVELS:
         raise _error(f"{label} must be high, medium, or low")
@@ -423,8 +432,15 @@ def load_onboarding_placement_proposal(
             for reference in linked_item.evidence:
                 if reference.path == edit_path:
                     covered.update(range(reference.start_line, reference.end_line + 1))
-        if not set(range(start, end + 1)).issubset(covered):
-            raise _error(f"{label} range is not fully covered by Evidence of its linked promoted items")
+        evidence_text = (snapshot.root / "evidence" / edit_path).read_text(encoding="utf-8")
+        required_lines = _nonblank_line_numbers(evidence_text, start, end)
+        missing_lines = sorted(required_lines - covered)
+        if missing_lines:
+            missing = ", ".join(str(line) for line in missing_lines)
+            raise _error(
+                f"{label} non-blank range lines are not fully covered by Evidence of its linked promoted items; "
+                f"missing lines: {missing}"
+            )
         for other_start, other_end, other_id in occupied.setdefault(edit_path, []):
             if not (end < other_start or start > other_end):
                 raise _error(f"{label} overlaps source edit {other_id} in {edit_path}")

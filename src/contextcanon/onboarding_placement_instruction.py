@@ -204,7 +204,7 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "}",
         "```",
         "",
-        "`source_edits` is the proposed A → A′ side of promotion. Use only mutable `.md` Evidence that is not listed as fixed Markdown. Every edited line must be covered by Evidence cited by the linked promoted items; linked IDs must all be `promote` items and must not be `unresolved` findings, because an unanswered question cannot justify deleting uncertain source meaning. One source range may be linked to several findings, but source edits in one file must never overlap. `replacement` may be empty only when removing the range entirely is clearly better than leaving orientation. If no promoted mutable prose needs cleanup, return an empty array.",
+        "`source_edits` is the proposed A → A′ side of promotion. Use only mutable `.md` Evidence that is not listed as fixed Markdown. Every **non-blank** edited line must be covered by Evidence cited by the linked promoted items; blank Markdown separator lines may sit inside one contiguous edit range without their own Evidence citation. Linked IDs must all be `promote` items and must not be `unresolved` findings, because an unanswered question cannot justify deleting uncertain source meaning. One source range may be linked to several findings, but source edits in one file must never overlap. `replacement` may be empty only when removing the range entirely is clearly better than leaving orientation. If no promoted mutable prose needs cleanup, return an empty array.",
         "",
         "Every `source_reuses` entry contains exactly:",
         "",

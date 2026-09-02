@@ -165,3 +165,7 @@ The Step-07 cockpit now visibly marks editable controls, destination content and
 ## Active fast-run boundary
 
 The current project-owner testing sequence is explicitly recorded as **Fast-run status — ACTIVE** in PLAN. Its scope is the live `ai-workstation` onboarding corrections through the next coherent owner-review candidate. Fast-run reduces repeated intermediate ceremony but does not alter authority: PR #13 remains draft/unmerged, unknown failures still require investigation, and final owner review plus exact-head merge verification remain mandatory. The reusable Development Workflow now requires both the ACTIVE scope/exit checkpoint and a later CLOSED checkpoint when ordinary cadence resumes.
+
+## Latest Source-edit blank-separator validation correction
+
+The next real `ai-workstation` placement validation exposed an intentionally narrow mismatch between semantic provenance and contiguous Markdown editing. A reviewed Source After edit may need to span a blank separator line between two Evidence-backed blocks; requiring a promoted finding to cite that empty line adds no semantic safety and rejected an otherwise sound proposal. Placement validation now requires linked promoted Evidence to cover every non-blank line in the edited frozen range while allowing blank/whitespace-only separators. Content-bearing headings, table rows, comments and prose remain covered or validation fails with the exact missing line numbers.
