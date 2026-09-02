@@ -240,3 +240,14 @@ Purpose: fix the live `ai-workstation` Step-6 validation failure where one coher
 - [x] Run the focused placement test, complete deterministic suite, build/check and diff hygiene, then remove the temporary verification harness.
 
 Blank-separator checkpoint: the live proposal was semantically sound. Its architecture edit covers lines 3–13 while linked findings cover the table (3–10) and source-of-truth statement (12–13); line 11 is only the Markdown separator between them. Validation now requires provenance for every non-blank edited line, not for formatting-only blank separators, while substantive uncovered lines remain a hard error.
+
+#### Block P — reuse persisted owner-selected Source when Step 7 is recreated
+
+Purpose: fix the live `ai-workstation` production-onboarding gate where snapshot-owned `run-inputs.json` correctly remembers the Development Workflow owner Source, but `placement-review` read that remembered value without using it to recreate `STEP-07-placement.md`.
+
+- [x] Reuse remembered owner Source specs when Step 7 is created and no explicit `--owner-source` was supplied.
+- [x] Preserve the existing one-time owner-choice contract: once STEP-07 exists, rerunning placement-review without the flag validates the human file; explicitly supplying `--owner-source` to an existing review remains an error.
+- [x] Keep the remembered owner choice in generated PLAN/checkpoint commands instead of replacing it with an empty CLI argument list.
+- [x] Add a focused regression for missing-vs-existing review behavior and run the complete deterministic/build/check/diff gate.
+
+Owner-Source recovery checkpoint: Step 7 recreation now actually consumes the owner Source already persisted in machine run state. This closes the gap between 'remembered' and 'used' and lets reset-from-7 reproduce the same owner-selected Development Workflow without asking the operator to reconstruct IDs.

@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from contextcanon.cli import _owner_specs_for_review
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
 from contextcanon.onboarding_reset import RESET_JOURNAL_NAME, reset_onboarding, run_journaled
@@ -211,6 +212,16 @@ class OnboardingResetTests(unittest.TestCase):
         plan = reopened.plan_path.read_text(encoding="utf-8")
         self.assertIn("C:/catalog/development-workflow", plan)
         self.assertIn("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40", plan)
+
+    def test_remembered_owner_source_is_reused_only_when_review_is_created(self):
+        root = Path(tempfile.mkdtemp())
+        review = root / "STEP-07-placement.md"
+        remembered = ("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40",)
+        self.assertEqual(_owner_specs_for_review(review, (), remembered), remembered)
+        review.write_text("existing human review\n", encoding="utf-8")
+        self.assertEqual(_owner_specs_for_review(review, (), remembered), ())
+        explicit = ("N-002=11111111-1111-4111-8111-111111111111",)
+        self.assertEqual(_owner_specs_for_review(review, explicit, remembered), explicit)
 
     def test_step9_journal_restores_reviewed_source_document(self):
         repo, prepared = self.make_repo()

@@ -83,6 +83,14 @@ def _catalog_labels(packages) -> tuple[str, ...]:
     )
 
 
+def _owner_specs_for_review(
+    review_path: Path, explicit: tuple[str, ...], remembered: tuple[str, ...]
+) -> tuple[str, ...]:
+    if explicit:
+        return explicit
+    return remembered if not review_path.exists() else ()
+
+
 def _add_workspace(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--workspace",
@@ -531,10 +539,11 @@ def main(argv: list[str] | None = None) -> int:
                 structure_path = Path(args.structure) if args.structure is not None else workspace.structure_path
                 catalog = tuple(Path(path) for path in args.catalog_package)
                 catalog_inputs = tuple(args.catalog_package)
+                explicit_owner = tuple(args.owner_source) if hasattr(args, "owner_source") else ()
                 remembered_catalog, remembered_owner = remember_run_inputs(
                     snapshot,
                     catalog_inputs=catalog_inputs,
-                    owner_source_specs=tuple(args.owner_source) if hasattr(args, "owner_source") else (),
+                    owner_source_specs=explicit_owner,
                 )
                 if not catalog_inputs and remembered_catalog:
                     catalog_inputs = remembered_catalog
@@ -603,11 +612,12 @@ def main(argv: list[str] | None = None) -> int:
 
                 review_path = Path(args.review) if args.review is not None else workspace.placement_path
                 if args.onboard_command == "placement-review":
+                    owner_for_review = _owner_specs_for_review(review_path, explicit_owner, remembered_owner)
                     review, created = create_or_load_placement_review(
                         review_path,
                         proposal,
                         snapshot,
-                        owner_source_specs=args.owner_source,
+                        owner_source_specs=owner_for_review,
                     )
                     verb = "created" if created else "loaded"
                     print(f"{verb} onboarding placement review {review.review_digest}")
@@ -627,7 +637,7 @@ def main(argv: list[str] | None = None) -> int:
                         placement_review_complete=review.is_complete,
                         source_catalog=_catalog_labels(proposal.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
-                        owner_source_specs=tuple(args.owner_source),
+                        owner_source_specs=explicit_owner or remembered_owner,
                         next_action=next_action,
                     )
                     return 0

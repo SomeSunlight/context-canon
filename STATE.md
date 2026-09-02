@@ -169,3 +169,7 @@ The current project-owner testing sequence is explicitly recorded as **Fast-run 
 ## Latest Source-edit blank-separator validation correction
 
 The next real `ai-workstation` placement validation exposed an intentionally narrow mismatch between semantic provenance and contiguous Markdown editing. A reviewed Source After edit may need to span a blank separator line between two Evidence-backed blocks; requiring a promoted finding to cite that empty line adds no semantic safety and rejected an otherwise sound proposal. Placement validation now requires linked promoted Evidence to cover every non-blank line in the edited frozen range while allowing blank/whitespace-only separators. Content-bearing headings, table rows, comments and prose remain covered or validation fails with the exact missing line numbers.
+
+## Latest remembered owner-Source recreation correction
+
+The real `ai-workstation` production review exposed that `placement-review` loaded persisted owner Source specs from snapshot-owned `run-inputs.json` but still passed only the current CLI `--owner-source` arguments into review creation. As a result, a reset/recreated Step 7 could silently lose the previously selected Development Workflow Source even though machine state still remembered it. Review creation now uses the remembered owner choice when the review file is absent, while repeated validation of an existing human review keeps the one-time owner-selection boundary unchanged.
