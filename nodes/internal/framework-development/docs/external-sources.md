@@ -126,13 +126,13 @@ A successful review writes a deterministic receipt under:
 .context/source-reviews/<candidate-package-digest>.json
 ```
 
-The receipt is bound to the exact current `CONTEXT.src.md`, the currently accepted Source state, the candidate package identity, the deterministic diff, and successful structural validation.
+The receipt is bound to the exact current `CONTEXT.src.md`, the currently accepted Source state, the candidate package identity, the deterministic diff, successful structural validation, and — for Git-fetched candidates — the exact frozen candidate commit plus locator/node-path provenance recorded at fetch time.
 
 ### Accept
 
-`source accept` requires the matching review receipt. It revalidates the candidate and structural composition, rejects the operation if `CONTEXT.src.md` or the accepted Source state changed since review, installs the candidate into `.context/sources/<package-digest>/`, and then updates the visible Source version plus exact digest pins in `CONTEXT.src.md`.
+`source accept` requires the matching review receipt. It revalidates the candidate, its frozen Git provenance and structural composition, rejects the operation if `CONTEXT.src.md` or the accepted Source state changed since review, installs the candidate into `.context/sources/<package-digest>/`, and then updates the visible Source version plus exact digest pins in `CONTEXT.src.md`. Acceptance never contacts the remote repository.
 
-Git transport metadata is preserved when the pin is updated.
+For the current exact-commit transport form, `ref` advances from the previously accepted commit to the exact reviewed candidate commit. Historical symbolic branch/tag refs remain symbolic so their explicitly chosen discovery channel is preserved. In both cases the normal build still uses only the accepted local package bytes.
 
 This cannot force a human to read a review, but it prevents the supported acceptance path from skipping the deterministic review step entirely.
 

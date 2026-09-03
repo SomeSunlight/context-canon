@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .compiler import Compiler
 from .diff import ContextDiff
+from .git_transport import load_candidate_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .package_diff import diff_packages
@@ -49,6 +50,7 @@ def review_source_candidate(
             f"Candidate Node ID {candidate.metadata.id} does not match Source {source_ref.name} ({source_ref.id})"
         )
 
+    transport_candidate = _validated_candidate_provenance(node_root, source_ref, candidate)
     _validate_candidate_composition(compiler, compiled, index, candidate)
     result = diff_packages(current, candidate)
 
@@ -68,6 +70,7 @@ def review_source_candidate(
             "normalized_digest": candidate.normalized_digest,
             "package_digest": candidate.package_digest,
         },
+        "transport_candidate": transport_candidate,
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
@@ -137,9 +140,14 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     if receipt.get("structural_validation") != "passed":
         raise ContextCanonError("Source candidate review did not pass structural validation")
 
+    transport_candidate = _validated_candidate_provenance(node_root, source_ref, candidate)
+    if receipt.get("transport_candidate") != transport_candidate:
+        raise ContextCanonError("Git Source candidate provenance differs from the reviewed candidate")
+
     _validate_candidate_composition(compiler, compiled, index, candidate)
     _install_package(node_root, candidate_root, candidate)
-    _write_source_pin(node_root, source_id, candidate)
+    accepted_ref = None if transport_candidate is None else transport_candidate["candidate_ref"]
+    _write_source_pin(node_root, source_id, candidate, accepted_ref=accepted_ref)
     return candidate
 
 
@@ -418,6 +426,29 @@ def _validate_candidate_composition(
     compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
 
 
+def _validated_candidate_provenance(
+    node_root: Path,
+    source_ref: SourceRef,
+    candidate: CompiledPackage,
+) -> dict[str, str] | None:
+    provenance = load_candidate_provenance(node_root, candidate.package_digest)
+    if provenance is None:
+        return None
+    if provenance["source_id"] != source_ref.id:
+        raise ContextCanonError("Git Source candidate provenance belongs to a different Source")
+    if provenance["locator"] != source_ref.locator:
+        raise ContextCanonError("Git Source candidate provenance locator differs from the accepted Source")
+    if provenance["node_path"] != (source_ref.node_path or "."):
+        raise ContextCanonError("Git Source candidate provenance node-path differs from the accepted Source")
+    if provenance["accepted_ref"] != (source_ref.transport_ref or ""):
+        raise ContextCanonError(
+            "Accepted Git Source ref changed after candidate discovery; fetch the candidate again before review"
+        )
+    if provenance["package_digest"] != candidate.package_digest:
+        raise ContextCanonError("Git Source candidate provenance package digest mismatch")
+    return provenance
+
+
 def _review_path(node_root: Path, candidate_package_digest: str) -> Path:
     return node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"
 
@@ -465,7 +496,7 @@ def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledP
             shutil.rmtree(temporary)
 
 
-def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage) -> None:
+def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage, *, accepted_ref: str | None = None) -> None:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -499,6 +530,8 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
                 if key == "version":
                     updated.append((key, candidate.metadata.version))
                     seen_version = True
+                elif key == "ref" and accepted_ref is not None and re.fullmatch(r"[0-9a-f]{40}", value):
+                    updated.append((key, accepted_ref))
                 elif key not in {"normalized-digest", "package-digest"}:
                     updated.append((key, value))
             if not seen_version:

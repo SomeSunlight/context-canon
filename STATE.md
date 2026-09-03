@@ -245,3 +245,7 @@ Block R5 is complete. The accepted Step-03 hierarchy is now durable package sema
 ## Latest Block R6 step 1 Source-discovery checkpoint
 
 Git-backed reusable Source discovery now distinguishes the accepted Git provenance from the moving update-discovery surface. A Source pinned by current onboarding to an exact old commit can explicitly `source fetch` the repository's newer default-branch package; ContextCanon immediately freezes the candidate under its package digest and records the exact discovered Git commit beside it. Normal build and accepted Source pins remain untouched. R6 proceeds to binding review/accept to that exact candidate without live pulls.
+
+## Latest Block R6 step 2 exact-Source-update checkpoint
+
+Reusable Source review/accept is now bound to the exact Git candidate provenance frozen during fetch as well as package identity and consumer state. The remote may move again after review without changing what accept means; acceptance never contacts it. Current exact-commit Source pins advance to the reviewed candidate commit, while historical symbolic discovery refs remain symbolic. Normal builds remain fully offline against accepted local package bytes. R6 proceeds to documenting and proving the ordinary daily update loop.

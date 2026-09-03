@@ -167,6 +167,55 @@ class GitTransportTests(unittest.TestCase):
         self.assertEqual(compiled.source_packages[0].package_digest, v1.package_digest)
         self.assertEqual(compiled.inherited_rules[0].statement, "Prefer explicit Python v1.")
 
+    def test_review_accept_is_bound_to_fetched_commit_even_if_remote_moves_again(self):
+        provider, v1, v2 = self.make_provider()
+        commits = self.git(provider, "log", "--format=%H", "--reverse").stdout.splitlines()
+        accepted_ref, reviewed_ref = commits
+        consumer = self.make_consumer(provider, v1)
+        source_path = consumer / "CONTEXT.src.md"
+        source_path.write_text(
+            source_path.read_text(encoding="utf-8").replace('ref="main"', f'ref="{accepted_ref}"'),
+            encoding="utf-8",
+        )
+
+        candidate, candidate_root = fetch_git_candidate(consumer, "node-python")
+        self.assertEqual(candidate.package_digest, v2.package_digest)
+        diff, receipt = review_source_candidate(consumer, "node-python", candidate_root)
+        self.assertFalse(diff.is_empty)
+        reviewed = __import__("json").loads(receipt.read_text(encoding="utf-8"))
+        self.assertEqual(reviewed["transport_candidate"]["candidate_ref"], reviewed_ref)
+
+        # Remote development continues after review. Acceptance must not look
+        # at the moving repository again.
+        node = provider / "nodes/library/python-development"
+        (node / "CONTEXT.src.md").write_text(
+            PROVIDER_TEMPLATE.format(version="3.0.0", statement="Prefer explicit Python v3."),
+            encoding="utf-8",
+        )
+        v3 = Compiler(provider).compile(node)
+        write_outputs(v3)
+        self.git(provider, "add", ".")
+        self.git(provider, "commit", "-m", "Publish Python context v3")
+        latest_ref = self.git(provider, "rev-parse", "HEAD").stdout.strip()
+        self.assertNotEqual(latest_ref, reviewed_ref)
+
+        accepted = accept_source_candidate(consumer, "node-python", candidate_root)
+        self.assertEqual(accepted.package_digest, v2.package_digest)
+        source = parse_node(consumer, consumer).sources[0]
+        self.assertEqual(source.transport_ref, reviewed_ref)
+        self.assertEqual(source.package_digest, v2.package_digest)
+        compiled = Compiler(consumer).compile(consumer)
+        self.assertEqual(compiled.inherited_rules[0].statement, "Prefer explicit Python v2.")
+
+        # A later explicit fetch discovers v3 from the moving default branch,
+        # proving the newly accepted exact ref is provenance rather than a live
+        # build dependency or a discovery dead-end.
+        next_candidate, _ = fetch_git_candidate(consumer, "node-python")
+        self.assertEqual(next_candidate.package_digest, v3.package_digest)
+        next_provenance = load_candidate_provenance(consumer, v3.package_digest)
+        self.assertEqual(next_provenance["accepted_ref"], reviewed_ref)
+        self.assertEqual(next_provenance["candidate_ref"], latest_ref)
+
     def test_git_fetch_rejects_missing_node_path(self):
         provider, v1, _ = self.make_provider()
         consumer = self.make_consumer(provider, v1)
