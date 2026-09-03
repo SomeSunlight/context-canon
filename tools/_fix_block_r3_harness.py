@@ -1,0 +1,13 @@
+from pathlib import Path
+
+path = Path("tools/_block_r3_source_audit.py")
+text = path.read_text(encoding="utf-8")
+old = '''        'f"- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.\\\\n"\\n',
+        'f"- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.\\\\n"\\n        f"- `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.\\\\n"\\n',
+'''
+new = '''        '- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.\\n- `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.\\n',
+        '- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.\\n- `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.\\n- `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.\\n',
+'''
+if old not in text:
+    raise SystemExit("Block R3 helper artifact-list patch anchor not found")
+path.write_text(text.replace(old, new, 1), encoding="utf-8")
