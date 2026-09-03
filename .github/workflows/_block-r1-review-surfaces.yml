@@ -1,0 +1,39 @@
+name: Implement Block R1 review surfaces
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Block R1
+        run: python tools/_block_r1_review_surfaces.py
+      - name: Focused tests
+        run: python -m unittest tests.test_onboarding_structure tests.test_onboarding_placement_review
+      - name: Complete deterministic suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate and verify self-hosted context
+        run: |
+          python -m contextcanon build --all .
+          python -m contextcanon check --all .
+          git diff --check
+      - name: Checkpoint completed R1 and commit clean product tree
+        shell: bash
+        run: |
+          python tools/_block_r1_review_surfaces.py --complete
+          rm -f .github/workflows/_block-r1-review-surfaces.yml tools/_block_r1_review_surfaces.py
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Improve onboarding review surfaces"
+          git push origin HEAD:agent/onboarding-placement-publication
