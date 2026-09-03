@@ -11,6 +11,7 @@ from .git_transport import fetch_git_candidate
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_placement import load_onboarding_placement_proposal
+from .onboarding_placement_audit import render_placement_source_audit
 from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
 from .onboarding_placement_publish import (
     build_placement_publication_preview,
@@ -639,14 +640,19 @@ def main(argv: list[str] | None = None) -> int:
                         owner_source_specs=owner_for_review,
                     )
                     verb = "created" if created else "loaded"
+                    write_utf8(
+                        workspace.placement_audit_path,
+                        render_placement_source_audit(proposal, review, snapshot, review_filename=review_path.name),
+                    )
                     print(f"{verb} onboarding placement review {review.review_digest}")
                     print(f"Review file: {review_path}")
+                    print(f"Source audit: {workspace.placement_audit_path}")
                     print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
                     next_action = (
-                        f"Run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
+                        f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
-                        f"Edit `{workspace.placement_path.name}`: review Into Node, Source Before/After, and set every item/Source-edit/Source Decision to `accept` or `reject`. "
-                        f"Then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` to validate the edited human gate before preview."
+                        f"Inspect `{workspace.placement_audit_path.name}` source-by-source, edit `{workspace.placement_path.name}` where needed, and set every item/Source-edit/Source Decision to `accept` or `reject`. "
+                        f"Then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`; it validates the edited human gate and regenerates the audit."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="human placement review",

@@ -14,6 +14,7 @@ from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
 from contextcanon.onboarding_reset import RESET_JOURNAL_NAME, reset_onboarding, run_journaled
 from contextcanon.onboarding_workspace import (
+    PLACEMENT_AUDIT_NAME,
     PLACEMENT_REVIEW_NAME,
     STRUCTURE_INSTRUCTION_NAME,
     STRUCTURE_PROPOSAL_NAME,
@@ -82,6 +83,19 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertEqual(STRUCTURE_INSTRUCTION_NAME, "STEP-02a-structure-instruction.md")
         self.assertEqual(STRUCTURE_PROPOSAL_NAME, "STEP-02b-structure-proposal.json")
         self.assertEqual(PLACEMENT_REVIEW_NAME, "STEP-07-placement.md")
+        self.assertEqual(PLACEMENT_AUDIT_NAME, "STEP-07a-source-audit.md")
+        self.assertIn(PLACEMENT_AUDIT_NAME, plan)
+
+    def test_reset_from_step7_removes_generated_source_audit(self):
+        _, prepared = self.make_repo()
+        workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
+        workspace.placement_path.write_text("human review\n", encoding="utf-8")
+        workspace.placement_audit_path.write_text("generated audit\n", encoding="utf-8")
+
+        reset = reset_onboarding(prepared.snapshot_root, from_step=7)
+        self.assertFalse(workspace.placement_path.exists())
+        self.assertFalse(workspace.placement_audit_path.exists())
+        self.assertIn(PLACEMENT_AUDIT_NAME, reset["workspace_files_removed"])
 
     def test_journaled_materialization_reset_restores_only_contextcanon_managed_bytes(self):
         repo, prepared = self.make_repo()

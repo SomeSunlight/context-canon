@@ -271,7 +271,11 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
 
-**Status: NEXT — Blocks R1/R2 complete; continue with the remaining Block R follow-up slices. Fast-run remains ACTIVE.**
+**Status: NEXT — Blocks R1/R2/R3 complete; continue with semantic parent composition and Source-update UX. Fast-run remains ACTIVE.**
+
+R3 purpose: keep `STEP-07-placement.md` as the single human-editable review truth while generating a deterministic source-file-first audit from the currently parsed review. The audit must group Source edits by original file/range and show exact Before, effective After, every linked P-finding, and the current reviewed destination/content so zero semantic loss can be checked without hunting through destination-first sections.
+
+R3 verification: focused source-audit, placement-review and reset regressions first, then the complete deterministic suite plus self-hosted build/check and hygiene before the clean checkpoint.
 
 R2 purpose: keep `CONTEXT.src.md` as the only authoring truth while making ordinary Rule/Topic creation safe and pleasant. ContextCanon should allocate stable hidden IDs once, write ordinary source syntax, and leave the familiar build/check loop intact.
 
@@ -286,8 +290,8 @@ R1 verification: focused structure/placement-review regressions passed, followed
 - [x] Give Step 03 the same visible edit affordance as Step 07, but use a quieter presentation that preserves the visual dominance of the Node tree. Apply the same lower-noise treatment to Step 07 so editable boundaries are obvious without overwhelming headings/content.
 - [x] Make Step 07 self-contained about every editable control. Show allowed `Decision` values and a concise Kind/Action glossary directly in the review artifact; an operator inside another repository must not need to know that `docs/onboarding.md` exists in the ContextCanon repository.
 - [x] Reconsider whether `Action` should be independently editable at all. Current validation effectively derives one action from each kind (`promote`, `reference`, `keep`, `map`); the review UX should expose meaningful choices rather than a pseudo-choice that can only form one valid Kind/Action pair.
-- [ ] Reduce rendered/source switching during review. Evaluate a separate source-file-first transformation review surface for Source After edits, grouped by original file/range and showing exact before/after plus every linked P-finding and final destination Node/content.
-- [ ] Make cross-linked E-edits easy to audit for zero semantic loss: from one source edit, the owner should be able to see where each removed substantive meaning lands without chasing findings from unrelated parts of the document.
+- [x] Reduce rendered/source switching during review. Evaluate a separate source-file-first transformation review surface for Source After edits, grouped by original file/range and showing exact before/after plus every linked P-finding and final destination Node/content.
+- [x] Make cross-linked E-edits easy to audit for zero semantic loss: from one source edit, the owner should be able to see where each removed substantive meaning lands without chasing findings from unrelated parts of the document.
 
 ##### Normal authoring after onboarding
 
