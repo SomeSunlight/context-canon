@@ -76,3 +76,8 @@ patch(
     '        self.assertIn("## Plan\\n\\n- Finish onboarding before feature work.", first.official_markdown)\n',
     '        self.assertIn("## Local Plan\\n\\n- Finish onboarding before feature work.", first.official_markdown)\n',
 )
+
+# Keep the final project checkpoint tidy: exactly one terminating newline, no
+# extra blank line that would make git diff --check fail.
+state_path = ROOT / "STATE.md"
+state_path.write_text(state_path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
