@@ -28,6 +28,12 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         f"**Context version:** `{compiled.metadata.version}`",
         "",
     ])
+    if compiled.parent_package is not None:
+        lines.extend([
+            f"**Parent:** {compiled.parent_package.metadata.name} (`{compiled.parent_package.metadata.id}`)  ",
+            f"**Accepted Parent package:** `{compiled.parent_package.package_digest}`",
+            "",
+        ])
 
     if compiled.parsed.overview:
         lines.extend(["## Overview", "", *compiled.parsed.overview.splitlines(), ""])
@@ -57,7 +63,7 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         _append_rules(lines, rules)
 
     if compiled.local_rules:
-        lines.extend(["## Local Rules" if compiled.source_packages else "## Rules", ""])
+        lines.extend(["## Local Rules" if (compiled.parent_package or compiled.source_packages) else "## Rules", ""])
         _append_rules(lines, compiled.local_rules)
     elif not compiled.inherited_rules:
         lines.extend(["This Node defines no Rules.", ""])
@@ -79,7 +85,7 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         _append_topics(lines, topics, compiled, repo_root)
 
     if compiled.local_topics:
-        lines.extend(["## Local Topics" if compiled.source_packages else "## Topics", ""])
+        lines.extend(["## Local Topics" if (compiled.parent_package or compiled.source_packages) else "## Topics", ""])
         _append_topics(lines, compiled.local_topics, compiled, repo_root)
     return "\n".join(lines).rstrip() + "\n"
 
@@ -171,8 +177,22 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
         f"  name: {q(compiled.metadata.name)}",
         f"  version: {q(compiled.metadata.version)}",
         "",
-        "# Accepted Source packages used by this build. Both digests are exact pins.",
+        "# Accepted semantic Parent package. The locator is discovery metadata; build uses only the exact pin.",
     ]
+    if compiled.parent_package is not None and compiled.parsed.parent is not None:
+        lines.extend([
+            "parent:",
+            f"  id: {q(compiled.parent_package.metadata.id)}",
+            f"  name: {q(compiled.parent_package.metadata.name)}",
+            f"  version: {q(compiled.parent_package.metadata.version)}",
+            f"  locator: {q(compiled.parsed.parent.locator)}",
+            f"  normalized_digest: {q(compiled.parent_package.normalized_digest)}",
+            f"  package_digest: {q(compiled.parent_package.package_digest)}",
+        ])
+    else:
+        lines.append("parent: null")
+
+    lines.extend(["", "# Accepted reusable Source packages used by this build. Both digests are exact pins."])
     if compiled.source_packages:
         lines.append("sources:")
         for source_ref, source_package in zip(compiled.parsed.sources, compiled.source_packages):

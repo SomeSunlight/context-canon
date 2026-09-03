@@ -1,6 +1,6 @@
 {
   "changes": [],
-  "compiler_version": "0.4.0",
+  "compiler_version": "0.5.0",
   "digests": {
     "normalized": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
     "package": "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3"
@@ -27,6 +27,7 @@
     "name": "Development Workflow",
     "version": "0.2.0-draft"
   },
+  "parent": null,
   "removed_rules": [],
   "rules": [
     {

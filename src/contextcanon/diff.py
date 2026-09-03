@@ -12,11 +12,12 @@ DiffChange = Literal["added", "removed", "modified"]
 
 _CATEGORY_ORDER = {
     "node": 0,
-    "source": 1,
-    "change": 2,
-    "rule": 3,
-    "topic": 4,
-    "resource": 5,
+    "parent": 1,
+    "source": 2,
+    "change": 3,
+    "rule": 4,
+    "topic": 5,
+    "resource": 6,
 }
 
 
@@ -95,6 +96,7 @@ def diff_compiled(before: CompiledNode, after: CompiledNode) -> ContextDiff:
 
     entries: list[DiffEntry] = []
     entries.extend(_diff_maps("node", _node_snapshot(before), _node_snapshot(after)))
+    entries.extend(_diff_maps("parent", _parent_snapshot(before), _parent_snapshot(after)))
     entries.extend(_diff_maps("source", _source_snapshot(before), _source_snapshot(after)))
     entries.extend(_diff_maps("change", _change_snapshot(before), _change_snapshot(after)))
     entries.extend(_diff_maps("rule", _rule_snapshot(before), _rule_snapshot(after)))
@@ -170,6 +172,19 @@ def _node_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
         compiled.metadata.id: {
             "name": compiled.metadata.name,
             "version": compiled.metadata.version,
+        }
+    }
+
+
+def _parent_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
+    parent = compiled.parent_package
+    if parent is None:
+        return {}
+    return {
+        parent.metadata.id: {
+            "version": parent.metadata.version,
+            "normalized_digest": parent.normalized_digest,
+            "package_digest": parent.package_digest,
         }
     }
 

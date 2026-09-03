@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 from .links import local_markdown_targets
-from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
+from .model import CompiledNode, CompiledPackage, ParentRef, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
 from .package import (
     compiled_package,
     load_package,
@@ -18,7 +18,7 @@ from .package import (
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.4.0"
+COMPILER_VERSION = "0.5.0"
 
 CONTEXT_FOLDER_README = """# Generated Context package resources
 
@@ -71,9 +71,26 @@ class Compiler:
             self._node_ids[parsed.metadata.id] = node_root
 
             compiled = CompiledNode(parsed=parsed)
-            seen_source_ids: set[str] = set()
+            composition_packages: list[CompiledPackage] = []
             source_resource_sets: list[dict[str, bytes]] = []
+            parent_id: str | None = None
+            if parsed.parent is not None:
+                parent_package, parent_resources = self._load_pinned_dependency(
+                    node_root, parsed.parent, relation="Parent"
+                )
+                if parent_package.metadata.id == compiled.metadata.id:
+                    raise ContextCanonError(f"{node_root}: Parent cannot be the Node itself")
+                compiled.parent_package = parent_package
+                composition_packages.append(parent_package)
+                source_resource_sets.append(parent_resources)
+                parent_id = parsed.parent.id
+
+            seen_source_ids: set[str] = set()
             for source in parsed.sources:
+                if parent_id is not None and source.id == parent_id:
+                    raise ContextCanonError(
+                        f"{node_root}: Node {source.id} cannot be both semantic Parent and ordinary Source"
+                    )
                 if source.id in seen_source_ids:
                     raise ContextCanonError(
                         f"{node_root}: duplicate Source Node ID {source.id}; each Source may be composed only once"
@@ -81,8 +98,11 @@ class Compiler:
                 seen_source_ids.add(source.id)
 
                 if source.is_pinned:
-                    package, package_resources = self._load_pinned_source(node_root, source)
+                    package, package_resources = self._load_pinned_dependency(
+                        node_root, source, relation="Source"
+                    )
                     compiled.source_packages.append(package)
+                    composition_packages.append(package)
                     source_resource_sets.append(package_resources)
                     continue
 
@@ -96,7 +116,9 @@ class Compiler:
                     raise ContextCanonError(
                         f"{node_root}: Source {source.name} expects version {source.version}, got {source_node.metadata.version}"
                     )
-                compiled.source_packages.append(compiled_package(source_node))
+                source_package = compiled_package(source_node)
+                compiled.source_packages.append(source_package)
+                composition_packages.append(source_package)
                 source_resource_sets.append({
                     path: content
                     for path, content in source_node.resources.items()
@@ -104,7 +126,7 @@ class Compiler:
                 })
 
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
-                compiled.source_packages,
+                composition_packages,
                 compiled.metadata.name,
             )
             compiled.local_changes = list(parsed.changes)
@@ -119,7 +141,7 @@ class Compiler:
             self._validate_visible_rule_ids(compiled)
 
             compiled.inherited_topics = self._compose_inherited_topics(
-                compiled.source_packages,
+                composition_packages,
                 compiled.metadata.name,
             )
             compiled.local_topics, local_resources = self._compile_local_topics(compiled)
@@ -144,35 +166,43 @@ class Compiler:
         finally:
             self._active.pop()
 
-    def _load_pinned_source(self, node_root: Path, source: SourceRef) -> tuple[CompiledPackage, dict[str, bytes]]:
-        if source.normalized_digest is None or source.package_digest is None:
-            raise ContextCanonError(f"{node_root}: internal error: pinned Source {source.name} has incomplete digests")
+    def _load_pinned_dependency(
+        self,
+        node_root: Path,
+        dependency: SourceRef | ParentRef,
+        *,
+        relation: str,
+    ) -> tuple[CompiledPackage, dict[str, bytes]]:
+        if dependency.normalized_digest is None or dependency.package_digest is None:
+            raise ContextCanonError(
+                f"{node_root}: internal error: pinned {relation} {dependency.name} has incomplete digests"
+            )
 
-        package_root = node_root / ".context" / "sources" / source.package_digest
+        package_root = node_root / ".context" / "sources" / dependency.package_digest
         if not package_root.is_dir():
             raise ContextCanonError(
-                f"{node_root}: accepted Source package {source.name} is not available locally at "
-                f".context/sources/{source.package_digest}; build does not fetch Source packages"
+                f"{node_root}: accepted {relation} package {dependency.name} is not available locally at "
+                f".context/sources/{dependency.package_digest}; build does not fetch {relation} packages"
             )
 
         package = load_package(package_root)
-        if package.metadata.id != source.id:
+        if package.metadata.id != dependency.id:
             raise ContextCanonError(
-                f"{node_root}: Source {source.name} expects Node ID {source.id}, got {package.metadata.id}"
+                f"{node_root}: {relation} {dependency.name} expects Node ID {dependency.id}, got {package.metadata.id}"
             )
-        if package.metadata.version != source.version:
+        if package.metadata.version != dependency.version:
             raise ContextCanonError(
-                f"{node_root}: Source {source.name} expects version {source.version}, got {package.metadata.version}"
+                f"{node_root}: {relation} {dependency.name} expects version {dependency.version}, got {package.metadata.version}"
             )
-        if package.normalized_digest != source.normalized_digest:
+        if package.normalized_digest != dependency.normalized_digest:
             raise ContextCanonError(
-                f"{node_root}: Source {source.name} normalized digest mismatch: "
-                f"expected {source.normalized_digest}, got {package.normalized_digest}"
+                f"{node_root}: {relation} {dependency.name} normalized digest mismatch: "
+                f"expected {dependency.normalized_digest}, got {package.normalized_digest}"
             )
-        if package.package_digest != source.package_digest:
+        if package.package_digest != dependency.package_digest:
             raise ContextCanonError(
-                f"{node_root}: Source {source.name} package digest mismatch: "
-                f"expected {source.package_digest}, got {package.package_digest}"
+                f"{node_root}: {relation} {dependency.name} package digest mismatch: "
+                f"expected {dependency.package_digest}, got {package.package_digest}"
             )
         resources = {
             file.path: (package_root / file.path).read_bytes()

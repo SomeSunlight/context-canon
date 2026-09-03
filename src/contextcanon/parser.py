@@ -3,12 +3,13 @@ from __future__ import annotations
 import re
 from pathlib import Path, PurePosixPath
 
-from .model import NodeMetadata, ParsedNode, Rule, RuleChange, SourceRef, Topic, TopicTarget
+from .model import NodeMetadata, ParentRef, ParsedNode, Rule, RuleChange, SourceRef, Topic, TopicTarget
 
 NODE_COMMENT_RE = re.compile(r'<!--\s*ctx:node\s+(?P<attrs>.*?)\s*-->')
 RULE_COMMENT_RE = re.compile(r'<!--\s*ctx:rule\s+(?P<attrs>.*?)\s*-->')
 TOPIC_COMMENT_RE = re.compile(r'<!--\s*ctx:topic\s+(?P<attrs>.*?)\s*-->')
 SOURCE_COMMENT_RE = re.compile(r'<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->')
+PARENT_COMMENT_RE = re.compile(r'<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->')
 CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
@@ -73,6 +74,9 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
     overview = _parse_overview(lines, sections.get("Overview"))
     state = _parse_overview(lines, sections.get("State"))
     plan = _parse_overview(lines, sections.get("Plan"))
+    parent = _parse_parent(lines, sections.get("Parent"), source_path)
+    if parent is not None and parent.id == metadata.id:
+        raise ContextCanonError(f"{source_path}: Parent cannot be the Node itself")
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
     rules = _parse_rules(lines, sections.get("Rules"), source_path, metadata)
     topics = _parse_topics(lines, sections.get("Topics"), source_path, metadata)
@@ -85,13 +89,14 @@ def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
         f"{source_path}: duplicate Change target",
     )
     return ParsedNode(
-        node_root,
-        repo_root,
-        metadata,
-        tuple(sources),
-        tuple(rules),
-        tuple(topics),
-        tuple(changes),
+        root=node_root,
+        repo_root=repo_root,
+        metadata=metadata,
+        sources=tuple(sources),
+        rules=tuple(rules),
+        topics=tuple(topics),
+        parent=parent,
+        changes=tuple(changes),
         overview=overview,
         state=state,
         plan=plan,
@@ -121,6 +126,49 @@ def _parse_overview(lines: list[str], section: tuple[int, int] | None) -> str:
         body.pop()
     return "\n".join(body)
 
+
+def _parse_parent(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> ParentRef | None:
+    if not section:
+        return None
+    start, end = section
+    entries: list[tuple[int, re.Match[str]]] = []
+    for i in range(start, end):
+        match = SOURCE_RE.match(lines[i])
+        if match:
+            entries.append((i, match))
+    if len(entries) != 1:
+        raise ContextCanonError(f"{source_path}: Parent section must contain exactly one Parent entry")
+
+    i, match = entries[0]
+    attrs = _find_ctx_attrs(lines, PARENT_COMMENT_RE, i + 1, min(i + 5, end))
+    if not attrs or not attrs.get("id") or not attrs.get("version"):
+        raise ContextCanonError(f"{source_path}:{i+1}: Parent needs ctx:parent id/version metadata")
+    if attrs["version"] != match.group("version"):
+        raise ContextCanonError(f"{source_path}:{i+1}: Parent display version and ctx:parent version differ")
+
+    normalized_digest = attrs.get("normalized-digest")
+    package_digest = attrs.get("package-digest")
+    if not normalized_digest or not package_digest:
+        raise ContextCanonError(
+            f"{source_path}:{i+1}: Parent must pin both normalized-digest and package-digest"
+        )
+    if not DIGEST_RE.fullmatch(normalized_digest):
+        raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent normalized-digest")
+    if not DIGEST_RE.fullmatch(package_digest):
+        raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent package-digest")
+    if {"transport", "ref", "node-path"}.intersection(attrs):
+        raise ContextCanonError(
+            f"{source_path}:{i+1}: Parent transport metadata is not supported yet; the locator is candidate-discovery metadata only"
+        )
+
+    return ParentRef(
+        id=attrs["id"],
+        name=match.group("name"),
+        version=attrs["version"],
+        locator=match.group("path"),
+        normalized_digest=normalized_digest,
+        package_digest=package_digest,
+    )
 
 def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> list[SourceRef]:
     if not section:

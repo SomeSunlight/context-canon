@@ -39,6 +39,20 @@ class SourceRef:
 
 
 @dataclass(frozen=True)
+class ParentRef:
+    id: str
+    name: str
+    version: str
+    locator: str
+    normalized_digest: str
+    package_digest: str
+
+    @property
+    def is_pinned(self) -> bool:
+        return True
+
+
+@dataclass(frozen=True)
 class RuleModification:
     kind: Literal["override"]
     node_id: str
@@ -126,6 +140,7 @@ class CompiledPackage:
     files: tuple[PackageFile, ...]
     normalized_digest: str
     package_digest: str
+    parent: PackageDependency | None = None
 
 
 @dataclass(frozen=True)
@@ -136,6 +151,7 @@ class ParsedNode:
     sources: tuple[SourceRef, ...]
     rules: tuple[Rule, ...]
     topics: tuple[Topic, ...]
+    parent: ParentRef | None = None
     changes: tuple[RuleChange, ...] = ()
     overview: str = ""
     state: str = ""
@@ -148,6 +164,7 @@ class CompiledNode:
     # All composition semantics consume immutable compiled packages. Local
     # Source Nodes are compiled first and immediately projected to this same
     # boundary; pinned external Sources are loaded directly into it.
+    parent_package: CompiledPackage | None = None
     source_packages: list[CompiledPackage] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     removed_rules: list[RuleRemoval] = field(default_factory=list)

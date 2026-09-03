@@ -170,8 +170,9 @@ def _validate_candidate_composition(
     source_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = list(compiled.source_packages)
-    packages[source_index] = candidate
+    packages = ([compiled.parent_package] if compiled.parent_package is not None else []) + list(compiled.source_packages)
+    candidate_index = source_index + (1 if compiled.parent_package is not None else 0)
+    packages[candidate_index] = candidate
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
         inherited,

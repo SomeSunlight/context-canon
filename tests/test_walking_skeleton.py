@@ -202,7 +202,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("Changes to inherited Rules", node.official_markdown)
         self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
         self.assertIn("**Removed** `Demo Foundation / F-002`", node.official_markdown)
-        self.assertIn("compiler_version: \"0.4.0\"", node.machine_yaml)
+        self.assertIn("compiler_version: \"0.5.0\"", node.machine_yaml)
         self.assertIn('"kind": "override"', node.machine_yaml)
         self.assertIn('"kind": "remove"', node.machine_yaml)
         self.assertIn("removed_rules:", node.machine_yaml)

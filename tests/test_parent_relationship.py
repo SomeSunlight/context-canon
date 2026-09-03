@@ -1,15 +1,4 @@
-from pathlib import Path
-
-helper = Path("tools/_block_r5_parent_step1.py")
-text = helper.read_text(encoding="utf-8")
-start_marker = "def write_tests() -> None:\n"
-end_marker = "\ndef complete() -> None:\n"
-start = text.find(start_marker)
-end = text.find(end_marker, start)
-if start < 0 or end < 0:
-    raise SystemExit("R5 write_tests function boundary not found")
-
-test_source = r'''from __future__ import annotations
+from __future__ import annotations
 
 import shutil
 import sys
@@ -184,12 +173,3 @@ class ParentRelationshipTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-'''
-
-replacement = (
-    "def write_tests() -> None:\n"
-    "    test = " + repr(test_source) + "\n"
-    "    Path(\"tests/test_parent_relationship.py\").write_text(test, encoding=\"utf-8\")\n"
-)
-text = text[:start] + replacement + text[end:]
-helper.write_text(text, encoding="utf-8")

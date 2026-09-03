@@ -213,3 +213,11 @@ Topics are now effective transitive package semantics rather than local-only pre
 Inherited Resource trees use `CONTEXT/references/<origin-node-id>/...` (with deterministic hashing only for path-unsafe IDs). This makes the collision rule structural and Source-order-free: the same stable origin path with identical bytes deduplicates through diamonds; different bytes at that path fail compilation/review. Pinned external Source packages can now provide Topics and Resources entirely offline. Official `CONTEXT.md` renders inherited Topics grouped by origin alongside local Topics; inherited Context-Node navigation shows the stable target identity when no consumer-local link can safely be promised.
 
 This deliberately precedes the Parent relationship itself. The next Block R slice can now model an accepted semantic Parent as a distinct exact package edge while reusing the already-general Rule/Topic composition machinery. Fast-run remains active; PR #13 remains draft and unmerged.
+
+## Latest Block R5 step-1 semantic-Parent checkpoint
+
+ContextCanon now has an explicit `## Parent` authoring relationship. Parent is always an exact immutable package pin and remains distinct from ordinary reusable Sources in parsed state, compiled state, human rendering, machine YAML, package metadata and deterministic diff. Filesystem nesting still carries no composition meaning.
+
+The compiler composes the accepted Parent package through the same Rule/Topic/Resource conflict machinery as Sources, while the normalized semantic digest records the Parent role separately. Existing packages without Parent metadata remain valid because the optional Parent semantic field is absent when no Parent exists. Normal builds load the Parent only from the Child's local immutable package store and never dereference the Parent locator.
+
+R5 step 2 is next: persist the owner-accepted Step-03 hierarchy during onboarding publication and install the exact resulting Parent package into each Child. PR #13 remains draft and unmerged; fast-run remains active.

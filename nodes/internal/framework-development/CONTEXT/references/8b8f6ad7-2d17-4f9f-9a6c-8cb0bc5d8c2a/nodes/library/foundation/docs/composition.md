@@ -1,6 +1,6 @@
 # Context Composition
 
-ContextCanon combines independent context Sources instead of relying on a single inheritance tree.
+ContextCanon combines one optional explicit semantic Parent with any number of independent reusable Sources. Filesystem nesting never creates either relationship implicitly.
 
 ```text
 Business Context ──────┐
@@ -9,9 +9,17 @@ Personal Style ─────────┼──> Local Delta ──> Officia
 Security Context ───────┘
 ```
 
-A Source is an accepted published package from another Context Node. Sources may live in the same Git repository or in independent repositories. Filesystem containment does not create inheritance.
+A Source is an accepted published package from another Context Node. Sources may live in the same Git repository or in independent repositories. A Parent is also an accepted package, but its role is the owner-reviewed semantic hierarchy rather than reusable cross-cutting composition.
 
-Local development Sources can be resolved directly from another Node in the same repository. Accepted external Sources are immutable packages pinned by Node/version identity plus exact semantic and package digests.
+Local development Sources can be resolved directly from another Node in the same repository. Accepted external Sources and every semantic Parent are immutable packages pinned by Node/version identity plus exact semantic and package digests.
+
+## Semantic Parent
+
+A Node has at most one Parent. The relationship must be written explicitly in `CONTEXT.src.md`; repository directories are only locations and do not imply Parent/Child composition.
+
+Parent and Sources are composed through the same `CompiledPackage` boundary. This means no special "parent text merge" exists: the Child consumes the Parent's complete effective Rules, Topics, removals, overrides and materialized Topic Resources exactly as an immutable package. The Parent role remains separately visible in human output, machine state, package metadata and deterministic diff.
+
+The accepted Parent pin is intentionally non-live. Editing or rebuilding the Parent Node elsewhere does not change an ordinary Child build. A Parent update is a later candidate/review/accept operation, not implicit inheritance from current filesystem bytes.
 
 ## No implicit precedence
 
@@ -25,7 +33,7 @@ The compiler canonicalizes direct Source order in normalized semantics. Reorderi
 
 Source relationships form a directed acyclic graph. The compiler deterministically detects structural problems such as dependency cycles, invalid Source identities/versions, dangling Changes, and incompatible transitive states of the same stable Rule.
 
-Compiler 0.4 supports local unpinned Sources and immutable pinned external Sources. Both become `CompiledPackage` before Rule composition, so the same transitive composition and conflict rules apply regardless of Source transport.
+Compiler 0.5 supports one immutable semantic Parent, local unpinned Sources and immutable pinned external Sources. All become `CompiledPackage` before Rule/Topic composition, so the same transitive composition and conflict rules apply while Parent remains a distinct relationship role.
 
 ## Structural Rule conflicts
 

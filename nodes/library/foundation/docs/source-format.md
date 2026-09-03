@@ -31,6 +31,25 @@ Changing only an Overview therefore changes the exact published package bytes an
 
 Keep an Overview compact. It is always-read entry context, so deeper explanations belong behind Topics rather than turning the Overview into another preload document. In particular, use Topics for material that needs to be packaged as deeper Resources instead of relying on repository-local links from an Overview.
 
+## Parent
+
+A Context Node may have **one semantic Parent**. Parent is an explicit accepted relationship, not a filesystem convention. A directory above the Node, or a Node whose path contains this Node, does not become Parent automatically.
+
+Parent is always an exact immutable package pin:
+
+```markdown
+## Parent
+
+- [Project Context](../) — `0.1.0`
+  <!-- ctx:parent id="<stable-parent-node-id>" version="0.1.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
+```
+
+The visible locator records where a newer Parent candidate may later be discovered. Ordinary `contextcanon build` never dereferences it. Build loads only the accepted Parent artifact from the Child's local `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests and package files.
+
+Parent and ordinary Sources are intentionally different roles. Parent expresses the human-accepted semantic hierarchy; Sources express independent reusable composition. Both feed the same immutable package-composition engine, so inherited Rules, Topics and Resources use the same deterministic conflict rules without creating a second inheritance implementation.
+
+Changing the Parent's live repository files therefore does not silently change the Child. The Child continues using its accepted Parent package until an explicit update is reviewed and accepted.
+
 ## Sources
 
 `## Sources` lists accepted Context Nodes. The visible link names the Source location; the adjacent compiler-managed comment preserves stable identity and accepted version.

@@ -43,6 +43,19 @@ def package_dependencies(compiled: CompiledNode) -> tuple[PackageDependency, ...
     )
 
 
+def package_parent_dependency(compiled: CompiledNode) -> PackageDependency | None:
+    parent = compiled.parent_package
+    if parent is None:
+        return None
+    return PackageDependency(
+        id=parent.metadata.id,
+        name=parent.metadata.name,
+        version=parent.metadata.version,
+        normalized_digest=parent.normalized_digest,
+        package_digest=parent.package_digest,
+    )
+
+
 def package_content_files(compiled: CompiledNode) -> dict[str, bytes]:
     return {
         "CONTEXT.md": compiled.official_markdown.encode("utf-8"),
@@ -74,6 +87,7 @@ def semantic_payload(
     rules: Iterable[Rule],
     removed_rules: Iterable[RuleRemoval],
     topics: Iterable[Topic],
+    parent: PackageDependency | None = None,
 ) -> dict[str, Any]:
     """Return the canonical semantic payload used for normalized_digest.
 
@@ -114,7 +128,7 @@ def semantic_payload(
     topic_items = [_topic_dict(topic) for topic in topics]
     topic_items.sort(key=lambda item: (item["origin_node_id"], item["id"]))
 
-    return {
+    payload: dict[str, Any] = {
         "node": {
             "id": metadata.id,
             "name": metadata.name,
@@ -126,6 +140,13 @@ def semantic_payload(
         "removed_rules": removal_items,
         "topics": topic_items,
     }
+    if parent is not None:
+        payload["parent"] = {
+            "id": parent.id,
+            "version": parent.version,
+            "normalized_digest": parent.normalized_digest,
+        }
+    return payload
 
 
 def semantic_digest(
@@ -135,8 +156,9 @@ def semantic_digest(
     rules: Iterable[Rule],
     removed_rules: Iterable[RuleRemoval],
     topics: Iterable[Topic],
+    parent: PackageDependency | None = None,
 ) -> str:
-    payload = semantic_payload(metadata, sources, changes, rules, removed_rules, topics)
+    payload = semantic_payload(metadata, sources, changes, rules, removed_rules, topics, parent)
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -149,6 +171,7 @@ def semantic_digest_for_node(compiled: CompiledNode) -> str:
         (*compiled.inherited_rules, *compiled.local_rules),
         compiled.removed_rules,
         (*compiled.inherited_topics, *compiled.local_topics),
+        package_parent_dependency(compiled),
     )
 
 
@@ -175,6 +198,7 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
         files=package_file_metadata(files),
         normalized_digest=compiled.normalized_digest,
         package_digest=compiled.package_digest,
+        parent=package_parent_dependency(compiled),
     )
 
 
@@ -188,6 +212,7 @@ def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> st
             "name": package.metadata.name,
             "version": package.metadata.version,
         },
+        "parent": asdict(package.parent) if package.parent is not None else None,
         "sources": [asdict(source) for source in package.sources],
         "changes": [asdict(change) for change in package.changes],
         "rules": [asdict(rule) for rule in package.rules],
@@ -233,8 +258,12 @@ def load_package(package_root: Path) -> CompiledPackage:
         _string(node.get("version"), "node.version"),
     )
 
+    parent_raw = root.get("parent")
+    parent = _parse_parent_dependency(parent_raw) if parent_raw is not None else None
     sources = tuple(_parse_dependency(item, index) for index, item in enumerate(_list(root.get("sources"), "sources")))
     _unique((source.id for source in sources), "package Source Node ID")
+    if parent is not None and any(source.id == parent.id for source in sources):
+        raise ContextCanonError("Context package cannot use the same Node as Parent and ordinary Source")
     changes = tuple(_parse_change(item, index) for index, item in enumerate(_list(root.get("changes"), "changes")))
     rules = tuple(_parse_rule(item, index) for index, item in enumerate(_list(root.get("rules"), "rules")))
     removed_rules = tuple(
@@ -248,7 +277,7 @@ def load_package(package_root: Path) -> CompiledPackage:
     normalized_digest = _digest(digests.get("normalized"), "digests.normalized")
     expected_package_digest = _digest(digests.get("package"), "digests.package")
 
-    actual_normalized = semantic_digest(metadata, sources, changes, rules, removed_rules, topics)
+    actual_normalized = semantic_digest(metadata, sources, changes, rules, removed_rules, topics, parent)
     if actual_normalized != normalized_digest:
         raise ContextCanonError(
             f"Context package normalized digest mismatch in {manifest_path}: "
@@ -284,6 +313,7 @@ def load_package(package_root: Path) -> CompiledPackage:
         files=tuple(sorted(files, key=lambda file: file.path)),
         normalized_digest=normalized_digest,
         package_digest=expected_package_digest,
+        parent=parent,
     )
 
 
@@ -346,6 +376,17 @@ def _read_and_verify_files(package_root: Path, expected: tuple[PackageFile, ...]
             )
         contents[path] = content
     return contents
+
+
+def _parse_parent_dependency(value: Any) -> PackageDependency:
+    item = _dict(value, "parent")
+    return PackageDependency(
+        _string(item.get("id"), "parent.id"),
+        _string(item.get("name"), "parent.name"),
+        _string(item.get("version"), "parent.version"),
+        _digest(item.get("normalized_digest"), "parent.normalized_digest"),
+        _digest(item.get("package_digest"), "parent.package_digest"),
+    )
 
 
 def _parse_dependency(value: Any, index: int) -> PackageDependency:

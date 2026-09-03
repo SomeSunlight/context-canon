@@ -271,7 +271,7 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: ACTIVE — R5 Semantic Parent relationship, step 1 of 5. Fast-run remains ACTIVE.**
+**Status: ACTIVE — R5 Semantic Parent relationship, step 2 of 5. Fast-run remains ACTIVE.**
 
 **How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
@@ -310,7 +310,7 @@ Checkpoint: pinned packages can provide Topics and exact Resource bytes fully of
 
 Goal: turn the human-accepted Step-03 hierarchy into an explicit ContextCanon relation. Filesystem nesting remains only layout; it must never silently imply inheritance.
 
-- [ ] 1. Add an explicit `Parent` relationship to the authoring grammar/model/compiler/package/rendering boundary, distinct from ordinary reusable Sources but reusing the same immutable package-composition machinery.
+- [x] 1. Add an explicit `Parent` relationship to the authoring grammar/model/compiler/package/rendering boundary, distinct from ordinary reusable Sources but reusing the same immutable package-composition machinery.
 - [ ] 2. Persist every non-root accepted Step-03 parent into onboarding publication and pin the exact accepted Parent package locally in the Child.
 - [ ] 3. Make Parent changes non-live: normal builds use the accepted package pin; a changed Parent can only become a candidate until reviewed/accepted.
 - [ ] 4. Prove that the Parent chain carries complete effective Rules, Topics and Resources transitively, so a reusable Development Workflow attached at the intended ancestor reaches descendants without being selected on every Node.
