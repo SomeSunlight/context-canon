@@ -79,4 +79,19 @@ text = text.replace(
     1,
 )
 
+# Diff fixtures now observe the same origin-qualified Resource identity as the
+# compiler and immutable package model.
+patch_tests_tail = '''\n    p = Path("tests/test_diff.py")
+    text = p.read_text(encoding="utf-8")
+    old_resource_key = '        resource_key = "CONTEXT/references/docs/guide.md"\\n'
+    new_resource_key = '        resource_key = "CONTEXT/references/node-project/docs/guide.md"\\n'
+    if old_resource_key not in text:
+        raise SystemExit("test_diff.py: legacy Resource key expectation not found")
+    p.write_text(text.replace(old_resource_key, new_resource_key, 1), encoding="utf-8")
+'''
+patch_docs_marker = "\n\ndef patch_docs() -> None:\n"
+if patch_docs_marker not in text:
+    raise SystemExit("R4a patch_docs boundary not found")
+text = text.replace(patch_docs_marker, patch_tests_tail + patch_docs_marker, 1)
+
 path.write_text(text, encoding="utf-8")
