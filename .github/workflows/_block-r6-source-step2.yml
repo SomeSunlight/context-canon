@@ -19,6 +19,7 @@ jobs:
           python-version: "3.12"
       - name: Apply R6 step 2
         run: |
+          python tools/_fix_r6_step2_helper.py
           python tools/_block_r6_source_step2.py
           python -m compileall -q src tests
       - name: Install ContextCanon
@@ -36,7 +37,7 @@ jobs:
       - name: Checkpoint R6 step 2 and commit clean product tree
         run: |
           python tools/_block_r6_source_step2.py --complete
-          rm -f .github/workflows/_block-r6-source-step2.yml tools/_block_r6_source_step2.py
+          rm -f .github/workflows/_block-r6-source-step2.yml tools/_block_r6_source_step2.py tools/_fix_r6_step2_helper.py
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
