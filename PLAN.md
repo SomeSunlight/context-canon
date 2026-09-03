@@ -267,48 +267,67 @@ Live reproduction: the real `ai-workstation` snapshot still renders `No reusable
 
 Fast-run decision: continue the vertical onboarding through human review, publication preview and publication. Revisit this block with another project or a dedicated compatibility test rather than extending the current correction loop.
 
-#### Block R — first production post-publish UX and parent composition findings
+#### Block R — first production use after onboarding
 
-Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
+Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: NEXT — Blocks R1-R4a complete; next persist the accepted Step-03 Parent relationship as an exact package edge. Fast-run remains ACTIVE.**
+**Status: ACTIVE — R5 Semantic Parent relationship, step 1 of 5. Fast-run remains ACTIVE.**
 
-R4a purpose: make Topics package semantics just like effective Rules before adding the distinct accepted Parent relationship. Local Topic targets are compiled into portable targets; Resource materialization is namespaced by stable origin Node identity so Source packages can be merged transitively without filesystem-path collisions, while Context-Node targets carry stable target identity across package boundaries.
+**How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
-R4a verification: focused compiler/package/external-Source/diff regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. Effective Topics now survive immutable package round-trips and pinned offline Source composition together with exact origin-namespaced Resource bytes.
+##### R1 — Make the human review surfaces obvious and self-contained
 
-R3 purpose: keep `STEP-07-placement.md` as the single human-editable review truth while generating a deterministic source-file-first audit from the currently parsed review. The audit must group Source edits by original file/range and show exact Before, effective After, every linked P-finding, and the current reviewed destination/content so zero semantic loss can be checked without hunting through destination-first sections.
+- [x] 1. Give Step 03 and Step 07 quiet but visible edit boundaries.
+- [x] 2. Put the Step 07 decision/Kind glossary directly into the review artifact.
+- [x] 3. Remove `Action` as a fake independent choice; derive it from Kind.
+- [x] 4. Add a source-file-first transformation audit beside the destination-first review.
+- [x] 5. Show every linked promoted finding from one Source edit so zero semantic loss is easy to audit.
 
-R3 verification: focused source-audit/placement-review/reset regressions passed, followed by the complete deterministic suite (167 tests), self-hosted build/check and `git diff --check`. The clean product checkpoint removed every temporary R3 harness file.
+Checkpoint: Step 03/07 editing is visibly understandable; `STEP-07a-source-audit.md` is generated/read-only while Step 07 remains the sole editable placement truth.
 
-R2 purpose: keep `CONTEXT.src.md` as the only authoring truth while making ordinary Rule/Topic creation safe and pleasant. ContextCanon should allocate stable hidden IDs once, write ordinary source syntax, and leave the familiar build/check loop intact.
+##### R2 — Make normal post-onboarding authoring simple
 
-R2 verification: focused authoring/CLI regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. `contextcanon author rule` and `contextcanon author topic` now allocate stable IDs and write ordinary validated `CONTEXT.src.md`; Foundation documents the minimal native-project daily loop.
+- [x] 1. Add first-class Rule/Topic authoring commands so humans do not invent hidden IDs.
+- [x] 2. Document the daily loop: read `CONTEXT.md`, edit `CONTEXT.src.md`/Resources, build, check, review dependency updates when present.
 
-R1 purpose: make the two human review gates visibly editable without visual shouting, make Step 07 self-contained about its controls, and remove `Action` as a fake independent choice while preserving the existing deterministic Kind→Action contract.
+Checkpoint: `contextcanon author rule` and `contextcanon author topic` allocate stable IDs and write validated ordinary `CONTEXT.src.md`.
 
-R1 verification: focused structure/placement-review regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. Step 03 now has quiet visible edit boundaries; Step 07 contains its own control glossary and quieter edit cues; Action is derived deterministically from Kind and is no longer parsed as an independent owner control.
+##### R3 — Make Source After review easy to audit from the original document
 
-##### Review surfaces
+- [x] 1. Generate a deterministic source-first audit grouped by original file/range with exact Before and effective After.
+- [x] 2. Include destination Node/content and all linked findings without creating a second human gate.
 
-- [x] Give Step 03 the same visible edit affordance as Step 07, but use a quieter presentation that preserves the visual dominance of the Node tree. Apply the same lower-noise treatment to Step 07 so editable boundaries are obvious without overwhelming headings/content.
-- [x] Make Step 07 self-contained about every editable control. Show allowed `Decision` values and a concise Kind/Action glossary directly in the review artifact; an operator inside another repository must not need to know that `docs/onboarding.md` exists in the ContextCanon repository.
-- [x] Reconsider whether `Action` should be independently editable at all. Current validation effectively derives one action from each kind (`promote`, `reference`, `keep`, `map`); the review UX should expose meaningful choices rather than a pseudo-choice that can only form one valid Kind/Action pair.
-- [x] Reduce rendered/source switching during review. Evaluate a separate source-file-first transformation review surface for Source After edits, grouped by original file/range and showing exact before/after plus every linked P-finding and final destination Node/content.
-- [x] Make cross-linked E-edits easy to audit for zero semantic loss: from one source edit, the owner should be able to see where each removed substantive meaning lands without chasing findings from unrelated parts of the document.
+Checkpoint: focused audit/review/reset regressions plus the complete 167-test suite, self-hosted build/check and diff hygiene passed on the clean R3 product checkpoint.
 
-##### Normal authoring after onboarding
+##### R4 — Make Topics and Resources real transitive package semantics
 
-- [x] Add first-class authoring ergonomics for new Rules/Topics after onboarding so humans do not have to invent or hand-maintain invisible `ctx:*` identity comments. Preserve stable IDs, but provide an explicit ContextCanon authoring/write command or equivalent safe mechanism that allocates the ID once.
-- [x] Document the minimal post-onboarding daily loop for ordinary projects: read `CONTEXT.md`, edit `CONTEXT.src.md`/Resources, build, check, and review Source updates when present.
+- [x] 1. Inherit effective Topics through accepted Source packages, including deterministic diamond/conflict handling.
+- [x] 2. Materialize Topic Resources under stable origin-Node namespaces and render the complete effective Rules + Topics context with provenance.
 
-##### Accepted semantic parent relationships
+Checkpoint: pinned packages can provide Topics and exact Resource bytes fully offline. The focused R4 tests passed 37/37; the complete deterministic suite passed 168/168 together with self-hosted build/check and diff hygiene.
 
-- [ ] Persist the human-accepted Step-03 parent/child hierarchy into the materialized Nodes as an explicit ContextCanon relationship. This must come from the reviewed semantic structure, not from filesystem nesting; repository directories alone still do not imply composition.
-- [ ] Model the accepted semantic parent as a Source-like accepted package edge so a Child uses the exact accepted Parent snapshot. A later Parent change becomes a candidate and does not alter the Child until reviewed/accepted.
-- [x] Extend compiled inheritance from Rules to Topics. Today Rules compose transitively, while Topics are intentionally local-only; define package locator/resource semantics so accepted Parent/Source Topics and their Resources can be rendered safely in the Child.
-- [x] Render each Node's `CONTEXT.md` as the complete effective working context: all effective inherited + local Rules and all effective inherited + local Topics, with provenance and accepted-package boundaries preserved.
-- [ ] Use the parent chain to make repository-wide workflow context practical. In `ai-workstation`, once the Development Workflow Source is correctly attached at the intended ancestor, descendants should receive that accepted workflow transitively instead of requiring the Source to be selected independently on every Node.
-- [ ] Revisit Source update UX so projects can discover/fetch newer reusable Node packages without manually tracking remote package identities; updates must remain candidates requiring review/accept, never live implicit pulls.
+##### R5 — Semantic Parent relationship
 
-Post-publish checkpoint: the owner set the current placement decisions to `accept` and completed real publication locally in `ai-workstation`. The resulting project is now being inspected as the first genuinely productive ContextCanon onboarding result. The known legacy owner-Source recovery defect from Block Q remained present, so this run may lack the intended Development Workflow Source; that is recorded test debt, not a reason to discard the published semantic placement.
+Goal: turn the human-accepted Step-03 hierarchy into an explicit ContextCanon relation. Filesystem nesting remains only layout; it must never silently imply inheritance.
+
+- [ ] 1. Add an explicit `Parent` relationship to the authoring grammar/model/compiler/package/rendering boundary, distinct from ordinary reusable Sources but reusing the same immutable package-composition machinery.
+- [ ] 2. Persist every non-root accepted Step-03 parent into onboarding publication and pin the exact accepted Parent package locally in the Child.
+- [ ] 3. Make Parent changes non-live: normal builds use the accepted package pin; a changed Parent can only become a candidate until reviewed/accepted.
+- [ ] 4. Prove that the Parent chain carries complete effective Rules, Topics and Resources transitively, so a reusable Development Workflow attached at the intended ancestor reaches descendants without being selected on every Node.
+- [ ] 5. Cover migration/idempotency/recovery for an already-published `ai-workstation`-like tree, then run the focused tests, complete suite, self-hosted build/check and hygiene gate.
+
+Expected practical result: when working inside a subsystem, an agent can start at that subsystem's Node and receive the accepted higher-level context through the semantic Parent chain without loading unrelated sibling context.
+
+##### R6 — Reusable Source update discovery UX
+
+Goal: make newer reusable Node packages discoverable without weakening the accepted-snapshot model.
+
+- [ ] 1. Let projects discover/fetch a newer reusable Source package without manually tracking package identities.
+- [ ] 2. Keep every update candidate-only until explicit review/accept; never introduce live implicit pulls.
+- [ ] 3. Document and test the normal update loop, including offline use of the last accepted package.
+
+##### Deferred compatibility debt
+
+Block Q remains intentionally deferred: an old in-flight onboarding snapshot created before `run-inputs.json` existed can lose a formerly owner-selected Source during reset/recreation. Fresh/current onboarding already persists and reuses owner-selected Sources correctly. Do not reopen the completed real placement merely to repair that legacy migration edge.
+
+Post-publish basis: the owner accepted and published the first real `ai-workstation` placement and is now using the resulting Nodes as a productive system. That live use is the design driver for R5/R6; PR #13 remains draft and unmerged until explicit project-owner approval.
