@@ -19,6 +19,7 @@ jobs:
           python-version: "3.12"
       - name: Apply Block S step 4
         run: |
+          python tools/_fix_s4_semantic_assertions.py
           python tools/_block_s_machine_state_step4.py
           python -m compileall -q src tests
       - name: Install ContextCanon
@@ -36,7 +37,7 @@ jobs:
       - name: Checkpoint completed Block S and commit clean product tree
         run: |
           python tools/_block_s_machine_state_step4.py --complete
-          rm -f .github/workflows/_block-s-machine-state-step4.yml tools/_block_s_machine_state_step4.py
+          rm -f .github/workflows/_block-s-machine-state-step4.yml tools/_block_s_machine_state_step4.py tools/_fix_s4_semantic_assertions.py
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
