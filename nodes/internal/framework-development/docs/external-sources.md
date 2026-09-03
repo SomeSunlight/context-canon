@@ -116,7 +116,7 @@ contextcanon build <consumer-node>
 contextcanon check <consumer-node>
 ```
 
-This is appropriate only for **first adoption** of an exact package the operator has deliberately selected. Subsequent changes to that Source use the reviewable update loop below.
+This is appropriate only for **first adoption** of an exact package the operator has deliberately selected. Subsequent changes to that Source use the reviewable update loop below. If the consumer is an ancestor in a semantic Parent hierarchy, descendants do not change live: review/accept the affected Parent edges from the ancestor downward so each child deliberately advances to a Parent snapshot that already contains the newly adopted Source.
 
 ## Fetch, review, accept
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -16,6 +18,7 @@ from contextcanon.onboarding_placement_publish import build_placement_publicatio
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
 from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_or_load_structure_markdown, load_structure_markdown, load_onboarding_structure_proposal
 from contextcanon.outputs import write_outputs
+from contextcanon.sources import adopt_source_package, accept_parent_candidate, review_parent_candidate
 from tests.test_onboarding_placement import OnboardingPlacementTests
 
 
@@ -50,6 +53,31 @@ EXPECTED_PARENT_KEYS = {
 
 def _sha(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
+
+
+WORKFLOW_SOURCE = '''# Development Workflow — Local Context Source
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
+
+## Rules
+
+### Human review gate
+
+- **Do not merge without explicit project-owner approval:** Keep a review PR open until the project owner explicitly approves the reviewed result.
+  Why: Automation does not decide product acceptance.
+  <!-- ctx:rule id="CCW-006" -->
+
+## Topics
+
+### Executing a development block
+
+When planning or reviewing a coherent development block:
+
+Required:
+- Resource: `docs/change-workflow.md`
+<!-- ctx:topic id="CCW-TOPIC-CHANGE-WORKFLOW" -->
+'''
+
+WORKFLOW_RESOURCE = "# Change workflow\n\nKeep changes recoverable, reviewed, and explicitly accepted.\n"
 
 
 class RealAiWorkstationParentMigrationTests(unittest.TestCase):
@@ -231,6 +259,49 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
         )
         return repo, prepared, workspace, proposal, review, acceptance
 
+    def publish_workflow_package(self, repo: Path):
+        workflow = repo / "nodes/library/development-workflow"
+        docs = workflow / "docs"
+        docs.mkdir(parents=True, exist_ok=True)
+        (workflow / "CONTEXT.src.md").write_text(WORKFLOW_SOURCE, encoding="utf-8")
+        (docs / "change-workflow.md").write_text(WORKFLOW_RESOURCE, encoding="utf-8")
+        compiled = Compiler(repo).compile(workflow)
+        write_outputs(compiled)
+
+        subprocess.run(["git", "-C", str(repo), "config", "user.email", "contextcanon@example.invalid"], check=True)
+        subprocess.run(["git", "-C", str(repo), "config", "user.name", "ContextCanon Tests"], check=True)
+        remote = subprocess.run(
+            ["git", "-C", str(repo), "remote", "get-url", "origin"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if remote.returncode != 0:
+            subprocess.run(
+                ["git", "-C", str(repo), "remote", "add", "origin", "https://example.test/context-canon.git"],
+                check=True,
+            )
+        subprocess.run(["git", "-C", str(repo), "add", "--", "nodes/library/development-workflow"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repo), "commit", "-qm", "Publish Development Workflow package"],
+            check=True,
+        )
+        return workflow, compiled
+
+    @staticmethod
+    def _node_depths():
+        by_key = {key: (rel, parent) for key, _, rel, parent, _ in REAL_NODES}
+        cache = {}
+
+        def depth(key):
+            if key in cache:
+                return cache[key]
+            parent = by_key[key][1]
+            cache[key] = 0 if parent is None else depth(parent) + 1
+            return cache[key]
+
+        return {key: depth(key) for key in by_key}
+
     def test_real_nine_node_legacy_tree_migrates_all_expected_parent_edges(self):
         repo, prepared, _, proposal, review, acceptance = self.make_legacy_publication()
 
@@ -293,6 +364,106 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
             project_root=repo,
         )
         self.assertTrue(all(not delta.changed for delta in second.nodes))
+
+    def test_real_pre_parent_pre_source_upgrade_carries_workflow_offline_to_scoped_descendants(self):
+        repo, prepared, _, proposal, review, acceptance = self.make_legacy_publication()
+
+        # 1. Migrate the exact untouched historical placement first. The legacy
+        # acceptance byte hashes are the safety proof for this one-time Parent
+        # publication, so later ordinary authoring must not be smuggled through it.
+        preview = build_placement_publication_preview(
+            proposal,
+            review,
+            prepared.snapshot_root,
+            project_root=repo,
+        )
+        publish_placement_review(
+            preview,
+            review,
+            snapshot_root=prepared.snapshot_root,
+            acceptance_path=acceptance,
+        )
+        parent_migration_acceptance = acceptance.read_bytes()
+
+        # 2. Explicitly re-adopt the reusable Development Workflow at the Root
+        # as a new post-onboarding owner decision. Historical placement remains
+        # unchanged and direct children stay on their previous Parent snapshots.
+        workflow_root, workflow = self.publish_workflow_package(repo)
+        adopted, changed = adopt_source_package(repo, workflow_root)
+        self.assertTrue(changed)
+        self.assertEqual(adopted.package_digest, workflow.package_digest)
+        self.assertEqual(acceptance.read_bytes(), parent_migration_acceptance)
+
+        root = Compiler(repo).compile(repo)
+        self.assertIn("Do not merge without explicit project-owner approval", {r.title for r in root.inherited_rules})
+        compose_before = Compiler(repo).compile(repo / "compose")
+        self.assertNotIn("CCW-006", {r.id for r in compose_before.inherited_rules})
+
+        # 3. Non-live Parent semantics require deliberate top-down propagation.
+        # Each edge reviews/accepts the current live Parent snapshot; children at
+        # the next depth then inherit an already accepted upstream snapshot.
+        depths = self._node_depths()
+        for key, _, rel, parent_key, _ in sorted(
+            REAL_NODES,
+            key=lambda item: (depths[item[0]], item[2], item[0]),
+        ):
+            if parent_key is None:
+                continue
+            child = repo / rel
+            diff, receipt = review_parent_candidate(child)
+            self.assertTrue(receipt.is_file(), key)
+            self.assertFalse(diff.is_empty, key)
+            accepted_parent = accept_parent_candidate(child)
+            self.assertEqual(accepted_parent.metadata.id, next(node_id for k, _, _, _, node_id in REAL_NODES if k == parent_key))
+
+        # Parent updates are ordinary post-onboarding evolution too; they must
+        # not rewrite the historical placement acceptance record.
+        self.assertEqual(acceptance.read_bytes(), parent_migration_acceptance)
+
+        goose = Compiler(repo).compile(repo / "compose/goose")
+        goose_rule_ids = {rule.id for rule in (*goose.inherited_rules, *goose.local_rules)}
+        goose_statements = {rule.statement for rule in (*goose.inherited_rules, *goose.local_rules)}
+        self.assertIn("CCW-006", goose_rule_ids)
+        self.assertEqual(
+            goose_statements,
+            {
+                "Keep a review PR open until the project owner explicitly approves the reviewed result.",
+                "AI Workstation root policy.",
+                "Application runtime policy.",
+                "Goose policy.",
+            },
+        )
+        self.assertIn("CCW-TOPIC-CHANGE-WORKFLOW", {topic.id for topic in goose.inherited_topics})
+        workflow_resource = (
+            "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/"
+            "nodes/library/development-workflow/docs/change-workflow.md"
+        )
+        self.assertEqual(goose.resources[workflow_resource], WORKFLOW_RESOURCE.encode("utf-8"))
+
+        ansible = Compiler(repo).compile(repo / "bootstrap/ansible")
+        ansible_rule_ids = {rule.id for rule in (*ansible.inherited_rules, *ansible.local_rules)}
+        ansible_statements = {rule.statement for rule in (*ansible.inherited_rules, *ansible.local_rules)}
+        self.assertIn("CCW-006", ansible_rule_ids)
+        self.assertEqual(
+            ansible_statements,
+            {
+                "Keep a review PR open until the project owner explicitly approves the reviewed result.",
+                "AI Workstation root policy.",
+                "Bootstrap policy.",
+                "Ansible host policy.",
+            },
+        )
+
+        # 4. Remove both the original reusable Node and the Root's direct Source
+        # package. A deep leaf still compiles from its own accepted direct Parent
+        # package, proving the complete effective workflow travelled through the
+        # immutable Parent chain rather than via a live Source checkout.
+        shutil.rmtree(workflow_root)
+        shutil.rmtree(repo / ".context/sources" / workflow.package_digest)
+        offline_goose = Compiler(repo).compile(repo / "compose/goose")
+        self.assertIn("CCW-006", {rule.id for rule in offline_goose.inherited_rules})
+        self.assertEqual(offline_goose.resources[workflow_resource], WORKFLOW_RESOURCE.encode("utf-8"))
+        self.assertEqual(acceptance.read_bytes(), parent_migration_acceptance)
 
 
 if __name__ == "__main__":

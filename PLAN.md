@@ -257,16 +257,9 @@ Owner-Source recovery checkpoint: Step 7 recreation now actually consumes the ow
 
 Purpose: preserve the remaining live `ai-workstation` finding without delaying the owner-approved end-to-end onboarding run. A previously selected Development Workflow owner Source can still disappear from a recreated `STEP-07-placement.md` when the onboarding snapshot predates snapshot-owned `run-inputs.json` persistence. The current code correctly reuses an owner choice that is already present in machine run state; it cannot reconstruct a choice that was lost before that state existed.
 
-**Status: DEFERRED — known defect, not a blocker for the current end-to-end `ai-workstation` run.** Do not reopen the current placement reasoning pass merely to solve this compatibility edge case.
+**Status: RESOLVED BY BLOCK S — do not invent owner history that no longer exists.**
 
-- [ ] Add a regression starting from a legacy/in-flight workspace where the owner Source exists only in the older human/PLAN state and `run-inputs.json` has no owner choice.
-- [ ] Make legacy PLAN-only owner Source values migrate into snapshot-owned machine run state before reset/recreation can remove the last human artifact that contains the choice.
-- [ ] Decide whether recreating Step 7 with an exact Source catalog but a previously expected owner choice that cannot be recovered should emit a visible warning instead of silently rendering `No reusable Source is currently proposed or owner-selected.`
-- [ ] Verify both paths: a fresh onboarding started with current ContextCanon and an upgraded in-flight onboarding that began before run-input persistence existed.
-
-Live reproduction: the real `ai-workstation` snapshot still renders `No reusable Source is currently proposed or owner-selected.` after `reset --from 7`, even after the correction that consumes remembered owner specs when they are present. This strongly indicates a migration/recovery gap in the older in-flight snapshot state rather than a failure of the current fresh-run persistence path.
-
-Fast-run decision: continue the vertical onboarding through human review, publication preview and publication. Revisit this block with another project or a dedicated compatibility test rather than extending the current correction loop.
+The supplied real `ai-workstation` machine state proved the stronger legacy case: the former Development Workflow choice can be absent from `STEP-07`, placement acceptance, run state, Source store, and reset journal simultaneously. There is then no exact historical package choice left to migrate safely. Block S therefore replaces hidden reconstruction with an explicit normal owner action: `contextcanon source adopt` re-adopts a deliberately selected exact current package without replaying placement, while fresh/current onboarding continues to persist owner-selected Sources normally. The combined real-tree regression proves subsequent top-down Parent propagation and offline descendant use.
 
 #### Block R — first production use after onboarding
 
@@ -335,12 +328,12 @@ Checkpoint: R6 is complete. Explicit fetch discovers and freezes a newer Git pac
 
 Goal: use the project owner's current published `ai-workstation` machine state as an upgrade boundary, while keeping every repair generic enough to protect future ContextCanon projects.
 
-**Status: ACTIVE — step 4 of 4.**
+**Status: COMPLETE — real machine-state upgrade hardening finished.**
 
 - [x] 1. Derive a compact regression from the current nine authored `ai-workstation` Nodes and prove the exact eight accepted Parent edges plus sibling isolation.
 - [x] 2. Remove package identity feedback from old generated Resource links such as `SECURITY.md -> CONTEXT.md`; previous generated output must never affect a fresh compile.
 - [x] 3. Provide a safe explicit recovery/re-adoption path for a reusable owner Source whose legacy onboarding choice is no longer present in machine state, without replaying the already accepted placement review.
-- [ ] 4. Prove the combined real upgrade shape end-to-end: pre-Parent/pre-Source machine state -> recovered Development Workflow Source at the intended ancestor -> exact Parent chain -> offline scoped descendant context.
+- [x] 4. Prove the combined real upgrade shape end-to-end: pre-Parent/pre-Source machine state -> exact Parent migration -> explicit Development Workflow re-adoption at the root -> top-down reviewed Parent updates -> offline scoped descendant context.
 
 Real-state evidence: the supplied machine snapshot has nine accepted placement Nodes whose `CONTEXT.src.md` hashes exactly match `placement-acceptance.json`; it has no accepted Sources or `.context/sources` store. Its compiler-0.4 root output also contains a generated `CONTEXT/references/CONTEXT.src.md`, and the acceptance-recorded root package digest differs from the package digest written by the same Step-9 journal while the normalized digest and authoring-source hash agree. This makes generated-Resource feedback and lost owner-Source recovery concrete upgrade defects rather than hypothetical debt.
 
