@@ -3,7 +3,7 @@
   "compiler_version": "0.5.0",
   "digests": {
     "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-    "package": "8b22069bbc6107458369d758cf86bf6ae191345d33ece74f32bf8e725cc71381"
+    "package": "3863c5df62dd1c49ccbc91fda89cc6ccff3b8c066e2bb8820e5a745b0f5d6f94"
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "cfbe9a916ae73e0e22a63461b24cae0cde6bd71768f3db0ca9ffcf32313ccff4",
-      "size": 12795
+      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
+      "size": 13945
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",

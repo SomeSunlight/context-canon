@@ -233,3 +233,7 @@ R5 step 3 is next: give Parent updates the same non-live candidate/review/accept
 ## Latest Block R5 step 3 Parent-update checkpoint
 
 Semantic Parent updates now have their own explicit `contextcanon parent review` / `contextcanon parent accept` gate. Ordinary Child builds remain pinned to accepted package bytes and never dereference the live Parent locator. Review explicitly compiles the current same-project Parent into a content-addressed candidate, validates it against the Child's real Rule/Topic composition and stores an exact receipt; accept installs and pins exactly that reviewed snapshot even if the live Parent changes again afterwards. R5 now proceeds to the full transitive Parent-chain proof.
+
+## Latest Block R5 step 4 Parent-chain checkpoint
+
+The complete scoped-context chain is now regression-proven: a reusable Development Workflow Source attached at a project ancestor reaches a deep subsystem Tool through immutable Parent packages together with project/subsystem Rules, Topics and exact Resource bytes, while an unrelated sibling contributes nothing. The leaf remains compilable from its direct Parent package even after upstream Source/Parent authoring files are removed, demonstrating that the semantic chain is accepted package reachability rather than filesystem recursion. R5 now proceeds to migration/idempotency/recovery for an already-published ai-workstation-like tree.

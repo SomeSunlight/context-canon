@@ -37,6 +37,22 @@ install exactly the reviewed immutable package + update only the Child's Parent 
 
 `parent review` is the only step that consults the live Parent locator. `build`, `check`, and `parent accept` continue to use immutable local package bytes; even if the live Parent changes again after review, acceptance means the exact reviewed candidate snapshot.
 
+## Parent chains define scoped context
+
+A semantic Parent chain is the normal way to work inside one project subtree without loading sibling context. Each accepted Parent package already contains its complete effective Rules, Topics and Topic Resources, including reusable Sources attached farther up the chain. A Child therefore needs only its direct accepted Parent package.
+
+For example:
+
+```text
+Development Workflow Source ──> AI Workstation
+                                 ├──> Llama Stack ──> Llama Dispatcher
+                                 └──> Unrelated Sibling
+```
+
+Starting from `Llama Dispatcher` yields the effective Development Workflow + AI Workstation + Llama Stack + Llama Dispatcher context. It does **not** include `Unrelated Sibling`. This is semantic reachability through accepted package edges, not directory recursion.
+
+Because every direct Parent pin is a self-contained immutable package snapshot, ordinary use at the leaf remains possible even when the upstream Source/Parent authoring trees are unavailable. Updating any ancestor is still an explicit review/accept operation at the next Child edge.
+
 ## No implicit precedence
 
 Source order does not mean priority. ContextCanon must never silently apply "first source wins" or "last source wins" semantics.

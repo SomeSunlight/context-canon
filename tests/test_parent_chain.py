@@ -1,22 +1,6 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding="utf-8")
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f"{path}: expected exactly one match, found {count}: {old[:120]!r}")
-    p.write_text(text.replace(old, new, 1), encoding="utf-8")
-
-
-def write_test() -> None:
-    test = r'''from __future__ import annotations
-
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -247,43 +231,3 @@ Required:
 
 if __name__ == "__main__":
     unittest.main()
-'''
-    Path("tests/test_parent_chain.py").write_text(test, encoding="utf-8")
-
-
-def patch_docs() -> None:
-    anchor = "## No implicit precedence\n"
-    section = '''## Parent chains define scoped context\n\nA semantic Parent chain is the normal way to work inside one project subtree without loading sibling context. Each accepted Parent package already contains its complete effective Rules, Topics and Topic Resources, including reusable Sources attached farther up the chain. A Child therefore needs only its direct accepted Parent package.\n\nFor example:\n\n```text\nDevelopment Workflow Source ──> AI Workstation\n                                 ├──> Llama Stack ──> Llama Dispatcher\n                                 └──> Unrelated Sibling\n```\n\nStarting from `Llama Dispatcher` yields the effective Development Workflow + AI Workstation + Llama Stack + Llama Dispatcher context. It does **not** include `Unrelated Sibling`. This is semantic reachability through accepted package edges, not directory recursion.\n\nBecause every direct Parent pin is a self-contained immutable package snapshot, ordinary use at the leaf remains possible even when the upstream Source/Parent authoring trees are unavailable. Updating any ancestor is still an explicit review/accept operation at the next Child edge.\n\n'''
-    p = Path("nodes/library/foundation/docs/composition.md")
-    text = p.read_text(encoding="utf-8")
-    if anchor not in text:
-        raise SystemExit("composition Parent-chain anchor missing")
-    p.write_text(text.replace(anchor, section + anchor, 1), encoding="utf-8")
-
-
-def complete() -> None:
-    replace_once(
-        "PLAN.md",
-        "**Status: ACTIVE — R5 Semantic Parent relationship, step 4 of 5. Fast-run remains ACTIVE.**",
-        "**Status: ACTIVE — R5 Semantic Parent relationship, step 5 of 5. Fast-run remains ACTIVE.**",
-    )
-    replace_once(
-        "PLAN.md",
-        "- [ ] 4. Prove that the Parent chain carries complete effective Rules, Topics and Resources transitively, so a reusable Development Workflow attached at the intended ancestor reaches descendants without being selected on every Node.",
-        "- [x] 4. Prove that the Parent chain carries complete effective Rules, Topics and Resources transitively, so a reusable Development Workflow attached at the intended ancestor reaches descendants without being selected on every Node.",
-    )
-    state = Path("STATE.md")
-    text = state.read_text(encoding="utf-8").rstrip() + "\n\n## Latest Block R5 step 4 Parent-chain checkpoint\n\nThe complete scoped-context chain is now regression-proven: a reusable Development Workflow Source attached at a project ancestor reaches a deep subsystem Tool through immutable Parent packages together with project/subsystem Rules, Topics and exact Resource bytes, while an unrelated sibling contributes nothing. The leaf remains compilable from its direct Parent package even after upstream Source/Parent authoring files are removed, demonstrating that the semantic chain is accepted package reachability rather than filesystem recursion. R5 now proceeds to migration/idempotency/recovery for an already-published ai-workstation-like tree.\n"
-    state.write_text(text, encoding="utf-8")
-
-
-def apply() -> None:
-    write_test()
-    patch_docs()
-
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--complete":
-        complete()
-    else:
-        apply()

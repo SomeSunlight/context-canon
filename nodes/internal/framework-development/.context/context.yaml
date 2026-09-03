@@ -21,7 +21,7 @@ sources:
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
     normalized_digest: "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b"
-    package_digest: "8b22069bbc6107458369d758cf86bf6ae191345d33ece74f32bf8e725cc71381"
+    package_digest: "3863c5df62dd1c49ccbc91fda89cc6ccff3b8c066e2bb8820e5a745b0f5d6f94"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
@@ -240,4 +240,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "0ae286d9cf3f7594af8cb645d1b03700ab19a604a7ccebde50abc9364e213c41"
-  package_digest: "310c56cee0f6fc7fc6ed4efc394562b931e5c226e239cb031ba5909738e8ee52"
+  package_digest: "38685f5aeac713197ad2bfd0d7aea47b8d5b69af04af5ab1921f21e3ef0c4cf4"
