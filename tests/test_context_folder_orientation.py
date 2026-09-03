@@ -11,27 +11,35 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.compiler import CONTEXT_FOLDER_README, Compiler
 
 
-class ContextFolderOrientationTests(unittest.TestCase):
-    def make_repo(self, *, with_resource: bool) -> Path:
-        root = Path(tempfile.mkdtemp())
-        (root / ".git").mkdir()
-        source = '''# Demo Node — Local Context Source
-<!-- ctx:node id="demo-node" version="1.0.0" -->
-'''
-        if with_resource:
-            (root / "guide.md").write_text("# Guide\n\nRead this only when needed.\n", encoding="utf-8")
-            source += '''
+SOURCE_WITH_RESOURCE = '''# Demo Node — Local Context Source
+<!-- ctx:node id="demo-node" version="0.1.0" -->
+
 ## Topics
 
 ### Guide
 
-When the guide is needed:
+When deeper guidance is useful:
 
 Required:
 - Resource: `guide.md`
-<!-- ctx:topic id="DEMO-GUIDE" -->
+<!-- ctx:topic id="GUIDE" -->
 '''
-        (root / "CONTEXT.src.md").write_text(source, encoding="utf-8")
+
+SOURCE_WITHOUT_RESOURCE = '''# Demo Node — Local Context Source
+<!-- ctx:node id="demo-node" version="0.1.0" -->
+'''
+
+
+class ContextFolderOrientationTests(unittest.TestCase):
+    def make_repo(self, *, with_resource: bool) -> Path:
+        root = Path(tempfile.mkdtemp())
+        (root / ".git").mkdir()
+        (root / "CONTEXT.src.md").write_text(
+            SOURCE_WITH_RESOURCE if with_resource else SOURCE_WITHOUT_RESOURCE,
+            encoding="utf-8",
+        )
+        if with_resource:
+            (root / "guide.md").write_text("# Guide\n\nRead this only when needed.\n", encoding="utf-8")
         return root
 
     def test_resource_package_gets_generated_context_readme(self):
@@ -44,7 +52,7 @@ Required:
         self.assertIn("not another maintenance surface", readme)
         self.assertIn("self-contained", readme)
         self.assertIn("../CONTEXT.md", readme)
-        self.assertIn("CONTEXT/references/guide.md", compiled.resources)
+        self.assertIn("CONTEXT/references/demo-node/guide.md", compiled.resources)
 
     def test_resource_free_node_stays_without_context_directory_material(self):
         root = self.make_repo(with_resource=False)
