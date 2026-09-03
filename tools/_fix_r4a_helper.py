@@ -50,9 +50,7 @@ if old_target_call not in text:
     raise SystemExit("R4a _render_target replacement call not found")
 text = text.replace(old_target_call, new_target_call, 1)
 
-# Preserve backslash escapes inside the generated Python functions. Without raw
-# outer templates, literals such as "\\n" become physical newlines in the
-# generated source and can split string literals.
+# Preserve backslash escapes inside generated Python functions.
 render_template = "    new = '''def render_official(compiled: CompiledNode, repo_root: Path) -> str:\n"
 if render_template not in text:
     raise SystemExit("R4a render_official template anchor not found")
@@ -67,6 +65,17 @@ if target_template not in text:
 text = text.replace(
     target_template,
     "    new_target = r'''def _append_topics(lines: list[str], topics, compiled: CompiledNode, repo_root: Path) -> None:\n",
+    1,
+)
+
+# The external-Source regression embeds a bytes literal containing \n escapes.
+# Keep that replacement raw too so the generated test remains valid Python.
+external_assertion_template = "        '''        self.assertEqual([topic.id for topic in compiled.inherited_topics], [\"PY-GUIDE\"])\n"
+if external_assertion_template not in text:
+    raise SystemExit("R4a external-Source assertion template anchor not found")
+text = text.replace(
+    external_assertion_template,
+    "        r'''        self.assertEqual([topic.id for topic in compiled.inherited_topics], [\"PY-GUIDE\"])\n",
     1,
 )
 
