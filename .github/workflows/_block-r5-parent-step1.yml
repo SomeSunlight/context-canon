@@ -22,12 +22,13 @@ jobs:
           python tools/_fix_r5_step1_helper.py
           python tools/_fix_r5_step1_anchor.py
           python tools/_block_r5_parent_step1.py
+          python tools/_post_r5_step1_apply.py
           python -m compileall -q src tests
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused Parent boundary tests
         run: |
-          python -m unittest tests.test_parent_relationship tests.test_external_sources tests.test_package tests.test_diff tests.test_package_diff tests.test_source_acceptance tests.test_walking_skeleton tests.test_semantic_normalization -v
+          python -m unittest tests.test_parent_relationship tests.test_external_sources tests.test_package tests.test_diff tests.test_source_acceptance tests.test_walking_skeleton tests.test_semantic_normalization -v
       - name: Complete deterministic suite
         run: python -m unittest discover -s tests -v
       - name: Regenerate and verify self-hosted context
@@ -38,7 +39,7 @@ jobs:
       - name: Checkpoint R5 step 1 and commit clean product tree
         run: |
           python tools/_block_r5_parent_step1.py --complete
-          rm -f .github/workflows/_block-r5-parent-step1.yml tools/_block_r5_parent_step1.py tools/_fix_r5_step1_helper.py tools/_fix_r5_step1_anchor.py
+          rm -f .github/workflows/_block-r5-parent-step1.yml tools/_block_r5_parent_step1.py tools/_fix_r5_step1_helper.py tools/_fix_r5_step1_anchor.py tools/_post_r5_step1_apply.py
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
