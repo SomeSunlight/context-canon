@@ -21,4 +21,9 @@ text = text.replace(
     r'workspace.placement_audit_path.write_text("generated audit\\n", encoding="utf-8")',
     1,
 )
+checkpoint_old = 'state.write_text(state_text.rstrip() + block + "\\n", encoding="utf-8")'
+checkpoint_new = 'state.write_text(state_text.rstrip() + block.rstrip() + "\\n", encoding="utf-8")'
+if checkpoint_old not in text:
+    raise SystemExit("Block R3 helper STATE checkpoint anchor not found")
+text = text.replace(checkpoint_old, checkpoint_new, 1)
 path.write_text(text, encoding="utf-8")
