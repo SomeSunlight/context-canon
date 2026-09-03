@@ -376,7 +376,13 @@ def accept_onboarding_review(
         if stage.exists():
             shutil.rmtree(stage)
 
-    output_paths = tuple(expected_outputs(staged_compiled))
+    staged_output_paths = tuple(expected_outputs(staged_compiled))
+    target_readme = project_root / "README.md"
+    output_paths = tuple(
+        rel
+        for rel in staged_output_paths
+        if not (rel == "README.md" and (target_readme.exists() or target_readme.is_symlink()))
+    )
     _ensure_first_adoption_outputs_absent(project_root, output_paths)
 
     accepted_root = project_root / ".context" / "onboarding" / "accepted" / proposal.proposal_digest
@@ -637,7 +643,7 @@ def _render_context_source(
 
     local_rules = [item for item in accepted_items if item.kind == "local-rule"]
     if local_rules:
-        lines.extend(["## Rules", ""])
+        lines.extend(["## Local Rules", ""])
         current_group: str | None = None
         for item in local_rules:
             group = _publishable(str(item.payload["group"]), f"item {item.id} group")
@@ -659,7 +665,7 @@ def _render_context_source(
 
     topics = [item for item in accepted_items if item.kind == "topic-resource"]
     if topics:
-        lines.extend(["## Topics", ""])
+        lines.extend(["## Local Topics", ""])
         for item in topics:
             title = _publishable(item.title, f"item {item.id} title")
             condition = _publishable(str(item.payload["condition"]), f"item {item.id} condition")

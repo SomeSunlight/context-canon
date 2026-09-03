@@ -105,7 +105,7 @@ class ParentRelationshipTests(unittest.TestCase):
             compiled.resources["CONTEXT/references/node-parent/guide.md"],
             b"# Parent Guide\n\nExact inherited bytes.\n",
         )
-        self.assertIn("**Parent:** Shared Parent", compiled.official_markdown)
+        self.assertIn("**Parent Context Node:** [Shared Parent]", compiled.official_markdown)
         self.assertIn("parent:\n", compiled.machine_yaml)
 
         package = self.package_roundtrip(compiled)

@@ -10,7 +10,7 @@
 **Node:** Development Workflow  
 **Context version:** `0.2.0-draft`
 
-## Overview
+## Local Overview
 
 Reusable workflow for carrying project development safely across long human/LLM-assisted sessions, tool failures, review rounds, and merges. It standardizes recoverable planning and review boundaries without prescribing a particular programming language, CI system, operating system, or ContextCanon baseline.
 
@@ -22,7 +22,7 @@ Apply all Rules below to every task in this Node.
 
 For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
 
-## Rules
+## Local Rules
 
 ### Recoverable planning
 
@@ -68,7 +68,7 @@ Keep a review PR or equivalent change set open until the project owner explicitl
 
 After a reviewed change is successfully merged into the accepted branch, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` or equivalent current-state documentation, and refresh README/CHANGELOG or review-status wording made stale by the merge when applicable.
 
-## Topics
+## Local Topics
 
 ### Executing a development block
 

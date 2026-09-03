@@ -265,3 +265,13 @@ A reusable Source that is genuinely absent from old machine/onboarding state is 
 ## Latest Block S complete real machine-state upgrade checkpoint
 
 Block S is complete against a compact regression distilled from the owner's supplied `ai-workstation` machine state. The exact nine authored Node identities produce eight semantic Parent edges; compiler-0.4 generated-Resource feedback is removed; a genuinely lost legacy owner Source is recovered only through explicit normal `source adopt`, not invented historical state; and the combined upgrade is proven end-to-end. The safe order is: migrate the still-byte-exact legacy placement to Parent pins first, explicitly adopt the current Development Workflow package at the root, then review/accept Parent updates top-down. Goose and Ansible receive the workflow plus only their own ancestor/local project context, siblings remain excluded, and a deep leaf still compiles with the workflow Resource after both the original reusable Node checkout and the root's direct Source package are removed. Historical placement acceptance remains byte-stable through ordinary Source adoption and Parent updates. PR #13 remains draft/unmerged pending explicit owner approval.
+
+## Block T publication-readability candidate
+
+The final pre-publication polish is implemented for owner acceptance. Canonical authoring now says `Parent Context Node` and `Local Overview` / `Local State` / `Local Plan` / `Local Rules` / `Local Topics`; the parser keeps the old headings as migration aliases but rejects mixed duplicate aliases. Placement publication moves the Parent Context Node relationship before local semantic sections.
+
+Immutable packages now authenticate a flattened list of effective imported Context origins. A deep generated `CONTEXT.md` therefore shows the direct Parent plus every effective imported Context Node with accepted version, relation/provenance and an offline local carrier-package link, while existing Parent/Source pins remain non-live and sibling isolation is unchanged. Machine YAML and package manifests expose the same exact imported identities.
+
+Node directories without a project-owned README receive a tiny marker-owned generated README doorplate linking Official Context, local authoring truth and the ContextCanon project. A foreign/project README is never overwritten or adopted. The doorplate is repository orientation only and is deliberately excluded from immutable package identity.
+
+The remaining owner gate is a final readability inspection on the real `ai-workstation` root, Goose and Ansible. PR #13 remains draft/unmerged; the project owner will perform the final GitHub merge explicitly after the exact clean head passes its merge gate.

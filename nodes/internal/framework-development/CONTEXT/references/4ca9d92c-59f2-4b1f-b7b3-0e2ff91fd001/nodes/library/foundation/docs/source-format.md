@@ -2,7 +2,7 @@
 
 `CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md`, `.context/context.yaml`, or `.context/package.json`.
 
-The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing.
+The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing. Canonical local sections are named `Local Overview`, `Local State`, `Local Plan`, `Local Rules`, and `Local Topics`; `Local` means authored in this Node, not an implicit override. The relationship heading is `Parent Context Node`. Compiler 0.5 continues to accept the older `Overview`/`State`/`Plan`/`Rules`/`Topics`/`Parent` headings as migration aliases, but a source must not contain both forms for the same section.
 
 ## Node header
 
@@ -15,12 +15,12 @@ A source begins with a human-readable H1 and compiler-managed Node metadata:
 
 The stable ID is independent of the Node's directory path or display name. A root Node may additionally declare generated harness adapters, for example `adapters="agents,goose"`.
 
-## Overview
+## Local Overview
 
-`## Overview` is an optional short orientation block for the Node itself: what this place is, why it exists, and what background helps a human or agent understand it before applying Rules or following Topics.
+`## Local Overview` is an optional short orientation block for the Node itself: what this place is, why it exists, and what background helps a human or agent understand it before applying Rules or following Topics.
 
 ```markdown
-## Overview
+## Local Overview
 
 This service owns customer-facing notification delivery. It exists separately from the billing service because delivery retries, provider failover, and message templates have their own operational lifecycle.
 ```
@@ -31,14 +31,14 @@ Changing only an Overview therefore changes the exact published package bytes an
 
 Keep an Overview compact. It is always-read entry context, so deeper explanations belong behind Topics rather than turning the Overview into another preload document. In particular, use Topics for material that needs to be packaged as deeper Resources instead of relying on repository-local links from an Overview.
 
-## Parent
+## Parent Context Node
 
 A Context Node may have **one semantic Parent**. Parent is an explicit accepted relationship, not a filesystem convention. A directory above the Node, or a Node whose path contains this Node, does not become Parent automatically.
 
 Parent is always an exact immutable package pin:
 
 ```markdown
-## Parent
+## Parent Context Node
 
 - [Project Context](../) — `0.1.0`
   <!-- ctx:parent id="<stable-parent-node-id>" version="0.1.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
@@ -103,9 +103,9 @@ Transport metadata is only for candidate discovery. Normal `build` never uses it
 
 Source order is not precedence. See [Context composition](composition.md) for immutable package storage and the fetch/review/accept workflow.
 
-## Rules
+## Local Rules
 
-`## Rules` contains the Node's local Rules. `###` headings group related Rules. Every Rule has a short visible title, a statement, rationale, and compiler-managed stable ID.
+`## Local Rules` contains the Node's local Rules. The explicit label keeps authored-here Rules visually distinct from generated `Rules from …` sections; it does not mean those Rules override inherited identities. `###` headings group related Rules. Every Rule has a short visible title, a statement, rationale, and compiler-managed stable ID.
 
 ```markdown
 ### Security
@@ -160,12 +160,12 @@ A Node may define at most one local Change for a given inherited Rule identity.
 
 Protected Rules and authorized exceptions are a later semantic layer. They will constrain which Changes are legal rather than changing the basic identity model.
 
-## Topics
+## Local Topics
 
 A Topic states when deeper context applies and explicitly types every target.
 
 ```markdown
-## Topics
+## Local Topics
 
 ### Logging
 

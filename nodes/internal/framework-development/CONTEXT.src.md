@@ -40,7 +40,7 @@ OVERRIDE IMPORTED RULE
 - [Development Workflow](../../library/development-workflow/) — `0.2.0-draft`
   <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
 
-## Rules
+## Local Rules
 
 ### Compiler architecture
 
@@ -90,7 +90,7 @@ OVERRIDE IMPORTED RULE
   Why: Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed.
   <!-- ctx:rule id="CCI-004" -->
 
-## Topics
+## Local Topics
 
 ### Compiler implementation
 

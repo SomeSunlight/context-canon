@@ -1,13 +1,13 @@
 # Development Workflow — Local Context Source
 <!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
 
-## Overview
+## Local Overview
 
 Reusable workflow for carrying project development safely across long human/LLM-assisted sessions, tool failures, review rounds, and merges. It standardizes recoverable planning and review boundaries without prescribing a particular programming language, CI system, operating system, or ContextCanon baseline.
 
 This Node deliberately does **not** compose ContextCanon Foundation. A consumer may compose Foundation and this workflow independently when both are useful; using the workflow alone must not pull unrelated framework governance transitively.
 
-## Rules
+## Local Rules
 
 ### Recoverable planning
 
@@ -53,7 +53,7 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
   Why: The merge itself creates project facts after the merge candidate was frozen. Without a post-merge checkpoint, the accepted code can be correct while recovery documentation still describes the pre-merge state.
   <!-- ctx:rule id="CCW-008" -->
 
-## Topics
+## Local Topics
 
 ### Executing a development block
 

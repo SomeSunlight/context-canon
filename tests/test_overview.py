@@ -37,7 +37,7 @@ class OverviewTests(unittest.TestCase):
         (repo / "CONTEXT.src.md").write_text(WITH_OVERVIEW, encoding="utf-8")
         with_overview = Compiler(repo).compile(repo)
 
-        self.assertIn("## Overview", with_overview.official_markdown)
+        self.assertIn("## Local Overview", with_overview.official_markdown)
         self.assertIn("A compact orientation belongs", with_overview.official_markdown)
         self.assertIn("- It may use ordinary Markdown.", with_overview.official_markdown)
         self.assertEqual(baseline.normalized_digest, with_overview.normalized_digest)

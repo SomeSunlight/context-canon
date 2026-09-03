@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 from .links import local_markdown_targets
-from .model import CompiledNode, CompiledPackage, ParentRef, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
+from .model import CompiledNode, CompiledPackage, PackageDependency, ParentRef, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
 from .package import (
     compiled_package,
     load_package,
@@ -149,6 +149,11 @@ class Compiler:
                     if path.startswith("CONTEXT/references/")
                 })
 
+            compiled.imported_contexts = self._compose_imported_contexts(
+                composition_packages,
+                compiled.metadata.id,
+                compiled.metadata.name,
+            )
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
                 composition_packages,
                 compiled.metadata.name,
@@ -247,6 +252,45 @@ class Compiler:
         if not (path / "CONTEXT.src.md").is_file():
             raise ContextCanonError(f"Source locator is not a Context Node root: {locator}")
         return path
+
+    def _compose_imported_contexts(
+        self,
+        packages: list[CompiledPackage],
+        node_id: str,
+        node_name: str,
+    ) -> list[PackageDependency]:
+        """Flatten exact effective Context origins in deterministic composition order.
+
+        A direct Parent/Source package already authenticates its own transitive
+        imports. Carrying those identities forward lets a deep leaf explain its
+        complete effective composition without dereferencing any live ancestor.
+        """
+        result: list[PackageDependency] = []
+        seen: dict[str, PackageDependency] = {}
+        for package in packages:
+            dependency = PackageDependency(
+                package.metadata.id,
+                package.metadata.name,
+                package.metadata.version,
+                package.normalized_digest,
+                package.package_digest,
+            )
+            for candidate in (*package.imports, dependency):
+                if candidate.id == node_id:
+                    raise ContextCanonError(
+                        f"{node_name}: imported Context chain loops back to the consuming Node {node_id}"
+                    )
+                previous = seen.get(candidate.id)
+                if previous is not None:
+                    if previous != candidate:
+                        raise ContextCanonError(
+                            f"{node_name}: imported Context {candidate.name} ({candidate.id}) arrives through "
+                            "multiple composition paths with different accepted package identity"
+                        )
+                    continue
+                seen[candidate.id] = candidate
+                result.append(candidate)
+        return result
 
     def _compose_inherited_rule_state(
         self,

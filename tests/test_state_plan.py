@@ -36,8 +36,8 @@ class StatePlanTests(unittest.TestCase):
         self.assertEqual(parsed.plan, "- Finish onboarding before feature work.")
 
         first = Compiler(repo).compile(repo)
-        self.assertIn("## State\n\n- Current migration is active.", first.official_markdown)
-        self.assertIn("## Plan\n\n- Finish onboarding before feature work.", first.official_markdown)
+        self.assertIn("## Local State\n\n- Current migration is active.", first.official_markdown)
+        self.assertIn("## Local Plan\n\n- Finish onboarding before feature work.", first.official_markdown)
         self.assertIn('state: "- Current migration is active."', first.machine_yaml)
         self.assertIn('plan: "- Finish onboarding before feature work."', first.machine_yaml)
 

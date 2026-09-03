@@ -3,13 +3,13 @@
   "compiler_version": "0.5.0",
   "digests": {
     "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-    "package": "c314ba54b84344560a401b55b881922dc119fff9e23259310d8339eae0118874"
+    "package": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "7958b78c97ef39cd49a72295d598118c0ac726425427fe66dd95dd0211bff59a",
-      "size": 4366
+      "sha256": "469ce5a15a55a4394cca7c3b69c68b3f19153bc6c78f0742049eb9fc11de6ebf",
+      "size": 4378
     },
     {
       "path": "CONTEXT/README.md",
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
-      "sha256": "c1ea2d125a9073b120fe5a251393618afc8a5c670f79d5027b7169623167f93a",
-      "size": 5239
+      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "size": 7074
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "94db0eb1bd13521dd0c23848904347c038900bfb20ea83cbf03e8ede7e532016",
-      "size": 12416
+      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
+      "size": 13069
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -42,6 +42,7 @@
       "size": 3889
     }
   ],
+  "imports": [],
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",

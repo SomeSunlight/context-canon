@@ -13,7 +13,7 @@
 >
 > Full format documentation: [docs/source-format.md](docs/source-format.md)
 
-## Rules
+## Local Rules
 
 ### Canonical context
 
@@ -77,7 +77,7 @@
   Why: Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier.
   <!-- ctx:rule id="CC-011" -->
 
-## Topics
+## Local Topics
 
 ### Context authoring
 

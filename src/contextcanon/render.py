@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 
-from .model import CompiledNode, Rule
+from .model import CompiledNode, CompiledPackage, PackageDependency, Rule, SourceRef
 from .parser import ContextCanonError, parse_node
 
 
@@ -29,18 +29,29 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         "",
     ])
     if compiled.parent_package is not None:
+        parent_link = _accepted_package_link(compiled.parent_package)
         lines.extend([
-            f"**Parent:** {compiled.parent_package.metadata.name} (`{compiled.parent_package.metadata.id}`)  ",
+            f"**Parent Context Node:** [{compiled.parent_package.metadata.name}]({parent_link}) — `{compiled.parent_package.metadata.version}`  ",
             f"**Accepted Parent package:** `{compiled.parent_package.package_digest}`",
             "",
         ])
 
+    if compiled.imported_contexts:
+        lines.extend(["**Resulting imported Contexts:**", ""])
+        for dependency in compiled.imported_contexts:
+            relation, link = _import_carrier(compiled, dependency)
+            lines.append(
+                f"- **{dependency.name}** — `{dependency.version}` — {relation} — "
+                f"[inspect accepted carrier]({link})"
+            )
+        lines.append("")
+
     if compiled.parsed.overview:
-        lines.extend(["## Overview", "", *compiled.parsed.overview.splitlines(), ""])
+        lines.extend(["## Local Overview", "", *compiled.parsed.overview.splitlines(), ""])
     if compiled.parsed.state:
-        lines.extend(["## State", "", *compiled.parsed.state.splitlines(), ""])
+        lines.extend(["## Local State", "", *compiled.parsed.state.splitlines(), ""])
     if compiled.parsed.plan:
-        lines.extend(["## Plan", "", *compiled.parsed.plan.splitlines(), ""])
+        lines.extend(["## Local Plan", "", *compiled.parsed.plan.splitlines(), ""])
 
     effective_topics = [*compiled.inherited_topics, *compiled.local_topics]
     if compiled.inherited_rules or compiled.local_rules or effective_topics:
@@ -63,10 +74,10 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         _append_rules(lines, rules)
 
     if compiled.local_rules:
-        lines.extend(["## Local Rules" if (compiled.parent_package or compiled.source_packages) else "## Rules", ""])
+        lines.extend(["## Local Rules", ""])
         _append_rules(lines, compiled.local_rules)
     elif not compiled.inherited_rules:
-        lines.extend(["This Node defines no Rules.", ""])
+        lines.extend(["This Node defines no Local Rules.", ""])
 
     if compiled.local_changes:
         lines.extend(["## Changes to inherited Rules", ""])
@@ -85,9 +96,56 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         _append_topics(lines, topics, compiled, repo_root)
 
     if compiled.local_topics:
-        lines.extend(["## Local Topics" if (compiled.parent_package or compiled.source_packages) else "## Topics", ""])
+        lines.extend(["## Local Topics", ""])
         _append_topics(lines, compiled.local_topics, compiled, repo_root)
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _accepted_package_link(package: CompiledPackage) -> str:
+    return f".context/sources/{package.package_digest}/CONTEXT.md"
+
+
+def _source_carrier_link(compiled: CompiledNode, ref: SourceRef, package: CompiledPackage) -> str:
+    if ref.is_pinned:
+        return _accepted_package_link(package)
+    target = (compiled.parsed.root / ref.locator).resolve()
+    if target.name != "CONTEXT.md":
+        target = target / "CONTEXT.md"
+    return os.path.relpath(target, compiled.parsed.root).replace(os.sep, "/")
+
+
+def _import_carrier(compiled: CompiledNode, dependency: PackageDependency) -> tuple[str, str]:
+    parent = compiled.parent_package
+    if parent is not None:
+        link = _accepted_package_link(parent)
+        if dependency.id == parent.metadata.id:
+            return "direct Parent Context Node", link
+        if any(item.id == dependency.id for item in parent.imports):
+            return f"via Parent Context Node **{parent.metadata.name}**", link
+
+    for ref, package in zip(compiled.parsed.sources, compiled.source_packages):
+        link = _source_carrier_link(compiled, ref, package)
+        if dependency.id == package.metadata.id:
+            return "direct Source", link
+        if any(item.id == dependency.id for item in package.imports):
+            return f"via Source **{package.metadata.name}**", link
+    raise ContextCanonError(
+        f"{compiled.metadata.name}: no direct accepted carrier found for imported Context {dependency.name}"
+    )
+
+
+def render_node_readme(compiled: CompiledNode) -> str:
+    return (
+        "<!-- contextcanon:generated-node-readme -->\n"
+        f"# {compiled.metadata.name} — ContextCanon Node\n\n"
+        "> [!NOTE]\n"
+        "> **GENERATED ORIENTATION — DO NOT EDIT.**\n"
+        "> ContextCanon creates this doorplate only when this Node directory has no project-owned `README.md`.\n\n"
+        "Start with [**CONTEXT.md**](CONTEXT.md): it is the generated Official Context that actually applies in this Node, including inherited Contexts and their provenance.\n\n"
+        "Edit [**CONTEXT.src.md**](CONTEXT.src.md) for this Node's local authored context. `Local` means authored here; inherited Rule overrides/removals are explicit separate Changes.\n\n"
+        "ContextCanon project and documentation: https://github.com/SomeSunlight/context-canon\n"
+    )
+
 
 def _append_rules(lines: list[str], rules: list[Rule]) -> None:
     current_group = None
@@ -206,6 +264,20 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
             ])
     else:
         lines.append("sources: []")
+
+    lines.extend(["", "# Effective imported Context origins, flattened through accepted Parent/Source packages."])
+    if compiled.imported_contexts:
+        lines.append("imports:")
+        for dependency in compiled.imported_contexts:
+            lines.extend([
+                f"  - id: {q(dependency.id)}",
+                f"    name: {q(dependency.name)}",
+                f"    version: {q(dependency.version)}",
+                f"    normalized_digest: {q(dependency.normalized_digest)}",
+                f"    package_digest: {q(dependency.package_digest)}",
+            ])
+    else:
+        lines.append("imports: []")
 
     lines.extend(["", "# Elements authored in this Node's CONTEXT.src.md.", "local:"])
     lines.append("  state: " + (q(compiled.parsed.state) if compiled.parsed.state else "null"))

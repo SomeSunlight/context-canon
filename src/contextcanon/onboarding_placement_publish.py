@@ -318,13 +318,32 @@ def _remove_skeleton_placeholder(text: str) -> str:
     return text
 
 
-def _replace_managed_section(text: str, section: str, name: str, body: str) -> str:
+def _replace_managed_section(
+    text: str,
+    section: str,
+    name: str,
+    body: str,
+    *,
+    aliases: tuple[str, ...] = (),
+) -> str:
     text = _strip_managed_block(text, name)
+    candidates: list[tuple[str, re.Match[str]]] = []
+    for candidate in (section, *aliases):
+        match = re.search(rf"(?m)^## {re.escape(candidate)}\s*$", text)
+        if match is not None:
+            candidates.append((candidate, match))
+    if len(candidates) > 1:
+        raise _error(
+            f"CONTEXT.src.md contains both canonical and legacy headings for {section}: "
+            + ", ".join(f"## {candidate}" for candidate, _ in candidates)
+        )
+    if candidates and candidates[0][0] != section:
+        _, match = candidates[0]
+        text = text[:match.start()] + f"## {section}" + text[match.end():]
     if not body.strip():
         return text.rstrip() + "\n"
     block = f"{_MARKER_START[name]}\n{body.rstrip()}\n{_MARKER_END[name]}"
-    heading_pattern = re.compile(rf"(?m)^## {re.escape(section)}\s*$")
-    heading = heading_pattern.search(text)
+    heading = re.search(rf"(?m)^## {re.escape(section)}\s*$", text)
     if heading is None:
         return text.rstrip() + f"\n\n## {section}\n\n{block}\n"
     next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
@@ -332,6 +351,37 @@ def _replace_managed_section(text: str, section: str, name: str, body: str) -> s
     before = text[:insert_at].rstrip()
     after = text[insert_at:].lstrip("\n")
     result = before + "\n\n" + block + "\n"
+    if after:
+        result += "\n" + after
+    return result.rstrip() + "\n"
+
+
+def _replace_parent_section(text: str, body: str) -> str:
+    text = _strip_managed_block(text, "parent")
+    matches: list[re.Match[str]] = []
+    for heading in ("Parent Context Node", "Parent"):
+        match = re.search(rf"(?m)^## {re.escape(heading)}\s*$", text)
+        if match is not None:
+            matches.append(match)
+    if len(matches) > 1:
+        raise _error("CONTEXT.src.md contains both ## Parent Context Node and legacy ## Parent")
+    if matches:
+        heading = matches[0]
+        next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
+        end = next_heading.start() if next_heading else len(text)
+        existing = text[heading.end():end].strip()
+        if existing and "ctx:parent" not in existing:
+            raise _error("Parent Context Node section contains unmanaged content; preserve it elsewhere before publication")
+        text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
+    if not body.strip():
+        return text
+    block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
+    section = f"## Parent Context Node\n\n{block}\n"
+    first_local = re.search(r"(?m)^## .+$", text)
+    insert_at = first_local.start() if first_local else len(text)
+    before = text[:insert_at].rstrip()
+    after = text[insert_at:].lstrip("\n")
+    result = before + "\n\n" + section
     if after:
         result += "\n" + after
     return result.rstrip() + "\n"
@@ -478,12 +528,12 @@ def _render_node_source(
     text = before
     if overviews or states or plans or rules or topics or sources:
         text = _remove_skeleton_placeholder(text)
-    text = _replace_managed_section(text, "Overview", "overview", _render_overviews(overviews))
-    text = _replace_managed_section(text, "State", "state", _render_state(states))
-    text = _replace_managed_section(text, "Plan", "plan", _render_summaries(plans, "plan"))
+    text = _replace_managed_section(text, "Local Overview", "overview", _render_overviews(overviews), aliases=("Overview",))
+    text = _replace_managed_section(text, "Local State", "state", _render_state(states), aliases=("State",))
+    text = _replace_managed_section(text, "Local Plan", "plan", _render_summaries(plans, "plan"), aliases=("Plan",))
     text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id))
-    text = _replace_managed_section(text, "Rules", "rules", _render_rules(rules))
-    text = _replace_managed_section(text, "Topics", "topics", _render_topics(topics, project_root, node_root))
+    text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
+    text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
     return text
 
 
@@ -659,9 +709,7 @@ def build_placement_publication_preview(
     for node in ordered_nodes:
         root = _node_root(project, node.path).resolve()
         if node.parent_key is None:
-            source_overrides[root] = _replace_managed_section(
-                source_overrides[root], "Parent", "parent", ""
-            )
+            source_overrides[root] = _replace_parent_section(source_overrides[root], "")
         else:
             parent = node_by_key[node.parent_key]
             compiled_parent = compiled_by_key.get(parent.key)
@@ -669,9 +717,7 @@ def build_placement_publication_preview(
                 raise _error(f"internal error: Parent {parent.key} was not compiled before Child {node.key}")
             parent_root = _node_root(project, parent.path).resolve()
             body, locator = _render_parent_body(parent, compiled_parent, root, parent_root)
-            source_overrides[root] = _replace_managed_section(
-                source_overrides[root], "Parent", "parent", body
-            )
+            source_overrides[root] = _replace_parent_section(source_overrides[root], body)
             package_overrides[(root, compiled_parent.package_digest)] = _compiled_package_override(compiled_parent)
             parent_pins.append(
                 PlacementParentPin(

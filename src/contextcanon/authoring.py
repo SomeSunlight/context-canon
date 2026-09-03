@@ -28,12 +28,15 @@ def _fresh_id(prefix: str, existing: set[str]) -> str:
     raise ContextCanonError(f"Could not allocate a fresh {prefix} identity")
 
 
-def _section_bounds(lines: list[str], name: str) -> tuple[int, int] | None:
-    heading = f"## {name}"
-    try:
-        heading_index = lines.index(heading)
-    except ValueError:
+def _section_bounds(lines: list[str], *names: str) -> tuple[int, int] | None:
+    matches = [(name, lines.index(f"## {name}")) for name in names if f"## {name}" in lines]
+    if len(matches) > 1:
+        raise ContextCanonError(
+            "Ambiguous local section aliases: " + ", ".join(f"## {name}" for name, _ in matches)
+        )
+    if not matches:
         return None
+    _, heading_index = matches[0]
     end = len(lines)
     for index in range(heading_index + 1, len(lines)):
         if lines[index].startswith("## "):
@@ -93,9 +96,9 @@ def add_rule(
         f'  <!-- ctx:rule id="{element_id}" -->',
     ]
 
-    bounds = _section_bounds(lines, "Rules")
+    bounds = _section_bounds(lines, "Local Rules", "Rules")
     if bounds is None:
-        lines = _trim_insert(lines, len(lines), ["## Rules", "", f"### {group}", ""] + rule_block)
+        lines = _trim_insert(lines, len(lines), ["## Local Rules", "", f"### {group}", ""] + rule_block)
     else:
         start, end = bounds
         group_heading = f"### {group}"
@@ -146,9 +149,9 @@ def add_topic(
         block += [""]
     block += [f'<!-- ctx:topic id="{element_id}" -->']
 
-    bounds = _section_bounds(lines, "Topics")
+    bounds = _section_bounds(lines, "Local Topics", "Topics")
     if bounds is None:
-        lines = _trim_insert(lines, len(lines), ["## Topics", ""] + block)
+        lines = _trim_insert(lines, len(lines), ["## Local Topics", ""] + block)
     else:
         _, end = bounds
         lines = _trim_insert(lines, end, block)

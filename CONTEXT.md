@@ -10,7 +10,7 @@
 **Node:** ContextCanon Gateway  
 **Context version:** `0.1.0-draft`
 
-## Overview
+## Local Overview
 
 Most AI projects eventually build a **static context bundle** by hand or with an LLM: a prompt, instruction file, or curated summary that tries to contain everything the model should know. It works until something important is missing; then the harness searches other repository files opportunistically, and whether it finds the right detail becomes less predictable. As the project changes, copied context also drifts and every duplicate becomes another place to review and repair.
 
@@ -22,9 +22,9 @@ The aim is simple: an unfamiliar human or agent should be able to understand whe
 
 For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
 
-This Node defines no Rules.
+This Node defines no Local Rules.
 
-## Topics
+## Local Topics
 
 ### Onboard an existing project
 

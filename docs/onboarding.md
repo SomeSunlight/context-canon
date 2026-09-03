@@ -204,6 +204,8 @@ Materialization creates missing accepted directories when necessary, then create
 
 At this point **the shelves exist, but the books have not been distributed yet**.
 
+A useful side effect appears during the later book-placement pass: forcing every maintained statement onto an explicit semantic shelf often surfaces responsibilities, boundaries, duplicates, and unresolved questions that were previously scattered through prose. Even before opening the detailed Evidence, the concise placement finding titles become a surprisingly useful project index. Treat that as review value, not as permission for the LLM to invent answers: unresolved questions remain explicit local State until the project resolves them.
+
 ## 5. Generate the content-placement assignment
 
 The second semantic pass is bound to both the exact frozen Evidence digest and the digest of the human-edited `STEP-03-structure.md`:

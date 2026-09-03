@@ -45,6 +45,22 @@ def find_repo_root(node_root: Path) -> Path:
     return current
 
 
+def _section_range(
+    sections: dict[str, tuple[int, int]],
+    source_path: Path,
+    canonical: str,
+    legacy: str | None = None,
+) -> tuple[int, int] | None:
+    names = (canonical,) if legacy is None else (canonical, legacy)
+    present = [(name, sections[name]) for name in names if name in sections]
+    if len(present) > 1:
+        joined = " and ".join(f"## {name}" for name, _ in present)
+        raise ContextCanonError(
+            f"{source_path}: ambiguous duplicate section aliases ({joined}); keep only ## {canonical}"
+        )
+    return present[0][1] if present else None
+
+
 def parse_node(
     node_root: Path,
     repo_root: Path | None = None,
@@ -76,15 +92,15 @@ def parse_node(
     metadata = NodeMetadata(node_attrs["id"], name, node_attrs["version"], adapters)
 
     sections = _section_ranges(lines)
-    overview = _parse_overview(lines, sections.get("Overview"))
-    state = _parse_overview(lines, sections.get("State"))
-    plan = _parse_overview(lines, sections.get("Plan"))
-    parent = _parse_parent(lines, sections.get("Parent"), source_path)
+    overview = _parse_overview(lines, _section_range(sections, source_path, "Local Overview", "Overview"))
+    state = _parse_overview(lines, _section_range(sections, source_path, "Local State", "State"))
+    plan = _parse_overview(lines, _section_range(sections, source_path, "Local Plan", "Plan"))
+    parent = _parse_parent(lines, _section_range(sections, source_path, "Parent Context Node", "Parent"), source_path)
     if parent is not None and parent.id == metadata.id:
         raise ContextCanonError(f"{source_path}: Parent cannot be the Node itself")
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
-    rules = _parse_rules(lines, sections.get("Rules"), source_path, metadata)
-    topics = _parse_topics(lines, sections.get("Topics"), source_path, metadata)
+    rules = _parse_rules(lines, _section_range(sections, source_path, "Local Rules", "Rules"), source_path, metadata)
+    topics = _parse_topics(lines, _section_range(sections, source_path, "Local Topics", "Topics"), source_path, metadata)
     changes = _parse_changes(lines, sections.get("Changes"), source_path)
 
     _ensure_unique([rule.id for rule in rules], f"{source_path}: duplicate Rule ID")

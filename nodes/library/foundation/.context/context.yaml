@@ -17,6 +17,9 @@ parent: null
 # Accepted reusable Source packages used by this build. Both digests are exact pins.
 sources: []
 
+# Effective imported Context origins, flattened through accepted Parent/Source packages.
+imports: []
+
 # Elements authored in this Node's CONTEXT.src.md.
 local:
   state: null
@@ -101,4 +104,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b"
-  package_digest: "c314ba54b84344560a401b55b881922dc119fff9e23259310d8339eae0118874"
+  package_digest: "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"

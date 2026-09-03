@@ -140,6 +140,7 @@ class CompiledPackage:
     files: tuple[PackageFile, ...]
     normalized_digest: str
     package_digest: str
+    imports: tuple[PackageDependency, ...] = ()
     parent: PackageDependency | None = None
 
 
@@ -166,6 +167,7 @@ class CompiledNode:
     # boundary; pinned external Sources are loaded directly into it.
     parent_package: CompiledPackage | None = None
     source_packages: list[CompiledPackage] = field(default_factory=list)
+    imported_contexts: list[PackageDependency] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     removed_rules: list[RuleRemoval] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)

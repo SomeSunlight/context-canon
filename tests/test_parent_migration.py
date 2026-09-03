@@ -21,7 +21,7 @@ from tests.test_onboarding_placement_publish import PlacementPublicationTests
 
 
 PARENT_BLOCK_RE = re.compile(
-    r"\n## Parent\n\n<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?(?=\n## |\Z)",
+    r"\n## (?:Parent Context Node|Parent)\n\n<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?(?=\n## |\Z)",
     re.DOTALL,
 )
 

@@ -369,7 +369,7 @@ def _render_skeleton(
     return (
         f"# {canonical_name or node.name} — Local Context Source\n"
         f'<!-- ctx:node id="{node_id}" version="{version}" -->\n\n'
-        "## Overview\n\n"
+        "## Local Overview\n\n"
         f"{state}\n\n"
         "The later placement pass will add only the Rules, Topics, Sources, or mappings reviewed for this area.\n"
     )

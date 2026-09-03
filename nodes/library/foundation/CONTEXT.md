@@ -16,7 +16,7 @@ Apply all Rules below to every task in this Node.
 
 For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
 
-## Rules
+## Local Rules
 
 ### Canonical context
 
@@ -80,7 +80,7 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are us
 
 Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
 
-## Topics
+## Local Topics
 
 ### Context authoring
 

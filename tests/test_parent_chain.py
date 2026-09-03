@@ -189,6 +189,17 @@ Required:
         )
         self.assertEqual(leaf_compiled.source_packages, [])
         self.assertEqual(leaf_compiled.parent_package.metadata.id, "node-subsystem")
+        self.assertEqual(
+            [(item.id, item.version) for item in leaf_compiled.imported_contexts],
+            [("node-workflow", "1.0.0"), ("node-project", "1.0.0"), ("node-subsystem", "1.0.0")],
+        )
+        self.assertIn("**Parent Context Node:**", leaf_compiled.official_markdown)
+        self.assertIn("**Resulting imported Contexts:**", leaf_compiled.official_markdown)
+        self.assertIn("Development Workflow** — `1.0.0`", leaf_compiled.official_markdown)
+        self.assertIn("AI Workstation** — `1.0.0`", leaf_compiled.official_markdown)
+        self.assertIn("Llama Stack** — `1.0.0`", leaf_compiled.official_markdown)
+        self.assertIn("via Parent Context Node **Llama Stack**", leaf_compiled.official_markdown)
+        self.assertNotIn("Unrelated Sibling** —", leaf_compiled.official_markdown)
 
         resources = leaf_compiled.resources
         self.assertEqual(
@@ -227,6 +238,8 @@ Required:
             inherited_topics,
         )
         self.assertEqual(offline_leaf.resources, resources)
+        self.assertEqual(offline_leaf.imported_contexts, leaf_compiled.imported_contexts)
+        self.assertIn("**Resulting imported Contexts:**", offline_leaf.official_markdown)
 
 
 if __name__ == "__main__":
