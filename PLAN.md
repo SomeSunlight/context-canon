@@ -200,11 +200,12 @@ Purpose: correct the next live `ai-workstation` Step-7 review failure. The secon
 
 Placement summary/cockpit checkpoint: the placement instruction now requires a real A′ summary plus the Context link, explicitly rejects pointer-only Source After prose at still-useful human surfaces, keeps volatile compatibility out of stable Overview, and treats Overview/State/Plan findings as one bullet-sized fact each. STEP-07 hides self-referential linked-finding noise and exposes a deterministic review-only Source edit when a promoted finding has an unambiguous mutable Markdown range but the LLM omitted cleanup; that fallback defaults to reject and therefore cannot mutate the project unless the owner edits and accepts it. Focused regressions cover the instruction and human fallback round-trip; full suite/build/check/diff-check are green before cleanup.
 
-#### Fast-run status — ACTIVE
+#### Fast-run status — CLOSED
 
 The project owner has explicitly delegated the current live `ai-workstation` correction sequence as an owner-approved fast-run. This boundary is now recorded durably instead of living only in conversation.
 
 - **Scope:** corrections discovered while vertically reviewing the real onboarding placement, through the next coherent owner-review candidate.
+- **Closed at Block R completion:** R1-R6 now form that coherent owner-review candidate. Further framework changes return to ordinary review cadence; the next useful activity is real owner testing/migration of the published `ai-workstation` tree.
 - **Reduced intermediate ceremony:** repeated PR-description polish, full CI and generated-output refresh may be deferred between small related corrections; focused verification and recovery checkpoints remain required.
 - **Exit condition:** the project owner explicitly ends the fast-run, or the current placement line reaches a coherent owner-review candidate. At exit, record **Fast-run status — CLOSED** in PLAN before returning to ordinary review cadence.
 - **Authority is unchanged:** fast-run changes cadence only. PR #13 remains review-only and must not be merged without explicit owner approval and the normal exact-head merge gate.
@@ -271,7 +272,7 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: ACTIVE — R6 reusable Source update discovery UX, step 3 of 3. Fast-run remains ACTIVE.**
+**Status: COMPLETE — R1-R6 first-production-use work complete. Fast-run CLOSED.**
 
 **How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
@@ -326,7 +327,9 @@ Goal: make newer reusable Node packages discoverable without weakening the accep
 
 - [x] 1. Let projects discover/fetch a newer reusable Source package without manually tracking package identities.
 - [x] 2. Keep every update candidate-only until explicit review/accept; never introduce live implicit pulls.
-- [ ] 3. Document and test the normal update loop, including offline use of the last accepted package.
+- [x] 3. Document and test the normal update loop, including offline use of the last accepted package.
+
+Checkpoint: R6 is complete. Explicit fetch discovers and freezes a newer Git package plus exact candidate commit; review/accept remains bound to that local snapshot even if the remote moves or disappears; the accepted exact commit advances only on acceptance; and normal build/check continues fully offline from the last accepted package.
 
 ##### Deferred compatibility debt
 

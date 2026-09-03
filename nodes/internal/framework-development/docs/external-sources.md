@@ -136,6 +136,39 @@ For the current exact-commit transport form, `ref` advances from the previously 
 
 This cannot force a human to read a review, but it prevents the supported acceptance path from skipping the deterministic review step entirely.
 
+## Normal daily update loop — KISS
+
+Updating a reusable Git-backed Source is intentionally boring. Only the first command needs the Source repository/network; everything after it uses frozen local candidate bytes.
+
+```text
+# 1. Explicitly look for a newer published package.
+contextcanon source fetch <source-node-id> --node <consumer-node>
+
+# The command prints the content-addressed Candidate package path. Use that path below.
+
+# 2. Review the exact frozen candidate against the currently accepted Source.
+contextcanon source review <source-node-id> <candidate-package> --node <consumer-node>
+
+# 3. Accept exactly that reviewed candidate when the diff is wanted.
+contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
+
+# 4. Regenerate/verify the consumer as usual.
+contextcanon build <consumer-node>
+contextcanon check <consumer-node>
+```
+
+The important mental model is:
+
+```text
+remote moving state ──fetch once──> frozen candidate ──review──> reviewed snapshot ──accept──> accepted local package
+                                           │                                              │
+                                           └── never used by normal build                 └── normal/offline build uses this
+```
+
+No package digest needs to be invented or looked up by the operator: `fetch` discovers the package and prints its exact local candidate path. If the Source repository disappears immediately afterwards, review and accept still work from that path. After acceptance, `.context/candidates/` and `.context/source-reviews/` are scratch/review state; the durable offline boundary is `.context/sources/<accepted-package-digest>/` plus the exact pin in `CONTEXT.src.md`.
+
+If no update is desired, do nothing. A newer remote commit has zero effect on `build` or `check` until this explicit loop reaches `accept`.
+
 ## Atomic publication and interrupted operations
 
 Candidate and accepted packages are never published directly into their final content-addressed directories. ContextCanon copies them into a sibling staging directory, loads and verifies the staged package, and only then atomically replaces the final directory entry.

@@ -249,3 +249,7 @@ Git-backed reusable Source discovery now distinguishes the accepted Git provenan
 ## Latest Block R6 step 2 exact-Source-update checkpoint
 
 Reusable Source review/accept is now bound to the exact Git candidate provenance frozen during fetch as well as package identity and consumer state. The remote may move again after review without changing what accept means; acceptance never contacts it. Current exact-commit Source pins advance to the reviewed candidate commit, while historical symbolic discovery refs remain symbolic. Normal builds remain fully offline against accepted local package bytes. R6 proceeds to documenting and proving the ordinary daily update loop.
+
+## Latest Block R complete first-production-use checkpoint
+
+Block R is complete and the owner-approved fast-run is CLOSED. ContextCanon now has human-readable onboarding review surfaces, simple normal Rule/Topic authoring, source-first migration audit, transitive package-safe Topics/Resources, explicit immutable semantic Parent chains with safe update/migration/recovery, and a complete reusable-Source fetch/review/accept loop whose normal builds remain offline on accepted packages. The next useful validation is the real published `ai-workstation` tree: migrate its reviewed Step-03 hierarchy to Parent pins and exercise work from a subsystem Node. PR #13 remains draft/unmerged pending explicit owner approval.
