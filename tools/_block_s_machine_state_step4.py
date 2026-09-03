@@ -135,7 +135,7 @@ WORKFLOW_RESOURCE = "# Change workflow\n\nKeep changes recoverable, reviewed, an
         self.assertEqual(acceptance.read_bytes(), parent_migration_acceptance)
 
         root = Compiler(repo).compile(repo)
-        self.assertIn("Do not merge without explicit project-owner approval.", {r.title for r in root.inherited_rules})
+        self.assertIn("Do not merge without explicit project-owner approval", {r.title for r in root.inherited_rules})
         compose_before = Compiler(repo).compile(repo / "compose")
         self.assertNotIn("CCW-006", {r.id for r in compose_before.inherited_rules})
 
