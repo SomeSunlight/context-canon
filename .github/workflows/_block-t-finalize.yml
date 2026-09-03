@@ -23,6 +23,7 @@ jobs:
         shell: bash
         run: |
           python tools/_block_t_apply.py
+          python tools/_block_t_followup.py
           python - <<'PY'
           from pathlib import Path
           path = Path("tests/test_parent_relationship.py")
@@ -36,7 +37,7 @@ jobs:
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused publication readability tests
-        run: python -m unittest -v tests.test_publication_readability tests.test_parent_chain tests.test_parent_relationship tests.test_package tests.test_authoring
+        run: python -m unittest -v tests.test_publication_readability tests.test_parent_chain tests.test_parent_relationship tests.test_parent_migration tests.test_ai_workstation_parent_migration tests.test_onboarding_review tests.test_onboarding_placement_publish tests.test_package tests.test_authoring tests.test_overview tests.test_state_plan
       - name: Complete deterministic suite
         run: python -m unittest discover -s tests -v
       - name: Regenerate self-hosted ContextCanon output
@@ -47,13 +48,14 @@ jobs:
         run: git diff --check
       - name: Remove temporary finalizer
         run: |
-          rm -f tools/_block_t_apply.py .github/workflows/_block-t-finalize.yml
+          rm -f tools/_block_t_apply.py tools/_block_t_followup.py .github/workflows/_block-t-finalize.yml
           rmdir tools 2>/dev/null || true
       - name: Verify cleanup and generated state
         run: |
           contextcanon check --all .
           git diff --check
           test ! -e tools/_block_t_apply.py
+          test ! -e tools/_block_t_followup.py
           test ! -e .github/workflows/_block-t-finalize.yml
       - name: Commit clean product tree
         run: |
