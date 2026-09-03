@@ -17,6 +17,67 @@ CANDIDATE_PROVENANCE_SCHEMA = "contextcanon/git-candidate-provenance/v0"
 _GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
+def resolve_git_package_provenance(package_root: Path) -> dict[str, str]:
+    """Resolve clean, exact Git provenance for one already-published package Node.
+
+    This is a read-only first-adoption helper. It never fetches and never
+    guesses a branch: the package bytes must already exist in a clean Git
+    checkout, and the returned ``ref`` is the checkout's exact HEAD commit.
+    """
+
+    package_root = package_root.resolve()
+
+    def read(root: Path, *args: str) -> str:
+        try:
+            completed = subprocess.run(
+                ["git", "-C", str(root), *args],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+        except FileNotFoundError as exc:
+            raise ContextCanonError("Git Source provenance requires the 'git' executable on PATH") from exc
+        except OSError as exc:
+            raise ContextCanonError(f"Could not start Git Source provenance lookup: {exc}") from exc
+        if completed.returncode != 0:
+            detail = completed.stderr.strip() or completed.stdout.strip() or f"exit code {completed.returncode}"
+            raise ContextCanonError(f"Could not resolve Git Source provenance: {detail}")
+        return completed.stdout.strip()
+
+    repository = Path(read(package_root, "rev-parse", "--show-toplevel")).resolve()
+    try:
+        node_path = package_root.relative_to(repository).as_posix() or "."
+    except ValueError as exc:
+        raise ContextCanonError(f"Source package root is not inside its Git repository: {package_root}") from exc
+
+    status = read(
+        repository,
+        "status",
+        "--porcelain",
+        "--untracked-files=all",
+        "--",
+        node_path,
+    )
+    if status:
+        raise ContextCanonError(
+            "Source package path has uncommitted changes; exact first-adoption provenance would be ambiguous"
+        )
+
+    ref = read(repository, "rev-parse", "HEAD")
+    if not _GIT_SHA_RE.fullmatch(ref):
+        raise ContextCanonError(f"Source Git HEAD is not an exact commit SHA: {ref!r}")
+    locator = read(repository, "remote", "get-url", "origin")
+    if not locator:
+        raise ContextCanonError("Source Git repository has no usable origin locator")
+    if any(char in locator for char in '"\n\r])'):
+        raise ContextCanonError("Source Git origin cannot be represented safely in Context authoring")
+    if any(char in node_path for char in '"\n\r'):
+        raise ContextCanonError("Source Git node path cannot be represented safely in Context authoring")
+    return {"locator": locator, "ref": ref, "node_path": node_path}
+
+
 def fetch_git_candidate(node_root: Path, source_id: str) -> tuple[CompiledPackage, Path]:
     """Fetch one immutable Source candidate through generic Git transport.
 

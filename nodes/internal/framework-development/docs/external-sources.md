@@ -96,9 +96,27 @@ The fields mean:
 
 All three transport fields are required together. `node-path` is location only; the stable Node ID remains identity. Absolute paths, backslashes, and `..` traversal are rejected.
 
-Transport metadata is used for **updates of an already accepted pinned Source**. Initial selection/addition of reusable Sources is handled by the reviewed first-adoption onboarding path: the semantic reviewer may propose an `existing-source`, but final acceptance requires the exact immutable package identity the reviewer saw. A transport locator never bypasses review or exact package binding.
+Transport metadata is used for **updates of an already accepted pinned Source**. Initial onboarding may select reusable Sources through its reviewed placement path. Normal post-onboarding work also has one explicit first-adoption command when the human already knows the exact published package to compose:
 
-The larger real-project onboarding test still needs to validate how natural this Source-selection/reuse experience feels in practice.
+```text
+contextcanon source adopt <published-package-node> --node <consumer-node>
+```
+
+`source adopt` is the first-adoption decision itself; it is not an update shortcut. ContextCanon loads and verifies the exact package, requires its package path to be clean in Git, records the repository origin, exact current commit and Node path, validates the consumer's complete prospective composition in memory, installs the immutable package locally, then atomically adds one normal Source declaration. It does not touch or rewrite historical onboarding acceptance. If the same Source identity is already present with a different package, adoption refuses and the existing fetch/review/accept update path remains mandatory. Repeating adoption of the exact same package is idempotent.
+
+A transport locator never bypasses exact package binding. This command is especially useful when a reusable Source is deliberately added after onboarding or when an old migration run lost a pre-`run-inputs.json` owner choice: recovery becomes a new explicit owner decision instead of pretending lost historical state can be inferred.
+
+## First adoption after onboarding
+
+When a reusable published Node is not yet a Source of the consumer, adoption is intentionally one explicit operation followed by the ordinary build/check loop:
+
+```text
+contextcanon source adopt <published-package-node> --node <consumer-node>
+contextcanon build <consumer-node>
+contextcanon check <consumer-node>
+```
+
+This is appropriate only for **first adoption** of an exact package the operator has deliberately selected. Subsequent changes to that Source use the reviewable update loop below.
 
 ## Fetch, review, accept
 

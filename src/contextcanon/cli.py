@@ -41,7 +41,7 @@ from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
-from .sources import accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
+from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
 
 
 def _node_root(path: Path) -> Path:
@@ -396,6 +396,9 @@ def main(argv: list[str] | None = None) -> int:
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
+    source_adopt = source_sub.add_parser("adopt", help="explicitly adopt one exact published Git package as a new Source")
+    source_adopt.add_argument("package", help="local root of the exact published Source package Node")
+    source_adopt.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
     source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate through its declared transport")
     source_fetch.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
     source_fetch.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
@@ -829,6 +832,13 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "source":
             node_root = _node_root(Path(args.node))
+            if args.source_command == "adopt":
+                adopted, changed = adopt_source_package(node_root, Path(args.package))
+                verb = "adopted" if changed else "already adopted"
+                print(f"{verb} Source {adopted.metadata.name} {adopted.metadata.version} ({adopted.package_digest})")
+                print(f"Next: contextcanon build {node_root}")
+                print(f"Then: contextcanon check {node_root}")
+                return 0
             if args.source_command == "fetch":
                 candidate, location = fetch_git_candidate(node_root, args.source_id)
                 try:

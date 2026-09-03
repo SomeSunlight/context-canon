@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .compiler import Compiler
 from .diff import ContextDiff
-from .git_transport import load_candidate_provenance
+from .git_transport import load_candidate_provenance, resolve_git_package_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .package_diff import diff_packages
@@ -24,6 +24,112 @@ _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>
 _SOURCE_LINE_RE = re.compile(
     r'^(?P<prefix>- \[[^]]+\]\([^)]+\)\s+—\s+)`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
 )
+
+
+def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledPackage, bool]:
+    """Explicitly adopt one exact published Git-backed package as a new Source.
+
+    The operator's invocation is the first-adoption decision. ContextCanon
+    resolves exact clean Git provenance, validates the *future* consumer
+    composition in memory, installs the immutable package, and only then
+    atomically publishes one Source declaration. Existing Source identities are
+    never upgraded through this path; they stay on fetch/review/accept.
+    """
+
+    node_root = node_root.resolve()
+    package_root = package_root.resolve()
+    repo_root = find_repo_root(node_root)
+    parsed = parse_node(node_root, repo_root)
+    candidate = load_package(package_root)
+
+    if candidate.metadata.id == parsed.metadata.id:
+        raise ContextCanonError(f"{parsed.metadata.name}: a Node cannot adopt itself as a Source")
+    if parsed.parent is not None and parsed.parent.id == candidate.metadata.id:
+        raise ContextCanonError(
+            f"{parsed.metadata.name}: Node {candidate.metadata.id} is already the semantic Parent and cannot also be a Source"
+        )
+
+    matches = [source for source in parsed.sources if source.id == candidate.metadata.id]
+    if matches:
+        if len(matches) != 1:
+            raise ContextCanonError(
+                f"{parsed.metadata.name}: Source Node ID {candidate.metadata.id} is not unique"
+            )
+        existing = matches[0]
+        if (
+            existing.is_pinned
+            and existing.version == candidate.metadata.version
+            and existing.normalized_digest == candidate.normalized_digest
+            and existing.package_digest == candidate.package_digest
+        ):
+            _install_package(node_root, package_root, candidate)
+            Compiler(repo_root).compile(node_root)
+            return candidate, False
+        raise ContextCanonError(
+            f"{parsed.metadata.name}: Source {candidate.metadata.name} ({candidate.metadata.id}) already exists with a different accepted package; use 'contextcanon source fetch/review/accept' for updates"
+        )
+
+    provenance = resolve_git_package_provenance(package_root)
+    entry = _render_adopted_source(candidate, provenance)
+    source_path = node_root / "CONTEXT.src.md"
+    before = source_path.read_text(encoding="utf-8")
+    after = _insert_source_entry(before, entry)
+
+    resources = {
+        file.path: (package_root / file.path).read_bytes()
+        for file in candidate.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+    preview = Compiler(
+        repo_root,
+        source_overrides={node_root: after},
+        package_overrides={(node_root, candidate.package_digest): (candidate, resources)},
+    )
+    preview.compile(node_root)
+
+    destination = node_root / ".context" / "sources" / candidate.package_digest
+    existed = destination.exists()
+    _install_package(node_root, package_root, candidate)
+    try:
+        _atomic_write_text(source_path, after)
+        Compiler(repo_root).compile(node_root)
+    except Exception:
+        _atomic_write_text(source_path, before)
+        if not existed and destination.exists():
+            shutil.rmtree(destination, ignore_errors=True)
+        raise
+    return candidate, True
+
+
+def _render_adopted_source(candidate: CompiledPackage, provenance: dict[str, str]) -> str:
+    name = candidate.metadata.name
+    if any(char in name for char in "]\n\r"):
+        raise ContextCanonError(f"Source name cannot be represented safely: {name!r}")
+    return "\n".join(
+        [
+            f"- [{name}]({provenance['locator']}) — `{candidate.metadata.version}`",
+            (
+                f'  <!-- ctx:source id="{candidate.metadata.id}" version="{candidate.metadata.version}" '
+                f'normalized-digest="{candidate.normalized_digest}" '
+                f'package-digest="{candidate.package_digest}" transport="git" '
+                f'ref="{provenance["ref"]}" node-path="{provenance["node_path"]}" -->'
+            ),
+        ]
+    )
+
+
+def _insert_source_entry(text: str, entry: str) -> str:
+    heading = re.search(r"(?m)^## Sources\s*$", text)
+    if heading is None:
+        return text.rstrip() + "\n\n## Sources\n\n" + entry.rstrip() + "\n"
+    next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
+    insert_at = next_heading.start() if next_heading else len(text)
+    before = text[:insert_at].rstrip()
+    after = text[insert_at:].lstrip("\n")
+    result = before + "\n\n" + entry.rstrip() + "\n"
+    if after:
+        result += "\n" + after
+    return result.rstrip() + "\n"
 
 
 def review_source_candidate(
