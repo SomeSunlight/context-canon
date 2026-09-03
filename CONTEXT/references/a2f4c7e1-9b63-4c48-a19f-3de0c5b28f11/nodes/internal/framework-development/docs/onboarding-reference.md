@@ -790,3 +790,11 @@ The regression suite covers, among other onboarding acceptance cases:
 ## Design invariant
 
 **ContextCanon deterministically defines and verifies evidence, task, proposal, review binding and publication mechanics; a capable semantic model proposes meaning inside that box; an explicit human decision chooses durable project truth; the ordinary compiler verifies the result immediately.**
+
+## Upgrading a placement published before semantic Parent edges
+
+A placement accepted by an older ContextCanon build may already contain the reviewed Nodes and Sources while its Step-03 hierarchy was not yet persisted as semantic Parent pins. Re-running the same exact placement preview/publication is the migration path; no new semantic LLM pass is required.
+
+ContextCanon allows this acceptance upgrade only when the old record is the same Evidence/Structure/Proposal/Review identity, has no Parent state yet, covers every accepted structure Node, and every current `CONTEXT.src.md` still has the exact `source_sha256` recorded by that old acceptance. The migration then adds the reviewed Parent blocks/packages parent-first and replaces the acceptance record transactionally. A later human Node edit disables automatic migration and requires explicit review instead.
+
+Step-9 reset journals the placement acceptance file together with Node sources, generated outputs and immutable package-store changes. Reset after such a migration therefore restores both the pre-Parent Node tree and its exact legacy acceptance record rather than leaving machine acceptance ahead of canonical source.

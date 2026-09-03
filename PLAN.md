@@ -271,7 +271,7 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: ACTIVE — R5 Semantic Parent relationship, step 5 of 5. Fast-run remains ACTIVE.**
+**Status: ACTIVE — R6 reusable Source update discovery UX, step 1 of 3. Fast-run remains ACTIVE.**
 
 **How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
@@ -314,9 +314,11 @@ Goal: turn the human-accepted Step-03 hierarchy into an explicit ContextCanon re
 - [x] 2. Persist every non-root accepted Step-03 parent into onboarding publication and pin the exact accepted Parent package locally in the Child.
 - [x] 3. Make Parent changes non-live: normal builds use the accepted package pin; a changed Parent can only become a candidate until reviewed/accepted.
 - [x] 4. Prove that the Parent chain carries complete effective Rules, Topics and Resources transitively, so a reusable Development Workflow attached at the intended ancestor reaches descendants without being selected on every Node.
-- [ ] 5. Cover migration/idempotency/recovery for an already-published `ai-workstation`-like tree, then run the focused tests, complete suite, self-hosted build/check and hygiene gate.
+- [x] 5. Cover migration/idempotency/recovery for an already-published `ai-workstation`-like tree, then run the focused tests, complete suite, self-hosted build/check and hygiene gate.
 
 Expected practical result: when working inside a subsystem, an agent can start at that subsystem's Node and receive the accepted higher-level context through the semantic Parent chain without loading unrelated sibling context.
+
+Checkpoint: R5 is complete. Step-03 hierarchy is persisted as exact non-live Parent packages; Parent updates are candidate/review/accept only; full Rules/Topics/Resources flow transitively while siblings stay out; and a pre-Parent published placement can migrate idempotently only from its exact unchanged accepted Node bytes, with Step-9 reset restoring the prior acceptance and package state.
 
 ##### R6 — Reusable Source update discovery UX
 

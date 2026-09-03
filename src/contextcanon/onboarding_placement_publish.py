@@ -1031,6 +1031,62 @@ def render_placement_followups(preview: PlacementPublicationPreview) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _legacy_parent_acceptance_upgrade(
+    content: bytes | None,
+    preview: PlacementPublicationPreview,
+) -> bool:
+    """Recognize the one safe in-place upgrade from pre-Parent placement acceptance.
+
+    The legacy acceptance must be the exact same reviewed placement and every
+    Node source byte it certified must still be current. This is deliberately
+    narrower than general acceptance replacement: post-publication human edits
+    require a fresh explicit workflow rather than being swept into migration.
+    """
+
+    if content is None:
+        return False
+    try:
+        raw = json.loads(content.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    if not isinstance(raw, dict) or "parents" in raw:
+        return False
+    identity = {
+        "evidence_digest": preview.evidence_digest,
+        "structure_digest": preview.structure_digest,
+        "proposal_digest": preview.proposal_digest,
+        "review_digest": preview.review_digest,
+    }
+    if any(raw.get(key) != value for key, value in identity.items()):
+        return False
+    if raw.get("schema") != PLACEMENT_ACCEPTANCE_SCHEMA:
+        return False
+
+    nodes = raw.get("nodes")
+    if not isinstance(nodes, dict):
+        raise _error("legacy placement acceptance has no verifiable Node state for Parent migration")
+    by_key = {delta.key: delta for delta in preview.nodes}
+    missing = sorted(set(by_key) - set(nodes))
+    if missing:
+        raise _error(
+            "legacy placement acceptance does not cover every accepted structure Node needed for automatic Parent migration: "
+            + ", ".join(missing)
+        )
+    for key, delta in by_key.items():
+        state = nodes.get(key)
+        if not isinstance(state, dict):
+            raise _error(f"legacy placement acceptance Node state is invalid for {key}")
+        expected_source = state.get("source_sha256")
+        current_source = _sha256_bytes(delta.before.encode("utf-8"))
+        if state.get("node_id") != delta.node_id or state.get("path") != delta.path:
+            raise _error(f"legacy placement acceptance Node identity changed for {key}; refuse automatic Parent migration")
+        if expected_source != current_source:
+            raise _error(
+                f"{delta.name} changed after the legacy placement acceptance; refuse automatic Parent migration and review the current Node explicitly"
+            )
+    return True
+
+
 def publish_placement_review(
     preview: PlacementPublicationPreview,
     review: OnboardingPlacementReview,
@@ -1071,6 +1127,7 @@ def publish_placement_review(
     generated_snapshots: dict[Path, dict[str, bytes | None]] = {}
     generated_new_rels: dict[Path, set[str]] = {}
     acceptance_before = acceptance_path.read_bytes() if acceptance_path.is_file() else None
+    legacy_parent_upgrade = _legacy_parent_acceptance_upgrade(acceptance_before, preview)
 
     try:
         for delta in preview.nodes:
@@ -1156,11 +1213,12 @@ def publish_placement_review(
 
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
-        if acceptance_path.is_file() and acceptance_path.read_bytes() != encoded:
+        if acceptance_path.is_file() and acceptance_path.read_bytes() != encoded and not legacy_parent_upgrade:
             raise _error(
                 f"placement acceptance record already exists with different exact content: {acceptance_path}"
             )
-        _atomic_write(acceptance_path, encoded)
+        if not acceptance_path.is_file() or acceptance_path.read_bytes() != encoded:
+            _atomic_write(acceptance_path, encoded)
         digest = _sha256_bytes(encoded)
         return PlacementPublicationResult(
             acceptance_path=acceptance_path,

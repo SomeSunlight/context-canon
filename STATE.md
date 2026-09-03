@@ -237,3 +237,7 @@ Semantic Parent updates now have their own explicit `contextcanon parent review`
 ## Latest Block R5 step 4 Parent-chain checkpoint
 
 The complete scoped-context chain is now regression-proven: a reusable Development Workflow Source attached at a project ancestor reaches a deep subsystem Tool through immutable Parent packages together with project/subsystem Rules, Topics and exact Resource bytes, while an unrelated sibling contributes nothing. The leaf remains compilable from its direct Parent package even after upstream Source/Parent authoring files are removed, demonstrating that the semantic chain is accepted package reachability rather than filesystem recursion. R5 now proceeds to migration/idempotency/recovery for an already-published ai-workstation-like tree.
+
+## Latest Block R5 complete semantic-Parent checkpoint
+
+Block R5 is complete. The accepted Step-03 hierarchy is now durable package semantics rather than a review-only tree: non-root Nodes pin exact Parent packages, ordinary builds are non-live, Parent changes require explicit review/accept, reusable Sources and complete effective Rules/Topics/Resources flow through the Parent chain without sibling leakage, and already-published pre-Parent placements have a narrow exact-byte migration path with idempotent republish and Step-9 recovery of the prior acceptance/package state. The next Block R work is R6 Source-update discovery UX.

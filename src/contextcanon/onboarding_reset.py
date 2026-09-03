@@ -174,9 +174,20 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
     project = (project_arg or find_repo_root(snapshot)).resolve()
     extra_paths: tuple[str, ...] = ()
     if argv[1] == "placement-publish":
-        extra_paths = tuple(
+        extras = [
             entry.path for entry in load_evidence_snapshot(snapshot).entries if entry.path.lower().endswith(".md")
-        )
+        ]
+        acceptance = snapshot / "placement-acceptance.json"
+        if "--acceptance" in argv:
+            index = argv.index("--acceptance")
+            if index + 1 < len(argv):
+                acceptance = Path(argv[index + 1]).resolve()
+        try:
+            extras.append(acceptance.resolve().relative_to(project).as_posix())
+        except ValueError:
+            # An explicitly external acceptance path remains outside project reset scope.
+            pass
+        extra_paths = tuple(extras)
     before = _managed_state(project, extra_paths)
     result = delegate(argv)
     if result != 0:
@@ -371,7 +382,13 @@ def reset_onboarding(
     workspace_files = _reset_workspace(workspace, from_step)
 
     if 9 in selected_steps:
-        (snapshot / "placement-acceptance.json").unlink(missing_ok=True)
+        acceptance = snapshot / "placement-acceptance.json"
+        try:
+            acceptance_rel = acceptance.relative_to(project).as_posix()
+        except ValueError:
+            acceptance_rel = None
+        if acceptance_rel is None or acceptance_rel not in project_files:
+            acceptance.unlink(missing_ok=True)
 
     update_workspace_checkpoint(
         workspace_state,
