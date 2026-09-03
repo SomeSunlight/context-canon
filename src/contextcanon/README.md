@@ -5,6 +5,7 @@ This directory contains ContextCanon's deterministic implementation modules. The
 High-level map:
 
 - `model.py` — typed deterministic data structures;
+- `authoring.py` — narrow safe writes to ordinary `CONTEXT.src.md`, including stable Rule/Topic ID allocation;
 - `parser.py` — constrained `CONTEXT.src.md` grammar;
 - `compiler.py` — Source composition, Rule changes, Topic/resource collection and semantic validation;
 - `package.py` — immutable package identity, manifests and verification;

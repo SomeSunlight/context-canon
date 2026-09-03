@@ -174,6 +174,33 @@ Every Topic ends with a compiler-managed stable ID:
 <!-- ctx:topic id="LOGGING" -->
 ```
 
+## Normal authoring after onboarding
+
+After a project has adopted ContextCanon, ordinary work does not repeat migration onboarding. The canonical source remains `CONTEXT.src.md` plus the Node's natural Resource files.
+
+For existing text, edit `CONTEXT.src.md` directly. For a **new Rule or Topic**, prefer the deterministic authoring commands so ContextCanon allocates the hidden stable identity once instead of making the author invent a `ctx:rule` or `ctx:topic` comment:
+
+```text
+contextcanon author rule . --group Security --title "Keep secrets out of Git" --statement "Credentials and secret values must stay outside version control." --why "Version control is not a secret store."
+
+contextcanon author topic . --title Logging --condition "When changing logging or diagnostics:" --required-resource docs/logging-contract.md
+```
+
+The commands write ordinary source syntax; they do **not** create another authoring database and they do not hide publication behind a write. The resulting `CONTEXT.src.md` is immediately readable and editable by hand. ContextCanon merely allocates the stable `RULE-...` or `TOPIC-...` identity and validates that the edited Node still parses.
+
+The minimal daily loop is intentionally boring:
+
+```text
+read CONTEXT.md for the effective working context
+→ edit CONTEXT.src.md and/or natural Resource files
+→ use contextcanon author rule/topic when creating a new identified element
+→ contextcanon build <node-or-repository>
+→ contextcanon check <node-or-repository>
+→ when a reusable Source has a candidate update, review it before explicit acceptance
+```
+
+Use `--all` with `build`/`check` when repository-wide generated state should be refreshed or verified. Source candidate discovery/review/acceptance remains a separate explicit workflow; normal authoring and normal builds never silently pull newer Source meaning.
+
 ## Compiler-managed authoring help
 
 Raw Markdown may contain compiler-managed HTML comment blocks with copyable examples. These blocks are authoring help only; they do not carry critical human meaning and disappear from rendered Markdown.

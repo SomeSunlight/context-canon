@@ -3,7 +3,7 @@
   "compiler_version": "0.4.0",
   "digests": {
     "normalized": "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b",
-    "package": "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
+    "package": "d13d8924145909ea256151c1b92bcac651bf89f410ea4d742a45e92a06883261"
   },
   "files": [
     {
@@ -33,8 +33,8 @@
     },
     {
       "path": "CONTEXT/references/nodes/library/foundation/docs/source-format.md",
-      "sha256": "9f37789ffe0fb39431e469258c627f0cbba670126518a50e0f44e9760fbd1a43",
-      "size": 8460
+      "sha256": "954be8ca72125e52ec31c47b847d7f2d728e1d6d438cfcd93e44bd2b823516a4",
+      "size": 10323
     },
     {
       "path": "CONTEXT/references/nodes/library/foundation/docs/topics.md",

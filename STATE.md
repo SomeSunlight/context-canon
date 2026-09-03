@@ -191,3 +191,9 @@ The known legacy in-flight owner-Source recovery defect remains deferred. The fi
 The first post-publish UX slice is complete. Step 03 now marks the editable semantic Node tree with quiet visible cues instead of relying only on hidden comments. Step 07 is self-contained about Decision, Destination, Kind, derived Action, Wording and Review-note semantics, and its editable regions use lower-noise visual boundaries.
 
 `Action` is no longer an independent human control in placement review. The renderer shows it as derived from `Kind`, and the parser deterministically reconstructs the only valid Kind→Action mapping. Stable review semantics and the existing placement proposal contract are unchanged. The remaining Block R work — source-file-first transformation audit, ordinary post-onboarding authoring ergonomics, semantic parent composition/Topic inheritance and Source-update UX — remains pending. Fast-run stays active and PR #13 remains draft/unmerged.
+
+## Latest Block R2 normal-authoring checkpoint
+
+Normal ContextCanon-native project work no longer requires authors to invent hidden Rule/Topic IDs. `contextcanon author rule` and `contextcanon author topic` write the same ordinary `CONTEXT.src.md` syntax humans already maintain, allocate one stable `RULE-...` / `TOPIC-...` identity, validate the resulting Node, and leave build/check explicit. There is no secondary authoring database.
+
+The reusable Source-format guidance now records the minimal post-onboarding loop: read effective `CONTEXT.md`, edit `CONTEXT.src.md` and natural Resources, use the authoring commands for new identified elements, build, check, and review Source candidates explicitly before acceptance. The remaining Block R work is the source-file-first transformation audit plus the larger semantic-parent/Topic-inheritance and Source-update UX blocks. Fast-run remains active; PR #13 remains draft and unmerged.

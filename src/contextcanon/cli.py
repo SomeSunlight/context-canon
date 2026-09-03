@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .authoring import add_rule, add_topic
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
 from .git_transport import fetch_git_candidate
@@ -366,6 +367,24 @@ def main(argv: list[str] | None = None) -> int:
         metavar="ITEM_ID=LOCATOR",
         help="visible Source provenance/update locator for an accepted existing-source finding; may be repeated",
     )
+
+    author_parser = sub.add_parser("author", help="write ordinary Rule/Topic authoring with stable IDs allocated by ContextCanon")
+    author_sub = author_parser.add_subparsers(dest="author_command", required=True)
+    author_rule = author_sub.add_parser("rule", help="add one Rule to CONTEXT.src.md and allocate its stable ID")
+    author_rule.add_argument("path", nargs="?", default=".", help="Context Node root (default: current directory)")
+    author_rule.add_argument("--group", default="General", help="Rule group heading (default: General)")
+    author_rule.add_argument("--title", required=True, help="short human-facing Rule title")
+    author_rule.add_argument("--statement", required=True, help="Rule statement")
+    author_rule.add_argument("--why", required=True, help="Rule rationale")
+
+    author_topic = author_sub.add_parser("topic", help="add one Topic to CONTEXT.src.md and allocate its stable ID")
+    author_topic.add_argument("path", nargs="?", default=".", help="Context Node root (default: current directory)")
+    author_topic.add_argument("--title", required=True, help="short human-facing Topic title")
+    author_topic.add_argument("--condition", required=True, help="when this deeper context applies")
+    author_topic.add_argument("--required-resource", action="append", default=[], metavar="PATH", help="required Resource target; may be repeated")
+    author_topic.add_argument("--optional-resource", action="append", default=[], metavar="PATH", help="optional Resource target; may be repeated")
+    author_topic.add_argument("--required-node", action="append", default=[], metavar="PATH", help="required Context Node navigation target; may be repeated")
+    author_topic.add_argument("--optional-node", action="append", default=[], metavar="PATH", help="optional Context Node navigation target; may be repeated")
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
@@ -749,6 +768,32 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Normalized digest: {acceptance.normalized_digest}")
             print(f"Package digest: {acceptance.package_digest}")
             print(f"Acceptance record: {acceptance.acceptance_path}")
+            return 0
+
+        if args.command == "author":
+            node_root = _node_root(Path(args.path))
+            if args.author_command == "rule":
+                result = add_rule(
+                    node_root,
+                    group=args.group,
+                    title=args.title,
+                    statement=args.statement,
+                    why=args.why,
+                )
+                print(f"added Rule {result.element_id} to {result.source_path}")
+            else:
+                result = add_topic(
+                    node_root,
+                    title=args.title,
+                    condition=args.condition,
+                    required_resources=tuple(args.required_resource),
+                    optional_resources=tuple(args.optional_resource),
+                    required_nodes=tuple(args.required_node),
+                    optional_nodes=tuple(args.optional_node),
+                )
+                print(f"added Topic {result.element_id} to {result.source_path}")
+            print(f"Next: contextcanon build {node_root}")
+            print(f"Then: contextcanon check {node_root}")
             return 0
 
         if args.command == "source":

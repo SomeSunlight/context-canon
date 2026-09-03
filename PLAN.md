@@ -271,7 +271,11 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
 
-**Status: NEXT — Block R1 complete; continue with the remaining Block R follow-up slices. Fast-run remains ACTIVE.**
+**Status: NEXT — Blocks R1/R2 complete; continue with the remaining Block R follow-up slices. Fast-run remains ACTIVE.**
+
+R2 purpose: keep `CONTEXT.src.md` as the only authoring truth while making ordinary Rule/Topic creation safe and pleasant. ContextCanon should allocate stable hidden IDs once, write ordinary source syntax, and leave the familiar build/check loop intact.
+
+R2 verification: focused authoring/CLI regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. `contextcanon author rule` and `contextcanon author topic` now allocate stable IDs and write ordinary validated `CONTEXT.src.md`; Foundation documents the minimal native-project daily loop.
 
 R1 purpose: make the two human review gates visibly editable without visual shouting, make Step 07 self-contained about its controls, and remove `Action` as a fake independent choice while preserving the existing deterministic Kind→Action contract.
 
@@ -287,8 +291,8 @@ R1 verification: focused structure/placement-review regressions passed, followed
 
 ##### Normal authoring after onboarding
 
-- [ ] Add first-class authoring ergonomics for new Rules/Topics after onboarding so humans do not have to invent or hand-maintain invisible `ctx:*` identity comments. Preserve stable IDs, but provide an explicit ContextCanon authoring/write command or equivalent safe mechanism that allocates the ID once.
-- [ ] Document the minimal post-onboarding daily loop for ordinary projects: read `CONTEXT.md`, edit `CONTEXT.src.md`/Resources, build, check, and review Source updates when present.
+- [x] Add first-class authoring ergonomics for new Rules/Topics after onboarding so humans do not have to invent or hand-maintain invisible `ctx:*` identity comments. Preserve stable IDs, but provide an explicit ContextCanon authoring/write command or equivalent safe mechanism that allocates the ID once.
+- [x] Document the minimal post-onboarding daily loop for ordinary projects: read `CONTEXT.md`, edit `CONTEXT.src.md`/Resources, build, check, and review Source updates when present.
 
 ##### Accepted semantic parent relationships
 
