@@ -229,3 +229,7 @@ Structure-first placement publication now preserves the owner-accepted Step-03 h
 Publication writes the reviewed source/document deltas transactionally, installs direct reusable Source packages, then walks the semantic Parent chain from roots to leaves. Each final Parent artifact is installed into the Child's local immutable `.context/sources/<package-digest>/` store before the Child is compiled. Acceptance records preserve the Parent edge and exact package identity; rerunning the same reviewed publication is idempotent.
 
 R5 step 3 is next: give Parent updates the same non-live candidate/review/accept safety as reusable Source updates. PR #13 remains draft and unmerged; fast-run remains active.
+
+## Latest Block R5 step 3 Parent-update checkpoint
+
+Semantic Parent updates now have their own explicit `contextcanon parent review` / `contextcanon parent accept` gate. Ordinary Child builds remain pinned to accepted package bytes and never dereference the live Parent locator. Review explicitly compiles the current same-project Parent into a content-addressed candidate, validates it against the Child's real Rule/Topic composition and stores an exact receipt; accept installs and pins exactly that reviewed snapshot even if the live Parent changes again afterwards. R5 now proceeds to the full transitive Parent-chain proof.

@@ -21,6 +21,22 @@ Parent and Sources are composed through the same `CompiledPackage` boundary. Thi
 
 The accepted Parent pin is intentionally non-live. Editing or rebuilding the Parent Node elsewhere does not change an ordinary Child build. A Parent update is a later candidate/review/accept operation, not implicit inheritance from current filesystem bytes.
 
+For the normal same-project semantic hierarchy the operator does not manage candidate paths manually:
+
+```text
+contextcanon parent review --node <child-node>
+        ↓
+explicitly compile the current Parent locator into .context/parent-candidates/<package-digest>/
+        ↓
+exact package diff + Child structural validation + parent-review receipt
+        ↓
+contextcanon parent accept --node <child-node>
+        ↓
+install exactly the reviewed immutable package + update only the Child's Parent pin
+```
+
+`parent review` is the only step that consults the live Parent locator. `build`, `check`, and `parent accept` continue to use immutable local package bytes; even if the live Parent changes again after review, acceptance means the exact reviewed candidate snapshot.
+
 ## No implicit precedence
 
 Source order does not mean priority. ContextCanon must never silently apply "first source wins" or "last source wins" semantics.

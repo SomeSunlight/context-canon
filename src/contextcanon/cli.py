@@ -41,7 +41,7 @@ from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root
-from .sources import accept_source_candidate, review_source_candidate
+from .sources import accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
 
 
 def _node_root(path: Path) -> Path:
@@ -386,6 +386,13 @@ def main(argv: list[str] | None = None) -> int:
     author_topic.add_argument("--optional-resource", action="append", default=[], metavar="PATH", help="optional Resource target; may be repeated")
     author_topic.add_argument("--required-node", action="append", default=[], metavar="PATH", help="required Context Node navigation target; may be repeated")
     author_topic.add_argument("--optional-node", action="append", default=[], metavar="PATH", help="optional Context Node navigation target; may be repeated")
+
+    parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
+    parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
+    parent_review = parent_sub.add_parser("review", help="compile the live Parent explicitly and review its immutable candidate snapshot")
+    parent_review.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
+    parent_accept = parent_sub.add_parser("accept", help="accept exactly the most recently reviewed Parent snapshot")
+    parent_accept.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
@@ -798,6 +805,24 @@ def main(argv: list[str] | None = None) -> int:
                     optional_nodes=tuple(args.optional_node),
                 )
                 print(f"added Topic {result.element_id} to {result.source_path}")
+            print(f"Next: contextcanon build {node_root}")
+            print(f"Then: contextcanon check {node_root}")
+            return 0
+
+        if args.command == "parent":
+            node_root = _node_root(Path(args.node))
+            if args.parent_command == "review":
+                result, receipt = review_parent_candidate(node_root)
+                print(render_diff(result), end="")
+                try:
+                    label = receipt.relative_to(node_root).as_posix()
+                except ValueError:
+                    label = str(receipt)
+                print(f"Parent review receipt: {label}")
+                print("Accepted Parent pin is unchanged until 'contextcanon parent accept'.")
+                return 0
+            accepted = accept_parent_candidate(node_root)
+            print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
             print(f"Next: contextcanon build {node_root}")
             print(f"Then: contextcanon check {node_root}")
             return 0
