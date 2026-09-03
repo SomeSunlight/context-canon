@@ -7,7 +7,7 @@ from pathlib import Path
 from .authoring import add_rule, add_topic
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
-from .git_transport import fetch_git_candidate
+from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_placement import load_onboarding_placement_proposal
@@ -836,7 +836,11 @@ def main(argv: list[str] | None = None) -> int:
                 except ValueError:
                     label = str(location)
                 print(f"fetched candidate {candidate.metadata.name} {candidate.metadata.version} ({candidate.package_digest})")
+                provenance = load_candidate_provenance(node_root, candidate.package_digest)
+                if provenance is not None:
+                    print(f"Candidate Git commit: {provenance['candidate_ref']}")
                 print(f"Candidate package: {label}")
+                print("Accepted Source pin is unchanged until explicit review and accept.")
                 return 0
 
             candidate = Path(args.candidate).resolve()

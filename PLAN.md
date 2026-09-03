@@ -271,7 +271,7 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: ACTIVE — R6 reusable Source update discovery UX, step 1 of 3. Fast-run remains ACTIVE.**
+**Status: ACTIVE — R6 reusable Source update discovery UX, step 2 of 3. Fast-run remains ACTIVE.**
 
 **How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
@@ -324,7 +324,7 @@ Checkpoint: R5 is complete. Step-03 hierarchy is persisted as exact non-live Par
 
 Goal: make newer reusable Node packages discoverable without weakening the accepted-snapshot model.
 
-- [ ] 1. Let projects discover/fetch a newer reusable Source package without manually tracking package identities.
+- [x] 1. Let projects discover/fetch a newer reusable Source package without manually tracking package identities.
 - [ ] 2. Keep every update candidate-only until explicit review/accept; never introduce live implicit pulls.
 - [ ] 3. Document and test the normal update loop, including offline use of the last accepted package.
 

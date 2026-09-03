@@ -79,7 +79,7 @@ The digest pair is all-or-nothing. For a pinned Source, the visible link is prov
 
 ## Git transport and multi-Node repositories
 
-Compiler 0.4 provides a generic Git candidate transport. It is not GitHub-specific and uses the system `git` executable.
+Compiler 0.5 provides a generic Git candidate transport. It is not GitHub-specific and uses the system `git` executable.
 
 A Git-backed Source adds three transport fields:
 
@@ -91,7 +91,7 @@ A Git-backed Source adds three transport fields:
 The fields mean:
 
 - `transport="git"` — use generic Git for candidate retrieval;
-- `ref="main"` — branch/tag/ref used for candidate discovery;
+- `ref="..."` — accepted Git provenance. Current onboarding records the exact accepted commit SHA. Historical symbolic branch/tag refs remain supported as an explicit discovery ref;
 - `node-path="..."` — location of this Context Node inside the retrieved repository snapshot. Use `.` for a repository-root Node.
 
 All three transport fields are required together. `node-path` is location only; the stable Node ID remains identity. Absolute paths, backslashes, and `..` traversal are rejected.
@@ -112,9 +112,9 @@ contextcanon source accept <source-node-id> <candidate-package> --node <consumer
 
 ### Fetch
 
-`source fetch` clones the declared Git ref into a temporary checkout, enters `node-path`, loads and fully verifies the immutable package already published there, then copies only that immutable artifact to `.context/candidates/<package-digest>/`.
+`source fetch` explicitly performs update discovery. When `ref` is an exact accepted commit SHA (the normal current-onboarding form), discovery reads the repository's current default branch rather than cloning that old accepted commit forever. Historical symbolic refs are followed directly. ContextCanon enters `node-path`, loads and fully verifies the immutable package already published there, copies only that immutable artifact to `.context/candidates/<package-digest>/`, and records the exact discovered Git commit in a sibling `<package-digest>.git.json` provenance record.
 
-It does **not** modify `CONTEXT.src.md` or `.context/sources/`.
+It does **not** modify `CONTEXT.src.md` or `.context/sources/`. The moving remote branch is used only long enough to discover one candidate; the persisted candidate immediately becomes content-addressed package bytes plus an exact Git commit.
 
 ### Review
 
@@ -198,7 +198,7 @@ A newer package is therefore a change request, not live inheritance. The determi
 
 ## Current implementation boundary
 
-Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, and atomic canonical-pin replacement.
+Compiler 0.5 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, atomic canonical-pin replacement, and exact-commit capture for update candidates discovered from a moving remote branch.
 
 The current reviewed first-adoption onboarding layer can also propose an existing reusable Source from a verified catalog and bind that proposal through human review to the exact Node ID, name, version, normalized digest, and package digest that were inspected. Final onboarding acceptance requires the same immutable package again and then pins it into normal offline consumer state.
 

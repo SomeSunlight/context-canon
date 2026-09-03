@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.compiler import Compiler
-from contextcanon.git_transport import fetch_git_candidate
+from contextcanon.git_transport import fetch_git_candidate, load_candidate_provenance
 from contextcanon.outputs import write_outputs
 from contextcanon.package import artifact_files
 from contextcanon.parser import ContextCanonError, parse_node
@@ -137,6 +137,35 @@ class GitTransportTests(unittest.TestCase):
         self.assertEqual(after.source_packages[0].metadata.version, "2.0.0")
         self.assertEqual(after.source_packages[0].package_digest, v2.package_digest)
         self.assertEqual(after.inherited_rules[0].statement, "Prefer explicit Python v2.")
+
+    def test_exact_accepted_commit_discovers_newer_default_branch_and_freezes_candidate_commit(self):
+        provider, v1, v2 = self.make_provider()
+        commits = self.git(provider, "log", "--format=%H", "--reverse").stdout.splitlines()
+        self.assertEqual(len(commits), 2)
+        accepted_ref, candidate_ref = commits
+        consumer = self.make_consumer(provider, v1)
+        source_path = consumer / "CONTEXT.src.md"
+        source_path.write_text(
+            source_path.read_text(encoding="utf-8").replace('ref="main"', f'ref="{accepted_ref}"'),
+            encoding="utf-8",
+        )
+
+        candidate, candidate_root = fetch_git_candidate(consumer, "node-python")
+        self.assertEqual(candidate.metadata.version, "2.0.0")
+        self.assertEqual(candidate.package_digest, v2.package_digest)
+        provenance = load_candidate_provenance(consumer, candidate.package_digest)
+        self.assertIsNotNone(provenance)
+        self.assertEqual(provenance["accepted_ref"], accepted_ref)
+        self.assertEqual(provenance["candidate_ref"], candidate_ref)
+        self.assertEqual(provenance["source_id"], "node-python")
+        self.assertEqual(provenance["node_path"], "nodes/library/python-development")
+        self.assertEqual(candidate_root, consumer / ".context/candidates" / v2.package_digest)
+
+        # Discovery is candidate-only; even a newer remote snapshot does not
+        # move the accepted consumer package.
+        compiled = Compiler(consumer).compile(consumer)
+        self.assertEqual(compiled.source_packages[0].package_digest, v1.package_digest)
+        self.assertEqual(compiled.inherited_rules[0].statement, "Prefer explicit Python v1.")
 
     def test_git_fetch_rejects_missing_node_path(self):
         provider, v1, _ = self.make_provider()

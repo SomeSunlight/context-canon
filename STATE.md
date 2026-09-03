@@ -241,3 +241,7 @@ The complete scoped-context chain is now regression-proven: a reusable Developme
 ## Latest Block R5 complete semantic-Parent checkpoint
 
 Block R5 is complete. The accepted Step-03 hierarchy is now durable package semantics rather than a review-only tree: non-root Nodes pin exact Parent packages, ordinary builds are non-live, Parent changes require explicit review/accept, reusable Sources and complete effective Rules/Topics/Resources flow through the Parent chain without sibling leakage, and already-published pre-Parent placements have a narrow exact-byte migration path with idempotent republish and Step-9 recovery of the prior acceptance/package state. The next Block R work is R6 Source-update discovery UX.
+
+## Latest Block R6 step 1 Source-discovery checkpoint
+
+Git-backed reusable Source discovery now distinguishes the accepted Git provenance from the moving update-discovery surface. A Source pinned by current onboarding to an exact old commit can explicitly `source fetch` the repository's newer default-branch package; ContextCanon immediately freezes the candidate under its package digest and records the exact discovered Git commit beside it. Normal build and accepted Source pins remain untouched. R6 proceeds to binding review/accept to that exact candidate without live pulls.
