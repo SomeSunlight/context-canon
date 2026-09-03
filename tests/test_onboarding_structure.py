@@ -193,6 +193,8 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertTrue(created)
         text = structure_path.read_text(encoding="utf-8")
         self.assertIn(f"schema: {STRUCTURE_MARKDOWN_SCHEMA}", text)
+        self.assertIn("> ✏️ Edit the Node tree between the markers below.", text)
+        self.assertIn("> End editable Node tree.", text)
         self.assertIn("- **AI Workstation** (`.`) <!-- cc:key=N-001 -->", text)
         self.assertIn("  - **AI Tools** (`nodes/ai-tools`) <!-- cc:key=N-003 -->", text)
         self.assertIn("    - **Goose** (`nodes/ai-tools/goose`) <!-- cc:key=N-004 -->", text)

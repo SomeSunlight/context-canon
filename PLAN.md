@@ -271,13 +271,17 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
 
-**Status: NEXT — preserve now, implement in coherent follow-up blocks after post-publish inspection. Fast-run remains ACTIVE.**
+**Status: NEXT — Block R1 complete; continue with the remaining Block R follow-up slices. Fast-run remains ACTIVE.**
+
+R1 purpose: make the two human review gates visibly editable without visual shouting, make Step 07 self-contained about its controls, and remove `Action` as a fake independent choice while preserving the existing deterministic Kind→Action contract.
+
+R1 verification: focused structure/placement-review regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. Step 03 now has quiet visible edit boundaries; Step 07 contains its own control glossary and quieter edit cues; Action is derived deterministically from Kind and is no longer parsed as an independent owner control.
 
 ##### Review surfaces
 
-- [ ] Give Step 03 the same visible edit affordance as Step 07, but use a quieter presentation that preserves the visual dominance of the Node tree. Apply the same lower-noise treatment to Step 07 so editable boundaries are obvious without overwhelming headings/content.
-- [ ] Make Step 07 self-contained about every editable control. Show allowed `Decision` values and a concise Kind/Action glossary directly in the review artifact; an operator inside another repository must not need to know that `docs/onboarding.md` exists in the ContextCanon repository.
-- [ ] Reconsider whether `Action` should be independently editable at all. Current validation effectively derives one action from each kind (`promote`, `reference`, `keep`, `map`); the review UX should expose meaningful choices rather than a pseudo-choice that can only form one valid Kind/Action pair.
+- [x] Give Step 03 the same visible edit affordance as Step 07, but use a quieter presentation that preserves the visual dominance of the Node tree. Apply the same lower-noise treatment to Step 07 so editable boundaries are obvious without overwhelming headings/content.
+- [x] Make Step 07 self-contained about every editable control. Show allowed `Decision` values and a concise Kind/Action glossary directly in the review artifact; an operator inside another repository must not need to know that `docs/onboarding.md` exists in the ContextCanon repository.
+- [x] Reconsider whether `Action` should be independently editable at all. Current validation effectively derives one action from each kind (`promote`, `reference`, `keep`, `map`); the review UX should expose meaningful choices rather than a pseudo-choice that can only form one valid Kind/Action pair.
 - [ ] Reduce rendered/source switching during review. Evaluate a separate source-file-first transformation review surface for Source After edits, grouped by original file/range and showing exact before/after plus every linked P-finding and final destination Node/content.
 - [ ] Make cross-linked E-edits easy to audit for zero semantic loss: from one source edit, the owner should be able to see where each removed substantive meaning lands without chasing findings from unrelated parts of the document.
 

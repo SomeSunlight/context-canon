@@ -549,6 +549,8 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
         "",
         "## Node tree",
         "",
+        "> ✏️ Edit the Node tree between the markers below. Indentation defines the reviewed semantic parent/child hierarchy.",
+        "",
         _TREE_START,
     ]
 
@@ -562,7 +564,7 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
             render_children(node.key)
 
     render_children(None)
-    lines.extend([_TREE_END, "", "## Proposed non-Node knowledge bodies", ""])
+    lines.extend([_TREE_END, "", "> End editable Node tree.", "", "## Proposed non-Node knowledge bodies", ""])
     if proposal.knowledge_bodies:
         for body in proposal.knowledge_bodies:
             target = body.suggested_node_key or "unassigned"

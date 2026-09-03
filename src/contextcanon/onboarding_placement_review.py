@@ -23,6 +23,16 @@ from .parser import ContextCanonError
 
 PLACEMENT_REVIEW_SCHEMA = "contextcanon/onboarding-placement-review/v1"
 REVIEW_DECISIONS = {"pending", "accept", "reject"}
+ACTION_FOR_KIND = {
+    "overview": "promote",
+    "rule": "promote",
+    "topic-resource": "reference",
+    "ordinary-documentation": "keep",
+    "state": "promote",
+    "plan": "promote",
+    "authority-mapping": "map",
+    "unresolved": "promote",
+}
 
 _HEADER_RE = re.compile(
     r"<!-- contextcanon-placement-review\s+"
@@ -190,7 +200,7 @@ def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
         heading = "### Into Node — editable"
     else:
         heading = "### Reviewed handling — editable"
-    lines = [heading, "", "**✏️ EDITABLE START — destination content**", ""]
+    lines = [heading, "", "> ✏️ Editable destination content starts below.", ""]
     if kind == "rule":
         lines.append(f"Statement: {_one_line(payload['statement'])}")
         lines.append(f"Why: {_one_line(payload['why'])}")
@@ -215,7 +225,7 @@ def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
         lines.append(f"Question: {_one_line(payload['question'])}")
     else:
         raise _error(f"unsupported kind {kind!r}")
-    lines.extend(["", "**✏️ EDITABLE END — destination content**"])
+    lines.extend(["", "> End editable destination content."])
     return lines
 
 
@@ -348,10 +358,10 @@ def _render_source_edit(
         )
     lines.extend(
         [
-            "**✏️ EDITABLE CONTROLS — source cleanup**",
+            "> ✏️ Editable source-cleanup controls",
             f"Source edit decision: `{edit.decision}`",
             f"Source edit note: {edit.review_note or '-'}",
-            "**✏️ END EDITABLE CONTROLS — source cleanup**",
+            "> End editable source-cleanup controls",
         ]
     )
     if related:
@@ -393,13 +403,13 @@ def _render_item(
         f"## {review_item.proposal_id} — {review_item.title}",
         f'<!-- cc:placement-item id="{review_item.proposal_id}" authoring-id="{review_item.authoring_id}" -->',
         "",
-        "**✏️ EDITABLE CONTROLS — finding**",
+        "> ✏️ Editable finding controls",
         f"Destination: {destination_text}",
         f"Decision: `{review_item.decision}`",
         f"Kind: `{review_item.kind}`",
-        f"Action: `{review_item.action}`",
+        f"Derived action: `{review_item.action}` (from Kind; do not edit)",
         f"Review note: {review_item.review_note or '-'}",
-        "**✏️ END EDITABLE CONTROLS — finding**",
+        "> End editable finding controls",
         "",
     ]
     lines.extend(_render_payload(review_item.kind, review_item.payload))
@@ -549,11 +559,20 @@ def render_placement_review(
     lines = [
         "# ContextCanon onboarding placement review",
         "",
-        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, kind/action, title, destination wording, Source edit decision/replacement, or review notes where necessary. Rendered Markdown deliberately shows `✏️ EDITABLE` boundary labels; the hidden `cc:*` comments remain machine markers and are not the only way to discover editability.",
+        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, `Kind`, title, destination wording, Source edit decision/replacement, or review notes where necessary. `Action` is derived from `Kind`; it is shown for clarity but is not an independent control. Quiet `✏️` boundary cues mark editable regions; hidden `cc:*` comments remain machine markers.",
         "",
         "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
         "",
         "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted. When the LLM omitted a rewrite for one unambiguous mutable range, ContextCanon may expose a review-only optional Source edit that defaults to `reject`; it exists only so the owner can edit that exact range without reconstructing it later.",
+        "",
+        "## Editable control glossary",
+        "",
+        "- `Decision`: `pending` while undecided, then `accept` or `reject`.",
+        "- `Destination`: the reviewed Context Node that owns this finding; `none / outside Node authoring` is valid only for kinds that intentionally stay outside Node authoring.",
+        "- `Kind`: `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, or `unresolved`.",
+        "- Derived `Action`: `overview`/`rule`/`state`/`plan`/`unresolved` → `promote`; `topic-resource` → `reference`; `ordinary-documentation` → `keep`; `authority-mapping` → `map`. Change the Kind, not the derived Action.",
+        "- `Wording` where shown: `exact`, `lightly-edited`, or `synthesized`.",
+        "- `Review note`: optional owner rationale or reminder; use `-` for none.",
         "",
         "<!-- contextcanon-placement-review",
         f"schema: {PLACEMENT_REVIEW_SCHEMA}",
@@ -721,19 +740,9 @@ def _validate_item_edit(
         raise _error(f"item {item_id} has unsupported Kind {kind!r}")
     if action not in PLACEMENT_ACTIONS:
         raise _error(f"item {item_id} has unsupported Action {action!r}")
-    allowed_actions = {
-        "overview": {"promote"},
-        "rule": {"promote"},
-        "topic-resource": {"reference"},
-        "ordinary-documentation": {"keep"},
-        "state": {"promote"},
-        "plan": {"promote"},
-        "authority-mapping": {"map"},
-        "unresolved": {"promote"},
-    }
-    if action not in allowed_actions[kind]:
-        expected = ", ".join(sorted(allowed_actions[kind]))
-        raise _error(f"item {item_id} Kind {kind} must use Action {expected}")
+    expected_action = ACTION_FOR_KIND[kind]
+    if action != expected_action:
+        raise _error(f"item {item_id} Kind {kind} must use Action {expected_action}")
     requires_destination = kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping", "unresolved"}
     if requires_destination and destination is None:
         raise _error(f"item {item_id} Kind {kind} requires a Destination")
@@ -851,7 +860,7 @@ def load_placement_review(
         if decision not in REVIEW_DECISIONS:
             raise _error(f"item {item_id} Decision must be pending, accept, or reject")
         kind = _simple_value(block, "Kind")
-        action = _simple_value(block, "Action")
+        action = ACTION_FOR_KIND.get(kind, "")
         destination = _destination(block, allow_none=True)
         if destination is not None and destination not in node_keys:
             raise _error(f"item {item_id} references unknown destination Node {destination}")

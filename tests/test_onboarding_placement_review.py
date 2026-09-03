@@ -50,10 +50,14 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertLess(destination, decision)
         self.assertLess(decision, rationale)
         self.assertIn("### Into Node — editable", text)
+        self.assertIn("## Editable control glossary", text)
+        self.assertIn("Change the Kind, not the derived Action.", text)
+        self.assertIn("Derived action: `promote` (from Kind; do not edit)", text)
+        self.assertNotIn("\nAction: `", text)
         self.assertIn("### Source before — frozen Evidence", text)
         self.assertIn("### Source after promotion", text)
-        self.assertIn("✏️ EDITABLE CONTROLS — finding", text)
-        self.assertIn("✏️ EDITABLE START — destination content", text)
+        self.assertIn("✏️ Editable finding controls", text)
+        self.assertIn("✏️ Editable destination content starts below.", text)
         self.assertIn("✏️ EDITABLE START — source replacement", text)
         self.assertIn('origin="owner-selected"', text)
         self.assertEqual(len(review.sources), 1)
@@ -97,12 +101,17 @@ class EditablePlacementReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ContextCanonError, "new review path"):
             create_or_load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
-    def test_invalid_human_rule_reference_is_rejected(self):
+    def test_action_is_derived_from_kind_and_rendered_text_is_not_a_control(self):
         prepared, workspace, source_root, package, proposal, _, _ = self.make_review(owner_source=False)
-        text = workspace.placement_path.read_text(encoding="utf-8").replace("Action: `promote`", "Action: `reference`", 1)
+        text = workspace.placement_path.read_text(encoding="utf-8").replace(
+            "Derived action: `promote` (from Kind; do not edit)",
+            "Derived action: `reference` (tampered display text)",
+            1,
+        )
         workspace.placement_path.write_text(text, encoding="utf-8")
-        with self.assertRaisesRegex(ContextCanonError, "Kind rule must use Action promote"):
-            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertEqual(loaded.items[0].kind, "rule")
+        self.assertEqual(loaded.items[0].action, "promote")
 
     def test_invalid_or_duplicate_stable_authoring_id_is_rejected_early(self):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
