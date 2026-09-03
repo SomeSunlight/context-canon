@@ -20,7 +20,19 @@ jobs:
         with:
           python-version: "3.12"
       - name: Apply Block T product changes
-        run: python tools/_block_t_apply.py
+        shell: bash
+        run: |
+          python tools/_block_t_apply.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("tests/test_parent_relationship.py")
+          text = path.read_text(encoding="utf-8")
+          old = 'self.assertIn("**Parent:** Shared Parent", compiled.official_markdown)'
+          new = 'self.assertIn("**Parent Context Node:** [Shared Parent]", compiled.official_markdown)'
+          if text.count(old) != 1:
+              raise SystemExit("legacy Parent rendering assertion not found exactly once")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused publication readability tests
