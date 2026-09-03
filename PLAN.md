@@ -331,8 +331,21 @@ Goal: make newer reusable Node packages discoverable without weakening the accep
 
 Checkpoint: R6 is complete. Explicit fetch discovers and freezes a newer Git package plus exact candidate commit; review/accept remains bound to that local snapshot even if the remote moves or disappears; the accepted exact commit advances only on acceptance; and normal build/check continues fully offline from the last accepted package.
 
+##### S — Real machine-state upgrade hardening
+
+Goal: use the project owner's current published `ai-workstation` machine state as an upgrade boundary, while keeping every repair generic enough to protect future ContextCanon projects.
+
+**Status: ACTIVE — step 3 of 4.**
+
+- [x] 1. Derive a compact regression from the current nine authored `ai-workstation` Nodes and prove the exact eight accepted Parent edges plus sibling isolation.
+- [x] 2. Remove package identity feedback from old generated Resource links such as `SECURITY.md -> CONTEXT.md`; previous generated output must never affect a fresh compile.
+- [ ] 3. Provide a safe explicit recovery/re-adoption path for a reusable owner Source whose legacy onboarding choice is no longer present in machine state, without replaying the already accepted placement review.
+- [ ] 4. Prove the combined real upgrade shape end-to-end: pre-Parent/pre-Source machine state -> recovered Development Workflow Source at the intended ancestor -> exact Parent chain -> offline scoped descendant context.
+
+Real-state evidence: the supplied machine snapshot has nine accepted placement Nodes whose `CONTEXT.src.md` hashes exactly match `placement-acceptance.json`; it has no accepted Sources or `.context/sources` store. Its compiler-0.4 root output also contains a generated `CONTEXT/references/CONTEXT.src.md`, and the acceptance-recorded root package digest differs from the package digest written by the same Step-9 journal while the normalized digest and authoring-source hash agree. This makes generated-Resource feedback and lost owner-Source recovery concrete upgrade defects rather than hypothetical debt.
+
 ##### Deferred compatibility debt
 
-Block Q remains intentionally deferred: an old in-flight onboarding snapshot created before `run-inputs.json` existed can lose a formerly owner-selected Source during reset/recreation. Fresh/current onboarding already persists and reuses owner-selected Sources correctly. Do not reopen the completed real placement merely to repair that legacy migration edge.
+The former Block Q owner-Source recovery debt is no longer deferred. The project owner's supplied real machine state proves the choice can be completely absent from legacy machine state; Block S step 3 now owns a safe explicit recovery/re-adoption path. Fresh/current onboarding already persists owner-selected Sources correctly.
 
 Post-publish basis: the owner accepted and published the first real `ai-workstation` placement and is now using the resulting Nodes as a productive system. That live use is the design driver for R5/R6; PR #13 remains draft and unmerged until explicit project-owner approval.

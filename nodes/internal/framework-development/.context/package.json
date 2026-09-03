@@ -3,7 +3,7 @@
   "compiler_version": "0.5.0",
   "digests": {
     "normalized": "0ae286d9cf3f7594af8cb645d1b03700ab19a604a7ccebde50abc9364e213c41",
-    "package": "42c00628a1b8878749a3905c58b18caa96f26cc2a9ec1cccf05fadc0c0abcaef"
+    "package": "6bcb6ef16f5cc5d0335d8983988c58efb0b63ff6e3d9c4424f9d24f5edbbb1c0"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "1103bad65c2173fa14b25b55654ea0dc00e12ecfbc0343132827a7052a927024",
-      "size": 1672
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
@@ -422,14 +422,14 @@
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
       "normalized_digest": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-      "package_digest": "3863c5df62dd1c49ccbc91fda89cc6ccff3b8c066e2bb8820e5a745b0f5d6f94",
+      "package_digest": "c314ba54b84344560a401b55b881922dc119fff9e23259310d8339eae0118874",
       "version": "0.1.0-draft"
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
       "normalized_digest": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
-      "package_digest": "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3",
+      "package_digest": "b6e7b8fe82b35500a49046176aa36837aacd68617e469701877c340d97cfea2a",
       "version": "0.2.0-draft"
     }
   ],

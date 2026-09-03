@@ -22,4 +22,6 @@ The first path is the authored source. The second path is generated package cont
 
 The copy is intentional: it makes the Official Context Package self-contained, so the package can later be published or consumed without needing the original authoring repository layout. In a standalone package the original source path may no longer exist; the materialized copy is what preserves the reviewed resource bytes.
 
+When an exact Markdown Resource links back to its owning Node's generated `CONTEXT.md`, ContextCanon materializes a tiny generated bridge at that linked location instead of copying whatever generated output happened to be on disk. The bridge points to this package's top-level Official Context. This keeps the Resource's exact bytes and link shape usable without making package identity depend on a previous build.
+
 `contextcanon build` refreshes generated package files. `contextcanon check` reports drift when committed generated output no longer matches the authored source and compiler.

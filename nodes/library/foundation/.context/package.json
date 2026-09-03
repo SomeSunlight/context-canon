@@ -3,7 +3,7 @@
   "compiler_version": "0.5.0",
   "digests": {
     "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-    "package": "3863c5df62dd1c49ccbc91fda89cc6ccff3b8c066e2bb8820e5a745b0f5d6f94"
+    "package": "c314ba54b84344560a401b55b881922dc119fff9e23259310d8339eae0118874"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "1103bad65c2173fa14b25b55654ea0dc00e12ecfbc0343132827a7052a927024",
-      "size": 1672
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",

@@ -3,7 +3,7 @@
   "compiler_version": "0.5.0",
   "digests": {
     "normalized": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
-    "package": "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3"
+    "package": "b6e7b8fe82b35500a49046176aa36837aacd68617e469701877c340d97cfea2a"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "1103bad65c2173fa14b25b55654ea0dc00e12ecfbc0343132827a7052a927024",
-      "size": 1672
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
       "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
