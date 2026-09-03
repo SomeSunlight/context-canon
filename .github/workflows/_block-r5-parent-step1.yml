@@ -20,6 +20,7 @@ jobs:
       - name: Apply R5 step 1
         run: |
           python tools/_fix_r5_step1_helper.py
+          python tools/_fix_r5_step1_anchor.py
           python tools/_block_r5_parent_step1.py
           python -m compileall -q src tests
       - name: Install ContextCanon
@@ -37,7 +38,7 @@ jobs:
       - name: Checkpoint R5 step 1 and commit clean product tree
         run: |
           python tools/_block_r5_parent_step1.py --complete
-          rm -f .github/workflows/_block-r5-parent-step1.yml tools/_block_r5_parent_step1.py tools/_fix_r5_step1_helper.py
+          rm -f .github/workflows/_block-r5-parent-step1.yml tools/_block_r5_parent_step1.py tools/_fix_r5_step1_helper.py tools/_fix_r5_step1_anchor.py
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
