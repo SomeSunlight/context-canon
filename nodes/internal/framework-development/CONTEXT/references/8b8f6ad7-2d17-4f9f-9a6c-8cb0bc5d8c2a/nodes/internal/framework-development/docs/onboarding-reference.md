@@ -638,6 +638,8 @@ The external LLM is replaceable. It participates only between deterministic inst
 
 The human review is explicit. It participates only after the proposal is structurally/provenance-valid and before canonical publication.
 
+For structure-first placement publication, the accepted Step-03 Parent hierarchy is also published deterministically. Preview computes the future Parent packages in semantic parent-to-child order using a read-only compiler overlay for reviewed `CONTEXT.src.md`, Source-After Resource bytes and exact catalog packages. Every non-root Child therefore receives an explicit `## Parent` pin to the exact final Parent package that the same publication will create. Publication installs that immutable Parent package locally before compiling the Child; repository nesting itself still carries no inheritance meaning.
+
 ## Evidence snapshot contract
 
 `onboard prepare` freezes the exact project evidence offered to the later semantic step. Every included file is bound by repository-relative path, byte size, SHA-256 hash, selection reason, and exact copied bytes.

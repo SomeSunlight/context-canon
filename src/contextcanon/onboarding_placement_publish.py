@@ -17,13 +17,13 @@ from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
 from .outputs import expected_outputs, write_outputs
-from .package import PACKAGE_MANIFEST_PATH, load_package
+from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .parser import ContextCanonError, find_repo_root, parse_node
 
 
 PLACEMENT_ACCEPTANCE_SCHEMA = "contextcanon/onboarding-placement-acceptance/v1"
 
-_MANAGED_SECTIONS = ("overview", "state", "plan", "sources", "rules", "topics")
+_MANAGED_SECTIONS = ("overview", "state", "plan", "parent", "sources", "rules", "topics")
 _MARKER_START = {name: f"<!-- contextcanon-placement-{name}:start -->" for name in _MANAGED_SECTIONS}
 _MARKER_END = {name: f"<!-- contextcanon-placement-{name}:end -->" for name in _MANAGED_SECTIONS}
 
@@ -71,6 +71,32 @@ class PlacementNodeDelta:
 
 
 @dataclass(frozen=True)
+class PlacementParentPin:
+    child_key: str
+    child_name: str
+    child_path: str
+    parent_key: str
+    parent_name: str
+    parent_path: str
+    parent_node_id: str
+    parent_version: str
+    parent_normalized_digest: str
+    parent_package_digest: str
+    locator: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "child_key": self.child_key,
+            "parent_key": self.parent_key,
+            "parent_node_id": self.parent_node_id,
+            "parent_version": self.parent_version,
+            "parent_normalized_digest": self.parent_normalized_digest,
+            "parent_package_digest": self.parent_package_digest,
+            "locator": self.locator,
+        }
+
+
+@dataclass(frozen=True)
 class PlacementDocumentDelta:
     path: str
     source_path: Path
@@ -93,6 +119,7 @@ class PlacementPublicationPreview:
     review_complete: bool
     pending_ids: tuple[str, ...]
     nodes: tuple[PlacementNodeDelta, ...]
+    parents: tuple[PlacementParentPin, ...]
     sources: tuple[SourceGitProvenance, ...]
     followups: tuple[PlacementReviewItem, ...]
     documents: tuple[PlacementDocumentDelta, ...]
@@ -460,6 +487,80 @@ def _render_node_source(
     return text
 
 
+def _structure_order(nodes) -> list:
+    by_key = {node.key: node for node in nodes}
+    depths: dict[str, int] = {}
+    active: set[str] = set()
+
+    def depth(key: str) -> int:
+        if key in depths:
+            return depths[key]
+        if key in active:
+            raise _error(f"accepted semantic Parent cycle includes {key}")
+        node = by_key.get(key)
+        if node is None:
+            raise _error(f"accepted semantic Parent references unknown Node key {key}")
+        active.add(key)
+        if node.parent_key is None:
+            value = 0
+        else:
+            if node.parent_key not in by_key:
+                raise _error(f"accepted semantic Parent {node.parent_key} for {key} is missing")
+            value = depth(node.parent_key) + 1
+        active.remove(key)
+        depths[key] = value
+        return value
+
+    return sorted(nodes, key=lambda node: (depth(node.key), node.path, node.key))
+
+
+def _parent_locator(child_root: Path, parent_root: Path) -> str:
+    return Path(os.path.relpath(parent_root, child_root)).as_posix()
+
+
+def _render_parent_body(parent, compiled_parent, child_root: Path, parent_root: Path) -> tuple[str, str]:
+    locator = _parent_locator(child_root, parent_root)
+    name = _safe_line(parent.name, f"Parent {parent.key} name")
+    if any(char in name for char in "]\n\r"):
+        raise _error(f"Parent {parent.key} name cannot be represented safely")
+    body = "\n".join([
+        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}`",
+        (
+            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
+            f'normalized-digest="{compiled_parent.normalized_digest}" '
+            f'package-digest="{compiled_parent.package_digest}" -->'
+        ),
+    ])
+    return body, locator
+
+
+def _assert_parent_block_is_framework_owned(text: str, node_name: str) -> None:
+    stripped = _strip_managed_block(text, "parent")
+    if re.search(r"ctx:parent\s+", stripped):
+        raise _error(
+            f"{node_name} already has a Parent outside the ContextCanon onboarding-managed block; "
+            "refuse to replace human-authored Parent state implicitly"
+        )
+
+
+def _package_resource_bytes(package_root: Path, package) -> dict[str, bytes]:
+    return {
+        file.path: (package_root / Path(*PurePosixPath(file.path).parts)).read_bytes()
+        for file in package.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+
+
+def _compiled_package_override(compiled) -> tuple[object, dict[str, bytes]]:
+    package = compiled_package(compiled)
+    resources = {
+        path: content
+        for path, content in compiled.resources.items()
+        if path.startswith("CONTEXT/references/")
+    }
+    return package, resources
+
+
 def _accepted_by_node(review: OnboardingPlacementReview) -> dict[str, list[PlacementReviewItem]]:
     result: dict[str, list[PlacementReviewItem]] = {}
     for item in review.items:
@@ -505,26 +606,111 @@ def build_placement_publication_preview(
     items_by_node = _accepted_by_node(review)
     sources_by_node = _sources_by_node(review)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
-    touched_keys = sorted(set(items_by_node) | set(sources_by_node), key=lambda key: node_by_key[key].path)
+    ordered_nodes = _structure_order(proposal.structure.nodes)
 
-    deltas: list[PlacementNodeDelta] = []
-    for key in touched_keys:
-        node = node_by_key[key]
+    source_overrides: dict[Path, str] = {}
+    node_before: dict[str, str] = {}
+    node_ids: dict[str, str] = {}
+    for node in ordered_nodes:
         root = _node_root(project, node.path)
         source_path = root / "CONTEXT.src.md"
         if not source_path.is_file():
             raise _error(f"accepted destination Node is not materialized: {node.name} ({node.path})")
         parsed = parse_node(root, project)
         before = source_path.read_text(encoding="utf-8")
-        after = _render_node_source(
-            before,
-            project,
-            root,
-            items_by_node.get(key, []),
-            sources_by_node.get(key, []),
-            provenance_by_id,
+        _assert_parent_block_is_framework_owned(before, node.name)
+        if node.key in items_by_node or node.key in sources_by_node:
+            after = _render_node_source(
+                before,
+                project,
+                root,
+                items_by_node.get(node.key, []),
+                sources_by_node.get(node.key, []),
+                provenance_by_id,
+            )
+        else:
+            after = before
+        node_before[node.key] = before
+        node_ids[node.key] = parsed.metadata.id
+        source_overrides[root] = after
+
+    file_overrides = {
+        document.source_path.resolve(): document.after.encode("utf-8")
+        for document in documents
+    }
+    roots = _catalog_roots(catalog_package_roots)
+    package_overrides: dict[tuple[Path, str], tuple[object, dict[str, bytes]]] = {}
+    for source in review.sources:
+        if source.decision != "accept":
+            continue
+        target = node_by_key[source.target_node_key]
+        target_root = _node_root(project, target.path)
+        package_root = roots.get(source.source_node_id)
+        if package_root is None:
+            raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
+        package = load_package(package_root)
+        package_overrides[(target_root.resolve(), source.source_package_digest)] = (
+            package,
+            _package_resource_bytes(package_root, package),
         )
-        deltas.append(PlacementNodeDelta(key, node.name, node.path, parsed.metadata.id, source_path, before, after))
+
+    compiled_by_key: dict[str, object] = {}
+    parent_pins: list[PlacementParentPin] = []
+    for node in ordered_nodes:
+        root = _node_root(project, node.path).resolve()
+        if node.parent_key is None:
+            source_overrides[root] = _replace_managed_section(
+                source_overrides[root], "Parent", "parent", ""
+            )
+        else:
+            parent = node_by_key[node.parent_key]
+            compiled_parent = compiled_by_key.get(parent.key)
+            if compiled_parent is None:
+                raise _error(f"internal error: Parent {parent.key} was not compiled before Child {node.key}")
+            parent_root = _node_root(project, parent.path).resolve()
+            body, locator = _render_parent_body(parent, compiled_parent, root, parent_root)
+            source_overrides[root] = _replace_managed_section(
+                source_overrides[root], "Parent", "parent", body
+            )
+            package_overrides[(root, compiled_parent.package_digest)] = _compiled_package_override(compiled_parent)
+            parent_pins.append(
+                PlacementParentPin(
+                    child_key=node.key,
+                    child_name=node.name,
+                    child_path=node.path,
+                    parent_key=parent.key,
+                    parent_name=parent.name,
+                    parent_path=parent.path,
+                    parent_node_id=compiled_parent.metadata.id,
+                    parent_version=compiled_parent.metadata.version,
+                    parent_normalized_digest=compiled_parent.normalized_digest,
+                    parent_package_digest=compiled_parent.package_digest,
+                    locator=locator,
+                )
+            )
+
+        compiled = Compiler(
+            project,
+            source_overrides=source_overrides,
+            file_overrides=file_overrides,
+            package_overrides=package_overrides,
+        ).compile(root)
+        if compiled.metadata.id != node_ids[node.key]:
+            raise _error(f"semantic Parent preview changed stable Node identity for {node.name}")
+        compiled_by_key[node.key] = compiled
+
+    deltas = tuple(
+        PlacementNodeDelta(
+            node.key,
+            node.name,
+            node.path,
+            node_ids[node.key],
+            _node_root(project, node.path) / "CONTEXT.src.md",
+            node_before[node.key],
+            source_overrides[_node_root(project, node.path).resolve()],
+        )
+        for node in ordered_nodes
+    )
 
     pending = tuple(
         [item.proposal_id for item in review.items if item.decision == "pending"]
@@ -538,12 +724,12 @@ def build_placement_publication_preview(
         review_digest=review.review_digest,
         review_complete=review.is_complete,
         pending_ids=pending,
-        nodes=tuple(deltas),
+        nodes=deltas,
+        parents=tuple(parent_pins),
         sources=provenance,
         followups=_followups(review),
         documents=documents,
     )
-
 
 def render_placement_publication_preview(preview: PlacementPublicationPreview) -> str:
     lines = [
@@ -563,7 +749,7 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
 
     lines.extend(["## Context Node source deltas", ""])
     if not preview.nodes:
-        lines.extend(["No accepted Overview, State/open-question, Plan, Rule, Topic/Resource or Source changes currently touch a Context Node.", ""])
+        lines.extend(["No accepted placement or semantic Parent changes currently touch a Context Node.", ""])
     for node in preview.nodes:
         lines.extend(
             [
@@ -587,6 +773,19 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
             lines.extend(["```diff", *diff, "```", ""])
         else:
             lines.extend(["No source delta; the reviewed placement is already materialized.", ""])
+
+    lines.extend(["## Accepted semantic Parent chain", ""])
+    if not preview.parents:
+        lines.extend(["No non-root Context Node is present in the accepted structure.", ""])
+    else:
+        for parent in preview.parents:
+            lines.extend([
+                f"- **{parent.child_name}** (`{parent.child_path}`) → **{parent.parent_name}** (`{parent.parent_path}`)",
+                f"  - Parent Node: `{parent.parent_node_id}`",
+                f"  - accepted package: `{parent.parent_package_digest}`",
+                f"  - locator: `{parent.locator}` (discovery/navigation metadata; ordinary build uses the exact local pin)",
+            ])
+        lines.append("")
 
     lines.extend(["## Accepted reusable Source state", ""])
     if not preview.sources:
@@ -665,6 +864,69 @@ def _copy_exact_package(package_root: Path, target_root: Path, expected_digest: 
     return True
 
 
+def _copy_compiled_package(compiled, target_root: Path) -> bool:
+    expected_digest = compiled.package_digest
+    destination = target_root / ".context" / "sources" / expected_digest
+    if destination.exists():
+        package = load_package(destination)
+        if (
+            package.metadata.id != compiled.metadata.id
+            or package.normalized_digest != compiled.normalized_digest
+            or package.package_digest != expected_digest
+        ):
+            raise _error(f"accepted Parent store path contains different package: {destination}")
+        return False
+
+    store = destination.parent
+    store.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=f".{expected_digest[:12]}-", dir=store))
+    try:
+        for rel, content in artifact_files(compiled).items():
+            target = staging / Path(*PurePosixPath(rel).parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        staged = load_package(staging)
+        if (
+            staged.metadata.id != compiled.metadata.id
+            or staged.normalized_digest != compiled.normalized_digest
+            or staged.package_digest != expected_digest
+        ):
+            raise _error("Parent package identity changed while staging publication")
+        os.replace(staging, destination)
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging, ignore_errors=True)
+    return True
+
+
+def _publication_order(preview: PlacementPublicationPreview) -> list[PlacementNodeDelta]:
+    by_key = {delta.key: delta for delta in preview.nodes}
+    parent_by_child = {parent.child_key: parent.parent_key for parent in preview.parents}
+    depths: dict[str, int] = {}
+    active: set[str] = set()
+
+    def depth(key: str) -> int:
+        if key in depths:
+            return depths[key]
+        if key in active:
+            raise _error(f"semantic Parent cycle in publication preview includes {key}")
+        if key not in by_key:
+            raise _error(f"publication preview Parent references missing Child {key}")
+        active.add(key)
+        parent_key = parent_by_child.get(key)
+        if parent_key is None:
+            value = 0
+        else:
+            if parent_key not in by_key:
+                raise _error(f"publication preview Parent {parent_key} is missing")
+            value = depth(parent_key) + 1
+        active.remove(key)
+        depths[key] = value
+        return value
+
+    return sorted(preview.nodes, key=lambda delta: (depth(delta.key), delta.path, delta.key))
+
+
 def _snapshot_files(root: Path, rels: Iterable[str]) -> dict[str, bytes | None]:
     result: dict[str, bytes | None] = {}
     for rel in set(rels):
@@ -727,6 +989,7 @@ def _acceptance_payload(
         "proposal_digest": preview.proposal_digest,
         "review_digest": preview.review_digest,
         "nodes": node_digests,
+        "parents": [parent.to_dict() for parent in preview.parents],
         "sources": accepted_sources,
         "followups": [item.to_dict() for item in preview.followups],
         "source_edits": [edit.to_dict() for edit in review.source_edits if edit.decision == "accept"],
@@ -799,9 +1062,9 @@ def publish_placement_review(
     for document in preview.documents:
         if not document.source_path.is_file() or document.source_path.read_text(encoding="utf-8") != document.before:
             raise _error(f"Source document changed after publication preview: {document.path}; build a fresh preview")
+
     roots = _catalog_roots(catalog_package_roots)
     delta_by_key = {delta.key: delta for delta in preview.nodes}
-    node_by_path = {delta.source_path.parent: delta for delta in preview.nodes}
     original_sources = {delta.source_path: delta.before.encode("utf-8") for delta in preview.nodes}
     original_documents = {document.source_path: document.before.encode("utf-8") for document in preview.documents}
     new_package_dirs: list[Path] = []
@@ -810,7 +1073,6 @@ def publish_placement_review(
     acceptance_before = acceptance_path.read_bytes() if acceptance_path.is_file() else None
 
     try:
-        # Publish reviewed source text and exact local Source package state first; compile all touched Nodes before any generated output is written.
         for delta in preview.nodes:
             if delta.changed:
                 _atomic_write(delta.source_path, delta.after.encode("utf-8"))
@@ -834,35 +1096,63 @@ def publish_placement_review(
                 if _copy_exact_package(root, target_root, source.source_package_digest):
                     new_package_dirs.append(destination)
 
-        compiler = Compiler(project)
+        parent_by_child = {parent.child_key: parent for parent in preview.parents}
+        compiled_by_key: dict[str, object] = {}
         compiled_nodes = []
-        for root in node_by_path:
-            compiled_nodes.append(compiler.compile(root))
+        for delta in _publication_order(preview):
+            parent_pin = parent_by_child.get(delta.key)
+            if parent_pin is not None:
+                compiled_parent = compiled_by_key.get(parent_pin.parent_key)
+                if compiled_parent is None:
+                    raise _error(
+                        f"internal error: Parent {parent_pin.parent_key} was not compiled before Child {delta.key}"
+                    )
+                if (
+                    compiled_parent.metadata.id != parent_pin.parent_node_id
+                    or compiled_parent.metadata.version != parent_pin.parent_version
+                    or compiled_parent.normalized_digest != parent_pin.parent_normalized_digest
+                    or compiled_parent.package_digest != parent_pin.parent_package_digest
+                ):
+                    raise _error(
+                        f"Parent {parent_pin.parent_name} changed between publication preview and publication"
+                    )
+                destination = delta.source_path.parent / ".context" / "sources" / compiled_parent.package_digest
+                if _copy_compiled_package(compiled_parent, delta.source_path.parent):
+                    new_package_dirs.append(destination)
 
-        # Snapshot all current/new compiler-owned paths before write_outputs can remove or replace them.
+            compiled = Compiler(project).compile(delta.source_path.parent)
+            if compiled.metadata.id != delta.node_id:
+                raise _error(f"publication changed stable Node identity for {delta.name}")
+            if parent_pin is not None:
+                if compiled.parent_package is None or compiled.parent_package.package_digest != parent_pin.parent_package_digest:
+                    raise _error(f"published Parent pin for {delta.name} does not match reviewed preview")
+            compiled_by_key[delta.key] = compiled
+            compiled_nodes.append(compiled)
+
         for compiled in compiled_nodes:
             root = compiled.parsed.root
-            current_compiler = Compiler(project).compile(root)
-            current_rels = set(expected_outputs(current_compiler)) | _existing_context_files(root)
-            new_rels = set(expected_outputs(compiled)) | _existing_context_files(root)
-            generated_snapshots[root] = _snapshot_files(root, current_rels | new_rels)
-            generated_new_rels[root] = new_rels
+            current_rels = set(expected_outputs(compiled)) | _existing_context_files(root)
+            generated_snapshots[root] = _snapshot_files(root, current_rels)
+            generated_new_rels[root] = set(expected_outputs(compiled))
 
         for compiled in compiled_nodes:
             write_outputs(compiled)
 
-        # Verify the exact resulting package state after generated outputs are materialized.
         verifier = Compiler(project)
         node_digests: dict[str, dict[str, str]] = {}
         for delta in preview.nodes:
             compiled = verifier.compile(delta.source_path.parent)
-            node_digests[delta.key] = {
+            state = {
                 "node_id": compiled.metadata.id,
                 "path": delta.path,
                 "normalized_digest": compiled.normalized_digest,
                 "package_digest": compiled.package_digest,
                 "source_sha256": _sha256_bytes(delta.source_path.read_bytes()),
             }
+            if compiled.parent_package is not None:
+                state["parent_node_id"] = compiled.parent_package.metadata.id
+                state["parent_package_digest"] = compiled.parent_package.package_digest
+            node_digests[delta.key] = state
 
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")

@@ -20,6 +20,7 @@ from contextcanon.onboarding_placement_publish import (
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
 from contextcanon.onboarding_structure import create_or_load_structure_markdown
 from contextcanon.outputs import write_outputs
+from contextcanon.package import load_package
 from contextcanon.parser import ContextCanonError, parse_node
 from tests.test_onboarding_placement import OnboardingPlacementTests
 
@@ -208,9 +209,16 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertEqual((repo / "CONTEXT.src.md").read_bytes(), root_before)
         self.assertEqual((repo / "compose" / "goose" / "CONTEXT.src.md").read_bytes(), child_before)
         self.assertEqual({delta.key for delta in preview.nodes}, {"N-001", "N-002"})
+        self.assertEqual(len(preview.parents), 1)
+        parent = preview.parents[0]
+        self.assertEqual((parent.child_key, parent.parent_key), ("N-002", "N-001"))
         child = next(delta for delta in preview.nodes if delta.key == "N-002")
+        self.assertIn("## Parent", child.after)
+        self.assertIn('ctx:parent id="aea56adf-2a26-43f0-b712-3bbeab7a3097"', child.after)
+        self.assertIn(parent.parent_package_digest, child.after)
         self.assertIn("Resource: `../../docs/architecture.md`", child.after)
         self.assertIn("Existing authored Goose orientation.", child.after)
+        self.assertFalse((repo / "compose" / "goose" / ".context" / "sources" / parent.parent_package_digest).exists())
         self.assertEqual({item.kind for item in preview.followups}, {"authority-mapping"})
         root = next(delta for delta in preview.nodes if delta.key == "N-001")
         self.assertIn("## State", root.after)
@@ -264,9 +272,24 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertIn('transport="git"', root_text)
         self.assertIn(f'ref="{head}"', root_text)
         self.assertIn("../../docs/architecture.md", child_text)
-        Compiler(repo).compile(repo)
-        Compiler(repo).compile(child_root)
+        parsed_child = parse_node(child_root, repo)
+        self.assertIsNotNone(parsed_child.parent)
+        self.assertEqual(parsed_child.parent.id, root_id)
+        parent_store = child_root / ".context" / "sources" / parsed_child.parent.package_digest
+        self.assertTrue(parent_store.is_dir())
+        accepted_parent = load_package(parent_store)
+        self.assertEqual(accepted_parent.metadata.id, root_id)
+        compiled_root = Compiler(repo).compile(repo)
+        compiled_child = Compiler(repo).compile(child_root)
+        self.assertEqual(compiled_child.parent_package.package_digest, compiled_root.package_digest)
+        self.assertIn(
+            "The repository is the installation specification.",
+            [rule.statement for rule in compiled_child.inherited_rules],
+        )
         payload = json.loads(acceptance.read_text(encoding="utf-8"))
+        self.assertEqual(len(payload["parents"]), 1)
+        self.assertEqual(payload["parents"][0]["parent_package_digest"], compiled_root.package_digest)
+        self.assertEqual(payload["nodes"]["N-002"]["parent_package_digest"], compiled_root.package_digest)
         self.assertEqual({item["kind"] for item in payload["followups"]}, {"authority-mapping"})
 
         second = build_placement_publication_preview(

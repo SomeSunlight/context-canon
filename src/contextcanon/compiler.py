@@ -49,11 +49,28 @@ The copy is intentional: it makes the Official Context Package self-contained, s
 
 
 class Compiler:
-    def __init__(self, repo_root: Path):
+    def __init__(
+        self,
+        repo_root: Path,
+        *,
+        source_overrides: dict[Path, str] | None = None,
+        file_overrides: dict[Path, bytes] | None = None,
+        package_overrides: dict[tuple[Path, str], tuple[CompiledPackage, dict[str, bytes]]] | None = None,
+    ):
         self.repo_root = repo_root.resolve()
         self._cache: dict[Path, CompiledNode] = {}
         self._active: list[Path] = []
         self._node_ids: dict[str, Path] = {}
+        self._source_overrides = {
+            path.resolve(): text for path, text in (source_overrides or {}).items()
+        }
+        self._file_overrides = {
+            path.resolve(): content for path, content in (file_overrides or {}).items()
+        }
+        self._package_overrides = {
+            (root.resolve(), digest): value
+            for (root, digest), value in (package_overrides or {}).items()
+        }
 
     def compile(self, node_root: Path) -> CompiledNode:
         node_root = node_root.resolve()
@@ -64,7 +81,11 @@ class Compiler:
             raise ContextCanonError(f"Source dependency cycle: {cycle}")
         self._active.append(node_root)
         try:
-            parsed = parse_node(node_root, self.repo_root)
+            parsed = parse_node(
+                node_root,
+                self.repo_root,
+                source_text=self._source_overrides.get(node_root),
+            )
             previous = self._node_ids.get(parsed.metadata.id)
             if previous is not None and previous != node_root:
                 raise ContextCanonError(f"Node ID {parsed.metadata.id} is used by both {previous} and {node_root}")
@@ -178,14 +199,22 @@ class Compiler:
                 f"{node_root}: internal error: pinned {relation} {dependency.name} has incomplete digests"
             )
 
-        package_root = node_root / ".context" / "sources" / dependency.package_digest
-        if not package_root.is_dir():
-            raise ContextCanonError(
-                f"{node_root}: accepted {relation} package {dependency.name} is not available locally at "
-                f".context/sources/{dependency.package_digest}; build does not fetch {relation} packages"
-            )
-
-        package = load_package(package_root)
+        override = self._package_overrides.get((node_root.resolve(), dependency.package_digest))
+        if override is not None:
+            package, resources = override
+        else:
+            package_root = node_root / ".context" / "sources" / dependency.package_digest
+            if not package_root.is_dir():
+                raise ContextCanonError(
+                    f"{node_root}: accepted {relation} package {dependency.name} is not available locally at "
+                    f".context/sources/{dependency.package_digest}; build does not fetch {relation} packages"
+                )
+            package = load_package(package_root)
+            resources = {
+                file.path: (package_root / file.path).read_bytes()
+                for file in package.files
+                if file.path.startswith("CONTEXT/references/")
+            }
         if package.metadata.id != dependency.id:
             raise ContextCanonError(
                 f"{node_root}: {relation} {dependency.name} expects Node ID {dependency.id}, got {package.metadata.id}"
@@ -204,11 +233,6 @@ class Compiler:
                 f"{node_root}: {relation} {dependency.name} package digest mismatch: "
                 f"expected {dependency.package_digest}, got {package.package_digest}"
             )
-        resources = {
-            file.path: (package_root / file.path).read_bytes()
-            for file in package.files
-            if file.path.startswith("CONTEXT/references/")
-        }
         return package, resources
 
     def _resolve_source_root(self, node_root: Path, locator: str) -> Path:
@@ -435,7 +459,7 @@ class Compiler:
                 continue
             visited.add(source)
             result.append(source)
-            content = source.read_bytes()
+            content = self._file_overrides.get(source, source.read_bytes())
             if source.suffix.lower() != ".md":
                 continue
             text = content.decode("utf-8")
@@ -462,7 +486,7 @@ class Compiler:
                     for source in closure:
                         rel = source.relative_to(self.repo_root).as_posix()
                         published = f"CONTEXT/references/{namespace}/{rel}"
-                        content = source.read_bytes()
+                        content = self._file_overrides.get(source, source.read_bytes())
                         previous = resources.get(published)
                         if previous is not None and previous != content:
                             raise ContextCanonError(
@@ -486,7 +510,11 @@ class Compiler:
                     raise ContextCanonError(
                         f"{compiled.metadata.name} Topic {topic.id}: invalid Context Node target {target.locator}"
                     )
-                target_node = parse_node(target_root, self.repo_root)
+                target_node = parse_node(
+                    target_root,
+                    self.repo_root,
+                    source_text=self._source_overrides.get(target_root),
+                )
                 targets.append(
                     TopicTarget(
                         kind="context-node",

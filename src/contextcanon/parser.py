@@ -45,14 +45,19 @@ def find_repo_root(node_root: Path) -> Path:
     return current
 
 
-def parse_node(node_root: Path, repo_root: Path | None = None) -> ParsedNode:
+def parse_node(
+    node_root: Path,
+    repo_root: Path | None = None,
+    *,
+    source_text: str | None = None,
+) -> ParsedNode:
     node_root = node_root.resolve()
     source_path = node_root / "CONTEXT.src.md"
     if not source_path.is_file():
         raise ContextCanonError(f"Not a Context Node root: {node_root} (missing CONTEXT.src.md)")
 
     repo_root = (repo_root or find_repo_root(node_root)).resolve()
-    text = source_path.read_text(encoding="utf-8")
+    text = source_text if source_text is not None else source_path.read_text(encoding="utf-8")
     lines = text.splitlines()
 
     name = None

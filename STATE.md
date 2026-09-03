@@ -221,3 +221,11 @@ ContextCanon now has an explicit `## Parent` authoring relationship. Parent is a
 The compiler composes the accepted Parent package through the same Rule/Topic/Resource conflict machinery as Sources, while the normalized semantic digest records the Parent role separately. Existing packages without Parent metadata remain valid because the optional Parent semantic field is absent when no Parent exists. Normal builds load the Parent only from the Child's local immutable package store and never dereference the Parent locator.
 
 R5 step 2 is next: persist the owner-accepted Step-03 hierarchy during onboarding publication and install the exact resulting Parent package into each Child. PR #13 remains draft and unmerged; fast-run remains active.
+
+## Latest Block R5 step-2 onboarding-Parent publication checkpoint
+
+Structure-first placement publication now preserves the owner-accepted Step-03 hierarchy as exact semantic Parent pins. Preview evaluates every accepted structure Node parent-to-child with the normal compiler behind a read-only overlay: reviewed future `CONTEXT.src.md` text, accepted Source-After Resource bytes and exact catalog packages are visible to compilation without mutating the project. The Child pin therefore names the exact final Parent package from the same reviewed publication, including any Parent meaning or Resource bytes being changed in that publication.
+
+Publication writes the reviewed source/document deltas transactionally, installs direct reusable Source packages, then walks the semantic Parent chain from roots to leaves. Each final Parent artifact is installed into the Child's local immutable `.context/sources/<package-digest>/` store before the Child is compiled. Acceptance records preserve the Parent edge and exact package identity; rerunning the same reviewed publication is idempotent.
+
+R5 step 3 is next: give Parent updates the same non-live candidate/review/accept safety as reusable Source updates. PR #13 remains draft and unmerged; fast-run remains active.
