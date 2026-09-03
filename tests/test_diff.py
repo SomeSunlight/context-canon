@@ -195,7 +195,7 @@ class ContextDiffTests(unittest.TestCase):
         self.assertIn(("topic", topic_key), entries)
         self.assertIn("condition", entries[("topic", topic_key)].changed_fields)
 
-        resource_key = "CONTEXT/references/docs/guide.md"
+        resource_key = "CONTEXT/references/node-project/docs/guide.md"
         self.assertIn(("resource", resource_key), entries)
         self.assertIn("sha256", entries[("resource", resource_key)].changed_fields)
 

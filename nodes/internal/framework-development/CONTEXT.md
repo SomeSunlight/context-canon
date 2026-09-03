@@ -176,7 +176,45 @@ Use `uv` instead of direct `pip` installation when the required workflow is supp
 
 A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
 
-## Topics
+## Topics from ContextCanon Foundation
+
+### Context authoring
+
+When editing ContextCanon source, IDs, generated views, package resources, or Topics:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md)
+
+### Context composition
+
+When adding Sources or changing inherited Rules:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md)
+
+### Harness adapters
+
+When adding or changing a harness-specific entry file:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md)
+
+## Topics from Development Workflow
+
+### Executing a development block
+
+When planning, resuming, checkpointing, reviewing, testing, finalizing, merging, or closing the accepted baseline for a coherent development block:
+
+**Required**
+
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)
+
+## Local Topics
 
 ### Compiler implementation
 
@@ -184,7 +222,7 @@ When changing, debugging, reviewing, or extending the deterministic compiler imp
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/compiler.md`](CONTEXT/references/nodes/internal/framework-development/docs/compiler.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md)
 
 ### Tests and CI
 
@@ -192,7 +230,7 @@ When changing or reviewing tests, GitHub Actions, repository consistency checks,
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md`](CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md)
 
 ### Development workflow
 
@@ -208,12 +246,12 @@ When changing the compiler boundary, package model, Node structure, deterministi
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/architecture.md`](CONTEXT/references/nodes/internal/framework-development/docs/architecture.md)
-- [`CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md)
 
 **Optional**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/concepts.md`](CONTEXT/references/nodes/internal/framework-development/docs/concepts.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md)
 
 ### Reviewed project onboarding
 
@@ -221,7 +259,7 @@ When changing onboarding inventory, evidence capture, semantic classification, p
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md`](CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md)
 
 ### Source and official formats
 
@@ -229,9 +267,9 @@ When changing authoring syntax, IDs, Topics, Changes, official entry views, or m
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/nodes/library/foundation/docs/source-format.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/nodes/library/foundation/docs/official-context.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/topics.md`](CONTEXT/references/nodes/library/foundation/docs/topics.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md)
 
 ### Composition
 
@@ -239,8 +277,8 @@ When changing Source composition, version acceptance, conflicts, removes, overri
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/composition.md`](CONTEXT/references/nodes/library/foundation/docs/composition.md)
-- [`CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md)
 
 ### Harness integration
 
@@ -248,7 +286,7 @@ When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/nodes/library/foundation/docs/harnesses.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md)
 
 ### State and planning
 
@@ -256,4 +294,4 @@ When deciding whether information belongs in current state, planning, governance
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/state.md`](CONTEXT/references/nodes/internal/framework-development/docs/state.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md)

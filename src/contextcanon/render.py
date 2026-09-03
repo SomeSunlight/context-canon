@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
 
 from .model import CompiledNode, Rule
 from .parser import ContextCanonError, parse_node
@@ -29,18 +31,17 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
 
     if compiled.parsed.overview:
         lines.extend(["## Overview", "", *compiled.parsed.overview.splitlines(), ""])
-
     if compiled.parsed.state:
         lines.extend(["## State", "", *compiled.parsed.state.splitlines(), ""])
-
     if compiled.parsed.plan:
         lines.extend(["## Plan", "", *compiled.parsed.plan.splitlines(), ""])
 
-    if compiled.inherited_rules or compiled.local_rules or compiled.local_topics:
+    effective_topics = [*compiled.inherited_topics, *compiled.local_topics]
+    if compiled.inherited_rules or compiled.local_rules or effective_topics:
         lines.extend(["## How to use this context", ""])
         if compiled.inherited_rules or compiled.local_rules:
             lines.extend(["Apply all Rules below to every task in this Node.", ""])
-        if compiled.local_topics:
+        if effective_topics:
             lines.extend([
                 "For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.",
                 "",
@@ -65,26 +66,22 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         lines.extend(["## Changes to inherited Rules", ""])
         for change in compiled.local_changes:
             action = "Removed" if change.kind == "remove" else "Overrode"
-            lines.append(
-                f"- **{action}** `{change.target_node_name} / {change.target_rule_id}` — {change.why}"
-            )
+            lines.append(f"- **{action}** `{change.target_node_name} / {change.target_rule_id}` — {change.why}")
         lines.append("")
 
-    if compiled.local_topics:
-        lines.extend(["## Topics", ""])
-        for topic in compiled.local_topics:
-            lines.extend([f"### {topic.title}", "", topic.condition, ""])
-            for intent in ("required", "optional"):
-                targets = [target for target in topic.targets if target.intent == intent]
-                if not targets:
-                    continue
-                lines.extend([f"**{intent.title()}**", ""])
-                for target in targets:
-                    display, href = _render_target(compiled, target, repo_root)
-                    lines.append(f"- [{display}]({href})")
-                lines.append("")
-    return "\n".join(lines).rstrip() + "\n"
+    seen_topic_origins: set[str] = set()
+    for topic in compiled.inherited_topics:
+        if topic.origin_node_id in seen_topic_origins:
+            continue
+        seen_topic_origins.add(topic.origin_node_id)
+        topics = [candidate for candidate in compiled.inherited_topics if candidate.origin_node_id == topic.origin_node_id]
+        lines.extend([f"## Topics from {topic.origin_node_name}", ""])
+        _append_topics(lines, topics, compiled, repo_root)
 
+    if compiled.local_topics:
+        lines.extend(["## Local Topics" if compiled.source_packages else "## Topics", ""])
+        _append_topics(lines, compiled.local_topics, compiled, repo_root)
+    return "\n".join(lines).rstrip() + "\n"
 
 def _append_rules(lines: list[str], rules: list[Rule]) -> None:
     current_group = None
@@ -99,19 +96,38 @@ def _append_rules(lines: list[str], rules: list[Rule]) -> None:
         lines.extend([rule.statement, ""])
 
 
-def _render_target(compiled: CompiledNode, target, repo_root: Path) -> tuple[str, str]:
-    if target.kind == "resource":
-        source = (compiled.parsed.root / target.locator).resolve()
-        rel = source.relative_to(repo_root).as_posix()
-        published = f"CONTEXT/references/{rel}"
-        return f"`{published}`", published
-    target_root = (compiled.parsed.root / target.locator).resolve()
-    if target_root.name == "CONTEXT.md":
-        target_root = target_root.parent
-    rel = os.path.relpath(target_root / "CONTEXT.md", compiled.parsed.root).replace(os.sep, "/")
-    target_node = parse_node(target_root, repo_root)
-    return target_node.metadata.name, rel
+def _append_topics(lines: list[str], topics, compiled: CompiledNode, repo_root: Path) -> None:
+    for topic in topics:
+        lines.extend([f"### {topic.title}", "", topic.condition, ""])
+        for intent in ("required", "optional"):
+            targets = [target for target in topic.targets if target.intent == intent]
+            if not targets:
+                continue
+            lines.extend([f"**{intent.title()}**", ""])
+            for target in targets:
+                lines.append(_render_target_line(compiled, topic, target, repo_root))
+            lines.append("")
 
+
+def _render_target_line(compiled: CompiledNode, topic, target, repo_root: Path) -> str:
+    if target.kind == "resource":
+        return f"- [`{target.locator}`]({target.locator})"
+    if topic.origin_node_id == compiled.metadata.id:
+        target_root = (compiled.parsed.root / target.locator).resolve()
+        if target_root.name == "CONTEXT.md":
+            target_root = target_root.parent
+        rel = os.path.relpath(target_root / "CONTEXT.md", compiled.parsed.root).replace(os.sep, "/")
+        target_node = parse_node(target_root, repo_root)
+        return f"- [{target_node.metadata.name}]({rel})"
+    name = target.target_node_name or "Context Node"
+    node_id = target.target_node_id or target.locator
+    return f"- **Context Node:** {name} (`{node_id}`) — inherited navigation target; not materialized into this package"
+
+
+def _resource_namespace(node_id: str) -> str:
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", node_id):
+        return node_id
+    return "sha256-" + hashlib.sha256(node_id.encode("utf-8")).hexdigest()
 
 def render_adapters(compiled: CompiledNode) -> dict[str, str]:
     result: dict[str, str] = {}
@@ -200,7 +216,7 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
     else:
         lines.append("  topics: []")
 
-    lines.extend(["", "# Compiled Rule view with provenance plus the local Topic index.", "official:"])
+    lines.extend(["", "# Compiled effective Rule/Topic view with provenance.", "official:"])
     all_rules = [*compiled.inherited_rules, *compiled.local_rules]
     if all_rules:
         lines.append("  rules:")
@@ -236,11 +252,12 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
             }))
     else:
         lines.append("  removed_rules: []")
-    lines.append("  topic_ids: " + q([topic.id for topic in compiled.local_topics]))
+    effective_topics = [*compiled.inherited_topics, *compiled.local_topics]
+    lines.append("  topic_ids: " + q([topic.id for topic in effective_topics]))
     lines.append("  resource_root: " + (q("CONTEXT/") if compiled.resources else "null"))
 
     lines.extend(["", "# Topic edges are explicit: kind is resource or context-node; intent is required or optional."])
-    targets = [(topic, target) for topic in compiled.local_topics for target in topic.targets]
+    targets = [(topic, target) for topic in effective_topics for target in topic.targets]
     if targets:
         lines.append("targets:")
         for topic, target in targets:
@@ -249,17 +266,23 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
                 f"    intent: {q(target.intent)}",
                 f"    kind: {q(target.kind)}",
                 f"    locator: {q(target.locator)}",
+                f"    target_node_id: {q(target.target_node_id) if target.target_node_id else 'null'}",
+                f"    target_node_name: {q(target.target_node_name) if target.target_node_name else 'null'}",
             ])
     else:
         lines.append("targets: []")
 
     lines.extend(["", "# Mapping from author-facing Resource paths to generated package paths."])
-    if compiled.resources:
+    published_resources = [path for path in compiled.resources if path != "CONTEXT/README.md"]
+    if published_resources:
         lines.append("resources:")
-        for published in compiled.resources:
-            repo_rel = published.removeprefix("CONTEXT/references/")
-            source_abs = repo_root / repo_rel
-            source_rel = os.path.relpath(source_abs, compiled.parsed.root).replace(os.sep, "/")
+        local_prefix = f"CONTEXT/references/{_resource_namespace(compiled.metadata.id)}/"
+        for published in published_resources:
+            source_rel = None
+            if published.startswith(local_prefix):
+                repo_rel = published[len(local_prefix):]
+                source_abs = repo_root / repo_rel
+                source_rel = os.path.relpath(source_abs, compiled.parsed.root).replace(os.sep, "/")
             lines.append("  - " + q({"source": source_rel, "published": published}))
     else:
         lines.append("resources: []")

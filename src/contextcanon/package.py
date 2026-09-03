@@ -148,7 +148,7 @@ def semantic_digest_for_node(compiled: CompiledNode) -> str:
         compiled.local_changes,
         (*compiled.inherited_rules, *compiled.local_rules),
         compiled.removed_rules,
-        compiled.local_topics,
+        (*compiled.inherited_topics, *compiled.local_topics),
     )
 
 
@@ -171,7 +171,7 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
                 removal.why,
             ),
         )),
-        topics=tuple(compiled.local_topics),
+        topics=tuple((*compiled.inherited_topics, *compiled.local_topics)),
         files=package_file_metadata(files),
         normalized_digest=compiled.normalized_digest,
         package_digest=compiled.package_digest,
@@ -298,9 +298,15 @@ def artifact_files(compiled: CompiledNode) -> dict[str, bytes]:
 
 def _topic_dict(topic: Topic) -> dict[str, Any]:
     item = asdict(topic)
+    targets: list[dict[str, Any]] = []
+    for target in item["targets"]:
+        targets.append({key: value for key, value in target.items() if value is not None})
     item["targets"] = sorted(
-        item["targets"],
-        key=lambda target: (target["intent"], target["kind"], target["locator"]),
+        targets,
+        key=lambda target: (
+            target["intent"], target["kind"], target["locator"],
+            target.get("target_node_id", ""), target.get("target_node_name", ""),
+        ),
     )
     return item
 
@@ -440,10 +446,20 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
         raise ContextCanonError(f"Invalid {label}.kind: {kind!r}")
     if intent not in {"required", "optional"}:
         raise ContextCanonError(f"Invalid {label}.intent: {intent!r}")
+    target_node_id = item.get("target_node_id")
+    target_node_name = item.get("target_node_name")
+    if target_node_id is not None and not isinstance(target_node_id, str):
+        raise ContextCanonError(f"Invalid {label}.target_node_id: expected string or null")
+    if target_node_name is not None and not isinstance(target_node_name, str):
+        raise ContextCanonError(f"Invalid {label}.target_node_name: expected string or null")
+    if (target_node_id is None) != (target_node_name is None):
+        raise ContextCanonError(f"Invalid {label}: target_node_id and target_node_name must appear together")
     return TopicTarget(
         kind=kind,  # type: ignore[arg-type]
         locator=_string(item.get("locator"), f"{label}.locator"),
         intent=intent,  # type: ignore[arg-type]
+        target_node_id=target_node_id,
+        target_node_name=target_node_name,
     )
 
 

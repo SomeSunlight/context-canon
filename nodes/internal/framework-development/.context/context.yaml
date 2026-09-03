@@ -17,14 +17,14 @@ sources:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
-    normalized_digest: "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b"
-    package_digest: "d13d8924145909ea256151c1b92bcac651bf89f410ea4d742a45e92a06883261"
+    normalized_digest: "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b"
+    package_digest: "b8675724d3581c47283237f35d3d3ab2c346c863c7c1f83a0689665d52cde8df"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "baee9f20f439021f9d66ee22f2baac71288ad06661aa745af478e3059a951e6b"
-    package_digest: "a5ae5d7b81e9ee1625f84db9cfb3717f8a0700d8348b8150b15f20bed277b854"
+    normalized_digest: "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99"
+    package_digest: "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -53,7 +53,7 @@ local:
     - {"id": "CCI-TOPIC-HARNESSES", "title": "Harness integration"}
     - {"id": "CCI-TOPIC-STATE", "title": "State and planning"}
 
-# Compiled Rule view with provenance plus the local Topic index.
+# Compiled effective Rule/Topic view with provenance.
 official:
   rules:
     - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": false, "overrides": []}
@@ -87,85 +87,154 @@ official:
     - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES", "CCW-TOPIC-CHANGE-WORKFLOW", "CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
 targets:
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CC-TOPIC-AUTHORING"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CC-TOPIC-COMPOSITION"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CC-TOPIC-HARNESSES"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CCW-TOPIC-CHANGE-WORKFLOW"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-COMPILER"
     intent: "required"
     kind: "resource"
-    locator: "docs/compiler.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-TESTS"
     intent: "required"
     kind: "resource"
-    locator: "docs/tests-and-ci.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-DEVELOPMENT-WORKFLOW"
     intent: "required"
     kind: "context-node"
     locator: "../../library/development-workflow/"
+    target_node_id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
+    target_node_name: "Development Workflow"
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
-    locator: "docs/architecture.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "required"
     kind: "resource"
-    locator: "docs/use-case-walkthrough.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-ARCHITECTURE"
     intent: "optional"
     kind: "resource"
-    locator: "docs/concepts.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "docs/onboarding-reference.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../library/foundation/docs/source-format.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../library/foundation/docs/official-context.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-FORMATS"
     intent: "required"
     kind: "resource"
-    locator: "../../library/foundation/docs/topics.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-COMPOSITION"
     intent: "required"
     kind: "resource"
-    locator: "../../library/foundation/docs/composition.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-COMPOSITION"
     intent: "required"
     kind: "resource"
-    locator: "docs/use-case-walkthrough.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-HARNESSES"
     intent: "required"
     kind: "resource"
-    locator: "../../library/foundation/docs/harnesses.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCI-TOPIC-STATE"
     intent: "required"
     kind: "resource"
-    locator: "docs/state.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"
+    target_node_id: null
+    target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "../../../CONTEXT/README.md", "published": "CONTEXT/README.md"}
-  - {"source": "docs/architecture.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/architecture.md"}
-  - {"source": "docs/compiler.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/compiler.md"}
-  - {"source": "docs/concepts.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/concepts.md"}
-  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md"}
-  - {"source": "docs/state.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/state.md"}
-  - {"source": "docs/tests-and-ci.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md"}
-  - {"source": "docs/use-case-walkthrough.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md"}
-  - {"source": "../../library/foundation/docs/composition.md", "published": "CONTEXT/references/nodes/library/foundation/docs/composition.md"}
-  - {"source": "../../library/foundation/docs/harnesses.md", "published": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md"}
-  - {"source": "../../library/foundation/docs/official-context.md", "published": "CONTEXT/references/nodes/library/foundation/docs/official-context.md"}
-  - {"source": "../../library/foundation/docs/source-format.md", "published": "CONTEXT/references/nodes/library/foundation/docs/source-format.md"}
-  - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/nodes/library/foundation/docs/topics.md"}
+  - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"}
+  - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"}
+  - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"}
+  - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"}
+  - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"}
+  - {"source": "docs/architecture.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"}
+  - {"source": "docs/compiler.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"}
+  - {"source": "docs/concepts.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"}
+  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "docs/state.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"}
+  - {"source": "docs/tests-and-ci.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"}
+  - {"source": "docs/use-case-walkthrough.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"}
+  - {"source": "../../library/foundation/docs/composition.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md"}
+  - {"source": "../../library/foundation/docs/harnesses.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md"}
+  - {"source": "../../library/foundation/docs/official-context.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md"}
+  - {"source": "../../library/foundation/docs/source-format.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md"}
+  - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md"}
+  - {"source": null, "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "99ac38a016668cf3785ec68296090062130a8d7add9f190b01b007202f01824e"
-  package_digest: "b932433d25f9c38b57caa2e507d633450b5d249a2a09baf20af8b22477fde242"
+  normalized_digest: "0ae286d9cf3f7594af8cb645d1b03700ab19a604a7ccebde50abc9364e213c41"
+  package_digest: "0a09109152f56b71bc52b7ffb63dc22eaf6a5ba7d16ac19c73a6920e3d1fd328"

@@ -24,6 +24,16 @@ SOURCE = '''# Shared Python Development — Local Context Source
 - **Use explicit Python:** Prefer explicit, deterministic Python over hidden magic.
   Why: Consumers need predictable implementation behavior.
   <!-- ctx:rule id="PY-001" -->
+
+## Topics
+
+### Python guide
+
+When changing Python implementation details:
+
+Required:
+- Resource: `guide.md`
+<!-- ctx:topic id="PY-GUIDE" -->
 '''
 
 CONSUMER_TEMPLATE = '''# Demo Consumer — Local Context Source
@@ -50,6 +60,7 @@ class ExternalSourceTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         (root / ".git").mkdir()
         (root / "CONTEXT.src.md").write_text(SOURCE, encoding="utf-8")
+        (root / "guide.md").write_text("# Python Guide\n\nKeep implementation explicit.\n", encoding="utf-8")
         return root, Compiler(root).compile(root)
 
     def make_consumer(self, normalized: str, package: str) -> Path:
@@ -90,7 +101,11 @@ class ExternalSourceTests(unittest.TestCase):
         self.assertIn("keep this consumer's command surface small", inherited.statement)
         self.assertEqual([mod.node_id for mod in inherited.modifications], ["node-consumer"])
 
+        self.assertEqual([topic.id for topic in compiled.inherited_topics], ["PY-GUIDE"])
+        self.assertIn("CONTEXT/references/node-python/guide.md", compiled.resources)
+        self.assertEqual(compiled.resources["CONTEXT/references/node-python/guide.md"], b"# Python Guide\n\nKeep implementation explicit.\n")
         self.assertIn("Rules from Shared Python Development", compiled.official_markdown)
+        self.assertIn("Topics from Shared Python Development", compiled.official_markdown)
         self.assertIn(source.normalized_digest, compiled.package_manifest)
         self.assertIn(source.package_digest, compiled.package_manifest)
         self.assertIn(source.package_digest, compiled.machine_yaml)

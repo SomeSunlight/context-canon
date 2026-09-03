@@ -32,7 +32,7 @@ local:
   topics:
     - {"id": "CCW-TOPIC-CHANGE-WORKFLOW", "title": "Executing a development block"}
 
-# Compiled Rule view with provenance plus the local Topic index.
+# Compiled effective Rule/Topic view with provenance.
 official:
   rules:
     - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -53,14 +53,15 @@ targets:
   - topic: "CCW-TOPIC-CHANGE-WORKFLOW"
     intent: "required"
     kind: "resource"
-    locator: "docs/change-workflow.md"
+    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+    target_node_id: null
+    target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "../../../CONTEXT/README.md", "published": "CONTEXT/README.md"}
-  - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md"}
+  - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "baee9f20f439021f9d66ee22f2baac71288ad06661aa745af478e3059a951e6b"
-  package_digest: "a5ae5d7b81e9ee1625f84db9cfb3717f8a0700d8348b8150b15f20bed277b854"
+  normalized_digest: "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99"
+  package_digest: "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3"

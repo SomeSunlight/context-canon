@@ -2,42 +2,42 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b",
-    "package": "d13d8924145909ea256151c1b92bcac651bf89f410ea4d742a45e92a06883261"
+    "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
+    "package": "b8675724d3581c47283237f35d3d3ab2c346c863c7c1f83a0689665d52cde8df"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "4a92037ef0b197fcca8b2623b8b04efe9b3042d22cc30df3c9dba170392a651f",
-      "size": 3996
+      "sha256": "7958b78c97ef39cd49a72295d598118c0ac726425427fe66dd95dd0211bff59a",
+      "size": 4366
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "1103bad65c2173fa14b25b55654ea0dc00e12ecfbc0343132827a7052a927024",
+      "size": 1672
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/composition.md",
-      "sha256": "1767df5fad574fbb505ee31b234003d924b88ee91f3bc7f9bfc8b7491147207b",
-      "size": 9871
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+      "sha256": "585f7d796973ce6a795f6d2359cbed33712faad7181470792f641ab4602b13ca",
+      "size": 10917
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
       "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
       "size": 3499
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/official-context.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
       "sha256": "c1ea2d125a9073b120fe5a251393618afc8a5c670f79d5027b7169623167f93a",
       "size": 5239
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/source-format.md",
-      "sha256": "954be8ca72125e52ec31c47b847d7f2d728e1d6d438cfcd93e44bd2b823516a4",
-      "size": 10323
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+      "sha256": "0ce792fc91c33c527dd8da7a2f2b5377268a7ebca967b852b1c79025bae44c33",
+      "size": 11064
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/topics.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
       "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
       "size": 3889
     }
@@ -172,17 +172,17 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/official-context.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/source-format.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/topics.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
         }
       ],
       "title": "Context authoring"
@@ -196,7 +196,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/composition.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
         }
       ],
       "title": "Context composition"
@@ -210,7 +210,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/harnesses.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
         }
       ],
       "title": "Harness adapters"

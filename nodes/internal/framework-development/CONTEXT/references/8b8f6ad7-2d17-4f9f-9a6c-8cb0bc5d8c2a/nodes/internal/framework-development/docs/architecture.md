@@ -242,7 +242,7 @@ Reviewed onboarding adds one bounded semantic step above that deterministic core
 
 First-adoption acceptance is implemented as a separate deterministic publication boundary: ContextCanon rechecks the reviewed evidence against the live repository, verifies exact reusable Source identities, stages and compiles the proposed Node, checks output ownership, publishes only after those checks succeed, runs normal build/check, and records the accepted state.
 
-Other later deterministic capabilities include protected Rules and authorized exceptions, Topic composition/materialization across Source package boundaries, richer resource-collision policy, and broader repository-boundary diagnostics.
+Other later deterministic capabilities include protected Rules and authorized exceptions, richer resource-collision policy beyond the current stable-origin exact-byte rule, and broader repository-boundary diagnostics. Effective Topics and their Resource closures now compose across Source package boundaries without parsing generated Markdown.
 
 LLMs may assist with work that genuinely requires interpretation:
 

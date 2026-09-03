@@ -271,11 +271,15 @@ Fast-run decision: continue the vertical onboarding through human review, public
 
 Purpose: capture what became visible only after the first real `ai-workstation` placement was fully accepted and published. The end-to-end publish succeeded; the owner is now inspecting the resulting Nodes as a real working project. These findings are the next product/design backlog, not reasons to rewind the completed onboarding run.
 
-**Status: NEXT — Blocks R1/R2/R3 complete; continue with semantic parent composition and Source-update UX. Fast-run remains ACTIVE.**
+**Status: NEXT — Blocks R1-R4a complete; next persist the accepted Step-03 Parent relationship as an exact package edge. Fast-run remains ACTIVE.**
+
+R4a purpose: make Topics package semantics just like effective Rules before adding the distinct accepted Parent relationship. Local Topic targets are compiled into portable targets; Resource materialization is namespaced by stable origin Node identity so Source packages can be merged transitively without filesystem-path collisions, while Context-Node targets carry stable target identity across package boundaries.
+
+R4a verification: focused compiler/package/external-Source/diff regressions passed, followed by the complete deterministic suite, self-hosted build/check and `git diff --check`. Effective Topics now survive immutable package round-trips and pinned offline Source composition together with exact origin-namespaced Resource bytes.
 
 R3 purpose: keep `STEP-07-placement.md` as the single human-editable review truth while generating a deterministic source-file-first audit from the currently parsed review. The audit must group Source edits by original file/range and show exact Before, effective After, every linked P-finding, and the current reviewed destination/content so zero semantic loss can be checked without hunting through destination-first sections.
 
-R3 verification: focused source-audit, placement-review and reset regressions first, then the complete deterministic suite plus self-hosted build/check and hygiene before the clean checkpoint.
+R3 verification: focused source-audit/placement-review/reset regressions passed, followed by the complete deterministic suite (167 tests), self-hosted build/check and `git diff --check`. The clean product checkpoint removed every temporary R3 harness file.
 
 R2 purpose: keep `CONTEXT.src.md` as the only authoring truth while making ordinary Rule/Topic creation safe and pleasant. ContextCanon should allocate stable hidden IDs once, write ordinary source syntax, and leave the familiar build/check loop intact.
 
@@ -302,8 +306,8 @@ R1 verification: focused structure/placement-review regressions passed, followed
 
 - [ ] Persist the human-accepted Step-03 parent/child hierarchy into the materialized Nodes as an explicit ContextCanon relationship. This must come from the reviewed semantic structure, not from filesystem nesting; repository directories alone still do not imply composition.
 - [ ] Model the accepted semantic parent as a Source-like accepted package edge so a Child uses the exact accepted Parent snapshot. A later Parent change becomes a candidate and does not alter the Child until reviewed/accepted.
-- [ ] Extend compiled inheritance from Rules to Topics. Today Rules compose transitively, while Topics are intentionally local-only; define package locator/resource semantics so accepted Parent/Source Topics and their Resources can be rendered safely in the Child.
-- [ ] Render each Node's `CONTEXT.md` as the complete effective working context: all effective inherited + local Rules and all effective inherited + local Topics, with provenance and accepted-package boundaries preserved.
+- [x] Extend compiled inheritance from Rules to Topics. Today Rules compose transitively, while Topics are intentionally local-only; define package locator/resource semantics so accepted Parent/Source Topics and their Resources can be rendered safely in the Child.
+- [x] Render each Node's `CONTEXT.md` as the complete effective working context: all effective inherited + local Rules and all effective inherited + local Topics, with provenance and accepted-package boundaries preserved.
 - [ ] Use the parent chain to make repository-wide workflow context practical. In `ai-workstation`, once the Development Workflow Source is correctly attached at the intended ancestor, descendants should receive that accepted workflow transitively instead of requiring the Source to be selected independently on every Node.
 - [ ] Revisit Source update UX so projects can discover/fetch newer reusable Node packages without manually tracking remote package identities; updates must remain candidates requiring review/accept, never live implicit pulls.
 

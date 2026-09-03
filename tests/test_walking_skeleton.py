@@ -140,14 +140,17 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "F-002"])
         self.assertEqual(node.removed_rules, [])
         self.assertEqual([rule.id for rule in node.local_rules], ["D-001"])
+        self.assertEqual([topic.id for topic in node.inherited_topics], ["F-AUTH"])
         self.assertEqual([topic.id for topic in node.local_topics], ["D-ARCH"])
         self.assertEqual(
             list(node.resources),
             [
                 "CONTEXT/README.md",
-                "CONTEXT/references/docs/architecture.md",
-                "CONTEXT/references/docs/authoring.md",
-                "CONTEXT/references/docs/details.md",
+                "CONTEXT/references/node-development/docs/architecture.md",
+                "CONTEXT/references/node-development/docs/authoring.md",
+                "CONTEXT/references/node-development/docs/details.md",
+                "CONTEXT/references/node-foundation/docs/authoring.md",
+                "CONTEXT/references/node-foundation/docs/details.md",
             ],
         )
         self.assertEqual(len(node.normalized_digest), 64)
@@ -156,6 +159,8 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("How to use this context", node.official_markdown)
         self.assertIn("Apply all Rules below to every task in this Node.", node.official_markdown)
         self.assertIn("Rules from Demo Foundation", node.official_markdown)
+        self.assertIn("Topics from Demo Foundation", node.official_markdown)
+        self.assertIn("CONTEXT/references/node-foundation/docs/authoring.md", node.official_markdown)
         self.assertIn("`F-001` — Write clearly", node.official_markdown)
         self.assertIn("`D-001` — Stay deterministic", node.official_markdown)
 
@@ -254,7 +259,10 @@ class WalkingSkeletonTests(unittest.TestCase):
         node = Compiler(repo).compile(child)
         self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "D-001"])
         self.assertEqual([removal.rule_id for removal in node.removed_rules], ["F-002"])
+        self.assertEqual([topic.id for topic in node.inherited_topics], ["F-AUTH", "D-ARCH"])
         self.assertIn("## Rules from Demo Foundation", node.official_markdown)
+        self.assertIn("## Topics from Demo Foundation", node.official_markdown)
+        self.assertIn("## Topics from Demo Development", node.official_markdown)
         self.assertIn("## Rules from Demo Development", node.official_markdown)
         self.assertIn("Use concise, explicit technical prose.", node.official_markdown)
         self.assertIn("**Override:** Demo Development", node.official_markdown)
@@ -294,6 +302,47 @@ class WalkingSkeletonTests(unittest.TestCase):
 
         node = Compiler(repo).compile(consumer)
         self.assertEqual([rule.id for rule in node.inherited_rules], ["F-001", "F-002"])
+        self.assertEqual([topic.id for topic in node.inherited_topics], ["F-AUTH"])
+
+
+    def test_visible_topic_id_collision_from_different_origins_fails(self):
+        repo = self.make_repo()
+        for name in ("left", "right"):
+            node = repo / f"nodes/internal/{name}"
+            node.mkdir(parents=True)
+            (node / "CONTEXT.src.md").write_text(
+                f'''# Demo {name.title()} — Local Context Source
+<!-- ctx:node id="node-{name}" version="0.1.0" -->
+
+## Topics
+
+### Shared label
+
+When testing {name}:
+
+Required:
+- Resource: `../../../docs/authoring.md`
+<!-- ctx:topic id="SHARED-TOPIC" -->
+''',
+                encoding="utf-8",
+            )
+        consumer = repo / "nodes/internal/topic-consumer"
+        consumer.mkdir(parents=True)
+        (consumer / "CONTEXT.src.md").write_text(
+            '''# Topic Consumer — Local Context Source
+<!-- ctx:node id="node-topic-consumer" version="0.1.0" -->
+
+## Sources
+
+- [Left](../left/) — `0.1.0`
+  <!-- ctx:source id="node-left" version="0.1.0" -->
+- [Right](../right/) — `0.1.0`
+  <!-- ctx:source id="node-right" version="0.1.0" -->
+''',
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ContextCanonError, "Visible Topic ID collision"):
+            Compiler(repo).compile(consumer)
 
     def test_conflicting_diamond_rule_fails_without_source_precedence(self):
         repo = self.make_repo()

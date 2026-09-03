@@ -32,7 +32,7 @@ When adopting ContextCanon in an existing repository, preparing onboarding evide
 
 **Required**
 
-- [`CONTEXT/references/docs/onboarding.md`](CONTEXT/references/docs/onboarding.md)
+- [`CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md`](CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md)
 
 ### ContextCanon framework development
 

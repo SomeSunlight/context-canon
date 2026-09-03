@@ -76,4 +76,4 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md)
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)

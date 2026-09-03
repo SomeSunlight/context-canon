@@ -166,7 +166,9 @@ Required:
 - Context Node: `nodes/internal/framework-development`
 ```
 
-`Resource` targets are materialized into the generated `CONTEXT/` package. `Context Node` targets point to another node root and remain navigation rather than Source composition.
+`Resource` targets are materialized into the generated `CONTEXT/` package. Compiled Resource targets use an origin-Node namespace under `CONTEXT/references/`, so effective Topics can cross Source package boundaries without unrelated repositories colliding on paths. `Context Node` targets remain navigation rather than Source composition; compiled packages carry the stable target Node identity so inherited navigation remains meaningful even when the original repository-relative link is unavailable.
+
+Topics compose transitively through accepted Sources just like effective Rules. A consuming Node renders inherited and local Topics together, while State/Plan/Overview remain local-only. Resource bytes from multiple Source paths are deduplicated only when the same origin-qualified package path has identical content; different bytes at that stable path are a structural conflict rather than Source-order precedence.
 
 Every Topic ends with a compiler-managed stable ID:
 

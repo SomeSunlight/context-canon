@@ -169,6 +169,14 @@ A missing or corrupt accepted package is an error. It is never permission for `b
 
 Package installation is staged and verified before atomic publication. Review receipts and Source-pin replacement are also published atomically. If the final canonical pin swap fails, the old `CONTEXT.src.md` and old accepted build state remain intact; a newly installed but unreferenced package is harmless immutable state.
 
+## Topics and Resources compose transitively
+
+A Source package carries its complete effective Topic set, not only the Topics authored directly in that Source. Resource targets are compiled to package-safe paths namespaced by the Topic's stable origin Node identity. Descendants therefore inherit both Topic conditions and the exact materialized Resource closure without consulting the Source repository.
+
+When the same inherited Topic identity reaches a Node through several Source paths, equivalent Topic definitions are deduplicated. If their effective definitions differ, compilation fails. Origin-qualified Resource paths behave the same way: identical bytes deduplicate, while different bytes at the same stable inherited path are a structural conflict.
+
+`Context Node` Topic targets remain navigation rather than composition. Packages preserve the stable target Node ID/name so an inherited Topic can still explain where it points; a consumer does not invent a local link when that target Node is not materialized in the consumer package.
+
 ## Navigation is not composition
 
 A Topic may direct an agent to deeper information or even to another Context Node when a task needs it. That is progressive disclosure, not inheritance.

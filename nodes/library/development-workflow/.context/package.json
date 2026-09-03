@@ -2,22 +2,22 @@
   "changes": [],
   "compiler_version": "0.4.0",
   "digests": {
-    "normalized": "baee9f20f439021f9d66ee22f2baac71288ad06661aa745af478e3059a951e6b",
-    "package": "a5ae5d7b81e9ee1625f84db9cfb3717f8a0700d8348b8150b15f20bed277b854"
+    "normalized": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
+    "package": "e0177d08b85f710e1af9bf3b66bba4e5e5fe29fee2be3f3b1adf949d3c54bdf3"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "4709b6edabbbebc60c64ea5a8f8010b589aeea46596cbd8f511a19f6fe5927a8",
-      "size": 5013
+      "sha256": "bde0feba7cb42dec101f015169c87849358f3385fe7201d3f018ee39b7475a0c",
+      "size": 5087
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "1103bad65c2173fa14b25b55654ea0dc00e12ecfbc0343132827a7052a927024",
+      "size": 1672
     },
     {
-      "path": "CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md",
+      "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
       "sha256": "bbd8fff080a48458badd28f6a996f67c0b5a818ccf76a8d797763ba660abf17f",
       "size": 9519
     }
@@ -132,7 +132,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/change-workflow.md"
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
         }
       ],
       "title": "Executing a development block"

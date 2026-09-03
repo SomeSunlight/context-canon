@@ -83,6 +83,8 @@ class TopicTarget:
     kind: TargetKind
     locator: str
     intent: TargetIntent
+    target_node_id: str | None = None
+    target_node_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -151,6 +153,7 @@ class CompiledNode:
     removed_rules: list[RuleRemoval] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)
     local_changes: list[RuleChange] = field(default_factory=list)
+    inherited_topics: list[Topic] = field(default_factory=list)
     local_topics: list[Topic] = field(default_factory=list)
     resources: dict[str, bytes] = field(default_factory=dict)
     normalized_digest: str = ""

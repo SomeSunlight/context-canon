@@ -97,7 +97,8 @@ The deterministic core now handles:
 - a common `CompiledPackage` semantic boundary for local and external Sources;
 - Source identity/version validation and dependency-cycle detection for local compilation;
 - transitive Rule composition, Remove/Override, provenance, dangling diagnostics, and diamond conflicts;
-- Required/Optional Topics and materialized Resource closure;
+- transitive Topic composition with stable origin identity, package-safe Context-Node target identity, and deterministic diamond conflict handling;
+- Required/Optional Topics and origin-namespaced materialized Resource closure across Source package boundaries;
 - canonical semantic normalization and exact package digests;
 - deterministic Node and package diff;
 - versioned `.context/package.json` manifests containing the complete compiled state required by descendants;
@@ -237,7 +238,6 @@ For the repository's complete GitHub Actions flow and failure-reading guide, see
 
 Compiler 0.4 deliberately still leaves several layers for later:
 
-- Topic composition/materialization across Source package boundaries;
 - protected Rules and authorized exceptions;
 - richer resource collision policy across composed packages;
 - semantic natural-language conflict detection;

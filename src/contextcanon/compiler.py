@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import hashlib
 from pathlib import Path
+import re
 
 from .links import local_markdown_targets
-from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef
+from .model import CompiledNode, CompiledPackage, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
 from .package import (
     compiled_package,
     load_package,
@@ -28,14 +30,14 @@ This `CONTEXT/` directory exists because the Node has deeper Topic resources tha
 
 ## Why `references/` may look like duplicate documentation
 
-`references/` contains exact materialized copies of authored Topic resources. The path after `CONTEXT/references/` preserves the resource's repository-relative source path at build time.
+`references/` contains exact materialized copies of effective Topic resources. The first path component after `CONTEXT/references/` is the stable origin Node identity (or a deterministic hash when that identity is not path-safe); the remaining path preserves repository-relative source location. This namespace lets inherited Topic resources from independent packages coexist without Source-order precedence.
 
 For example:
 
 ```text
 nodes/internal/framework-development/docs/architecture.md
         ↓ deterministic materialization
-CONTEXT/references/nodes/internal/framework-development/docs/architecture.md
+CONTEXT/references/<origin-node-id>/nodes/internal/framework-development/docs/architecture.md
 ```
 
 The first path is the authored source. The second path is generated package content and is **not another maintenance surface**.
@@ -70,6 +72,7 @@ class Compiler:
 
             compiled = CompiledNode(parsed=parsed)
             seen_source_ids: set[str] = set()
+            source_resource_sets: list[dict[str, bytes]] = []
             for source in parsed.sources:
                 if source.id in seen_source_ids:
                     raise ContextCanonError(
@@ -78,7 +81,9 @@ class Compiler:
                 seen_source_ids.add(source.id)
 
                 if source.is_pinned:
-                    compiled.source_packages.append(self._load_pinned_source(node_root, source))
+                    package, package_resources = self._load_pinned_source(node_root, source)
+                    compiled.source_packages.append(package)
+                    source_resource_sets.append(package_resources)
                     continue
 
                 source_root = self._resolve_source_root(node_root, source.locator)
@@ -92,6 +97,11 @@ class Compiler:
                         f"{node_root}: Source {source.name} expects version {source.version}, got {source_node.metadata.version}"
                     )
                 compiled.source_packages.append(compiled_package(source_node))
+                source_resource_sets.append({
+                    path: content
+                    for path, content in source_node.resources.items()
+                    if path.startswith("CONTEXT/references/")
+                })
 
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
                 compiled.source_packages,
@@ -107,11 +117,22 @@ class Compiler:
             )
             compiled.local_rules = list(parsed.rules)
             self._validate_visible_rule_ids(compiled)
-            # Topics remain local for now. Inheriting Topic payloads across
-            # published Source package boundaries needs an explicit package
-            # locator/materialization contract.
-            compiled.local_topics = list(parsed.topics)
-            compiled.resources = self._collect_resources(compiled)
+
+            compiled.inherited_topics = self._compose_inherited_topics(
+                compiled.source_packages,
+                compiled.metadata.name,
+            )
+            compiled.local_topics, local_resources = self._compile_local_topics(compiled)
+            self._validate_visible_topic_ids(
+                compiled.inherited_topics,
+                compiled.local_topics,
+                compiled.metadata.name,
+            )
+            compiled.resources = self._collect_resources(
+                compiled.metadata.name,
+                local_resources,
+                source_resource_sets,
+            )
             compiled.normalized_digest = semantic_digest_for_node(compiled)
             compiled.official_markdown = render_official(compiled, self.repo_root)
             compiled.package_digest = package_digest(package_content_files(compiled))
@@ -123,7 +144,7 @@ class Compiler:
         finally:
             self._active.pop()
 
-    def _load_pinned_source(self, node_root: Path, source: SourceRef) -> CompiledPackage:
+    def _load_pinned_source(self, node_root: Path, source: SourceRef) -> tuple[CompiledPackage, dict[str, bytes]]:
         if source.normalized_digest is None or source.package_digest is None:
             raise ContextCanonError(f"{node_root}: internal error: pinned Source {source.name} has incomplete digests")
 
@@ -153,7 +174,12 @@ class Compiler:
                 f"{node_root}: Source {source.name} package digest mismatch: "
                 f"expected {source.package_digest}, got {package.package_digest}"
             )
-        return package
+        resources = {
+            file.path: (package_root / file.path).read_bytes()
+            for file in package.files
+            if file.path.startswith("CONTEXT/references/")
+        }
+        return package, resources
 
     def _resolve_source_root(self, node_root: Path, locator: str) -> Path:
         path = (node_root / locator).resolve()
@@ -281,46 +307,183 @@ class Compiler:
                 )
             seen[rule.id] = rule
 
-    def _collect_resources(self, compiled: CompiledNode) -> dict[str, bytes]:
-        seeds: list[Path] = []
-        for topic in compiled.local_topics:
+    @staticmethod
+    def _topic_target_key(target: TopicTarget) -> tuple[str, str, str, str, str]:
+        return (
+            target.intent,
+            target.kind,
+            target.locator,
+            target.target_node_id or "",
+            target.target_node_name or "",
+        )
+
+    def _topics_equivalent(self, left: Topic, right: Topic) -> bool:
+        return (
+            left.id == right.id
+            and left.title == right.title
+            and left.condition == right.condition
+            and left.origin_node_id == right.origin_node_id
+            and left.origin_node_name == right.origin_node_name
+            and sorted(left.targets, key=self._topic_target_key)
+            == sorted(right.targets, key=self._topic_target_key)
+        )
+
+    def _validate_package_topics(self, package: CompiledPackage, node_name: str) -> None:
+        package_files = {file.path for file in package.files}
+        for topic in package.topics:
             for target in topic.targets:
-                if target.kind == "context-node":
-                    target_root = (compiled.parsed.root / target.locator).resolve()
-                    if target_root.name == "CONTEXT.md":
-                        target_root = target_root.parent
-                    if not self._is_within_repo(target_root) or not (target_root / "CONTEXT.src.md").is_file():
+                if target.kind == "resource":
+                    if not target.locator.startswith("CONTEXT/references/") or target.locator not in package_files:
                         raise ContextCanonError(
-                            f"{compiled.metadata.name} Topic {topic.id}: invalid Context Node target {target.locator}"
+                            f"{node_name}: Source package {package.metadata.name} Topic {topic.id} uses a legacy/non-portable Resource target {target.locator!r}; republish that Source with package-safe Topic targets before inheritance"
                         )
                     continue
-                source = (compiled.parsed.root / target.locator).resolve()
-                self._validate_resource(source, compiled.metadata.name, topic.id, target.locator)
-                seeds.append(source)
+                if not target.target_node_id or not target.target_node_name:
+                    raise ContextCanonError(
+                        f"{node_name}: Source package {package.metadata.name} Topic {topic.id} lacks stable Context Node target identity; republish that Source before Topic inheritance"
+                    )
 
-        resources: dict[str, bytes] = {}
-        queue = list(dict.fromkeys(seeds))
+    def _validate_inherited_resource_files(self, source_packages: list[CompiledPackage], node_name: str) -> None:
+        seen: dict[str, tuple[str, int, str]] = {}
+        for package in source_packages:
+            for file in package.files:
+                if not file.path.startswith("CONTEXT/references/"):
+                    continue
+                current = (file.sha256, file.size, package.metadata.name)
+                previous = seen.get(file.path)
+                if previous is None:
+                    seen[file.path] = current
+                    continue
+                if previous[:2] != current[:2]:
+                    raise ContextCanonError(
+                        f"{node_name}: conflicting inherited Topic Resource {file.path} arrives through {previous[2]} and {package.metadata.name} with different exact bytes"
+                    )
+
+    def _compose_inherited_topics(self, source_packages: list[CompiledPackage], node_name: str) -> list[Topic]:
+        self._validate_inherited_resource_files(source_packages, node_name)
+        result: list[Topic] = []
+        by_identity: dict[tuple[str, str], Topic] = {}
+        for package in source_packages:
+            self._validate_package_topics(package, node_name)
+            for topic in package.topics:
+                identity = (topic.origin_node_id, topic.id)
+                previous = by_identity.get(identity)
+                if previous is not None:
+                    if not self._topics_equivalent(previous, topic):
+                        raise ContextCanonError(
+                            f"{node_name}: conflicting inherited Topic {topic.origin_node_name} / {topic.id} ({topic.origin_node_id}#{topic.id}) arrives through multiple Sources with different effective definitions"
+                        )
+                    continue
+                by_identity[identity] = topic
+                result.append(topic)
+        return result
+
+    def _validate_visible_topic_ids(self, inherited: list[Topic], local: list[Topic], node_name: str) -> None:
+        seen: dict[str, Topic] = {}
+        for topic in (*inherited, *local):
+            previous = seen.get(topic.id)
+            if previous is not None and previous.origin_node_id != topic.origin_node_id:
+                raise ContextCanonError(
+                    f"Visible Topic ID collision in {node_name}: {topic.id} comes from multiple Nodes"
+                )
+            seen[topic.id] = topic
+
+    @staticmethod
+    def _resource_namespace(node_id: str) -> str:
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", node_id):
+            return node_id
+        return "sha256-" + hashlib.sha256(node_id.encode("utf-8")).hexdigest()
+
+    def _resource_closure(self, seed: Path, node_name: str, topic_id: str, locator: str) -> list[Path]:
+        self._validate_resource(seed, node_name, topic_id, locator)
+        queue = [seed.resolve()]
         visited: set[Path] = set()
+        result: list[Path] = []
         while queue:
             source = queue.pop(0).resolve()
             if source in visited:
                 continue
             visited.add(source)
-            rel = source.relative_to(self.repo_root).as_posix()
-            published = f"CONTEXT/references/{rel}"
+            result.append(source)
             content = source.read_bytes()
-            resources[published] = content
+            if source.suffix.lower() != ".md":
+                continue
+            text = content.decode("utf-8")
+            rel = source.relative_to(self.repo_root).as_posix()
+            for linked_locator in local_markdown_targets(text):
+                linked = (source.parent / linked_locator).resolve()
+                if linked.is_dir():
+                    continue
+                self._validate_resource(linked, node_name, f"closure:{rel}", linked_locator)
+                if linked not in visited:
+                    queue.append(linked)
+        return result
 
-            if source.suffix.lower() == ".md":
-                text = content.decode("utf-8")
-                for locator in local_markdown_targets(text):
-                    linked = (source.parent / locator).resolve()
-                    if linked.is_dir():
-                        continue
-                    self._validate_resource(linked, compiled.metadata.name, f"closure:{rel}", locator)
-                    if linked not in visited:
-                        queue.append(linked)
+    def _compile_local_topics(self, compiled: CompiledNode) -> tuple[list[Topic], dict[str, bytes]]:
+        effective: list[Topic] = []
+        resources: dict[str, bytes] = {}
+        namespace = self._resource_namespace(compiled.metadata.id)
+        for topic in compiled.parsed.topics:
+            targets: list[TopicTarget] = []
+            for target in topic.targets:
+                if target.kind == "resource":
+                    seed = (compiled.parsed.root / target.locator).resolve()
+                    closure = self._resource_closure(seed, compiled.metadata.name, topic.id, target.locator)
+                    for source in closure:
+                        rel = source.relative_to(self.repo_root).as_posix()
+                        published = f"CONTEXT/references/{namespace}/{rel}"
+                        content = source.read_bytes()
+                        previous = resources.get(published)
+                        if previous is not None and previous != content:
+                            raise ContextCanonError(
+                                f"{compiled.metadata.name}: local Topic Resource collision at {published}"
+                            )
+                        resources[published] = content
+                    seed_rel = seed.relative_to(self.repo_root).as_posix()
+                    targets.append(
+                        TopicTarget(
+                            kind="resource",
+                            locator=f"CONTEXT/references/{namespace}/{seed_rel}",
+                            intent=target.intent,
+                        )
+                    )
+                    continue
 
+                target_root = (compiled.parsed.root / target.locator).resolve()
+                if target_root.name == "CONTEXT.md":
+                    target_root = target_root.parent
+                if not self._is_within_repo(target_root) or not (target_root / "CONTEXT.src.md").is_file():
+                    raise ContextCanonError(
+                        f"{compiled.metadata.name} Topic {topic.id}: invalid Context Node target {target.locator}"
+                    )
+                target_node = parse_node(target_root, self.repo_root)
+                targets.append(
+                    TopicTarget(
+                        kind="context-node",
+                        locator=target.locator,
+                        intent=target.intent,
+                        target_node_id=target_node.metadata.id,
+                        target_node_name=target_node.metadata.name,
+                    )
+                )
+            effective.append(replace(topic, targets=tuple(targets)))
+        return effective, resources
+
+    def _collect_resources(
+        self,
+        node_name: str,
+        local_resources: dict[str, bytes],
+        source_resource_sets: list[dict[str, bytes]],
+    ) -> dict[str, bytes]:
+        resources = dict(local_resources)
+        for inherited in source_resource_sets:
+            for path, content in inherited.items():
+                previous = resources.get(path)
+                if previous is not None and previous != content:
+                    raise ContextCanonError(
+                        f"{node_name}: conflicting inherited Topic Resource bytes at {path}"
+                    )
+                resources[path] = content
         if resources:
             resources["CONTEXT/README.md"] = CONTEXT_FOLDER_README.encode("utf-8")
         return dict(sorted(resources.items()))

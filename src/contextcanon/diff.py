@@ -233,7 +233,7 @@ def _rule_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
 
 def _topic_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
-    for topic in compiled.local_topics:
+    for topic in (*compiled.inherited_topics, *compiled.local_topics):
         item = asdict(topic)
         item["targets"] = sorted(
             item["targets"],

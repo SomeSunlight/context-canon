@@ -190,6 +190,9 @@ def _validate_candidate_composition(
             )
         seen[rule.id] = rule
 
+    inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
+    compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
+
 
 def _review_path(node_root: Path, candidate_package_digest: str) -> Path:
     return node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"
