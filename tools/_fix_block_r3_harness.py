@@ -10,4 +10,15 @@ new = '''        '- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decision
 '''
 if old not in text:
     raise SystemExit("Block R3 helper artifact-list patch anchor not found")
-path.write_text(text.replace(old, new, 1), encoding="utf-8")
+text = text.replace(old, new, 1)
+text = text.replace(
+    r'workspace.placement_path.write_text("human review\n", encoding="utf-8")',
+    r'workspace.placement_path.write_text("human review\\n", encoding="utf-8")',
+    1,
+)
+text = text.replace(
+    r'workspace.placement_audit_path.write_text("generated audit\n", encoding="utf-8")',
+    r'workspace.placement_audit_path.write_text("generated audit\\n", encoding="utf-8")',
+    1,
+)
+path.write_text(text, encoding="utf-8")
