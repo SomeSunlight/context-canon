@@ -1,0 +1,46 @@
+name: Prove combined real machine-state upgrade
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply Block S step 4
+        run: |
+          python tools/_block_s_machine_state_step4.py
+          python -m compileall -q src tests
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Focused combined real upgrade regressions
+        run: |
+          python -m unittest tests.test_ai_workstation_parent_migration tests.test_source_adoption tests.test_parent_acceptance tests.test_parent_chain tests.test_context_folder_orientation -v
+      - name: Complete deterministic suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate and verify self-hosted context
+        run: |
+          contextcanon build --all .
+          contextcanon check --all .
+          git diff --check
+      - name: Checkpoint completed Block S and commit clean product tree
+        run: |
+          python tools/_block_s_machine_state_step4.py --complete
+          rm -f .github/workflows/_block-s-machine-state-step4.yml tools/_block_s_machine_state_step4.py
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Prove real machine-state Source and Parent upgrade"
+          git push origin HEAD:agent/onboarding-placement-publication
