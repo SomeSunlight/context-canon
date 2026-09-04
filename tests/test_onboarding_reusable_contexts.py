@@ -136,6 +136,15 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(plan.catalog_locations, (str(catalog),))
             canonical = workspace_file.read_text(encoding="utf-8")
             self.assertIn(f"- `{catalog}`", canonical)
+            self.assertIn("## Copy-ready Assignment lines — generated", canonical)
+            self.assertIn(
+                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
+                canonical,
+            )
+            self.assertIn(
+                "- **Bootstrap** (`bootstrap`) ← **Development Workflow** (`0.2.0-draft`)",
+                canonical,
+            )
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:
         from contextcanon.onboarding_reusable_contexts import ReusableContextAssignment

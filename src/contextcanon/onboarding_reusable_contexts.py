@@ -210,8 +210,9 @@ def _parse_assignments(
         match = _ASSIGN_RE.fullmatch(line)
         if match is None:
             raise _error(
-                "Assignments must use '- **Project Node** (`path`) ← **Reusable Context** (`version`)' "
-                "followed by an indented 'Why:' line"
+                "Assignment first line is incomplete. Copy one complete line from "
+                "'Copy-ready Assignment lines — generated' below, paste it into Assignments, "
+                "then add an indented 'Why:' line"
             )
         target = target_by_label.get((match.group("target"), match.group("path")))
         if target is None:
@@ -333,7 +334,7 @@ def render_reusable_contexts(
             "",
             "## Assignments",
             "",
-            "Only list relationships that should actually exist; there is deliberately no project-node × catalog-node matrix. Copy the human-readable names/path/version from the generated lists below. Every relationship needs a durable `Why`.",
+            "Only keep relationships that should actually exist. Copy one complete first line from `Copy-ready Assignment lines — generated` below, paste it here, then add an indented `Why:` line. The generated copy helpers are syntax options, not recommendations; the editable list remains sparse. Every relationship needs a durable `Why`.",
             "",
             "Example syntax:",
             "",
@@ -387,8 +388,25 @@ def render_reusable_contexts(
             "",
             "The generated package identities are review information. Do not copy their IDs or digests into Assignments; ContextCanon resolves and remembers them for subsequent steps.",
             "",
+            "## Copy-ready Assignment lines — generated",
+            "",
+            "These are syntactic copy helpers, not recommendations. Copy one desired complete line into the editable Assignments section above and add an indented `Why:` line below it.",
+            "",
         ]
     )
+    if packages:
+        for package in packages:
+            lines.append(f"### {package.metadata.name} (`{package.metadata.version}`)")
+            lines.append("")
+            for node in structure.nodes:
+                lines.append(
+                    f"- **{node.name}** (`{node.path}`) ← **{package.metadata.name}** (`{package.metadata.version}`)"
+                )
+            lines.append("")
+    elif locations:
+        lines.extend(["No verified reusable Context Nodes are available for copy-ready assignments.", ""])
+    else:
+        lines.extend(["Add a Catalog location above and rerun STEP 05 to generate copy-ready assignment lines.", ""])
     return "\n".join(lines)
 
 

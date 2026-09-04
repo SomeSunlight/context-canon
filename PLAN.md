@@ -381,3 +381,13 @@ Purpose: fix the first real STEP-05 owner run, where the machine accepted only o
 - [x] Mark STEP-05 Catalog and assignment controls with the same rendered `✏️ Editable ...` / `End editable ...` visual grammar already used in placement review.
 - [x] Add a ContextCanon framework-development Rule requiring visible, consistent editable-region affordances in generated human-gate Markdown; machine-only HTML markers are insufficient.
 - [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.
+
+## Final owner-UX correction: copy-ready STEP-05 assignments
+
+Purpose: remove the remaining grammar reconstruction from STEP 05. The generated project/source lists looked copyable, but a copied project-node line was not a valid Assignment because the Source name/version were missing.
+
+- [x] Keep Assignment parsing semantically strict: ContextCanon must not guess which reusable Context a partial project-node line intended.
+- [x] Render a generated `Copy-ready Assignment lines` section whose lines already use the exact valid Assignment first-line syntax, grouped by reusable Context.
+- [x] Make clear that these generated pairings are syntax helpers rather than recommendations; the editable Assignment list remains sparse and human-selected.
+- [x] Point incomplete-Assignment errors directly at the copy-ready section instead of restating grammar the operator must reconstruct.
+- [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.
