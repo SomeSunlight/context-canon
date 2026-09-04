@@ -10,6 +10,11 @@
 **Node:** ContextCanon Framework Development  
 **Context version:** `0.1.0-draft`
 
+**Resulting imported Contexts:**
+
+- **ContextCanon Foundation** — `0.1.0-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
+- **Development Workflow** — `0.2.0-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+
 ## How to use this context
 
 Apply all Rules below to every task in this Node.
@@ -106,6 +111,10 @@ When the project owner resumes work after a short conversational interruption, e
 
 For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
 
+#### `CCW-009` — Use owner-approved fast-run blocks without weakening the final gate
+
+When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.
+
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
@@ -162,6 +171,10 @@ Validate ContextCanon through concrete repository use cases before hardening abs
 
 Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
 
+#### `CCI-011` — Mark human-editable generated Markdown with one visible convention
+
+Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.
+
 #### `CCI-010` — Prefer uv for ContextCanon development and tool installation
 
 Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.
@@ -172,7 +185,45 @@ Use `uv` instead of direct `pip` installation when the required workflow is supp
 
 A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
 
-## Topics
+## Topics from ContextCanon Foundation
+
+### Context authoring
+
+When editing ContextCanon source, IDs, generated views, package resources, or Topics:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md)
+
+### Context composition
+
+When adding Sources or changing inherited Rules:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md)
+
+### Harness adapters
+
+When adding or changing a harness-specific entry file:
+
+**Required**
+
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md)
+
+## Topics from Development Workflow
+
+### Executing a development block
+
+When planning, resuming, checkpointing, reviewing, testing, finalizing, merging, or closing the accepted baseline for a coherent development block:
+
+**Required**
+
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)
+
+## Local Topics
 
 ### Compiler implementation
 
@@ -180,7 +231,7 @@ When changing, debugging, reviewing, or extending the deterministic compiler imp
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/compiler.md`](CONTEXT/references/nodes/internal/framework-development/docs/compiler.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md)
 
 ### Tests and CI
 
@@ -188,7 +239,7 @@ When changing or reviewing tests, GitHub Actions, repository consistency checks,
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md`](CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md)
 
 ### Development workflow
 
@@ -204,12 +255,12 @@ When changing the compiler boundary, package model, Node structure, deterministi
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/architecture.md`](CONTEXT/references/nodes/internal/framework-development/docs/architecture.md)
-- [`CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md)
 
 **Optional**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/concepts.md`](CONTEXT/references/nodes/internal/framework-development/docs/concepts.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md)
 
 ### Reviewed project onboarding
 
@@ -217,7 +268,7 @@ When changing onboarding inventory, evidence capture, semantic classification, p
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md`](CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md)
 
 ### Source and official formats
 
@@ -225,9 +276,9 @@ When changing authoring syntax, IDs, Topics, Changes, official entry views, or m
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/nodes/library/foundation/docs/source-format.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/nodes/library/foundation/docs/official-context.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/topics.md`](CONTEXT/references/nodes/library/foundation/docs/topics.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md)
 
 ### Composition
 
@@ -235,8 +286,8 @@ When changing Source composition, version acceptance, conflicts, removes, overri
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/composition.md`](CONTEXT/references/nodes/library/foundation/docs/composition.md)
-- [`CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md)
 
 ### Harness integration
 
@@ -244,7 +295,7 @@ When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/nodes/library/foundation/docs/harnesses.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md)
 
 ### State and planning
 
@@ -252,4 +303,4 @@ When deciding whether information belongs in current state, planning, governance
 
 **Required**
 
-- [`CONTEXT/references/nodes/internal/framework-development/docs/state.md`](CONTEXT/references/nodes/internal/framework-development/docs/state.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md)

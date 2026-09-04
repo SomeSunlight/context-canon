@@ -10,7 +10,7 @@
 **Node:** Development Workflow  
 **Context version:** `0.2.0-draft`
 
-## Overview
+## Local Overview
 
 Reusable workflow for carrying project development safely across long human/LLM-assisted sessions, tool failures, review rounds, and merges. It standardizes recoverable planning and review boundaries without prescribing a particular programming language, CI system, operating system, or ContextCanon baseline.
 
@@ -22,7 +22,7 @@ Apply all Rules below to every task in this Node.
 
 For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
 
-## Rules
+## Local Rules
 
 ### Recoverable planning
 
@@ -48,6 +48,10 @@ When the project owner resumes work after a short conversational interruption, e
 
 For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
 
+#### `CCW-009` — Use owner-approved fast-run blocks without weakening the final gate
+
+When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.
+
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
@@ -64,7 +68,7 @@ Keep a review PR or equivalent change set open until the project owner explicitl
 
 After a reviewed change is successfully merged into the accepted branch, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` or equivalent current-state documentation, and refresh README/CHANGELOG or review-status wording made stale by the merge when applicable.
 
-## Topics
+## Local Topics
 
 ### Executing a development block
 
@@ -72,4 +76,4 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md)
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)

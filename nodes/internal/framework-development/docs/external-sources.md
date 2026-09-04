@@ -79,7 +79,7 @@ The digest pair is all-or-nothing. For a pinned Source, the visible link is prov
 
 ## Git transport and multi-Node repositories
 
-Compiler 0.4 provides a generic Git candidate transport. It is not GitHub-specific and uses the system `git` executable.
+Compiler 0.5 provides a generic Git candidate transport. It is not GitHub-specific and uses the system `git` executable.
 
 A Git-backed Source adds three transport fields:
 
@@ -91,14 +91,32 @@ A Git-backed Source adds three transport fields:
 The fields mean:
 
 - `transport="git"` — use generic Git for candidate retrieval;
-- `ref="main"` — branch/tag/ref used for candidate discovery;
+- `ref="..."` — accepted Git provenance. Current onboarding records the exact accepted commit SHA. Historical symbolic branch/tag refs remain supported as an explicit discovery ref;
 - `node-path="..."` — location of this Context Node inside the retrieved repository snapshot. Use `.` for a repository-root Node.
 
 All three transport fields are required together. `node-path` is location only; the stable Node ID remains identity. Absolute paths, backslashes, and `..` traversal are rejected.
 
-Transport metadata is used for **updates of an already accepted pinned Source**. Initial selection/addition of reusable Sources is handled by the reviewed first-adoption onboarding path: the semantic reviewer may propose an `existing-source`, but final acceptance requires the exact immutable package identity the reviewer saw. A transport locator never bypasses review or exact package binding.
+Transport metadata is used for **updates of an already accepted pinned Source**. Initial onboarding may select reusable Sources through its reviewed placement path. Normal post-onboarding work also has one explicit first-adoption command when the human already knows the exact published package to compose:
 
-The larger real-project onboarding test still needs to validate how natural this Source-selection/reuse experience feels in practice.
+```text
+contextcanon source adopt <published-package-node> --node <consumer-node>
+```
+
+`source adopt` is the first-adoption decision itself; it is not an update shortcut. ContextCanon loads and verifies the exact package, requires its package path to be clean in Git, records the repository origin, exact current commit and Node path, validates the consumer's complete prospective composition in memory, installs the immutable package locally, then atomically adds one normal Source declaration. It does not touch or rewrite historical onboarding acceptance. If the same Source identity is already present with a different package, adoption refuses and the existing fetch/review/accept update path remains mandatory. Repeating adoption of the exact same package is idempotent.
+
+A transport locator never bypasses exact package binding. This command is especially useful when a reusable Source is deliberately added after onboarding or when an old migration run lost a pre-`run-inputs.json` owner choice: recovery becomes a new explicit owner decision instead of pretending lost historical state can be inferred.
+
+## First adoption after onboarding
+
+When a reusable published Node is not yet a Source of the consumer, adoption is intentionally one explicit operation followed by the ordinary build/check loop:
+
+```text
+contextcanon source adopt <published-package-node> --node <consumer-node>
+contextcanon build <consumer-node>
+contextcanon check <consumer-node>
+```
+
+This is appropriate only for **first adoption** of an exact package the operator has deliberately selected. Subsequent changes to that Source use the reviewable update loop below. If the consumer is an ancestor in a semantic Parent hierarchy, descendants do not change live: review/accept the affected Parent edges from the ancestor downward so each child deliberately advances to a Parent snapshot that already contains the newly adopted Source.
 
 ## Fetch, review, accept
 
@@ -112,9 +130,9 @@ contextcanon source accept <source-node-id> <candidate-package> --node <consumer
 
 ### Fetch
 
-`source fetch` clones the declared Git ref into a temporary checkout, enters `node-path`, loads and fully verifies the immutable package already published there, then copies only that immutable artifact to `.context/candidates/<package-digest>/`.
+`source fetch` explicitly performs update discovery. When `ref` is an exact accepted commit SHA (the normal current-onboarding form), discovery reads the repository's current default branch rather than cloning that old accepted commit forever. Historical symbolic refs are followed directly. ContextCanon enters `node-path`, loads and fully verifies the immutable package already published there, copies only that immutable artifact to `.context/candidates/<package-digest>/`, and records the exact discovered Git commit in a sibling `<package-digest>.git.json` provenance record.
 
-It does **not** modify `CONTEXT.src.md` or `.context/sources/`.
+It does **not** modify `CONTEXT.src.md` or `.context/sources/`. The moving remote branch is used only long enough to discover one candidate; the persisted candidate immediately becomes content-addressed package bytes plus an exact Git commit.
 
 ### Review
 
@@ -126,15 +144,48 @@ A successful review writes a deterministic receipt under:
 .context/source-reviews/<candidate-package-digest>.json
 ```
 
-The receipt is bound to the exact current `CONTEXT.src.md`, the currently accepted Source state, the candidate package identity, the deterministic diff, and successful structural validation.
+The receipt is bound to the exact current `CONTEXT.src.md`, the currently accepted Source state, the candidate package identity, the deterministic diff, successful structural validation, and — for Git-fetched candidates — the exact frozen candidate commit plus locator/node-path provenance recorded at fetch time.
 
 ### Accept
 
-`source accept` requires the matching review receipt. It revalidates the candidate and structural composition, rejects the operation if `CONTEXT.src.md` or the accepted Source state changed since review, installs the candidate into `.context/sources/<package-digest>/`, and then updates the visible Source version plus exact digest pins in `CONTEXT.src.md`.
+`source accept` requires the matching review receipt. It revalidates the candidate, its frozen Git provenance and structural composition, rejects the operation if `CONTEXT.src.md` or the accepted Source state changed since review, installs the candidate into `.context/sources/<package-digest>/`, and then updates the visible Source version plus exact digest pins in `CONTEXT.src.md`. Acceptance never contacts the remote repository.
 
-Git transport metadata is preserved when the pin is updated.
+For the current exact-commit transport form, `ref` advances from the previously accepted commit to the exact reviewed candidate commit. Historical symbolic branch/tag refs remain symbolic so their explicitly chosen discovery channel is preserved. In both cases the normal build still uses only the accepted local package bytes.
 
 This cannot force a human to read a review, but it prevents the supported acceptance path from skipping the deterministic review step entirely.
+
+## Normal daily update loop — KISS
+
+Updating a reusable Git-backed Source is intentionally boring. Only the first command needs the Source repository/network; everything after it uses frozen local candidate bytes.
+
+```text
+# 1. Explicitly look for a newer published package.
+contextcanon source fetch <source-node-id> --node <consumer-node>
+
+# The command prints the content-addressed Candidate package path. Use that path below.
+
+# 2. Review the exact frozen candidate against the currently accepted Source.
+contextcanon source review <source-node-id> <candidate-package> --node <consumer-node>
+
+# 3. Accept exactly that reviewed candidate when the diff is wanted.
+contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
+
+# 4. Regenerate/verify the consumer as usual.
+contextcanon build <consumer-node>
+contextcanon check <consumer-node>
+```
+
+The important mental model is:
+
+```text
+remote moving state ──fetch once──> frozen candidate ──review──> reviewed snapshot ──accept──> accepted local package
+                                           │                                              │
+                                           └── never used by normal build                 └── normal/offline build uses this
+```
+
+No package digest needs to be invented or looked up by the operator: `fetch` discovers the package and prints its exact local candidate path. If the Source repository disappears immediately afterwards, review and accept still work from that path. After acceptance, `.context/candidates/` and `.context/source-reviews/` are scratch/review state; the durable offline boundary is `.context/sources/<accepted-package-digest>/` plus the exact pin in `CONTEXT.src.md`.
+
+If no update is desired, do nothing. A newer remote commit has zero effect on `build` or `check` until this explicit loop reaches `accept`.
 
 ## Atomic publication and interrupted operations
 
@@ -198,7 +249,7 @@ A newer package is therefore a change request, not live inheritance. The determi
 
 ## Current implementation boundary
 
-Compiler 0.4 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, and atomic canonical-pin replacement.
+Compiler 0.5 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, atomic canonical-pin replacement, and exact-commit capture for update candidates discovered from a moving remote branch.
 
 The current reviewed first-adoption onboarding layer can also propose an existing reusable Source from a verified catalog and bind that proposal through human review to the exact Node ID, name, version, normalized digest, and package digest that were inspected. Final onboarding acceptance requires the same immutable package again and then pins it into normal offline consumer state.
 

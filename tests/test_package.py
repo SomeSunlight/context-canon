@@ -135,7 +135,7 @@ class CompiledPackageTests(unittest.TestCase):
         self.assertEqual(loaded.removed_rules[0].rule_id, "F-002")
         self.assertEqual(loaded.removed_rules[0].removed_by_node_id, "node-team")
         self.assertEqual([topic.id for topic in loaded.topics], ["TEAM-GUIDE"])
-        self.assertIn("CONTEXT/references/docs/team-guide.md", [file.path for file in loaded.files])
+        self.assertIn("CONTEXT/references/node-team/docs/team-guide.md", [file.path for file in loaded.files])
 
     def test_manifest_is_deterministic_for_equivalent_compiles(self):
         first_repo = self.make_repo()
@@ -173,7 +173,7 @@ class CompiledPackageTests(unittest.TestCase):
         repo = self.make_repo()
         _, team = self.compile_team(repo)
         artifact = self.write_artifact(team)
-        (artifact / "CONTEXT/references/docs/team-guide.md").unlink()
+        (artifact / "CONTEXT/references/node-team/docs/team-guide.md").unlink()
 
         with self.assertRaisesRegex(ContextCanonError, "package file set mismatch"):
             load_package(artifact)

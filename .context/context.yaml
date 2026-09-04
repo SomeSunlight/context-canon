@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.4.0"
+compiler_version: "0.5.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -11,18 +11,26 @@ node:
   name: "ContextCanon Gateway"
   version: "0.1.0-draft"
 
-# Accepted Source packages used by this build. Both digests are exact pins.
+# Accepted semantic Parent package. The locator is discovery metadata; build uses only the exact pin.
+parent: null
+
+# Accepted reusable Source packages used by this build. Both digests are exact pins.
 sources: []
+
+# Effective imported Context origins, flattened through accepted Parent/Source packages.
+imports: []
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules: []
   changes: []
   topics:
     - {"id": "CCG-TOPIC-ONBOARDING", "title": "Onboard an existing project"}
     - {"id": "CCG-TOPIC-DEVELOPMENT", "title": "ContextCanon framework development"}
 
-# Compiled Rule view with provenance plus the local Topic index.
+# Compiled effective Rule/Topic view with provenance.
 official:
   rules: []
   removed_rules: []
@@ -34,19 +42,22 @@ targets:
   - topic: "CCG-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "docs/onboarding.md"
+    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CCG-TOPIC-DEVELOPMENT"
     intent: "required"
     kind: "context-node"
     locator: "nodes/internal/framework-development"
+    target_node_id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
+    target_node_name: "ContextCanon Framework Development"
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "CONTEXT/README.md", "published": "CONTEXT/README.md"}
-  - {"source": "docs/onboarding.md", "published": "CONTEXT/references/docs/onboarding.md"}
-  - {"source": "nodes/internal/framework-development/docs/onboarding-reference.md", "published": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "docs/onboarding.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"}
+  - {"source": "nodes/internal/framework-development/docs/onboarding-reference.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f"
-  package_digest: "53cce2371fb80085ce8725acd6f30b2fce7b2a89e1e8e6206216e3e222c30cf0"
+  normalized_digest: "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683"
+  package_digest: "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"

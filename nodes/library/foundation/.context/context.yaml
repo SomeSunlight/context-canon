@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.4.0"
+compiler_version: "0.5.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -11,11 +11,19 @@ node:
   name: "ContextCanon Foundation"
   version: "0.1.0-draft"
 
-# Accepted Source packages used by this build. Both digests are exact pins.
+# Accepted semantic Parent package. The locator is discovery metadata; build uses only the exact pin.
+parent: null
+
+# Accepted reusable Source packages used by this build. Both digests are exact pins.
 sources: []
+
+# Effective imported Context origins, flattened through accepted Parent/Source packages.
+imports: []
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
+  state: null
+  plan: null
   rules:
     - {"id": "CC-001", "title": "One official package", "group": "Canonical context"}
     - {"id": "CC-002", "title": "Edit source, not generated output", "group": "Canonical context"}
@@ -34,7 +42,7 @@ local:
     - {"id": "CC-TOPIC-COMPOSITION", "title": "Context composition"}
     - {"id": "CC-TOPIC-HARNESSES", "title": "Harness adapters"}
 
-# Compiled Rule view with provenance plus the local Topic index.
+# Compiled effective Rule/Topic view with provenance.
 official:
   rules:
     - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
@@ -57,34 +65,43 @@ targets:
   - topic: "CC-TOPIC-AUTHORING"
     intent: "required"
     kind: "resource"
-    locator: "docs/source-format.md"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CC-TOPIC-AUTHORING"
     intent: "required"
     kind: "resource"
-    locator: "docs/official-context.md"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CC-TOPIC-AUTHORING"
     intent: "required"
     kind: "resource"
-    locator: "docs/topics.md"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CC-TOPIC-COMPOSITION"
     intent: "required"
     kind: "resource"
-    locator: "docs/composition.md"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "CC-TOPIC-HARNESSES"
     intent: "required"
     kind: "resource"
-    locator: "docs/harnesses.md"
+    locator: "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
+    target_node_id: null
+    target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "../../../CONTEXT/README.md", "published": "CONTEXT/README.md"}
-  - {"source": "docs/composition.md", "published": "CONTEXT/references/nodes/library/foundation/docs/composition.md"}
-  - {"source": "docs/harnesses.md", "published": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md"}
-  - {"source": "docs/official-context.md", "published": "CONTEXT/references/nodes/library/foundation/docs/official-context.md"}
-  - {"source": "docs/source-format.md", "published": "CONTEXT/references/nodes/library/foundation/docs/source-format.md"}
-  - {"source": "docs/topics.md", "published": "CONTEXT/references/nodes/library/foundation/docs/topics.md"}
+  - {"source": "docs/composition.md", "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"}
+  - {"source": "docs/harnesses.md", "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"}
+  - {"source": "docs/official-context.md", "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"}
+  - {"source": "docs/source-format.md", "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"}
+  - {"source": "docs/topics.md", "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b"
-  package_digest: "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
+  normalized_digest: "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b"
+  package_digest: "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"

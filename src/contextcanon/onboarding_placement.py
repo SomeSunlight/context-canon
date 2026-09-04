@@ -13,8 +13,9 @@ from .onboarding_structure import HumanStructurePlan, load_onboarding_structure_
 from .parser import ContextCanonError
 
 
-PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v0"
+PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v1"
 PLACEMENT_KINDS = {
+    "overview",
     "rule",
     "topic-resource",
     "ordinary-documentation",
@@ -23,7 +24,7 @@ PLACEMENT_KINDS = {
     "authority-mapping",
     "unresolved",
 }
-PLACEMENT_ACTIONS = {"keep", "move", "reference", "map"}
+PLACEMENT_ACTIONS = {"keep", "promote", "reference", "map"}
 WORDING_ORIGINS = {"exact", "lightly-edited", "synthesized"}
 CONFIDENCE_LEVELS = {"high", "medium", "low"}
 
@@ -83,10 +84,37 @@ class PlacementSourceReuse:
 
 
 @dataclass(frozen=True)
+class PlacementSourceEdit:
+    id: str
+    path: str
+    sha256: str
+    start_line: int
+    end_line: int
+    linked_item_ids: tuple[str, ...]
+    replacement: str
+    rationale: str
+    confidence: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "path": self.path,
+            "sha256": self.sha256,
+            "start_line": self.start_line,
+            "end_line": self.end_line,
+            "linked_item_ids": list(self.linked_item_ids),
+            "replacement": self.replacement,
+            "rationale": self.rationale,
+            "confidence": self.confidence,
+        }
+
+
+@dataclass(frozen=True)
 class OnboardingPlacementProposal:
     evidence_digest: str
     structure_digest: str
     items: tuple[PlacementItem, ...]
+    source_edits: tuple[PlacementSourceEdit, ...]
     source_reuses: tuple[PlacementSourceReuse, ...]
     proposal_digest: str
     structure: HumanStructurePlan
@@ -141,6 +169,23 @@ def _optional_string(value: object, label: str) -> str | None:
     if value is None:
         return None
     return _string(value, label)
+
+
+def _replacement(value: object, label: str) -> str:
+    if not isinstance(value, str):
+        raise _error(f"{label} must be a string")
+    if "\x00" in value:
+        raise _error(f"{label} contains an unsupported NUL character")
+    return value.replace("\r\n", "\n").replace("\r", "\n").strip("\n")
+
+
+def _nonblank_line_numbers(text: str, start_line: int, end_line: int) -> set[int]:
+    lines = text.splitlines()
+    return {
+        line_number
+        for line_number in range(start_line, end_line + 1)
+        if lines[line_number - 1].strip()
+    }
 
 
 def _confidence(value: object, label: str) -> str:
@@ -217,7 +262,7 @@ def _parse_payload(kind: str, raw: object, label: str, snapshot: EvidenceSnapsho
             "document_paths": _path_list(payload["document_paths"], f"{label}.document_paths", snapshot),
             "reason": _string(payload["reason"], f"{label}.reason"),
         }
-    if kind in {"state", "plan"}:
+    if kind in {"overview", "state", "plan"}:
         _exact_keys(payload, {"text", "wording_origin"}, label)
         return {
             "text": _string(payload["text"], f"{label}.text"),
@@ -252,7 +297,17 @@ def load_onboarding_placement_proposal(
     node_keys = {node.key for node in structure.nodes}
 
     raw = _read_json(proposal_path)
-    _exact_keys(raw, {"schema", "evidence_digest", "structure_digest", "items", "source_reuses"}, "proposal")
+    required_top = {"schema", "evidence_digest", "structure_digest", "items", "source_reuses"}
+    allowed_top = required_top | {"source_edits"}
+    unknown_top = sorted(set(raw) - allowed_top)
+    missing_top = sorted(required_top - set(raw))
+    if unknown_top or missing_top:
+        detail = []
+        if missing_top:
+            detail.append(f"missing fields: {', '.join(missing_top)}")
+        if unknown_top:
+            detail.append(f"unknown fields: {', '.join(unknown_top)}")
+        raise _error(f"proposal has {'; '.join(detail)}")
     if raw["schema"] != PLACEMENT_PROPOSAL_SCHEMA:
         raise _error(f"unsupported schema {raw['schema']!r}")
     if raw["evidence_digest"] != snapshot.evidence_digest:
@@ -286,10 +341,29 @@ def load_onboarding_placement_proposal(
         destination = _optional_string(raw_item["destination_node_key"], f"items[{index}].destination_node_key")
         if destination is not None and destination not in node_keys:
             raise _error(f"items[{index}] references unknown destination Node {destination}")
-        if kind in {"rule", "topic-resource", "state", "plan", "authority-mapping"} and destination is None:
+        if kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping", "unresolved"} and destination is None:
             raise _error(f"items[{index}] kind {kind} requires destination_node_key")
-        if kind == "authority-mapping" and action != "map":
-            raise _error(f"items[{index}] authority-mapping must use action 'map'")
+        allowed_actions = {
+            "overview": {"promote"},
+            "rule": {"promote"},
+            "topic-resource": {"reference"},
+            "ordinary-documentation": {"keep"},
+            "state": {"promote"},
+            "plan": {"promote"},
+            "authority-mapping": {"map"},
+            "unresolved": {"promote"},
+        }
+        if action not in allowed_actions[str(kind)]:
+            expected = ", ".join(sorted(allowed_actions[str(kind)]))
+            raise _error(f"items[{index}] kind {kind} must use action {expected}")
+        payload = _parse_payload(str(kind), raw_item["payload"], f"items[{index}].payload", snapshot)
+        if kind == "authority-mapping":
+            fixed = set(structure.fixed_markdown)
+            for path in payload["authority_paths"]:
+                if path not in fixed:
+                    raise _error(
+                        f"items[{index}] authority path {path!r} is not marked fixed in the accepted structure"
+                    )
         items.append(
             PlacementItem(
                 id=item_id,
@@ -300,7 +374,88 @@ def load_onboarding_placement_proposal(
                 rationale=_string(raw_item["rationale"], f"items[{index}].rationale"),
                 confidence=_confidence(raw_item["confidence"], f"items[{index}].confidence"),
                 evidence=_references(raw_item["evidence"], f"items[{index}].evidence", snapshot),
-                payload=_parse_payload(str(kind), raw_item["payload"], f"items[{index}].payload", snapshot),
+                payload=payload,
+            )
+        )
+
+    raw_source_edits = raw.get("source_edits", [])
+    if not isinstance(raw_source_edits, list):
+        raise _error("source_edits must be a list")
+    source_edits: list[PlacementSourceEdit] = []
+    item_by_id = {item.id: item for item in items}
+    occupied: dict[str, list[tuple[int, int, str]]] = {}
+    fixed_markdown = set(structure.fixed_markdown)
+    for index, raw_edit in enumerate(raw_source_edits):
+        label = f"source_edits[{index}]"
+        if not isinstance(raw_edit, dict):
+            raise _error(f"{label} must be an object")
+        _exact_keys(
+            raw_edit,
+            {"id", "path", "sha256", "start_line", "end_line", "linked_item_ids", "replacement", "rationale", "confidence"},
+            label,
+        )
+        edit_id = _string(raw_edit["id"], f"{label}.id")
+        if edit_id in seen_ids:
+            raise _error(f"duplicate proposal id {edit_id}")
+        seen_ids.add(edit_id)
+        edit_path = _string(raw_edit["path"], f"{label}.path")
+        entry = snapshot.by_path.get(edit_path)
+        if entry is None:
+            raise _error(f"{label}.path is not present in frozen Evidence: {edit_path}")
+        if not edit_path.lower().endswith(".md"):
+            raise _error(f"{label}.path must be mutable Markdown")
+        if edit_path in fixed_markdown:
+            raise _error(f"{label}.path is fixed Markdown and cannot receive a source edit")
+        if raw_edit["sha256"] != entry.sha256:
+            raise _error(f"{label}.sha256 does not match frozen Evidence: {edit_path}")
+        start = raw_edit["start_line"]
+        end = raw_edit["end_line"]
+        if not isinstance(start, int) or isinstance(start, bool) or start < 1:
+            raise _error(f"{label}.start_line must be a positive integer")
+        if not isinstance(end, int) or isinstance(end, bool) or end < start or end > entry.line_count:
+            raise _error(f"{label}.end_line is outside the frozen Evidence range")
+        linked_raw = raw_edit["linked_item_ids"]
+        if not isinstance(linked_raw, list) or not linked_raw:
+            raise _error(f"{label}.linked_item_ids must be a non-empty list")
+        linked = tuple(_string(value, f"{label}.linked_item_ids[{i}]") for i, value in enumerate(linked_raw))
+        if len(linked) != len(set(linked)):
+            raise _error(f"{label}.linked_item_ids contains duplicates")
+        covered: set[int] = set()
+        for linked_id in linked:
+            linked_item = item_by_id.get(linked_id)
+            if linked_item is None:
+                raise _error(f"{label} references unknown placement item {linked_id}")
+            if linked_item.action != "promote":
+                raise _error(f"{label} may link only promoted placement items; {linked_id} uses {linked_item.action}")
+            if linked_item.kind == "unresolved":
+                raise _error(f"{label} cannot use unresolved finding {linked_id} to justify source cleanup")
+            for reference in linked_item.evidence:
+                if reference.path == edit_path:
+                    covered.update(range(reference.start_line, reference.end_line + 1))
+        evidence_text = (snapshot.root / "evidence" / edit_path).read_text(encoding="utf-8")
+        required_lines = _nonblank_line_numbers(evidence_text, start, end)
+        missing_lines = sorted(required_lines - covered)
+        if missing_lines:
+            missing = ", ".join(str(line) for line in missing_lines)
+            raise _error(
+                f"{label} non-blank range lines are not fully covered by Evidence of its linked promoted items; "
+                f"missing lines: {missing}"
+            )
+        for other_start, other_end, other_id in occupied.setdefault(edit_path, []):
+            if not (end < other_start or start > other_end):
+                raise _error(f"{label} overlaps source edit {other_id} in {edit_path}")
+        occupied[edit_path].append((start, end, edit_id))
+        source_edits.append(
+            PlacementSourceEdit(
+                id=edit_id,
+                path=edit_path,
+                sha256=entry.sha256,
+                start_line=start,
+                end_line=end,
+                linked_item_ids=linked,
+                replacement=_replacement(raw_edit["replacement"], f"{label}.replacement"),
+                rationale=_string(raw_edit["rationale"], f"{label}.rationale"),
+                confidence=_confidence(raw_edit["confidence"], f"{label}.confidence"),
             )
         )
 
@@ -356,12 +511,14 @@ def load_onboarding_placement_proposal(
         "evidence_digest": snapshot.evidence_digest,
         "structure_digest": structure.structure_digest,
         "items": [item.to_dict() for item in items],
+        "source_edits": [edit.to_dict() for edit in source_edits],
         "source_reuses": [reuse.to_dict() for reuse in reuses],
     }
     return OnboardingPlacementProposal(
         evidence_digest=snapshot.evidence_digest,
         structure_digest=structure.structure_digest,
         items=tuple(items),
+        source_edits=tuple(source_edits),
         source_reuses=tuple(reuses),
         proposal_digest=_canonical_digest(normalized),
         structure=structure,

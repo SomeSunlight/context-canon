@@ -36,6 +36,9 @@ _HEADER_RE = re.compile(
 )
 _TREE_START = "<!-- contextcanon-node-tree:start -->"
 _TREE_END = "<!-- contextcanon-node-tree:end -->"
+_FIXED_MARKDOWN_START = "<!-- contextcanon-fixed-markdown:start -->"
+_FIXED_MARKDOWN_END = "<!-- contextcanon-fixed-markdown:end -->"
+_FIXED_MARKDOWN_LINE_RE = re.compile(r"^- `(?P<path>[^`]+)`$")
 
 
 @dataclass(frozen=True)
@@ -165,6 +168,7 @@ class HumanStructurePlan:
     evidence_digest: str
     proposal_digest: str
     nodes: tuple[HumanStructureNode, ...]
+    fixed_markdown: tuple[str, ...]
     structure_digest: str
 
 
@@ -411,6 +415,11 @@ def load_onboarding_structure_proposal(proposal_path: Path, snapshot_root: Path)
             path = _safe_relative_path(raw_path, f"knowledge_bodies[{index}].paths[{path_index}]")
             if path not in snapshot.by_path:
                 raise _error(f"knowledge body path is not in evidence snapshot: {path}")
+            if not path.lower().endswith(".md"):
+                raise _error(
+                    f"knowledge body path {path!r} is not supported in this experiment; "
+                    "non-Node document policy currently supports Markdown only"
+                )
             paths.append(path)
         if len(set(paths)) != len(paths):
             raise _error(f"knowledge_bodies[{index}].paths contains duplicates")
@@ -540,6 +549,8 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
         "",
         "## Node tree",
         "",
+        "> ✏️ Edit the Node tree between the markers below. Indentation defines the reviewed semantic parent/child hierarchy.",
+        "",
         _TREE_START,
     ]
 
@@ -553,7 +564,7 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
             render_children(node.key)
 
     render_children(None)
-    lines.extend([_TREE_END, "", "## Proposed non-Node knowledge bodies", ""])
+    lines.extend([_TREE_END, "", "> End editable Node tree.", "", "## Proposed non-Node knowledge bodies", ""])
     if proposal.knowledge_bodies:
         for body in proposal.knowledge_bodies:
             target = body.suggested_node_key or "unassigned"
@@ -564,7 +575,21 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
     else:
         lines.append("None proposed.")
 
-    lines.extend(["", "## Proposed reusable Source matches", ""])
+    fixed_defaults = _default_fixed_markdown(proposal)
+    lines.extend(
+        [
+            "",
+            "## Fixed Markdown",
+            "",
+            "Ordinary project-documentation Markdown is mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` are preselected below as fixed candidates; review this list directly and keep only Markdown that must remain fixed/authoritative. The later placement pass may reference or map fixed Markdown but must not plan destructive cleanup of it.",
+            "",
+            _FIXED_MARKDOWN_START,
+        ]
+    )
+    if fixed_defaults:
+        for path in fixed_defaults:
+            lines.append(f"- `{path}`")
+    lines.extend([_FIXED_MARKDOWN_END, "", "## Proposed reusable Source matches", ""])
     if proposal.source_reuses:
         for reuse in proposal.source_reuses:
             lines.append(
@@ -631,6 +656,23 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _default_fixed_markdown(proposal: OnboardingStructureProposal) -> tuple[str, ...]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for body in proposal.knowledge_bodies:
+        if body.kind not in {"authoritative-reference", "imported-corpus"}:
+            continue
+        for path in body.paths:
+            if path not in seen:
+                seen.add(path)
+                result.append(path)
+    return tuple(result)
+
+
+def _knowledge_body_markdown(proposal: OnboardingStructureProposal) -> set[str]:
+    return {path for body in proposal.knowledge_bodies for path in body.paths}
 
 
 def _human_key(name: str, path: str, parent_key: str | None, lifecycle: str) -> str:
@@ -726,16 +768,45 @@ def load_structure_markdown(
         if node.path == "." or (prefix and not node.path.startswith(prefix)):
             raise _error(f"edited Node {node.name!r} path {node.path!r} must be nested under parent path {parent.path!r}")
 
+    fixed_markdown = _default_fixed_markdown(proposal)
+    if _FIXED_MARKDOWN_START in raw_lines or _FIXED_MARKDOWN_END in raw_lines:
+        try:
+            fixed_start = raw_lines.index(_FIXED_MARKDOWN_START)
+            fixed_end = raw_lines.index(_FIXED_MARKDOWN_END)
+        except ValueError as exc:
+            raise _error("Fixed Markdown section must contain both boundary markers") from exc
+        if fixed_end < fixed_start:
+            raise _error("Fixed Markdown boundary markers are reversed")
+        allowed = _knowledge_body_markdown(proposal)
+        selected: list[str] = []
+        seen_fixed: set[str] = set()
+        for line_number, line in enumerate(raw_lines[fixed_start + 1 : fixed_end], start=fixed_start + 2):
+            if not line.strip():
+                continue
+            match = _FIXED_MARKDOWN_LINE_RE.fullmatch(line)
+            if match is None:
+                raise _error(f"Fixed Markdown line {line_number} must look like '- `docs/file.md`'")
+            path = match.group("path")
+            if path not in allowed:
+                raise _error(f"Fixed Markdown path is not a proposed knowledge-body Markdown path: {path}")
+            if path in seen_fixed:
+                raise _error(f"Fixed Markdown contains duplicate path {path}")
+            seen_fixed.add(path)
+            selected.append(path)
+        fixed_markdown = tuple(selected)
+
     normalized = {
         "schema": STRUCTURE_MARKDOWN_SCHEMA,
         "evidence_digest": proposal.evidence_digest,
         "proposal_digest": proposal.proposal_digest,
         "nodes": [node.to_dict() for node in nodes],
+        "fixed_markdown": list(fixed_markdown),
     }
     return HumanStructurePlan(
         evidence_digest=proposal.evidence_digest,
         proposal_digest=proposal.proposal_digest,
         nodes=tuple(nodes),
+        fixed_markdown=fixed_markdown,
         structure_digest=_canonical_digest(normalized),
     )
 

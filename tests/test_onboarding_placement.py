@@ -15,7 +15,12 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
-from contextcanon.onboarding_placement import PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal, render_placement_review
+from contextcanon.onboarding_placement import (
+    PLACEMENT_PROPOSAL_SCHEMA,
+    _nonblank_line_numbers,
+    load_onboarding_placement_proposal,
+    render_placement_review,
+)
 from contextcanon.onboarding_placement_instruction import build_onboarding_placement_instruction
 from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_or_load_structure_markdown, load_structure_markdown, load_onboarding_structure_proposal
 from contextcanon.onboarding_workspace import open_onboarding_workspace
@@ -106,7 +111,7 @@ class OnboardingPlacementTests(unittest.TestCase):
                     "id": "P-001",
                     "title": "Repository is the installation specification",
                     "kind": "rule",
-                    "action": "move",
+                    "action": "promote",
                     "destination_node_key": "N-001",
                     "rationale": "This is durable repository-wide governance and the existing wording is already precise.",
                     "confidence": "high",
@@ -131,6 +136,19 @@ class OnboardingPlacementTests(unittest.TestCase):
                         "resource_paths": ["docs/architecture.md"],
                     },
                 },
+            ],
+            "source_edits": [
+                {
+                    "id": "E-001",
+                    "path": "docs/architecture.md",
+                    "sha256": architecture.sha256,
+                    "start_line": 2,
+                    "end_line": 2,
+                    "linked_item_ids": ["P-001"],
+                    "replacement": "Installation authority is maintained in [AI Workstation Context](../CONTEXT.md).",
+                    "rationale": "Keep architecture orientation without maintaining the promoted rule twice.",
+                    "confidence": "high",
+                }
             ],
             "source_reuses": [
                 {
@@ -157,11 +175,45 @@ class OnboardingPlacementTests(unittest.TestCase):
             catalog_package_roots=[source_root],
         )
         self.assertIn("place the books onto the already accepted shelves", instruction.text)
+        self.assertIn("where each durable piece of project knowledge should be **maintained in the future**", instruction.text)
+        self.assertIn("README as first-contact orientation/navigation", instruction.text)
+        self.assertIn("Overview is a condensation task", instruction.text)
+        self.assertIn("one bullet-sized fact", instruction.text)
+        self.assertIn("three or more independently maintainable claims", instruction.text)
+        self.assertIn("short versionless Overview", instruction.text)
+        self.assertIn("Splitting is not permission to drop facts", instruction.text)
+        self.assertIn("Zero semantic loss per Source edit", instruction.text)
+        self.assertIn("blank Markdown separator lines", instruction.text)
+        self.assertIn("last documented", instruction.text)
+        self.assertIn("local open question", instruction.text)
+        self.assertIn("real plain-language summary", instruction.text)
+        self.assertIn("Pointer-only replacements", instruction.text)
+        self.assertIn("A reader should learn the gist without following the link", instruction.text)
+        self.assertIn("source_edits", instruction.text)
+        self.assertIn("one shared source edit", instruction.text)
+        self.assertIn("do **not** keep `architecture.md` as a Topic/Resource merely because", instruction.text)
+        self.assertIn("Use action `reference` only for `topic-resource`", instruction.text)
         self.assertIn("Do not redesign it in this pass", instruction.text)
         self.assertIn("wording_origin", instruction.text)
-        self.assertIn("use it verbatim", instruction.text)
+        self.assertIn("move with minimal wording change", instruction.text)
         self.assertIn("Development Workflow", instruction.text)
         self.assertIn(instruction.structure_digest, instruction.text)
+
+    def test_source_edit_coverage_ignores_only_blank_separator_lines(self):
+        self.assertEqual(_nonblank_line_numbers("table\n\nrule\n", 1, 3), {1, 3})
+
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["source_edits"][0]["start_line"] = 1
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "missing lines: 1"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path,
+                prepared.snapshot_root,
+                workspace.structure_proposal_path,
+                workspace.structure_path,
+                catalog_package_roots=[source_root],
+            )
 
     def test_placement_validates_exact_evidence_structure_and_catalog(self):
         _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
@@ -184,6 +236,7 @@ class OnboardingPlacementTests(unittest.TestCase):
         )
         self.assertEqual(first.proposal_digest, second.proposal_digest)
         self.assertEqual(first.items[0].payload["wording_origin"], "exact")
+        self.assertEqual(first.source_edits[0].linked_item_ids, ("P-001",))
         self.assertEqual(first.source_reuses[0].source_node_id, package.metadata.id)
 
     def test_placement_rejects_stale_structure_and_unsupplied_source(self):
@@ -224,11 +277,79 @@ class OnboardingPlacementTests(unittest.TestCase):
             catalog_package_roots=[source_root],
         )
         review = render_placement_review(proposal, prepared.snapshot_root)
-        self.assertIn("action: `move`", review)
+        self.assertIn("action: `promote`", review)
         self.assertIn("Destination: AI Workstation (`.`)", review)
         self.assertIn("Wording origin: **exact**", review)
         self.assertIn("The repository is the installation specification.", review)
         self.assertIn("reuse Development Workflow", review)
+
+    def test_overview_is_distinct_from_state_and_rule_reference_is_rejected(self):
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["items"].insert(0, {
+            "id": "P-000",
+            "title": "Stable root responsibility",
+            "kind": "overview",
+            "action": "promote",
+            "destination_node_key": "N-001",
+            "rationale": "This is stable orientation, not temporary project state.",
+            "confidence": "high",
+            "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 1, "end_line": 1}],
+            "payload": {"text": "AI Workstation owns reproducible workstation setup.", "wording_origin": "synthesized"},
+        })
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+            workspace.structure_path, catalog_package_roots=[source_root],
+        )
+        self.assertEqual(proposal.items[0].kind, "overview")
+
+        raw["items"][1]["action"] = "reference"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "kind rule must use action promote"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
+
+
+    def test_unresolved_requires_destination_and_promotes_for_later_investigation(self):
+        _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
+        raw = self.placement_dict(prepared, workspace, readme, architecture, package)
+        raw["items"].append({
+            "id": "P-003",
+            "title": "Version semantics unclear",
+            "kind": "unresolved",
+            "action": "keep",
+            "destination_node_key": None,
+            "rationale": "The question should survive onboarding.",
+            "confidence": "medium",
+            "evidence": [{"path": "README.md", "sha256": readme.sha256, "start_line": 1, "end_line": 1}],
+            "payload": {"question": "Which version surface is canonical?"},
+        })
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "requires destination_node_key"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
+
+        raw["items"][-1]["destination_node_key"] = "N-001"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "kind unresolved must use action promote"):
+            load_onboarding_placement_proposal(
+                workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+                workspace.structure_path, catalog_package_roots=[source_root],
+            )
+
+        raw["items"][-1]["action"] = "promote"
+        workspace.placement_proposal_path.write_text(json.dumps(raw), encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path, prepared.snapshot_root, workspace.structure_proposal_path,
+            workspace.structure_path, catalog_package_roots=[source_root],
+        )
+        self.assertEqual(proposal.items[-1].kind, "unresolved")
+        self.assertEqual(proposal.items[-1].destination_node_key, "N-001")
 
     def test_cli_writes_instruction_validates_and_renders_review_without_redirects(self):
         _, prepared, workspace, readme, architecture, source_root, package = self.make_case()
@@ -254,6 +375,7 @@ class OnboardingPlacementTests(unittest.TestCase):
             ])
         self.assertEqual(result, 0)
         self.assertIn("Placement items: 2", stdout.getvalue())
+        self.assertIn("Source edits: 1", stdout.getvalue())
         self.assertIn("Source reuses: 1", stdout.getvalue())
 
         stdout = io.StringIO()
@@ -264,7 +386,11 @@ class OnboardingPlacementTests(unittest.TestCase):
             ])
         self.assertEqual(result, 0)
         self.assertTrue(workspace.placement_path.is_file())
-        self.assertIn("Wording origin: **exact**", workspace.placement_path.read_text(encoding="utf-8"))
+        review_text = workspace.placement_path.read_text(encoding="utf-8")
+        self.assertIn("Wording: `exact`", review_text)
+        self.assertIn("### Into Node — editable", review_text)
+        self.assertIn("### Source before — frozen Evidence", review_text)
+        self.assertIn("### Source after promotion", review_text)
 
 
 if __name__ == "__main__":

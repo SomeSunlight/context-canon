@@ -1,32 +1,34 @@
 {
   "changes": [],
-  "compiler_version": "0.4.0",
+  "compiler_version": "0.5.0",
   "digests": {
-    "normalized": "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463",
-    "package": "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a"
+    "normalized": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
+    "package": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "0fba1f72ec64d5e8fb331b6b634d69ea6b14787f664a0ada43af5d5db3ca9a40",
-      "size": 4400
+      "sha256": "eee3ddfbab1292f0c6d5e0024909d05b318d9a4afeef31c01e7a35bdceb99f5a",
+      "size": 5105
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
-      "path": "CONTEXT/references/nodes/library/development-workflow/docs/change-workflow.md",
-      "sha256": "fc8b969e1dc2643bf5d89f45d9fd12d412bb7e0c799acbf232f453c66ba3e846",
-      "size": 8079
+      "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
+      "sha256": "bbd8fff080a48458badd28f6a996f67c0b5a818ccf76a8d797763ba660abf17f",
+      "size": 9519
     }
   ],
+  "imports": [],
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
     "version": "0.2.0-draft"
   },
+  "parent": null,
   "removed_rules": [],
   "rules": [
     {
@@ -81,6 +83,16 @@
     },
     {
       "group": "Proportional verification",
+      "id": "CCW-009",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.",
+      "title": "Use owner-approved fast-run blocks without weakening the final gate",
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker fast-run from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
+    },
+    {
+      "group": "Proportional verification",
       "id": "CCW-005",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
@@ -122,7 +134,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/change-workflow.md"
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
         }
       ],
       "title": "Executing a development block"

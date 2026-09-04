@@ -43,6 +43,19 @@ def package_dependencies(compiled: CompiledNode) -> tuple[PackageDependency, ...
     )
 
 
+def package_parent_dependency(compiled: CompiledNode) -> PackageDependency | None:
+    parent = compiled.parent_package
+    if parent is None:
+        return None
+    return PackageDependency(
+        id=parent.metadata.id,
+        name=parent.metadata.name,
+        version=parent.metadata.version,
+        normalized_digest=parent.normalized_digest,
+        package_digest=parent.package_digest,
+    )
+
+
 def package_content_files(compiled: CompiledNode) -> dict[str, bytes]:
     return {
         "CONTEXT.md": compiled.official_markdown.encode("utf-8"),
@@ -74,6 +87,8 @@ def semantic_payload(
     rules: Iterable[Rule],
     removed_rules: Iterable[RuleRemoval],
     topics: Iterable[Topic],
+    parent: PackageDependency | None = None,
+    imports: Iterable[PackageDependency] = (),
 ) -> dict[str, Any]:
     """Return the canonical semantic payload used for normalized_digest.
 
@@ -90,6 +105,20 @@ def semantic_payload(
                 "normalized_digest": source.normalized_digest,
             }
             for source in sources
+        ),
+        key=lambda item: (item["id"], item["version"], item["normalized_digest"]),
+    )
+    import_items = sorted(
+        (
+            {
+                **{
+                    "id": dependency.id,
+                    "version": dependency.version,
+                    "normalized_digest": dependency.normalized_digest,
+                },
+                **({"why": dependency.why} if dependency.why else {}),
+            }
+            for dependency in imports
         ),
         key=lambda item: (item["id"], item["version"], item["normalized_digest"]),
     )
@@ -114,7 +143,7 @@ def semantic_payload(
     topic_items = [_topic_dict(topic) for topic in topics]
     topic_items.sort(key=lambda item: (item["origin_node_id"], item["id"]))
 
-    return {
+    payload: dict[str, Any] = {
         "node": {
             "id": metadata.id,
             "name": metadata.name,
@@ -126,6 +155,18 @@ def semantic_payload(
         "removed_rules": removal_items,
         "topics": topic_items,
     }
+    # Keep old package/v0 digests valid when no imports exist. Once a Node
+    # composes context, the flattened import identities become authenticated
+    # semantic provenance rather than unauthenticated manifest decoration.
+    if import_items:
+        payload["imports"] = import_items
+    if parent is not None:
+        payload["parent"] = {
+            "id": parent.id,
+            "version": parent.version,
+            "normalized_digest": parent.normalized_digest,
+        }
+    return payload
 
 
 def semantic_digest(
@@ -135,8 +176,10 @@ def semantic_digest(
     rules: Iterable[Rule],
     removed_rules: Iterable[RuleRemoval],
     topics: Iterable[Topic],
+    parent: PackageDependency | None = None,
+    imports: Iterable[PackageDependency] = (),
 ) -> str:
-    payload = semantic_payload(metadata, sources, changes, rules, removed_rules, topics)
+    payload = semantic_payload(metadata, sources, changes, rules, removed_rules, topics, parent, imports)
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -148,7 +191,9 @@ def semantic_digest_for_node(compiled: CompiledNode) -> str:
         compiled.local_changes,
         (*compiled.inherited_rules, *compiled.local_rules),
         compiled.removed_rules,
-        compiled.local_topics,
+        (*compiled.inherited_topics, *compiled.local_topics),
+        package_parent_dependency(compiled),
+        compiled.imported_contexts,
     )
 
 
@@ -171,10 +216,12 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
                 removal.why,
             ),
         )),
-        topics=tuple(compiled.local_topics),
+        topics=tuple((*compiled.inherited_topics, *compiled.local_topics)),
         files=package_file_metadata(files),
         normalized_digest=compiled.normalized_digest,
         package_digest=compiled.package_digest,
+        imports=tuple(compiled.imported_contexts),
+        parent=package_parent_dependency(compiled),
     )
 
 
@@ -188,7 +235,9 @@ def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> st
             "name": package.metadata.name,
             "version": package.metadata.version,
         },
+        "parent": asdict(package.parent) if package.parent is not None else None,
         "sources": [asdict(source) for source in package.sources],
+        "imports": [asdict(dependency) for dependency in package.imports],
         "changes": [asdict(change) for change in package.changes],
         "rules": [asdict(rule) for rule in package.rules],
         "removed_rules": [asdict(removal) for removal in package.removed_rules],
@@ -233,8 +282,17 @@ def load_package(package_root: Path) -> CompiledPackage:
         _string(node.get("version"), "node.version"),
     )
 
+    parent_raw = root.get("parent")
+    parent = _parse_parent_dependency(parent_raw) if parent_raw is not None else None
     sources = tuple(_parse_dependency(item, index) for index, item in enumerate(_list(root.get("sources"), "sources")))
+    imports = tuple(
+        _parse_import_dependency(item, index)
+        for index, item in enumerate(_list(root.get("imports", []), "imports"))
+    )
     _unique((source.id for source in sources), "package Source Node ID")
+    _unique((dependency.id for dependency in imports), "package imported Context Node ID")
+    if parent is not None and any(source.id == parent.id for source in sources):
+        raise ContextCanonError("Context package cannot use the same Node as Parent and ordinary Source")
     changes = tuple(_parse_change(item, index) for index, item in enumerate(_list(root.get("changes"), "changes")))
     rules = tuple(_parse_rule(item, index) for index, item in enumerate(_list(root.get("rules"), "rules")))
     removed_rules = tuple(
@@ -248,7 +306,7 @@ def load_package(package_root: Path) -> CompiledPackage:
     normalized_digest = _digest(digests.get("normalized"), "digests.normalized")
     expected_package_digest = _digest(digests.get("package"), "digests.package")
 
-    actual_normalized = semantic_digest(metadata, sources, changes, rules, removed_rules, topics)
+    actual_normalized = semantic_digest(metadata, sources, changes, rules, removed_rules, topics, parent, imports)
     if actual_normalized != normalized_digest:
         raise ContextCanonError(
             f"Context package normalized digest mismatch in {manifest_path}: "
@@ -284,6 +342,8 @@ def load_package(package_root: Path) -> CompiledPackage:
         files=tuple(sorted(files, key=lambda file: file.path)),
         normalized_digest=normalized_digest,
         package_digest=expected_package_digest,
+        imports=tuple(imports),
+        parent=parent,
     )
 
 
@@ -298,9 +358,15 @@ def artifact_files(compiled: CompiledNode) -> dict[str, bytes]:
 
 def _topic_dict(topic: Topic) -> dict[str, Any]:
     item = asdict(topic)
+    targets: list[dict[str, Any]] = []
+    for target in item["targets"]:
+        targets.append({key: value for key, value in target.items() if value is not None})
     item["targets"] = sorted(
-        item["targets"],
-        key=lambda target: (target["intent"], target["kind"], target["locator"]),
+        targets,
+        key=lambda target: (
+            target["intent"], target["kind"], target["locator"],
+            target.get("target_node_id", ""), target.get("target_node_name", ""),
+        ),
     )
     return item
 
@@ -342,6 +408,17 @@ def _read_and_verify_files(package_root: Path, expected: tuple[PackageFile, ...]
     return contents
 
 
+def _parse_parent_dependency(value: Any) -> PackageDependency:
+    item = _dict(value, "parent")
+    return PackageDependency(
+        _string(item.get("id"), "parent.id"),
+        _string(item.get("name"), "parent.name"),
+        _string(item.get("version"), "parent.version"),
+        _digest(item.get("normalized_digest"), "parent.normalized_digest"),
+        _digest(item.get("package_digest"), "parent.package_digest"),
+    )
+
+
 def _parse_dependency(value: Any, index: int) -> PackageDependency:
     item = _dict(value, f"sources[{index}]")
     return PackageDependency(
@@ -350,6 +427,18 @@ def _parse_dependency(value: Any, index: int) -> PackageDependency:
         _string(item.get("version"), f"sources[{index}].version"),
         _digest(item.get("normalized_digest"), f"sources[{index}].normalized_digest"),
         _digest(item.get("package_digest"), f"sources[{index}].package_digest"),
+    )
+
+
+def _parse_import_dependency(value: Any, index: int) -> PackageDependency:
+    item = _dict(value, f"imports[{index}]")
+    return PackageDependency(
+        _string(item.get("id"), f"imports[{index}].id"),
+        _string(item.get("name"), f"imports[{index}].name"),
+        _string(item.get("version"), f"imports[{index}].version"),
+        _digest(item.get("normalized_digest"), f"imports[{index}].normalized_digest"),
+        _digest(item.get("package_digest"), f"imports[{index}].package_digest"),
+        None if item.get("why") is None else _string(item.get("why"), f"imports[{index}].why"),
     )
 
 
@@ -440,10 +529,20 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
         raise ContextCanonError(f"Invalid {label}.kind: {kind!r}")
     if intent not in {"required", "optional"}:
         raise ContextCanonError(f"Invalid {label}.intent: {intent!r}")
+    target_node_id = item.get("target_node_id")
+    target_node_name = item.get("target_node_name")
+    if target_node_id is not None and not isinstance(target_node_id, str):
+        raise ContextCanonError(f"Invalid {label}.target_node_id: expected string or null")
+    if target_node_name is not None and not isinstance(target_node_name, str):
+        raise ContextCanonError(f"Invalid {label}.target_node_name: expected string or null")
+    if (target_node_id is None) != (target_node_name is None):
+        raise ContextCanonError(f"Invalid {label}: target_node_id and target_node_name must appear together")
     return TopicTarget(
         kind=kind,  # type: ignore[arg-type]
         locator=_string(item.get("locator"), f"{label}.locator"),
         intent=intent,  # type: ignore[arg-type]
+        target_node_id=target_node_id,
+        target_node_name=target_node_name,
     )
 
 

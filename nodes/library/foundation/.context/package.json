@@ -1,52 +1,54 @@
 {
   "changes": [],
-  "compiler_version": "0.4.0",
+  "compiler_version": "0.5.0",
   "digests": {
-    "normalized": "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b",
-    "package": "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993"
+    "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
+    "package": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "4a92037ef0b197fcca8b2623b8b04efe9b3042d22cc30df3c9dba170392a651f",
-      "size": 3996
+      "sha256": "469ce5a15a55a4394cca7c3b69c68b3f19153bc6c78f0742049eb9fc11de6ebf",
+      "size": 4378
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/composition.md",
-      "sha256": "1767df5fad574fbb505ee31b234003d924b88ee91f3bc7f9bfc8b7491147207b",
-      "size": 9871
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
+      "size": 13945
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
       "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
       "size": 3499
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/official-context.md",
-      "sha256": "c1ea2d125a9073b120fe5a251393618afc8a5c670f79d5027b7169623167f93a",
-      "size": 5239
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "size": 7074
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/source-format.md",
-      "sha256": "9f37789ffe0fb39431e469258c627f0cbba670126518a50e0f44e9760fbd1a43",
-      "size": 8460
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
+      "size": 13069
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/topics.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
       "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
       "size": 3889
     }
   ],
+  "imports": [],
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
     "version": "0.1.0-draft"
   },
+  "parent": null,
   "removed_rules": [],
   "rules": [
     {
@@ -172,17 +174,17 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/official-context.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/source-format.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/topics.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
         }
       ],
       "title": "Context authoring"
@@ -196,7 +198,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/composition.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
         }
       ],
       "title": "Context composition"
@@ -210,7 +212,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/harnesses.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
         }
       ],
       "title": "Harness adapters"

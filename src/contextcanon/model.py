@@ -28,6 +28,7 @@ class SourceRef:
     transport: str | None = None
     transport_ref: str | None = None
     node_path: str | None = None
+    why: str | None = None
 
     @property
     def is_pinned(self) -> bool:
@@ -36,6 +37,20 @@ class SourceRef:
     @property
     def has_transport(self) -> bool:
         return self.transport is not None
+
+
+@dataclass(frozen=True)
+class ParentRef:
+    id: str
+    name: str
+    version: str
+    locator: str
+    normalized_digest: str
+    package_digest: str
+
+    @property
+    def is_pinned(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -83,6 +98,8 @@ class TopicTarget:
     kind: TargetKind
     locator: str
     intent: TargetIntent
+    target_node_id: str | None = None
+    target_node_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,6 +119,7 @@ class PackageDependency:
     version: str
     normalized_digest: str
     package_digest: str
+    why: str | None = None
 
 
 @dataclass(frozen=True)
@@ -124,6 +142,8 @@ class CompiledPackage:
     files: tuple[PackageFile, ...]
     normalized_digest: str
     package_digest: str
+    imports: tuple[PackageDependency, ...] = ()
+    parent: PackageDependency | None = None
 
 
 @dataclass(frozen=True)
@@ -134,8 +154,11 @@ class ParsedNode:
     sources: tuple[SourceRef, ...]
     rules: tuple[Rule, ...]
     topics: tuple[Topic, ...]
+    parent: ParentRef | None = None
     changes: tuple[RuleChange, ...] = ()
     overview: str = ""
+    state: str = ""
+    plan: str = ""
 
 
 @dataclass
@@ -144,11 +167,14 @@ class CompiledNode:
     # All composition semantics consume immutable compiled packages. Local
     # Source Nodes are compiled first and immediately projected to this same
     # boundary; pinned external Sources are loaded directly into it.
+    parent_package: CompiledPackage | None = None
     source_packages: list[CompiledPackage] = field(default_factory=list)
+    imported_contexts: list[PackageDependency] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
     removed_rules: list[RuleRemoval] = field(default_factory=list)
     local_rules: list[Rule] = field(default_factory=list)
     local_changes: list[RuleChange] = field(default_factory=list)
+    inherited_topics: list[Topic] = field(default_factory=list)
     local_topics: list[Topic] = field(default_factory=list)
     resources: dict[str, bytes] = field(default_factory=dict)
     normalized_digest: str = ""

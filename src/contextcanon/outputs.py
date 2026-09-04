@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .model import CompiledNode
 from .package import PACKAGE_MANIFEST_PATH
+from .render import render_node_readme
 
 
 def expected_outputs(compiled: CompiledNode) -> dict[str, bytes]:
@@ -12,6 +13,15 @@ def expected_outputs(compiled: CompiledNode) -> dict[str, bytes]:
     }
     outputs.update({path: content for path, content in compiled.resources.items()})
     outputs.update({path: content.encode("utf-8") for path, content in compiled.adapters.items()})
+    readme = compiled.parsed.root / "README.md"
+    manage_readme = not readme.exists()
+    if readme.is_file() and not readme.is_symlink():
+        try:
+            manage_readme = readme.read_text(encoding="utf-8").startswith("<!-- contextcanon:generated-node-readme -->\n")
+        except (OSError, UnicodeDecodeError):
+            manage_readme = False
+    if manage_readme:
+        outputs["README.md"] = render_node_readme(compiled).encode("utf-8")
     return outputs
 
 

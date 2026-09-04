@@ -1,80 +1,128 @@
 {
   "changes": [],
-  "compiler_version": "0.4.0",
+  "compiler_version": "0.5.0",
   "digests": {
-    "normalized": "86130e850646b598067b03a59f160c608f26ec57fbf3bbbbc5caea67a6f1b456",
-    "package": "7631141a9e5d1588384cd9bb6d29235726dc2ae6079be70d8bfab8c664bed226"
+    "normalized": "f200abb7a1b97badf5bf20553646deb7f4e26e9c08bc9168351440324dd51b29",
+    "package": "9b9d09d8aa60e11d71e1dad44f543130ff22881f0b1cc880e6512a9df9eb785d"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "10e6462fe6474f5b7d98c94ddac75b26f6d9ffca76918eb887cc9c7480fc0327",
-      "size": 13087
+      "sha256": "69d1335d9716d66469320621ea0eec04d8e39fecfbb44ae29b2766516c827077",
+      "size": 17224
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/architecture.md",
-      "sha256": "8b6295817a7e67ed406aeaecda68886d4ebbe4c19a7e125abd28b82c34973a09",
-      "size": 21172
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
+      "size": 13945
     },
     {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/compiler.md",
-      "sha256": "4becd311c057cd7a72f6501ce83528f9b17766a9fe34d7c12bae50eb1ce0a9b0",
-      "size": 13179
-    },
-    {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/concepts.md",
-      "sha256": "730e9e418d49e2424f95681c1d7e11b5d77add5ee55419d74b8b82795ebc3f90",
-      "size": 5003
-    },
-    {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "8772cb4912c0a7618437f76fca387bf956207ffa53c0d4656cdb4e7787dd0f6b",
-      "size": 39199
-    },
-    {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/state.md",
-      "sha256": "2725beca19e2eb26d29af2d8a8078415fc518943ac14b0d4bb7743024b5024ae",
-      "size": 1382
-    },
-    {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/tests-and-ci.md",
-      "sha256": "cd5d21f13d4c6d0886041fe8bfa2c59eec39b4896b1a12d8545c8e40940edd26",
-      "size": 5194
-    },
-    {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/use-case-walkthrough.md",
-      "sha256": "107f10defaf30e0d99dc0b5591be47dc06acf24323e098f0ad96208df5e8421a",
-      "size": 14140
-    },
-    {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/composition.md",
-      "sha256": "1767df5fad574fbb505ee31b234003d924b88ee91f3bc7f9bfc8b7491147207b",
-      "size": 9871
-    },
-    {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/harnesses.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
       "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
       "size": 3499
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/official-context.md",
-      "sha256": "c1ea2d125a9073b120fe5a251393618afc8a5c670f79d5027b7169623167f93a",
-      "size": 5239
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "size": 7074
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/source-format.md",
-      "sha256": "9f37789ffe0fb39431e469258c627f0cbba670126518a50e0f44e9760fbd1a43",
-      "size": 8460
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
+      "size": 13069
     },
     {
-      "path": "CONTEXT/references/nodes/library/foundation/docs/topics.md",
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
       "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
       "size": 3889
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
+      "sha256": "57c7a5e544a894d3a7450990236ff0a235c502b8f968c580e1a0c12235e5a0cc",
+      "size": 21279
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
+      "sha256": "da3c30765c518829839f26959a6c32f3fef23b92a2ce6b7050696374209e9ad9",
+      "size": 13308
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md",
+      "sha256": "730e9e418d49e2424f95681c1d7e11b5d77add5ee55419d74b8b82795ebc3f90",
+      "size": 5003
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md",
+      "sha256": "0ccbab6d59e0d44b857cc9675af30c753e14aa22b282f3fdf134a85f0b387f03",
+      "size": 41000
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
+      "sha256": "2725beca19e2eb26d29af2d8a8078415fc518943ac14b0d4bb7743024b5024ae",
+      "size": 1382
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md",
+      "sha256": "cd5d21f13d4c6d0886041fe8bfa2c59eec39b4896b1a12d8545c8e40940edd26",
+      "size": 5194
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+      "sha256": "107f10defaf30e0d99dc0b5591be47dc06acf24323e098f0ad96208df5e8421a",
+      "size": 14140
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md",
+      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
+      "size": 13945
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md",
+      "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
+      "size": 3499
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md",
+      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "size": 7074
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md",
+      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
+      "size": 13069
+    },
+    {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md",
+      "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
+      "size": 3889
+    },
+    {
+      "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
+      "sha256": "bbd8fff080a48458badd28f6a996f67c0b5a818ccf76a8d797763ba660abf17f",
+      "size": 9519
+    }
+  ],
+  "imports": [
+    {
+      "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "name": "ContextCanon Foundation",
+      "normalized_digest": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
+      "package_digest": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44",
+      "version": "0.1.0-draft",
+      "why": null
+    },
+    {
+      "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "name": "Development Workflow",
+      "normalized_digest": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
+      "package_digest": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653",
+      "version": "0.2.0-draft",
+      "why": null
     }
   ],
   "node": {
@@ -82,6 +130,7 @@
     "name": "ContextCanon Framework Development",
     "version": "0.1.0-draft"
   },
+  "parent": null,
   "removed_rules": [],
   "rules": [
     {
@@ -246,6 +295,16 @@
     },
     {
       "group": "Proportional verification",
+      "id": "CCW-009",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.",
+      "title": "Use owner-approved fast-run blocks without weakening the final gate",
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker fast-run from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
+    },
+    {
+      "group": "Proportional verification",
       "id": "CCW-005",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
@@ -356,6 +415,16 @@
     },
     {
       "group": "Development method",
+      "id": "CCI-011",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.",
+      "title": "Mark human-editable generated Markdown with one visible convention",
+      "why": "Operators often review Markdown in preview mode where HTML comments disappear. One repeated visual grammar makes the workflow scannable and prevents each new review surface from inventing its own hidden interaction contract."
+    },
+    {
+      "group": "Development method",
       "id": "CCI-010",
       "modifications": [],
       "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
@@ -380,19 +449,87 @@
     {
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
-      "normalized_digest": "66e400b14e4219ae154c72756c4ae3d987d1dcf40db9850afce38affe764ae9b",
-      "package_digest": "ac3a1ceda5b93cc2fc8b1b370867d5dabd94cc93e3a6c7ea8053fc4260307993",
-      "version": "0.1.0-draft"
+      "normalized_digest": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
+      "package_digest": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44",
+      "version": "0.1.0-draft",
+      "why": null
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "a4398d91e6ed4fafd0609974da3cb0caa822ec80e1fa66b5fe19feedbc444463",
-      "package_digest": "a458f447ba95930a299f096265bd67e9ed508519d03cab530232ec05dfe1a41a",
-      "version": "0.2.0-draft"
+      "normalized_digest": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
+      "package_digest": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653",
+      "version": "0.2.0-draft",
+      "why": null
     }
   ],
   "topics": [
+    {
+      "condition": "When editing ContextCanon source, IDs, generated views, package resources, or Topics:",
+      "id": "CC-TOPIC-AUTHORING",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
+        }
+      ],
+      "title": "Context authoring"
+    },
+    {
+      "condition": "When adding Sources or changing inherited Rules:",
+      "id": "CC-TOPIC-COMPOSITION",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
+        }
+      ],
+      "title": "Context composition"
+    },
+    {
+      "condition": "When adding or changing a harness-specific entry file:",
+      "id": "CC-TOPIC-HARNESSES",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
+        }
+      ],
+      "title": "Harness adapters"
+    },
+    {
+      "condition": "When planning, resuming, checkpointing, reviewing, testing, finalizing, merging, or closing the accepted baseline for a coherent development block:",
+      "id": "CCW-TOPIC-CHANGE-WORKFLOW",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+        }
+      ],
+      "title": "Executing a development block"
+    },
     {
       "condition": "When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler behavior:",
       "id": "CCI-TOPIC-COMPILER",
@@ -402,7 +539,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/compiler.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"
         }
       ],
       "title": "Compiler implementation"
@@ -416,7 +553,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/tests-and-ci.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"
         }
       ],
       "title": "Tests and CI"
@@ -430,7 +567,9 @@
         {
           "intent": "required",
           "kind": "context-node",
-          "locator": "../../library/development-workflow/"
+          "locator": "../../library/development-workflow/",
+          "target_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+          "target_node_name": "Development Workflow"
         }
       ],
       "title": "Development workflow"
@@ -444,17 +583,17 @@
         {
           "intent": "optional",
           "kind": "resource",
-          "locator": "docs/concepts.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/architecture.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/use-case-walkthrough.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
         }
       ],
       "title": "Framework architecture"
@@ -468,7 +607,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/onboarding-reference.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
         }
       ],
       "title": "Reviewed project onboarding"
@@ -482,17 +621,17 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../library/foundation/docs/official-context.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../library/foundation/docs/source-format.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../library/foundation/docs/topics.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md"
         }
       ],
       "title": "Source and official formats"
@@ -506,12 +645,12 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../library/foundation/docs/composition.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/use-case-walkthrough.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md"
         }
       ],
       "title": "Composition"
@@ -525,7 +664,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "../../library/foundation/docs/harnesses.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md"
         }
       ],
       "title": "Harness integration"
@@ -539,7 +678,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/state.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"
         }
       ],
       "title": "State and planning"

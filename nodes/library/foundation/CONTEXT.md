@@ -16,7 +16,7 @@ Apply all Rules below to every task in this Node.
 
 For the current task, evaluate each Topic condition. When one matches, read every **Required** target before continuing; read **Optional** targets only when useful.
 
-## Rules
+## Local Rules
 
 ### Canonical context
 
@@ -80,7 +80,7 @@ Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are us
 
 Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.
 
-## Topics
+## Local Topics
 
 ### Context authoring
 
@@ -88,9 +88,9 @@ When editing ContextCanon source, IDs, generated views, package resources, or To
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/nodes/library/foundation/docs/source-format.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/nodes/library/foundation/docs/official-context.md)
-- [`CONTEXT/references/nodes/library/foundation/docs/topics.md`](CONTEXT/references/nodes/library/foundation/docs/topics.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md)
 
 ### Context composition
 
@@ -98,7 +98,7 @@ When adding Sources or changing inherited Rules:
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/composition.md`](CONTEXT/references/nodes/library/foundation/docs/composition.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md)
 
 ### Harness adapters
 
@@ -106,4 +106,4 @@ When adding or changing a harness-specific entry file:
 
 **Required**
 
-- [`CONTEXT/references/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/nodes/library/foundation/docs/harnesses.md)
+- [`CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md`](CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md)

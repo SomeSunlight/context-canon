@@ -1,37 +1,39 @@
 {
   "changes": [],
-  "compiler_version": "0.4.0",
+  "compiler_version": "0.5.0",
   "digests": {
-    "normalized": "3d83dae500e2dc53b9d3f05eada676ee1534b7dc0959336e8fa3cac50bc23a7f",
-    "package": "53cce2371fb80085ce8725acd6f30b2fce7b2a89e1e8e6206216e3e222c30cf0"
+    "normalized": "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683",
+    "package": "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "ffff31454b1fdc587084750e0157b8845f21c72de40736e528ded0c9cd160701",
-      "size": 2443
+      "sha256": "e96ac67b5a2caa4dbb3f48e4cf4d9b7c031918056dbd9c561e98b19ce1afc274",
+      "size": 2535
     },
     {
       "path": "CONTEXT/README.md",
-      "sha256": "0db45ec8ce444a30a75a19f85db1117ddee0c7862f08302bcfcc2199135376b1",
-      "size": 1433
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
     },
     {
-      "path": "CONTEXT/references/docs/onboarding.md",
-      "sha256": "acdeb7730005bbae0e5999e99e6e6aefba48ae0586bdf60b1484f43011b2d64b",
-      "size": 15501
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
+      "sha256": "ed41166188dcc17a7d0c9c2564a6fdfcabca8ef6a66cfe0a26605db12ccaf3e8",
+      "size": 23204
     },
     {
-      "path": "CONTEXT/references/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "8772cb4912c0a7618437f76fca387bf956207ffa53c0d4656cdb4e7787dd0f6b",
-      "size": 39199
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md",
+      "sha256": "0ccbab6d59e0d44b857cc9675af30c753e14aa22b282f3fdf134a85f0b387f03",
+      "size": 41000
     }
   ],
+  "imports": [],
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
     "version": "0.1.0-draft"
   },
+  "parent": null,
   "removed_rules": [],
   "rules": [],
   "schema": "contextcanon/package/v0",
@@ -46,7 +48,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "docs/onboarding.md"
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"
         }
       ],
       "title": "Onboard an existing project"
@@ -60,7 +62,9 @@
         {
           "intent": "required",
           "kind": "context-node",
-          "locator": "nodes/internal/framework-development"
+          "locator": "nodes/internal/framework-development",
+          "target_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+          "target_node_name": "ContextCanon Framework Development"
         }
       ],
       "title": "ContextCanon framework development"

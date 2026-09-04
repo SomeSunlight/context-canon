@@ -9,11 +9,12 @@ from .parser import ContextCanonError
 
 _CATEGORY_ORDER = {
     "node": 0,
-    "source": 1,
-    "change": 2,
-    "rule": 3,
-    "topic": 4,
-    "resource": 5,
+    "parent": 1,
+    "source": 2,
+    "change": 3,
+    "rule": 4,
+    "topic": 5,
+    "resource": 6,
 }
 
 
@@ -29,6 +30,7 @@ def diff_packages(before: CompiledPackage, after: CompiledPackage) -> ContextDif
 
     entries: list[DiffEntry] = []
     entries.extend(_diff_maps("node", _node_snapshot(before), _node_snapshot(after)))
+    entries.extend(_diff_maps("parent", _parent_snapshot(before), _parent_snapshot(after)))
     entries.extend(_diff_maps("source", _source_snapshot(before), _source_snapshot(after)))
     entries.extend(_diff_maps("change", _change_snapshot(before), _change_snapshot(after)))
     entries.extend(_diff_maps("rule", _rule_snapshot(before), _rule_snapshot(after)))
@@ -76,6 +78,19 @@ def _node_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
         package.metadata.id: {
             "name": package.metadata.name,
             "version": package.metadata.version,
+        }
+    }
+
+
+def _parent_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
+    parent = package.parent
+    if parent is None:
+        return {}
+    return {
+        parent.id: {
+            "version": parent.version,
+            "normalized_digest": parent.normalized_digest,
+            "package_digest": parent.package_digest,
         }
     }
 

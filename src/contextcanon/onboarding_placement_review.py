@@ -1,0 +1,1105 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable, Mapping
+
+from .model import CompiledPackage
+from .onboarding_placement import (
+    PLACEMENT_ACTIONS,
+    PLACEMENT_KINDS,
+    WORDING_ORIGINS,
+    OnboardingPlacementProposal,
+    PlacementItem,
+    PlacementSourceEdit,
+)
+from .onboarding_proposal import EvidenceReference, EvidenceSnapshot, load_evidence_snapshot
+from .parser import ContextCanonError
+
+
+PLACEMENT_REVIEW_SCHEMA = "contextcanon/onboarding-placement-review/v1"
+REVIEW_DECISIONS = {"pending", "accept", "reject"}
+ACTION_FOR_KIND = {
+    "overview": "promote",
+    "rule": "promote",
+    "topic-resource": "reference",
+    "ordinary-documentation": "keep",
+    "state": "promote",
+    "plan": "promote",
+    "authority-mapping": "map",
+    "unresolved": "promote",
+}
+
+_HEADER_RE = re.compile(
+    r"<!-- contextcanon-placement-review\s+"
+    r"schema: (?P<schema>\S+)\s+"
+    r"evidence_digest: (?P<evidence>[0-9a-f]{64})\s+"
+    r"structure_digest: (?P<structure>[0-9a-f]{64})\s+"
+    r"proposal_digest: (?P<proposal>[0-9a-f]{64})\s+-->"
+)
+_ITEM_HEADING_RE = re.compile(r"^## (?P<id>[^ ]+) — (?P<title>.+)$")
+_ITEM_COMMENT_RE = re.compile(
+    r'^<!-- cc:placement-item id="(?P<id>[^"]+)" authoring-id="(?P<authoring>[^"]+)" -->$'
+)
+_SOURCE_HEADING_RE = re.compile(r"^## Source (?P<id>[^ ]+) — (?P<title>.+)$")
+_SOURCE_COMMENT_RE = re.compile(
+    r'^<!-- cc:placement-source id="(?P<id>[^"]+)" origin="(?P<origin>[^"]+)" '
+    r'source-id="(?P<source_id>[^"]+)" version="(?P<version>[^"]+)" '
+    r'normalized-digest="(?P<normalized>[0-9a-f]{64})" package-digest="(?P<package>[0-9a-f]{64})" -->$'
+)
+_DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
+_SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin): `(?P<value>[^`]+)`$")
+_PATH_RE = re.compile(r"`([^`]+)`")
+_AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_SOURCE_EDIT_COMMENT_RE = re.compile(
+    r'^<!-- cc:source-edit id="(?P<id>[^"]+)" path="(?P<path>[^"]+)" sha256="(?P<sha>[0-9a-f]{64})" '
+    r'start-line="(?P<start>[0-9]+)" end-line="(?P<end>[0-9]+)" linked-items="(?P<linked>[^"]+)" -->$'
+)
+_SOURCE_AFTER_START_RE = re.compile(r'^<!-- cc:source-after id="(?P<id>[^"]+)":start -->$')
+_SOURCE_AFTER_END_RE = re.compile(r'^<!-- cc:source-after id="(?P<id>[^"]+)":end -->$')
+
+
+@dataclass(frozen=True)
+class PlacementReviewItem:
+    proposal_id: str
+    authoring_id: str
+    title: str
+    decision: str
+    destination_node_key: str | None
+    kind: str
+    action: str
+    payload: dict[str, object]
+    review_note: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "proposal_id": self.proposal_id,
+            "authoring_id": self.authoring_id,
+            "title": self.title,
+            "decision": self.decision,
+            "destination_node_key": self.destination_node_key,
+            "kind": self.kind,
+            "action": self.action,
+            "payload": self.payload,
+            "review_note": self.review_note,
+        }
+
+
+@dataclass(frozen=True)
+class PlacementReviewSourceEdit:
+    proposal_id: str
+    decision: str
+    path: str
+    sha256: str
+    start_line: int
+    end_line: int
+    linked_item_ids: tuple[str, ...]
+    replacement: str
+    review_note: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "proposal_id": self.proposal_id,
+            "decision": self.decision,
+            "path": self.path,
+            "sha256": self.sha256,
+            "start_line": self.start_line,
+            "end_line": self.end_line,
+            "linked_item_ids": list(self.linked_item_ids),
+            "replacement": self.replacement,
+            "review_note": self.review_note,
+        }
+
+
+@dataclass(frozen=True)
+class PlacementReviewSource:
+    review_id: str
+    origin: str
+    target_node_key: str
+    decision: str
+    source_node_id: str
+    source_name: str
+    source_version: str
+    source_normalized_digest: str
+    source_package_digest: str
+    review_note: str
+    proposal_id: str | None
+    relationship_why: str = ""
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "review_id": self.review_id,
+            "origin": self.origin,
+            "target_node_key": self.target_node_key,
+            "decision": self.decision,
+            "source_node_id": self.source_node_id,
+            "source_name": self.source_name,
+            "source_version": self.source_version,
+            "source_normalized_digest": self.source_normalized_digest,
+            "source_package_digest": self.source_package_digest,
+            "review_note": self.review_note,
+            "proposal_id": self.proposal_id,
+            "relationship_why": self.relationship_why,
+        }
+
+
+@dataclass(frozen=True)
+class OnboardingPlacementReview:
+    evidence_digest: str
+    structure_digest: str
+    proposal_digest: str
+    items: tuple[PlacementReviewItem, ...]
+    source_edits: tuple[PlacementReviewSourceEdit, ...]
+    sources: tuple[PlacementReviewSource, ...]
+    review_digest: str
+
+    @property
+    def is_complete(self) -> bool:
+        return (
+            all(item.decision != "pending" for item in self.items)
+            and all(edit.decision != "pending" for edit in self.source_edits)
+            and all(source.decision != "pending" for source in self.sources)
+        )
+
+
+def _error(message: str) -> ContextCanonError:
+    return ContextCanonError(f"Invalid onboarding placement review: {message}")
+
+
+def _digest(value: dict[str, object]) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _one_line(value: object) -> str:
+    return " ".join(str(value).splitlines()).strip()
+
+
+def _fresh_authoring_id() -> str:
+    return "ONB-" + uuid.uuid4().hex[:12].upper()
+
+
+def _node_entry_link(node_path: str) -> str:
+    return "../CONTEXT.md" if node_path == "." else f"../{node_path}/CONTEXT.md"
+
+
+def _evidence_excerpt(reference: EvidenceReference, snapshot: EvidenceSnapshot) -> list[str]:
+    evidence_file = snapshot.root / "evidence" / reference.path
+    text = evidence_file.read_text(encoding="utf-8").splitlines()
+    lines = [f"- `{reference.path}` lines {reference.start_line}-{reference.end_line} · `{reference.sha256}`", "  ```text"]
+    for number, content in enumerate(text[reference.start_line - 1 : reference.end_line], start=reference.start_line):
+        lines.append(f"  {number:>5}: {content}")
+    lines.append("  ```")
+    return lines
+
+
+def _render_payload(kind: str, payload: dict[str, object]) -> list[str]:
+    if kind in {"overview", "rule", "topic-resource", "state", "plan", "unresolved"}:
+        heading = "### Into Node — editable"
+    else:
+        heading = "### Reviewed handling — editable"
+    lines = [heading, "", "> ✏️ Editable destination content starts below.", ""]
+    if kind == "rule":
+        lines.append(f"Statement: {_one_line(payload['statement'])}")
+        lines.append(f"Why: {_one_line(payload['why'])}")
+        lines.append(f"Wording: `{payload['wording_origin']}`")
+    elif kind in {"overview", "state", "plan"}:
+        lines.append(f"Summary: {_one_line(payload['text'])}")
+        lines.append(f"Wording: `{payload['wording_origin']}`")
+    elif kind == "topic-resource":
+        lines.append(f"Condition: {_one_line(payload['condition'])}")
+        paths = ", ".join(f"`{path}`" for path in payload["resource_paths"])
+        lines.append(f"Resources: {paths}")
+    elif kind == "ordinary-documentation":
+        paths = ", ".join(f"`{path}`" for path in payload["document_paths"])
+        lines.append(f"Documents: {paths}")
+        lines.append(f"Reason: {_one_line(payload['reason'])}")
+    elif kind == "authority-mapping":
+        paths = ", ".join(f"`{path}`" for path in payload["authority_paths"])
+        lines.append(f"Authorities: {paths}")
+        lines.append(f"Mapping: {_one_line(payload['mapping'])}")
+        lines.append(f"Wording: `{payload['wording_origin']}`")
+    elif kind == "unresolved":
+        lines.append(f"Question: {_one_line(payload['question'])}")
+    else:
+        raise _error(f"unsupported kind {kind!r}")
+    lines.extend(["", "> End editable destination content."])
+    return lines
+
+
+def _source_edit_excerpt(edit: PlacementSourceEdit, snapshot: EvidenceSnapshot) -> list[str]:
+    reference = EvidenceReference(edit.path, edit.sha256, edit.start_line, edit.end_line)
+    return _evidence_excerpt(reference, snapshot)
+
+
+def _source_reference_text(reference: EvidenceReference, snapshot: EvidenceSnapshot) -> str:
+    evidence_file = snapshot.root / "evidence" / reference.path
+    lines = evidence_file.read_text(encoding="utf-8").splitlines()
+    return "\n".join(lines[reference.start_line - 1 : reference.end_line])
+
+
+def _ranges_overlap(path_a: str, start_a: int, end_a: int, path_b: str, start_b: int, end_b: int) -> bool:
+    return path_a == path_b and max(start_a, start_b) <= min(end_a, end_b)
+
+
+def _review_source_edit_candidates(
+    proposal: OnboardingPlacementProposal, snapshot: EvidenceSnapshot
+) -> tuple[PlacementSourceEdit, ...]:
+    """Return LLM source edits plus conservative review-only edit affordances.
+
+    The fallback exists only when the LLM supplied no source edit for a promoted
+    finding. It is bound to exact mutable frozen Evidence, defaults to reject in
+    the human review, and therefore cannot silently add a cleanup mutation.
+    """
+    proposed = list(proposal.source_edits)
+    linked_by_proposal = {item_id for edit in proposed for item_id in edit.linked_item_ids}
+    fixed = set(proposal.structure.fixed_markdown)
+    item_order = {item.id: index for index, item in enumerate(proposal.items)}
+
+    protected_resources = {
+        str(path)
+        for item in proposal.items
+        if item.kind == "topic-resource"
+        for path in item.payload.get("resource_paths", [])
+    }
+
+    def history_document(path_value: str) -> bool:
+        name = Path(path_value).name.lower()
+        return name.startswith("changelog") or name.startswith("patch-") or "/patch-" in path_value.lower()
+
+    grouped: dict[tuple[str, str, int, int], list[str]] = {}
+    for item in proposal.items:
+        if item.action != "promote" or item.id in linked_by_proposal:
+            continue
+        for reference in item.evidence:
+            if (
+                not reference.path.lower().endswith(".md")
+                or reference.path in fixed
+                or reference.path in protected_resources
+                or history_document(reference.path)
+            ):
+                continue
+            if any(
+                _ranges_overlap(
+                    reference.path, reference.start_line, reference.end_line,
+                    edit.path, edit.start_line, edit.end_line,
+                )
+                for edit in proposed
+            ):
+                continue
+            key = (reference.path, reference.sha256, reference.start_line, reference.end_line)
+            grouped.setdefault(key, []).append(item.id)
+
+    keys = list(grouped)
+    ambiguous: set[tuple[str, str, int, int]] = set()
+    for index, left in enumerate(keys):
+        for right in keys[index + 1 :]:
+            if left == right:
+                continue
+            if _ranges_overlap(left[0], left[2], left[3], right[0], right[2], right[3]):
+                ambiguous.add(left)
+                ambiguous.add(right)
+
+    fallbacks: list[PlacementSourceEdit] = []
+    for key in sorted((key for key in keys if key not in ambiguous), key=lambda value: (value[0], value[2], value[3])):
+        path_value, sha256, start_line, end_line = key
+        linked = tuple(sorted(set(grouped[key]), key=item_order.__getitem__))
+        reference = EvidenceReference(path_value, sha256, start_line, end_line)
+        identity = f"{path_value}:{start_line}:{end_line}:{','.join(linked)}"
+        edit_id = "H-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:10].upper()
+        fallbacks.append(
+            PlacementSourceEdit(
+                id=edit_id,
+                path=path_value,
+                sha256=sha256,
+                start_line=start_line,
+                end_line=end_line,
+                linked_item_ids=linked,
+                replacement=_source_reference_text(reference, snapshot),
+                rationale=(
+                    "No LLM Source After rewrite was proposed for this unambiguous mutable Evidence range. "
+                    "ContextCanon exposes it as a review-only fallback so the project owner can optionally "
+                    "replace it without reconstructing the source range by hand."
+                ),
+                confidence="low",
+            )
+        )
+    return tuple(proposed + fallbacks)
+
+
+def _render_source_edit(
+    edit: PlacementReviewSourceEdit,
+    candidate: PlacementSourceEdit,
+    snapshot: EvidenceSnapshot,
+    *,
+    proposal: OnboardingPlacementProposal,
+) -> list[str]:
+    linked = ", ".join(candidate.linked_item_ids)
+    proposal_ids = {item.id for item in proposal.source_edits}
+    item_titles = {item.id: item.title for item in proposal.items}
+    owner = candidate.linked_item_ids[0]
+    related = [item_id for item_id in edit.linked_item_ids if item_id != owner]
+    heading = f"#### Source edit {edit.proposal_id}"
+    lines = [
+        f'<a id="source-edit-{edit.proposal_id.lower()}"></a>',
+        heading,
+        f'<!-- cc:source-edit id="{edit.proposal_id}" path="{edit.path}" sha256="{edit.sha256}" start-line="{edit.start_line}" end-line="{edit.end_line}" linked-items="{linked}" -->',
+        "",
+    ]
+    if edit.proposal_id not in proposal_ids:
+        lines.extend(
+            [
+                "**Optional source cleanup — independent from promotion.**",
+                "Accepting or rejecting the finding above is separate. Leave this Source edit at `reject` to keep the source unchanged; switch to `accept` only if you want to rewrite this exact frozen range now.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "> ✏️ Editable source-cleanup controls",
+            f"Source edit decision: `{edit.decision}`",
+            f"Source edit note: {edit.review_note or '-'}",
+            "> End editable source-cleanup controls",
+        ]
+    )
+    if related:
+        lines.append(
+            "Also covers: " + ", ".join(f"`{item_id}` — {item_titles[item_id]}" for item_id in related)
+        )
+    lines.extend(["", "**Exact range being replaced:**", ""])
+    lines.extend(_source_edit_excerpt(candidate, snapshot))
+    lines.extend(
+        [
+            "",
+            "**Proposed replacement — edit the text between the markers:**",
+            "",
+            "**✏️ EDITABLE START — source replacement**",
+            f'<!-- cc:source-after id="{edit.proposal_id}":start -->',
+        ]
+    )
+    if edit.replacement:
+        lines.extend(edit.replacement.split("\n"))
+    lines.extend([f'<!-- cc:source-after id="{edit.proposal_id}":end -->', "**✏️ EDITABLE END — source replacement**", "", f"Why this source edit: {candidate.rationale}", ""])
+    return lines
+
+
+def _render_item(
+    item: PlacementItem,
+    review_item: PlacementReviewItem,
+    proposal: OnboardingPlacementProposal,
+    snapshot: EvidenceSnapshot,
+    source_edits: tuple[PlacementReviewSourceEdit, ...],
+) -> list[str]:
+    nodes = {node.key: node for node in proposal.structure.nodes}
+    destination = nodes.get(review_item.destination_node_key) if review_item.destination_node_key else None
+    destination_text = (
+        f"`{destination.key}` — [**{destination.name}**]({_node_entry_link(destination.path)}) (`{destination.path}`)"
+        if destination
+        else "none / outside Node authoring"
+    )
+    lines = [
+        f"## {review_item.proposal_id} — {review_item.title}",
+        f'<!-- cc:placement-item id="{review_item.proposal_id}" authoring-id="{review_item.authoring_id}" -->',
+        "",
+        "> ✏️ Editable finding controls",
+        f"Destination: {destination_text}",
+        f"Decision: `{review_item.decision}`",
+        f"Kind: `{review_item.kind}`",
+        f"Derived action: `{review_item.action}` (from Kind; do not edit)",
+        f"Review note: {review_item.review_note or '-'}",
+        "> End editable finding controls",
+        "",
+    ]
+    lines.extend(_render_payload(review_item.kind, review_item.payload))
+    lines.extend(["", "### Source before — frozen Evidence", ""])
+    for reference in item.evidence:
+        lines.extend(_evidence_excerpt(reference, snapshot))
+    linked_edits = [edit for edit in source_edits if review_item.proposal_id in edit.linked_item_ids]
+    if linked_edits:
+        candidate_edits = {edit.id: edit for edit in _review_source_edit_candidates(proposal, snapshot)}
+        item_titles = {item.id: item.title for item in proposal.items}
+        lines.extend(["", "### Source after promotion", ""])
+        for edit in linked_edits:
+            candidate = candidate_edits[edit.proposal_id]
+            if candidate.linked_item_ids[0] == review_item.proposal_id:
+                lines.extend(_render_source_edit(edit, candidate, snapshot, proposal=proposal))
+            else:
+                owner = candidate.linked_item_ids[0]
+                lines.extend(
+                    [
+                        f"Shared source edit [`{edit.proposal_id}`](#source-edit-{edit.proposal_id.lower()}) also covers this finding and is edited once under `{owner}` — {item_titles[owner]}.",
+                        "",
+                    ]
+                )
+    elif review_item.action == "promote":
+        lines.extend(
+            [
+                "",
+                "### Source after promotion",
+                "",
+                "No mutable-Markdown rewrite is proposed for this finding. The cited source either remains independently useful/authoritative, is not mutable Markdown, or no duplicate-maintenance cleanup was justified.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "### Proposal rationale",
+            "",
+            item.rationale,
+            "",
+            f"Original confidence: `{item.confidence}`",
+            "",
+        ]
+    )
+    return lines
+
+
+def _package_by_id(proposal: OnboardingPlacementProposal) -> dict[str, CompiledPackage]:
+    return {package.metadata.id: package for package in proposal.catalog_packages}
+
+
+def _initial_sources(
+    proposal: OnboardingPlacementProposal,
+    owner_source_specs: Iterable[str],
+    *,
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
+) -> tuple[PlacementReviewSource, ...]:
+    result: list[PlacementReviewSource] = []
+    seen: set[tuple[str, str]] = set()
+    packages = _package_by_id(proposal)
+    node_keys = {node.key for node in proposal.structure.nodes}
+    why_by_spec = dict(owner_source_whys or {})
+
+    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage]] = {}
+    nodes_by_key = {node.key: node for node in proposal.structure.nodes}
+
+    def is_same_or_descendant(candidate_key: str, ancestor_key: str) -> bool:
+        current = candidate_key
+        seen_keys: set[str] = set()
+        while current is not None and current not in seen_keys:
+            if current == ancestor_key:
+                return True
+            seen_keys.add(current)
+            node = nodes_by_key.get(current)
+            current = None if node is None else node.parent_key
+        return False
+    for spec in owner_source_specs:
+        if "=" not in spec:
+            raise _error("--owner-source must be TARGET_NODE_KEY=SOURCE_NODE_ID")
+        target, source_id = (part.strip() for part in spec.split("=", 1))
+        if target not in node_keys:
+            raise _error(f"owner-selected Source references unknown target Node {target}")
+        package = packages.get(source_id)
+        if package is None:
+            raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
+        owner_pairs[(target, source_id)] = (spec, package)
+
+    # Evidence-derived suggestions that duplicate an already accepted STEP-05
+    # relationship do not create a second decision in Placement.
+    for reuse in proposal.source_reuses:
+        pair = (reuse.target_node_key, reuse.source_node_id)
+        if any(
+            source_id == reuse.source_node_id and is_same_or_descendant(reuse.target_node_key, owner_target)
+            for owner_target, source_id in owner_pairs
+        ):
+            continue
+        seen.add(pair)
+        result.append(
+            PlacementReviewSource(
+                review_id=reuse.id,
+                origin="evidence-derived",
+                target_node_key=reuse.target_node_key,
+                decision="pending",
+                source_node_id=reuse.source_node_id,
+                source_name=reuse.source_name,
+                source_version=reuse.source_version,
+                source_normalized_digest=reuse.source_normalized_digest,
+                source_package_digest=reuse.source_package_digest,
+                review_note="",
+                proposal_id=reuse.id,
+                relationship_why=reuse.reason,
+            )
+        )
+
+    for pair, (spec, package) in owner_pairs.items():
+        if pair in seen:
+            continue
+        seen.add(pair)
+        target, source_id = pair
+        why = why_by_spec.get(spec, "").strip() or "Explicitly selected by the project owner."
+        result.append(
+            PlacementReviewSource(
+                review_id="O-" + uuid.uuid4().hex[:10].upper(),
+                origin="owner-selected",
+                target_node_key=target,
+                decision="accept" if preaccepted_owner_sources else "pending",
+                source_node_id=source_id,
+                source_name=package.metadata.name,
+                source_version=package.metadata.version,
+                source_normalized_digest=package.normalized_digest,
+                source_package_digest=package.package_digest,
+                review_note="",
+                proposal_id=None,
+                relationship_why=why,
+            )
+        )
+    return tuple(result)
+
+def render_placement_review(
+    proposal: OnboardingPlacementProposal,
+    snapshot_root: Path,
+    *,
+    owner_source_specs: Iterable[str] = (),
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
+) -> str:
+    snapshot = load_evidence_snapshot(snapshot_root)
+    review_items = tuple(
+        PlacementReviewItem(
+            proposal_id=item.id,
+            authoring_id=_fresh_authoring_id(),
+            title=item.title,
+            decision="pending",
+            destination_node_key=item.destination_node_key,
+            kind=item.kind,
+            action=item.action,
+            payload=dict(item.payload),
+            review_note="",
+        )
+        for item in proposal.items
+    )
+    candidate_edits = _review_source_edit_candidates(proposal, snapshot)
+    proposal_edit_ids = {edit.id for edit in proposal.source_edits}
+    source_edits = tuple(
+        PlacementReviewSourceEdit(
+            proposal_id=edit.id,
+            decision="pending" if edit.id in proposal_edit_ids else "reject",
+            path=edit.path,
+            sha256=edit.sha256,
+            start_line=edit.start_line,
+            end_line=edit.end_line,
+            linked_item_ids=edit.linked_item_ids,
+            replacement=edit.replacement,
+            review_note="",
+        )
+        for edit in candidate_edits
+    )
+    sources = _initial_sources(
+        proposal,
+        owner_source_specs,
+        owner_source_whys=owner_source_whys,
+        preaccepted_owner_sources=preaccepted_owner_sources,
+    )
+    lines = [
+        "# ContextCanon onboarding placement review",
+        "",
+        "Edit this file directly. **This is the transformation cockpit.** For promoted meaning, review what is going into the destination, the frozen source before, and the proposed source after. Change `Decision`, destination, `Kind`, title, destination wording, Source edit decision/replacement, or review notes where necessary. `Action` is derived from `Kind`; it is shown for clarity but is not an independent control. Quiet `✏️` boundary cues mark editable regions; hidden `cc:*` comments remain machine markers.",
+        "",
+        "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
+        "",
+        "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted. When the LLM omitted a rewrite for one unambiguous mutable range, ContextCanon may expose a review-only optional Source edit that defaults to `reject`; it exists only so the owner can edit that exact range without reconstructing it later.",
+        "",
+        "## Editable control glossary",
+        "",
+        "- `Decision`: `pending` while undecided, then `accept` or `reject`.",
+        "- `Destination`: the reviewed Context Node that owns this finding; `none / outside Node authoring` is valid only for kinds that intentionally stay outside Node authoring.",
+        "- `Kind`: `overview`, `rule`, `topic-resource`, `ordinary-documentation`, `state`, `plan`, `authority-mapping`, or `unresolved`.",
+        "- Derived `Action`: `overview`/`rule`/`state`/`plan`/`unresolved` → `promote`; `topic-resource` → `reference`; `ordinary-documentation` → `keep`; `authority-mapping` → `map`. Change the Kind, not the derived Action.",
+        "- `Wording` where shown: `exact`, `lightly-edited`, or `synthesized`.",
+        "- `Review note`: optional owner rationale or reminder; use `-` for none.",
+        "",
+        "<!-- contextcanon-placement-review",
+        f"schema: {PLACEMENT_REVIEW_SCHEMA}",
+        f"evidence_digest: {proposal.evidence_digest}",
+        f"structure_digest: {proposal.structure_digest}",
+        f"proposal_digest: {proposal.proposal_digest}",
+        "-->",
+        "",
+        "# Placement findings",
+        "",
+    ]
+    by_id = {item.id: item for item in proposal.items}
+    for review_item in review_items:
+        lines.extend(_render_item(by_id[review_item.proposal_id], review_item, proposal, snapshot, source_edits))
+
+    lines.extend(["# Reusable Sources", ""])
+    if not sources:
+        lines.append("No reusable Source is currently proposed or owner-selected.")
+        lines.append("")
+    else:
+        nodes = {node.key: node for node in proposal.structure.nodes}
+        by_reuse = {reuse.id: reuse for reuse in proposal.source_reuses}
+        for source in sources:
+            target = nodes[source.target_node_key]
+            lines.extend(
+                [
+                    f"## Source {source.review_id} — {source.source_name}",
+                    f'<!-- cc:placement-source id="{source.review_id}" origin="{source.origin}" source-id="{source.source_node_id}" version="{source.source_version}" normalized-digest="{source.source_normalized_digest}" package-digest="{source.source_package_digest}" -->',
+                    "",
+                    f"Destination: `{target.key}` — [**{target.name}**]({_node_entry_link(target.path)}) (`{target.path}`)",
+                    f"Decision: `{source.decision}`",
+                    f"Origin: `{source.origin}`",
+                    f"Why this Source applies: {source.relationship_why or '-'}",
+                    f"Review note: {source.review_note or '-'}",
+                    "",
+                    f"Exact package: `{source.source_version}` · `{source.source_package_digest}`",
+                    "",
+                ]
+            )
+            if source.proposal_id is not None:
+                reuse = by_reuse[source.proposal_id]
+                lines.extend(["Proposal rationale:", "", reuse.reason, "", "Evidence:", ""])
+                for reference in reuse.evidence:
+                    lines.extend(_evidence_excerpt(reference, snapshot))
+                lines.append("")
+            else:
+                lines.extend(
+                    [
+                        "This Source was selected explicitly by the project owner. When it came from STEP 05, that relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
+                        "",
+                    ]
+                )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _section_blocks(lines: list[str], prefix: str) -> list[tuple[int, int]]:
+    starts: list[int] = []
+    source_after_id: str | None = None
+    for index, line in enumerate(lines):
+        start_match = _SOURCE_AFTER_START_RE.match(line)
+        if start_match is not None:
+            source_after_id = start_match.group("id")
+            continue
+        end_match = _SOURCE_AFTER_END_RE.match(line)
+        if end_match is not None and source_after_id == end_match.group("id"):
+            source_after_id = None
+            continue
+        if source_after_id is None and line.startswith(prefix):
+            starts.append(index)
+    result: list[tuple[int, int]] = []
+    for index, start in enumerate(starts):
+        end = starts[index + 1] if index + 1 < len(starts) else len(lines)
+        result.append((start, end))
+    return result
+
+
+def _find_line(block: list[str], prefix: str, label: str) -> str:
+    matches = [line[len(prefix) :] for line in block if line.startswith(prefix)]
+    if len(matches) != 1:
+        raise _error(f"{label} must appear exactly once")
+    return matches[0].strip()
+
+
+def _simple_value(block: list[str], label: str) -> str:
+    line = next((line for line in block if line.startswith(label + ":")), None)
+    if line is None:
+        raise _error(f"missing {label}")
+    match = _SIMPLE_VALUE_RE.match(line)
+    if match is None or match.group("label") != label:
+        raise _error(f"{label} must use backtick value syntax")
+    return match.group("value")
+
+
+def _destination(block: list[str], *, allow_none: bool) -> str | None:
+    line = next((line for line in block if line.startswith("Destination:")), None)
+    if line is None:
+        raise _error("missing Destination")
+    if line == "Destination: none / outside Node authoring" and allow_none:
+        return None
+    match = _DESTINATION_RE.match(line)
+    if match is None:
+        raise _error("Destination must begin with a backtick Node key")
+    return match.group("key")
+
+
+def _paths(value: str, label: str) -> list[str]:
+    paths = _PATH_RE.findall(value)
+    if not paths:
+        raise _error(f"{label} must contain one or more backtick paths")
+    if len(paths) != len(set(paths)):
+        raise _error(f"{label} contains duplicate paths")
+    return paths
+
+
+def _payload_from_block(kind: str, block: list[str]) -> dict[str, object]:
+    if kind == "rule":
+        return {
+            "statement": _find_line(block, "Statement: ", "Statement"),
+            "why": _find_line(block, "Why: ", "Why"),
+            "wording_origin": _simple_value(block, "Wording"),
+        }
+    if kind in {"overview", "state", "plan"}:
+        summary_lines = [line[len("Summary: ") :] for line in block if line.startswith("Summary: ")]
+        text_lines = [line[len("Text: ") :] for line in block if line.startswith("Text: ")]
+        if len(summary_lines) == 1 and not text_lines:
+            maintained = summary_lines[0].strip()
+        elif len(text_lines) == 1 and not summary_lines:
+            maintained = text_lines[0].strip()
+        else:
+            raise _error("Summary must appear exactly once (legacy Text is accepted only when Summary is absent)")
+        return {
+            "text": maintained,
+            "wording_origin": _simple_value(block, "Wording"),
+        }
+    if kind == "topic-resource":
+        return {
+            "condition": _find_line(block, "Condition: ", "Condition"),
+            "resource_paths": _paths(_find_line(block, "Resources: ", "Resources"), "Resources"),
+        }
+    if kind == "ordinary-documentation":
+        return {
+            "document_paths": _paths(_find_line(block, "Documents: ", "Documents"), "Documents"),
+            "reason": _find_line(block, "Reason: ", "Reason"),
+        }
+    if kind == "authority-mapping":
+        return {
+            "authority_paths": _paths(_find_line(block, "Authorities: ", "Authorities"), "Authorities"),
+            "mapping": _find_line(block, "Mapping: ", "Mapping"),
+            "wording_origin": _simple_value(block, "Wording"),
+        }
+    if kind == "unresolved":
+        return {"question": _find_line(block, "Question: ", "Question")}
+    raise _error(f"unsupported kind {kind!r}")
+
+
+def _validate_item_edit(
+    item_id: str,
+    kind: str,
+    action: str,
+    destination: str | None,
+    payload: dict[str, object],
+    proposal: OnboardingPlacementProposal,
+    snapshot: EvidenceSnapshot,
+) -> None:
+    if kind not in PLACEMENT_KINDS:
+        raise _error(f"item {item_id} has unsupported Kind {kind!r}")
+    if action not in PLACEMENT_ACTIONS:
+        raise _error(f"item {item_id} has unsupported Action {action!r}")
+    expected_action = ACTION_FOR_KIND[kind]
+    if action != expected_action:
+        raise _error(f"item {item_id} Kind {kind} must use Action {expected_action}")
+    requires_destination = kind in {"overview", "rule", "topic-resource", "state", "plan", "authority-mapping", "unresolved"}
+    if requires_destination and destination is None:
+        raise _error(f"item {item_id} Kind {kind} requires a Destination")
+    evidence_paths = set(snapshot.by_path)
+    if kind in {"overview", "state", "plan"}:
+        if payload.get("wording_origin") not in WORDING_ORIGINS or not str(payload.get("text", "")).strip():
+            raise _error(f"item {item_id} has invalid {kind} maintained meaning")
+    elif kind == "rule":
+        if payload.get("wording_origin") not in WORDING_ORIGINS:
+            raise _error(f"item {item_id} has invalid Rule wording origin")
+        if not str(payload.get("statement", "")).strip() or not str(payload.get("why", "")).strip():
+            raise _error(f"item {item_id} Rule requires Statement and Why")
+    elif kind == "topic-resource":
+        if not str(payload.get("condition", "")).strip():
+            raise _error(f"item {item_id} Topic requires Condition")
+        for path in payload.get("resource_paths", []):
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} Resource path is not frozen Evidence: {path}")
+    elif kind == "ordinary-documentation":
+        for path in payload.get("document_paths", []):
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} document path is not frozen Evidence: {path}")
+    elif kind == "authority-mapping":
+        if payload.get("wording_origin") not in WORDING_ORIGINS:
+            raise _error(f"item {item_id} has invalid mapping wording origin")
+        fixed = set(proposal.structure.fixed_markdown)
+        for path in payload.get("authority_paths", []):
+            if path not in fixed:
+                raise _error(f"item {item_id} authority is not fixed Markdown in the accepted structure: {path}")
+    elif kind == "unresolved" and not str(payload.get("question", "")).strip():
+        raise _error(f"item {item_id} unresolved finding requires Question")
+
+
+def _normalize_review(
+    proposal: OnboardingPlacementProposal,
+    items: tuple[PlacementReviewItem, ...],
+    source_edits: tuple[PlacementReviewSourceEdit, ...],
+    sources: tuple[PlacementReviewSource, ...],
+) -> OnboardingPlacementReview:
+    value = {
+        "schema": PLACEMENT_REVIEW_SCHEMA,
+        "evidence_digest": proposal.evidence_digest,
+        "structure_digest": proposal.structure_digest,
+        "proposal_digest": proposal.proposal_digest,
+        "items": [item.to_dict() for item in items],
+        "source_edits": [edit.to_dict() for edit in source_edits],
+        "sources": [source.to_dict() for source in sources],
+    }
+    return OnboardingPlacementReview(
+        evidence_digest=proposal.evidence_digest,
+        structure_digest=proposal.structure_digest,
+        proposal_digest=proposal.proposal_digest,
+        items=items,
+        source_edits=source_edits,
+        sources=sources,
+        review_digest=_digest(value),
+    )
+
+
+def load_placement_review(
+    path: Path, proposal: OnboardingPlacementProposal, snapshot_root: Path
+) -> OnboardingPlacementReview:
+    try:
+        text = path.resolve().read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ContextCanonError(f"Missing onboarding placement review: {path}") from exc
+    except UnicodeDecodeError as exc:
+        raise _error("placement.md is not valid UTF-8") from exc
+    header = _HEADER_RE.search(text)
+    if header is None:
+        raise _error("placement.md is missing its ContextCanon binding header")
+    if header.group("schema") != PLACEMENT_REVIEW_SCHEMA:
+        raise _error(f"unsupported review schema {header.group('schema')!r}")
+    if header.group("evidence") != proposal.evidence_digest:
+        raise _error("evidence_digest does not match the proposal")
+    if header.group("structure") != proposal.structure_digest:
+        raise _error("structure_digest does not match the proposal")
+    if header.group("proposal") != proposal.proposal_digest:
+        raise _error(
+            "proposal_digest does not match the existing human placement review; create a new review path for a new LLM candidate rather than overwriting human edits"
+        )
+
+    snapshot = load_evidence_snapshot(snapshot_root)
+    lines = text.splitlines()
+    proposal_by_id = {item.id: item for item in proposal.items}
+    node_keys = {node.key for node in proposal.structure.nodes}
+    parsed_items: list[PlacementReviewItem] = []
+    seen: set[str] = set()
+    authoring_ids: set[str] = set()
+    for start, end in _section_blocks(lines, "## "):
+        heading = _ITEM_HEADING_RE.match(lines[start])
+        if heading is None:
+            continue
+        item_id = heading.group("id")
+        if item_id not in proposal_by_id:
+            raise _error(f"placement.md contains unknown proposal item {item_id}")
+        if item_id in seen:
+            raise _error(f"placement.md contains duplicate item {item_id}")
+        seen.add(item_id)
+        block = lines[start:end]
+        comment = next((line for line in block if _ITEM_COMMENT_RE.match(line)), None)
+        if comment is None:
+            raise _error(f"item {item_id} is missing its stable authoring-id comment")
+        attrs = _ITEM_COMMENT_RE.match(comment)
+        assert attrs is not None
+        if attrs.group("id") != item_id:
+            raise _error(f"item {item_id} comment ID differs from heading")
+        authoring_id = attrs.group("authoring")
+        if _AUTHORING_ID_RE.fullmatch(authoring_id) is None:
+            raise _error(f"item {item_id} has invalid stable authoring ID {authoring_id!r}")
+        if authoring_id in authoring_ids:
+            raise _error(f"placement.md contains duplicate stable authoring ID {authoring_id}")
+        authoring_ids.add(authoring_id)
+        decision = _simple_value(block, "Decision")
+        if decision not in REVIEW_DECISIONS:
+            raise _error(f"item {item_id} Decision must be pending, accept, or reject")
+        kind = _simple_value(block, "Kind")
+        action = ACTION_FOR_KIND.get(kind, "")
+        destination = _destination(block, allow_none=True)
+        if destination is not None and destination not in node_keys:
+            raise _error(f"item {item_id} references unknown destination Node {destination}")
+        payload = _payload_from_block(kind, block)
+        _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
+        note = _find_line(block, "Review note: ", "Review note")
+        parsed_items.append(
+            PlacementReviewItem(
+                proposal_id=item_id,
+                authoring_id=authoring_id,
+                title=heading.group("title").strip(),
+                decision=decision,
+                destination_node_key=destination,
+                kind=kind,
+                action=action,
+                payload=payload,
+                review_note="" if note == "-" else note,
+            )
+        )
+    if seen != set(proposal_by_id):
+        missing = sorted(set(proposal_by_id) - seen)
+        raise _error(f"placement.md is missing proposal items: {', '.join(missing)}")
+
+    review_source_edits = {edit.id: edit for edit in _review_source_edit_candidates(proposal, snapshot)}
+    parsed_source_edits: list[PlacementReviewSourceEdit] = []
+    seen_source_edits: set[str] = set()
+    for index, line in enumerate(lines):
+        match = _SOURCE_EDIT_COMMENT_RE.match(line)
+        if match is None:
+            continue
+        edit_id = match.group("id")
+        proposed = review_source_edits.get(edit_id)
+        if proposed is None:
+            raise _error(f"placement.md contains unknown Source edit {edit_id}")
+        if edit_id in seen_source_edits:
+            raise _error(f"placement.md contains duplicate Source edit {edit_id}")
+        seen_source_edits.add(edit_id)
+        linked = tuple(part.strip() for part in match.group("linked").split(",") if part.strip())
+        immutable = (
+            match.group("path"), match.group("sha"), int(match.group("start")), int(match.group("end")), linked
+        )
+        expected = (proposed.path, proposed.sha256, proposed.start_line, proposed.end_line, proposed.linked_item_ids)
+        if immutable != expected:
+            raise _error(f"Source edit {edit_id} immutable Evidence binding was changed")
+        next_item = next(
+            (
+                i
+                for i in range(index + 1, len(lines))
+                if _SOURCE_EDIT_COMMENT_RE.match(lines[i])
+                or _ITEM_HEADING_RE.match(lines[i])
+                or _SOURCE_HEADING_RE.match(lines[i])
+            ),
+            len(lines),
+        )
+        block = lines[index:next_item]
+        decision_line = next((entry for entry in block if entry.startswith("Source edit decision:")), None)
+        if decision_line is None:
+            raise _error(f"Source edit {edit_id} is missing Source edit decision")
+        decision_match = re.match(r"^Source edit decision: `([^`]+)`$", decision_line)
+        if decision_match is None or decision_match.group(1) not in REVIEW_DECISIONS:
+            raise _error(f"Source edit {edit_id} decision must be pending, accept, or reject")
+        note = _find_line(block, "Source edit note: ", "Source edit note")
+        start_marker = f'<!-- cc:source-after id="{edit_id}":start -->'
+        end_marker = f'<!-- cc:source-after id="{edit_id}":end -->'
+        if block.count(start_marker) != 1 or block.count(end_marker) != 1:
+            raise _error(f"Source edit {edit_id} must contain one editable source-after marker pair")
+        source_start = block.index(start_marker)
+        source_end = block.index(end_marker, source_start + 1)
+        replacement = "\n".join(block[source_start + 1 : source_end]).strip("\n")
+        parsed_source_edits.append(
+            PlacementReviewSourceEdit(
+                proposal_id=edit_id,
+                decision=decision_match.group(1),
+                path=proposed.path,
+                sha256=proposed.sha256,
+                start_line=proposed.start_line,
+                end_line=proposed.end_line,
+                linked_item_ids=proposed.linked_item_ids,
+                replacement=replacement,
+                review_note="" if note == "-" else note,
+            )
+        )
+    if seen_source_edits != set(review_source_edits):
+        missing = sorted(set(review_source_edits) - seen_source_edits)
+        raise _error(f"placement.md is missing Source edits: {', '.join(missing)}")
+
+    item_decisions = {item.proposal_id: item.decision for item in parsed_items}
+    for edit in parsed_source_edits:
+        if edit.decision == "accept":
+            not_accepted = [item_id for item_id in edit.linked_item_ids if item_decisions.get(item_id) != "accept"]
+            if not_accepted:
+                raise _error(
+                    f"Source edit {edit.proposal_id} cannot be accepted until all linked promoted findings are accepted: {', '.join(not_accepted)}"
+                )
+
+    packages = _package_by_id(proposal)
+    parsed_sources: list[PlacementReviewSource] = []
+    source_ids: set[str] = set()
+    for start, end in _section_blocks(lines, "## Source "):
+        heading = _SOURCE_HEADING_RE.match(lines[start])
+        if heading is None:
+            continue
+        block = lines[start:end]
+        comment = next((line for line in block if _SOURCE_COMMENT_RE.match(line)), None)
+        if comment is None:
+            raise _error(f"Source {heading.group('id')} is missing exact package metadata")
+        attrs = _SOURCE_COMMENT_RE.match(comment)
+        assert attrs is not None
+        review_id = heading.group("id")
+        if attrs.group("id") != review_id or review_id in source_ids:
+            raise _error(f"duplicate or mismatched Source review ID {review_id}")
+        source_ids.add(review_id)
+        source_id = attrs.group("source_id")
+        package = packages.get(source_id)
+        if package is None:
+            raise _error(f"Source {review_id} names package {source_id} not supplied in the exact catalog")
+        expected = (
+            package.metadata.version,
+            package.normalized_digest,
+            package.package_digest,
+            package.metadata.name,
+        )
+        actual = (
+            attrs.group("version"),
+            attrs.group("normalized"),
+            attrs.group("package"),
+            heading.group("title").strip(),
+        )
+        if actual != expected:
+            raise _error(f"Source {review_id} exact package identity does not match the supplied catalog")
+        origin = attrs.group("origin")
+        if origin not in {"evidence-derived", "owner-selected"}:
+            raise _error(f"Source {review_id} has unsupported origin {origin!r}")
+        target = _destination(block, allow_none=False)
+        assert target is not None
+        if target not in node_keys:
+            raise _error(f"Source {review_id} references unknown destination Node {target}")
+        decision = _simple_value(block, "Decision")
+        if decision not in REVIEW_DECISIONS:
+            raise _error(f"Source {review_id} Decision must be pending, accept, or reject")
+        proposal_id = review_id if origin == "evidence-derived" else None
+        if proposal_id is not None and proposal_id not in {reuse.id for reuse in proposal.source_reuses}:
+            raise _error(f"Source {review_id} is not present in the placement proposal")
+        note = _find_line(block, "Review note: ", "Review note")
+        why_line = next((entry for entry in block if entry.startswith("Why this Source applies: ")), None)
+        relationship_why = "" if why_line is None else why_line[len("Why this Source applies: "):].strip()
+        if relationship_why == "-":
+            relationship_why = ""
+        parsed_sources.append(
+            PlacementReviewSource(
+                review_id=review_id,
+                origin=origin,
+                target_node_key=target,
+                decision=decision,
+                source_node_id=source_id,
+                source_name=package.metadata.name,
+                source_version=package.metadata.version,
+                source_normalized_digest=package.normalized_digest,
+                source_package_digest=package.package_digest,
+                review_note="" if note == "-" else note,
+                proposal_id=proposal_id,
+                relationship_why=relationship_why,
+            )
+        )
+
+    expected_evidence_sources = {reuse.id for reuse in proposal.source_reuses}
+    actual_evidence_sources = {source.review_id for source in parsed_sources if source.origin == "evidence-derived"}
+    if actual_evidence_sources != expected_evidence_sources:
+        missing = sorted(expected_evidence_sources - actual_evidence_sources)
+        raise _error(f"placement.md is missing Evidence-derived Source reviews: {', '.join(missing)}")
+    return _normalize_review(proposal, tuple(parsed_items), tuple(parsed_source_edits), tuple(parsed_sources))
+
+
+def create_or_load_placement_review(
+    path: Path,
+    proposal: OnboardingPlacementProposal,
+    snapshot_root: Path,
+    *,
+    owner_source_specs: Iterable[str] = (),
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
+) -> tuple[OnboardingPlacementReview, bool]:
+    path = path.resolve()
+    if path.exists():
+        if tuple(owner_source_specs):
+            raise _error(
+                "--owner-source is only used when placement.md is first created; edit the existing human review instead of silently changing it"
+            )
+        return load_placement_review(path, proposal, snapshot_root), False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        render_placement_review(
+            proposal,
+            snapshot_root,
+            owner_source_specs=owner_source_specs,
+            owner_source_whys=owner_source_whys,
+            preaccepted_owner_sources=preaccepted_owner_sources,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return load_placement_review(path, proposal, snapshot_root), True
