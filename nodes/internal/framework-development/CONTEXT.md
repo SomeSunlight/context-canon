@@ -171,6 +171,10 @@ Validate ContextCanon through concrete repository use cases before hardening abs
 
 Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.
 
+#### `CCI-011` — Mark human-editable generated Markdown with one visible convention
+
+Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.
+
 #### `CCI-010` — Prefer uv for ContextCanon development and tool installation
 
 Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.

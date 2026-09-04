@@ -80,6 +80,10 @@ OVERRIDE IMPORTED RULE
   Why: ContextCanon itself should demonstrate durable, reviewable project context.
   <!-- ctx:rule id="CCI-003" -->
 
+- **Mark human-editable generated Markdown with one visible convention:** Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.
+  Why: Operators often review Markdown in preview mode where HTML comments disappear. One repeated visual grammar makes the workflow scannable and prevents each new review surface from inventing its own hidden interaction contract.
+  <!-- ctx:rule id="CCI-011" -->
+
 - **Prefer uv for ContextCanon development and tool installation:** Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force "git+https://github.com/SomeSunlight/context-canon.git@<ref>"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.
   Why: A uv-managed tool install has proven more repeatable for the real ContextCanon operator workflow and avoids repeatedly reintroducing environment-specific `pip` setup across development sessions, while the framework itself must remain usable on other operating systems and shells.
   <!-- ctx:rule id="CCI-010" -->

@@ -285,3 +285,9 @@ The generated onboarding PLAN is now a ten-step operator console. Each STEP keep
 Source relationship rationale is durable provenance rather than a Rule: direct Source authoring records the Why, immutable imported context carries it through accepted Parent packages, and descendants can therefore explain both where inherited reusable Context came from and why it was attached. Ordinary builds remain offline and Parent/Source package pins remain immutable.
 
 The final product commit is created only after the focused onboarding/Parent/package regressions, the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, diff hygiene, temporary-helper cleanup, and a second post-cleanup check all succeed. PR #13 remains draft and unmerged; the next action is the project owner's real `ai-workstation` test starting again at STEP 05.
+
+## Latest STEP-05 path-input owner-test correction
+
+The first real reusable-Contexts human gate exposed two UX defects despite the underlying Source model being correct. Catalog input was parsed as one exact Markdown spelling (`- `PATH``) rather than as a path value, so an ordinary pasted Windows path failed with a formatting error. STEP-05 also used headings and invisible HTML markers instead of the preview-visible editable-region cues already established in placement review.
+
+The correction makes Catalog path input forgiving and canonicalizing: plain path, optional Markdown bullet, and optional quote/backtick wrappers are accepted as equivalent human input, then the rerendered file uses the canonical Markdown form. STEP-05 now gives a concrete Windows example and visibly brackets both editable regions with the shared `✏️ Editable ...` / `End editable ...` grammar. The framework-development Context now records this as an explicit rule for future generated human gates so preview-mode users do not have to infer editability from hidden comments.

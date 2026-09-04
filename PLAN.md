@@ -371,3 +371,13 @@ Purpose: remove the last onboarding step that required a human to remember Catal
 - [x] 5. Renumber downstream human artifacts to `STEP-06...STEP-10`, retain migration aliases for prior workspace filenames, and extend reset semantics through step 10.
 - [x] 6. Replace the split top checklist / lower command manual with one integrated PLAN chapter per numbered STEP: same title vocabulary as the artifact names, novice-oriented subject/action explanation, completion checkbox, exact command, and artifact guidance in one place.
 - [x] 7. Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head to the project owner for the final real `ai-workstation` onboarding/readability test. PR remains draft/unmerged until explicit owner approval.
+
+## Final owner-UX correction: forgiving STEP-05 path input and visible edit grammar
+
+Purpose: fix the first real STEP-05 owner run, where the machine accepted only one exact Markdown spelling for a Catalog path and the new human gate failed to use the established preview-visible editable-area convention.
+
+- [x] Treat a Catalog location as a human-entered path value rather than Markdown syntax: accept plain pasted paths plus optional bullet/backtick/quote wrappers, then rewrite to canonical `- `PATH`` presentation on rerun.
+- [x] Put a concrete Windows Catalog example beside the input and improve the error boundary so the operator does not have to guess quoting syntax.
+- [x] Mark STEP-05 Catalog and assignment controls with the same rendered `✏️ Editable ...` / `End editable ...` visual grammar already used in placement review.
+- [x] Add a ContextCanon framework-development Rule requiring visible, consistent editable-region affordances in generated human-gate Markdown; machine-only HTML markers are insufficient.
+- [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.

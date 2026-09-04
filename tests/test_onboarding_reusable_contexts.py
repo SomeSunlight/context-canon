@@ -11,6 +11,7 @@ from contextcanon.onboarding_reusable_contexts import (
     ASSIGNMENTS_START,
     CATALOG_END,
     CATALOG_START,
+    _catalog_locations,
     load_accepted_reusable_contexts,
     refresh_reusable_contexts,
 )
@@ -94,6 +95,47 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(len(accepted.catalog_packages), 1)
             state = json.loads((snapshot / "reusable-contexts.json").read_text(encoding="utf-8"))
             self.assertEqual(state["assignments"][0]["source_node_id"], "workflow-node")
+
+    def test_catalog_locations_accept_plain_windows_path_and_common_wrappers(self) -> None:
+        windows_path = r"C:\Users\u239230\PycharmProjects\context-canon\nodes\library"
+        variants = (
+            windows_path,
+            f"- {windows_path}",
+            f'"{windows_path}"',
+            f"- `{windows_path}`",
+        )
+        for value in variants:
+            with self.subTest(value=value):
+                text = f"{CATALOG_START}\n{value}\n{CATALOG_END}\n"
+                self.assertEqual(_catalog_locations(text), (windows_path,))
+
+    def test_step05_marks_editable_areas_visibly_and_canonicalizes_plain_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-05-reusable-contexts.md"
+            structure = self._structure()
+            catalog = self._catalog(root)
+
+            refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            text = workspace_file.read_text(encoding="utf-8")
+            self.assertIn("> ✏️ Editable Catalog locations start below.", text)
+            self.assertIn("> End editable Catalog locations.", text)
+            self.assertIn("> ✏️ Editable reusable-Context assignment controls start below.", text)
+            self.assertIn("> End editable reusable-Context assignment controls.", text)
+            self.assertIn(r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
+
+            text = text.replace(
+                CATALOG_START + "\n" + CATALOG_END,
+                CATALOG_START + f"\n{catalog}\n" + CATALOG_END,
+            )
+            workspace_file.write_text(text, encoding="utf-8")
+            plan, created = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            self.assertFalse(created)
+            self.assertEqual(plan.catalog_locations, (str(catalog),))
+            canonical = workspace_file.read_text(encoding="utf-8")
+            self.assertIn(f"- `{catalog}`", canonical)
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:
         from contextcanon.onboarding_reusable_contexts import ReusableContextAssignment

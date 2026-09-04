@@ -112,14 +112,25 @@ def _catalog_locations(text: str) -> tuple[str, ...]:
         line = raw.strip()
         if not line:
             continue
-        match = re.fullmatch(r"- `(.+)`", line)
-        if match is None:
-            raise _error("Catalog locations must contain only '- `PATH`' lines")
-        value = match.group(1).strip()
-        if value not in values:
-            values.append(value)
-    return tuple(values)
 
+        # Human input is intentionally forgiving. A pasted path is the semantic
+        # value; Markdown bullet/code/quote wrappers are only presentation.
+        if line.startswith("- "):
+            line = line[2:].strip()
+        if len(line) >= 2 and (line[0], line[-1]) in {
+            ("`", "`"),
+            ('"', '"'),
+            ("'", "'"),
+        }:
+            line = line[1:-1].strip()
+
+        if not line:
+            raise _error("Catalog location cannot be empty")
+        if line.startswith("<!--"):
+            raise _error("Catalog locations must contain paths, not machine markers")
+        if line not in values:
+            values.append(line)
+    return tuple(values)
 
 def _decision(text: str) -> str:
     matches = re.findall(r"(?m)^Decision: `([^`]+)`$", text)
@@ -301,9 +312,15 @@ def render_reusable_contexts(
         "",
         "Edit only the Catalog locations, the sparse Assignments, and `Decision`. ContextCanon owns IDs, package digests and the generated lists. Run the same `contextcanon onboard reusable-contexts ...` command again after every edit.",
         "",
-        "## Catalog locations — editable",
+        "## Catalog locations",
         "",
         "Add one directory containing reusable compiled Context Nodes per line. A location may itself be one Context Node or a directory containing several Nodes.",
+        "",
+        "Paste a path normally. Markdown bullets, backticks, or quotes are optional input conveniences; ContextCanon rewrites accepted input into one canonical Markdown form on the next run.",
+        "",
+        r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`",
+        "",
+        "> ✏️ Editable Catalog locations start below.",
         "",
         CATALOG_START,
     ]
@@ -312,7 +329,9 @@ def render_reusable_contexts(
         [
             CATALOG_END,
             "",
-            "## Assignments — editable",
+            "> End editable Catalog locations.",
+            "",
+            "## Assignments",
             "",
             "Only list relationships that should actually exist; there is deliberately no project-node × catalog-node matrix. Copy the human-readable names/path/version from the generated lists below. Every relationship needs a durable `Why`.",
             "",
@@ -322,6 +341,8 @@ def render_reusable_contexts(
             "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
             "  Why: Shared development workflow applies to the whole project.",
             "```",
+            "",
+            "> ✏️ Editable reusable-Context assignment controls start below.",
             "",
             f"Decision: `{decision}`",
             "",
@@ -338,6 +359,8 @@ def render_reusable_contexts(
     lines.extend(
         [
             ASSIGNMENTS_END,
+            "",
+            "> End editable reusable-Context assignment controls.",
             "",
             "Set `Decision` to `accept` when the Catalog and assignments are the intended reusable-context composition for this onboarding. An empty assignment list is valid when no reusable Context applies.",
             "",

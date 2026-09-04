@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.5.0",
   "digests": {
-    "normalized": "94e696af3c1637f9a7dba387935d30aed762a2fdbdd0506a33a5a69dc9f296d1",
-    "package": "dd6e0caea9521560d540f151718f96c21b233937a3f634ab183fe64e760ac9a9"
+    "normalized": "f200abb7a1b97badf5bf20553646deb7f4e26e9c08bc9168351440324dd51b29",
+    "package": "9b9d09d8aa60e11d71e1dad44f543130ff22881f0b1cc880e6512a9df9eb785d"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "98e6ffc868104f67fabe67ffb94861c0d29c33002c877556a2540ca7f183cb95",
-      "size": 16844
+      "sha256": "69d1335d9716d66469320621ea0eec04d8e39fecfbb44ae29b2766516c827077",
+      "size": 17224
     },
     {
       "path": "CONTEXT/README.md",
@@ -412,6 +412,16 @@
       "statement": "Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.",
       "title": "Repository documentation is the design record",
       "why": "ContextCanon itself should demonstrate durable, reviewable project context."
+    },
+    {
+      "group": "Development method",
+      "id": "CCI-011",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.",
+      "title": "Mark human-editable generated Markdown with one visible convention",
+      "why": "Operators often review Markdown in preview mode where HTML comments disappear. One repeated visual grammar makes the workflow scannable and prevents each new review surface from inventing its own hidden interaction contract."
     },
     {
       "group": "Development method",

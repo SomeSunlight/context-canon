@@ -55,6 +55,7 @@ local:
     - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "group": "Onboarding trust"}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "group": "Development method"}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "group": "Development method"}
+    - {"id": "CCI-011", "title": "Mark human-editable generated Markdown with one visible convention", "group": "Development method"}
     - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "group": "Development method"}
     - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "group": "Node library"}
   changes: []
@@ -100,6 +101,7 @@ official:
     - {"id": "CCI-009", "title": "Make first-adoption publication rollback-safe", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-002", "title": "Validate vertically before hardening", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-003", "title": "Repository documentation is the design record", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-011", "title": "Mark human-editable generated Markdown with one visible convention", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
@@ -252,5 +254,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "94e696af3c1637f9a7dba387935d30aed762a2fdbdd0506a33a5a69dc9f296d1"
-  package_digest: "dd6e0caea9521560d540f151718f96c21b233937a3f634ab183fe64e760ac9a9"
+  normalized_digest: "f200abb7a1b97badf5bf20553646deb7f4e26e9c08bc9168351440324dd51b29"
+  package_digest: "9b9d09d8aa60e11d71e1dad44f543130ff22881f0b1cc880e6512a9df9eb785d"
