@@ -1,0 +1,72 @@
+name: Block W STEP-05 assignment copy UX
+
+on:
+  push:
+    branches:
+      - agent/onboarding-placement-publication
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply product correction
+        run: python tools/_block_w_apply.py
+      - name: Install
+        run: python -m pip install -e .
+      - name: Focused tests
+        run: python -m unittest -v tests.test_onboarding_reusable_contexts tests.test_repository_consistency
+      - name: Full suite
+        run: python -m unittest discover -s tests -v
+      - name: Build all
+        run: contextcanon build --all .
+      - name: Check all
+        run: contextcanon check --all .
+      - name: Diff hygiene
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('PLAN.md', 'STATE.md'):
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8', newline='\n')
+          PY
+          git diff --check
+      - name: Remove temporary files
+        run: |
+          rm -f tools/_block_w_apply.py .github/workflows/_block-w-finalize.yml
+          rmdir tools 2>/dev/null || true
+      - name: Check after cleanup
+        run: |
+          contextcanon check --all .
+          git diff --check
+      - name: Close durable checkpoint
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('PLAN.md')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace(
+              '- [ ] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.',
+              '- [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.',
+              1,
+          )
+          p.write_text(text.rstrip() + '\n', encoding='utf-8', newline='\n')
+          PY
+          contextcanon build --all .
+          contextcanon check --all .
+          git diff --check
+      - name: Commit clean product tree
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Make STEP-05 assignments copy-ready"
+          git push origin HEAD:agent/onboarding-placement-publication
