@@ -14,6 +14,14 @@ def patch(rel: str, old: str, new: str, *, count: int = 1) -> None:
     path.write_text(text.replace(old, new, count), encoding="utf-8", newline="\n")
 
 
+# The orchestration PLAN should not teach obsolete/advanced CLI plumbing even
+# as a footnote. Scripting compatibility belongs in CLI/help/reference docs.
+patch(
+    "src/contextcanon/onboarding_workspace.py",
+    "Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests or repeated `--catalog-package`/`--owner-source` options. Those identities are resolved and retained by ContextCanon from STEP 05. The legacy CLI options remain available for scripting/backward compatibility.",
+    "Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.",
+)
+
 rel = "tests/test_onboarding_reset.py"
 
 patch(
@@ -33,8 +41,6 @@ patch(
     '''            (["onboard", "placement-instruction", "--help"], ("STEP-02b-structure-proposal.json", "STEP-03-structure.md", "STEP-06a-placement-instruction.md")),\n            (["onboard", "placement-review", "--help"], ("STEP-06b-placement-proposal.json", "STEP-08-placement.md")),\n''',
 )
 
-# Stale-plan recovery should prove that the current integrated runbook replaces
-# old/split wording rather than preserving old numbering.
 start = '''        stale = workspace.plan_path.read_text(encoding="utf-8")\n        stale = stale.replace(\n            "- [ ] 6. Placement validate — validate the LLM proposal against the frozen Evidence, accepted structure, and exact Source catalog.\\n",\n            "",\n        )\n        stale = stale.replace("7. Placement review", "6. Placement review")\n        stale = stale.replace("8. Publication preview", "7. Publication preview")\n        stale = stale.replace("9. Publish placement", "8. Publish placement")\n        stale = stale.replace("STEP-07-placement.md", "placement.md")\n        workspace.plan_path.write_text(stale, encoding="utf-8")\n\n        reset_onboarding(prepared.snapshot_root, from_step=5)\n        refreshed = workspace.plan_path.read_text(encoding="utf-8")\n        self.assertIn("6. Placement validate", refreshed)\n        self.assertIn("7. Placement review", refreshed)\n        self.assertIn("STEP-07-placement.md", refreshed)\n        self.assertIn("contextcanon onboard reset", refreshed)\n'''
 replacement = '''        stale = workspace.plan_path.read_text(encoding="utf-8")\n        stale = stale.replace("### STEP 07 — Placement validate", "### OLD STEP — Placement validate")\n        stale = stale.replace("STEP-08-placement.md", "placement.md")\n        workspace.plan_path.write_text(stale, encoding="utf-8")\n\n        reset_onboarding(prepared.snapshot_root, from_step=5)\n        refreshed = workspace.plan_path.read_text(encoding="utf-8")\n        self.assertIn("STEP 05 — Reusable Contexts", refreshed)\n        self.assertIn("STEP 07 — Placement validate", refreshed)\n        self.assertIn("STEP 08 — Placement review", refreshed)\n        self.assertIn("STEP-08-placement.md", refreshed)\n        self.assertIn("contextcanon onboard reset", refreshed)\n'''
 patch(rel, start, replacement)
