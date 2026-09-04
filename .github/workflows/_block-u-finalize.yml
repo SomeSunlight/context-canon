@@ -23,7 +23,9 @@ jobs:
           python tools/_block_u_apply.py
           python tools/_block_u_followup.py
           python tools/_block_u_fullsuite_followup.py
+          python tools/_block_u_assignment_instruction.py
           python tools/_block_u_docs.py
+          python tools/_block_u_copyfix.py
       - name: Install
         run: python -m pip install -e .
       - name: Focused tests
@@ -38,7 +40,7 @@ jobs:
         run: git diff --check
       - name: Remove temporary files
         run: |
-          rm -f tools/_block_u_apply.py tools/_block_u_followup.py tools/_block_u_fullsuite_followup.py tools/_block_u_docs.py .github/workflows/_block-u-finalize.yml
+          rm -f tools/_block_u_apply.py tools/_block_u_followup.py tools/_block_u_fullsuite_followup.py tools/_block_u_assignment_instruction.py tools/_block_u_docs.py tools/_block_u_copyfix.py .github/workflows/_block-u-finalize.yml
           rmdir tools 2>/dev/null || true
       - name: Check after cleanup
         run: |
