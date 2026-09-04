@@ -23,10 +23,11 @@ jobs:
           python tools/_block_u_apply.py
           python tools/_block_u_followup.py
           python tools/_block_u_fullsuite_followup.py
+          python tools/_block_u_docs.py
       - name: Install
         run: python -m pip install -e .
       - name: Focused tests
-        run: python -m unittest -v tests.test_onboarding_reusable_contexts tests.test_onboarding_plan_steps tests.test_onboarding_reset tests.test_onboarding_owner_review_followup tests.test_onboarding_workspace_checkpoint tests.test_onboarding_placement tests.test_onboarding_placement_publish tests.test_onboarding_placement_review tests.test_parent_chain tests.test_package
+        run: python -m unittest -v tests.test_onboarding_reusable_contexts tests.test_onboarding_plan_steps tests.test_onboarding_walkthrough_current tests.test_onboarding_reset tests.test_onboarding_owner_review_followup tests.test_onboarding_workspace_checkpoint tests.test_onboarding_placement tests.test_onboarding_placement_publish tests.test_onboarding_placement_review tests.test_parent_chain tests.test_package
       - name: Full suite
         run: python -m unittest discover -s tests -v
       - name: Build all
@@ -37,7 +38,7 @@ jobs:
         run: git diff --check
       - name: Remove temporary files
         run: |
-          rm -f tools/_block_u_apply.py tools/_block_u_followup.py tools/_block_u_fullsuite_followup.py .github/workflows/_block-u-finalize.yml
+          rm -f tools/_block_u_apply.py tools/_block_u_followup.py tools/_block_u_fullsuite_followup.py tools/_block_u_docs.py .github/workflows/_block-u-finalize.yml
           rmdir tools 2>/dev/null || true
       - name: Check after cleanup
         run: |
