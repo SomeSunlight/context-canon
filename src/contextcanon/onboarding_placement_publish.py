@@ -473,9 +473,11 @@ def _render_sources(
         name = _safe_line(source.source_name, f"Source {source.review_id} name")
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
+        lines.append(f"- [{name}]({provenance.locator}) — `{source.source_version}`")
+        if source.relationship_why:
+            lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
         lines.extend(
             [
-                f"- [{name}]({provenance.locator}) — `{source.source_version}`",
                 (
                     f'  <!-- ctx:source id="{source.source_node_id}" version="{source.source_version}" '
                     f'normalized-digest="{source.source_normalized_digest}" '

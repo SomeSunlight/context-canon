@@ -111,9 +111,12 @@ def semantic_payload(
     import_items = sorted(
         (
             {
-                "id": dependency.id,
-                "version": dependency.version,
-                "normalized_digest": dependency.normalized_digest,
+                **{
+                    "id": dependency.id,
+                    "version": dependency.version,
+                    "normalized_digest": dependency.normalized_digest,
+                },
+                **({"why": dependency.why} if dependency.why else {}),
             }
             for dependency in imports
         ),
@@ -435,6 +438,7 @@ def _parse_import_dependency(value: Any, index: int) -> PackageDependency:
         _string(item.get("version"), f"imports[{index}].version"),
         _digest(item.get("normalized_digest"), f"imports[{index}].normalized_digest"),
         _digest(item.get("package_digest"), f"imports[{index}].package_digest"),
+        None if item.get("why") is None else _string(item.get("why"), f"imports[{index}].why"),
     )
 
 

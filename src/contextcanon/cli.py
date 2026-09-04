@@ -13,6 +13,7 @@ from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
 from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from .onboarding_reusable_contexts import load_accepted_reusable_contexts, refresh_reusable_contexts
 from .onboarding_placement_publish import (
     build_placement_publication_preview,
     publish_placement_review,
@@ -30,6 +31,7 @@ from .onboarding_review import (
 from .onboarding_structure import (
     create_or_load_structure_markdown,
     load_onboarding_structure_proposal,
+    load_structure_markdown,
 )
 from .onboarding_structure_instruction import build_onboarding_structure_instruction
 from .onboarding_structure_materialize import (
@@ -208,6 +210,14 @@ def main(argv: list[str] | None = None) -> int:
     _add_workspace(onboard_structure_materialize)
     onboard_structure_materialize.add_argument("--project", metavar="PATH", help="target Git repository root (default: infer from snapshot)")
 
+    onboard_reusable_contexts = onboard_sub.add_parser(
+        "reusable-contexts",
+        help="create or validate the human reusable-Context Catalog and assignment gate",
+    )
+    onboard_reusable_contexts.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    _add_workspace(onboard_reusable_contexts)
+    _add_structure_inputs(onboard_reusable_contexts)
+
     onboard_placement_instruction = onboard_sub.add_parser(
         "placement-instruction",
         help="write the framework-owned second-pass content-placement instruction bound to the edited structure",
@@ -225,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_instruction.add_argument(
         "--stdout",
         action="store_true",
-        help="emit the instruction to stdout instead of writing <workspace>/STEP-05a-placement-instruction.md",
+        help="emit the instruction to stdout instead of writing <workspace>/STEP-06a-placement-instruction.md",
     )
 
     onboard_placement_validate = onboard_sub.add_parser(
@@ -236,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_validate.add_argument(
         "proposal",
         nargs="?",
-        help="placement proposal JSON (default: <workspace>/STEP-05b-placement-proposal.json)",
+        help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)",
     )
     _add_workspace(onboard_placement_validate)
     _add_structure_inputs(onboard_placement_validate)
@@ -256,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_review.add_argument(
         "proposal",
         nargs="?",
-        help="placement proposal JSON (default: <workspace>/STEP-05b-placement-proposal.json)",
+        help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)",
     )
     _add_workspace(onboard_placement_review)
     _add_structure_inputs(onboard_placement_review)
@@ -270,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_review.add_argument(
         "--review",
         metavar="PATH",
-        help="human-editable placement Markdown (default: <workspace>/STEP-07-placement.md)",
+        help="human-editable placement Markdown (default: <workspace>/STEP-08-placement.md)",
     )
     onboard_placement_review.add_argument(
         "--owner-source",
@@ -287,7 +297,7 @@ def main(argv: list[str] | None = None) -> int:
         command = onboard_sub.add_parser(command_name, help=command_help)
         command.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
         command.add_argument(
-            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-05b-placement-proposal.json)"
+            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)"
         )
         _add_workspace(command)
         _add_structure_inputs(command)
@@ -299,7 +309,7 @@ def main(argv: list[str] | None = None) -> int:
             help="same exact immutable Source catalog used for placement review; may be repeated",
         )
         command.add_argument(
-            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-07-placement.md)"
+            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-08-placement.md)"
         )
         command.add_argument(
             "--project", metavar="PATH", help="target Git repository root (default: infer from snapshot)"
@@ -537,7 +547,7 @@ def main(argv: list[str] | None = None) -> int:
                     next_action = (
                         f"Run `contextcanon onboard structure-materialize {_snapshot_cli(snapshot)}` after reviewing `STEP-04-structure-preview.md`."
                         if missing or recovering else
-                        f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`."
+                        f"Run `contextcanon onboard reusable-contexts {_snapshot_cli(snapshot)}`."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="structure previewed",
@@ -551,7 +561,46 @@ def main(argv: list[str] | None = None) -> int:
                 update_workspace_checkpoint(
                     workspace, snapshot, stage="structure materialized",
                     structure_digest=preview.structure_digest,
-                    next_action=f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`.",
+                    next_action=f"Run `contextcanon onboard reusable-contexts {_snapshot_cli(snapshot)}`.",
+                )
+                return 0
+
+            if args.onboard_command == "reusable-contexts":
+                workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
+                structure_proposal_path = (
+                    Path(args.structure_proposal) if args.structure_proposal is not None else workspace.structure_proposal_path
+                )
+                structure_path = Path(args.structure) if args.structure is not None else workspace.structure_path
+                structure_proposal = load_onboarding_structure_proposal(structure_proposal_path, snapshot)
+                structure = load_structure_markdown(structure_path, structure_proposal)
+                plan, created = refresh_reusable_contexts(
+                    workspace.reusable_contexts_path,
+                    snapshot,
+                    structure_proposal.evidence_digest,
+                    structure,
+                )
+                verb = "created" if created else "validated"
+                print(f"{verb} reusable Context setup {plan.review_digest}")
+                print(f"Review file: {workspace.reusable_contexts_path}")
+                print(f"Catalog Nodes: {len(plan.catalog_packages)} · assignments: {len(plan.assignments)} · complete: {plan.is_complete}")
+                # Keep the old machine run-input cache populated for scripting/backward compatibility,
+                # but the human PLAN never asks the operator to reconstruct these values.
+                remember_run_inputs(
+                    snapshot,
+                    catalog_inputs=plan.catalog_package_inputs,
+                    owner_source_specs=plan.owner_source_specs,
+                )
+                stage = "reusable contexts accepted" if plan.is_complete else "reusable contexts review"
+                next_action = (
+                    f"Run `contextcanon onboard placement-instruction {_snapshot_cli(snapshot)}`."
+                    if plan.is_complete else
+                    f"Edit `{workspace.reusable_contexts_path.name}` (Catalog locations / sparse Assignments / Why), then rerun `contextcanon onboard reusable-contexts {_snapshot_cli(snapshot)}`."
+                )
+                update_workspace_checkpoint(
+                    workspace, snapshot,
+                    stage=stage,
+                    structure_digest=structure.structure_digest,
+                    next_action=next_action,
                 )
                 return 0
 
@@ -570,12 +619,32 @@ def main(argv: list[str] | None = None) -> int:
                 catalog = tuple(Path(path) for path in args.catalog_package)
                 catalog_inputs = tuple(args.catalog_package)
                 explicit_owner = tuple(args.owner_source) if hasattr(args, "owner_source") else ()
+                owner_source_whys: dict[str, str] = {}
+                preaccepted_owner_sources = False
+                accepted_reusable_assignments = ()
+
+                structure_proposal = load_onboarding_structure_proposal(structure_proposal_path, snapshot)
+                structure = load_structure_markdown(structure_path, structure_proposal)
                 remembered_catalog, remembered_owner = remember_run_inputs(
                     snapshot,
                     catalog_inputs=catalog_inputs,
                     owner_source_specs=explicit_owner,
                 )
-                if not catalog_inputs and remembered_catalog:
+                if not catalog_inputs and workspace.reusable_contexts_path.is_file():
+                    reusable = load_accepted_reusable_contexts(
+                        workspace.reusable_contexts_path,
+                        snapshot,
+                        structure_proposal.evidence_digest,
+                        structure,
+                    )
+                    catalog_inputs = reusable.catalog_package_inputs
+                    catalog = tuple(Path(path) for path in catalog_inputs)
+                    remembered_owner = reusable.owner_source_specs
+                    owner_source_whys = reusable.owner_source_whys
+                    accepted_reusable_assignments = reusable.assignments
+                    preaccepted_owner_sources = True
+                elif not catalog_inputs and remembered_catalog:
+                    # Legacy/scripting compatibility for an onboarding started before STEP 05 existed.
                     catalog_inputs = remembered_catalog
                     catalog = tuple(Path(path) for path in catalog_inputs)
 
@@ -585,6 +654,7 @@ def main(argv: list[str] | None = None) -> int:
                         structure_proposal_path,
                         structure_path,
                         catalog_package_roots=catalog,
+                        accepted_reusable_assignments=accepted_reusable_assignments,
                     )
                     if args.stdout:
                         if args.workspace is not None:
@@ -604,9 +674,9 @@ def main(argv: list[str] | None = None) -> int:
                         source_catalog=_catalog_labels(instruction.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            "Give `STEP-05a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                            "Save its single JSON result as `STEP-05b-placement-proposal.json`, then run "
-                            f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
+                            "Give `STEP-06a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
+                            "Save its single JSON result as `STEP-06b-placement-proposal.json`, then run "
+                            f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}`."
                         ),
                     )
                     return 0
@@ -634,8 +704,8 @@ def main(argv: list[str] | None = None) -> int:
                         source_catalog=_catalog_labels(proposal.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above. "
-                            "Add any explicit owner choice once with `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID`."
+                            f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`. "
+                            "Reusable Context relationships were already accepted in STEP 05; no Source IDs need to be typed here."
                         ),
                     )
                     return 0
@@ -648,6 +718,8 @@ def main(argv: list[str] | None = None) -> int:
                         proposal,
                         snapshot,
                         owner_source_specs=owner_for_review,
+                        owner_source_whys=owner_source_whys,
+                        preaccepted_owner_sources=preaccepted_owner_sources,
                     )
                     verb = "created" if created else "loaded"
                     write_utf8(
@@ -692,9 +764,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Touched Context Nodes: {len(preview.nodes)} · follow-ups: {len(preview.followups)}")
                 if args.onboard_command == "placement-preview":
                     next_action = (
-                        f"Review `STEP-08-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}` with the exact `--catalog-package` inputs listed above."
+                        f"Review `STEP-09-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}`."
                         if preview.review_complete else
-                        "Return to `STEP-07-placement.md`, resolve all pending decisions, and preview again."
+                        "Return to `STEP-08-placement.md`, resolve all pending decisions, and preview again."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement publication previewed",
@@ -734,7 +806,7 @@ def main(argv: list[str] | None = None) -> int:
                     source_catalog=_catalog_labels(proposal.catalog_packages),
                     source_catalog_inputs=catalog_inputs,
                     next_action=(
-                        "Review `STEP-09-placement-followup.md`. Accepted mutable-Markdown Source After transformations were published transactionally with canonical Context; "
+                        "Review `STEP-10-placement-followup.md`. Accepted mutable-Markdown Source After transformations were published transactionally with canonical Context; "
                         "ordinary ContextCanon-native project growth now happens by editing the relevant Node sources directly, not by rerunning migration onboarding."
                     ),
                 )

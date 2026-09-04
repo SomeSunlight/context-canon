@@ -28,6 +28,7 @@ class SourceRef:
     transport: str | None = None
     transport_ref: str | None = None
     node_path: str | None = None
+    why: str | None = None
 
     @property
     def is_pinned(self) -> bool:
@@ -118,6 +119,7 @@ class PackageDependency:
     version: str
     normalized_digest: str
     package_digest: str
+    why: str | None = None
 
 
 @dataclass(frozen=True)

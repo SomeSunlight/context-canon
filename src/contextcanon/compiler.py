@@ -154,6 +154,12 @@ class Compiler:
                 compiled.metadata.id,
                 compiled.metadata.name,
             )
+            source_whys = {source.id: source.why for source in parsed.sources if source.why}
+            if source_whys:
+                compiled.imported_contexts = [
+                    replace(dependency, why=source_whys.get(dependency.id, dependency.why))
+                    for dependency in compiled.imported_contexts
+                ]
             compiled.inherited_rules, compiled.removed_rules = self._compose_inherited_rule_state(
                 composition_packages,
                 compiled.metadata.name,

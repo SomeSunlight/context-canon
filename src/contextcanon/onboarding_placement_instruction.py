@@ -8,6 +8,7 @@ from typing import Iterable
 from .model import CompiledPackage
 from .onboarding_instruction import MAX_INSTRUCTION_BYTES, _load_catalog, _render_evidence
 from .onboarding_proposal import load_evidence_snapshot
+from .onboarding_reusable_contexts import ReusableContextAssignment
 from .onboarding_structure import HumanStructurePlan, load_onboarding_structure_proposal, load_structure_markdown
 from .parser import ContextCanonError
 
@@ -66,6 +67,37 @@ def _render_structure(structure: HumanStructurePlan) -> list[str]:
     return lines
 
 
+def _render_accepted_reusable_contexts(
+    assignments: tuple[ReusableContextAssignment, ...],
+) -> list[str]:
+    lines = [
+        "## Accepted reusable Context assignments — already decided",
+        "",
+    ]
+    if not assignments:
+        lines.extend([
+            "No owner-selected reusable Context relationship applies in this onboarding.",
+            "",
+        ])
+        return lines
+    lines.extend([
+        "The project owner already accepted these composition relationships in STEP 05. Treat them as fixed input for placement, not as Source suggestions to rediscover. A reusable Context attached to a project Node also reaches that Node's semantic descendants through the accepted Parent chain. Do not duplicate its generic Rules/Topics locally merely because the same project prose mentions them.",
+        "",
+    ])
+    for assignment in assignments:
+        lines.extend([
+            f"- `{assignment.target_node_key}` — **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)",
+            f"  Why: {assignment.why}",
+            f"  Exact Source: `{assignment.source_node_id}` · `{assignment.source_package_digest}`",
+        ])
+    lines.extend([
+        "",
+        "Do not emit a `source_reuses` entry for one of these already accepted relationships, or for the same Source redundantly at one of its descendant Nodes. `source_reuses` is reserved for a genuinely new Evidence-derived relationship that STEP 05 did not already establish.",
+        "",
+    ])
+    return lines
+
+
 def _render_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
     lines = ["## Available reusable ContextCanon Source catalog", ""]
     if not packages:
@@ -79,7 +111,7 @@ def _render_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
         return lines
     lines.extend(
         [
-            "Compare generic-looking project guidance with every verified immutable package below before proposing a duplicate local Rule. Use `source_reuses` only when one exact package materially covers evidence-backed guidance for one accepted Node. Copy the exact package identity.",
+            "These verified reusable packages were prepared before placement. Compare generic-looking project guidance with them before proposing a duplicate local Rule. Reusable Context assignment itself is a separate human gate; do not invent or re-decide owner-selected relationships in this LLM pass.",
             "",
         ]
     )
@@ -131,7 +163,7 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "11. Treat README as first-contact orientation/navigation rather than the default store for volatile state, future plan, detailed architecture, or every implementation invariant. Its durable project summary should be short and human-facing; exact supported versions/platforms normally belong in root `state` or a narrower Node. If the existing README identity line mixes the durable project idea with exact OS/runtime versions, normally keep a simpler versionless first-contact sentence in README and maintain the exact compatibility matrix as State. Use `state` for current local situation, `plan` for future work, `overview` for stable Node responsibility, Rules for durable governance, and Topics/Resources for genuinely useful deeper task material.",
         "12. Treat CONTRIBUTING, architecture notes, implementation/configuration, CI, tests, security policy, state/planning text, and imported documentation according to their actual semantic role. In particular, do **not** keep `architecture.md` as a Topic/Resource merely because its filename says architecture: promote its durable responsibilities/invariants into the owning Nodes when that is the better maintenance surface. It is acceptable for a later reviewed cleanup to reduce such a document to a short orientation/reference or remove it when no independent procedural, explanatory, diagrammatic, or authority value remains. Conventional files can be stale; prefer direct implementation/configuration/CI/test evidence for current behavior when it clearly conflicts with prose.",
         "13. Preserve project state, planning, important local development constraints, and unresolved contradictions explicitly. A volatile version/value supported only by release history or other historical prose is not proven current merely because it is the newest historical mention: phrase it as `last documented ...` or emit an unresolved question when currentness matters. Before returning, check that the better structure did not silently drop high-value semantics visible elsewhere in the same frozen Evidence.",
-        "14. Compare likely generic practices with every supplied reusable Source package before proposing a duplicate local Rule. A Source reuse is a separate Evidence-derived proposal entry; project-specific deltas may still remain local.",
+        "14. Compare likely generic practices with every supplied reusable Source package and the accepted STEP-05 assignments before proposing a duplicate local Rule. A Source attached to an ancestor is already effective in its semantic descendants through Parent composition. Project-specific deltas may still remain local. Return `source_reuses` only for a genuinely new Evidence-derived relationship not already established by the human reusable-Context gate or inherited from one of its assignments.",
         "15. A Source may be useful even when it is independent of other Sources. Do not infer Foundation or any other transitive dependency unless it is actually present in the supplied package semantics.",
         "16. Use only frozen Evidence as evidence about this project. Do not use the live repository, web search, chat history, or model memory to fill project gaps. An explicit owner-selected Source, when supplied later by the human review workflow, is design input and is deliberately not something you must pretend to derive from Evidence.",
         "17. Every placement item and Evidence-derived Source reuse must cite exact Evidence path/hash/line ranges supporting the proposal. Those exact excerpts are also the deterministic basis for a future duplicate-cleanup review: semantic cleanup may propose shorter orientation wording, but ContextCanon must never guess which original bytes were reviewed.",
@@ -234,11 +266,13 @@ def build_onboarding_placement_instruction(
     structure_path: Path,
     *,
     catalog_package_roots: Iterable[Path] = (),
+    accepted_reusable_assignments: Iterable[ReusableContextAssignment] = (),
 ) -> OnboardingPlacementInstruction:
     snapshot = load_evidence_snapshot(snapshot_root)
     structure_proposal = load_onboarding_structure_proposal(structure_proposal_path, snapshot_root)
     structure = load_structure_markdown(structure_path, structure_proposal)
     packages = _load_catalog(catalog_package_roots)
+    assignments = tuple(accepted_reusable_assignments)
 
     lines = [
         "# ContextCanon Onboarding Placement Instruction",
@@ -250,6 +284,7 @@ def build_onboarding_placement_instruction(
     ]
     lines.extend(_render_evidence(snapshot))
     lines.extend(_render_structure(structure))
+    lines.extend(_render_accepted_reusable_contexts(assignments))
     lines.extend(_render_catalog(packages))
     lines.extend(_render_contract(snapshot.evidence_digest, structure.structure_digest))
     text = "\n".join(lines)

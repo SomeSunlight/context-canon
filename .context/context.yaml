@@ -60,4 +60,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683"
-  package_digest: "ec18aebd3a05f1c25ee8e535ed0f71107e67b7533d5fb4342d35bc1e9ae9d327"
+  package_digest: "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"

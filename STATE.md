@@ -275,3 +275,13 @@ Immutable packages now authenticate a flattened list of effective imported Conte
 Node directories without a project-owned README receive a tiny marker-owned generated README doorplate linking Official Context, local authoring truth and the ContextCanon project. A foreign/project README is never overwritten or adopted. The doorplate is repository orientation only and is deliberately excluded from immutable package identity.
 
 The remaining owner gate is a final readability inspection on the real `ai-workstation` root, Goose and Ansible. PR #13 remains draft/unmerged; the project owner will perform the final GitHub merge explicitly after the exact clean head passes its merge gate.
+
+## Latest Block U reusable-Context onboarding UX checkpoint
+
+The final owner-UX correction turns reusable Context setup into its own human gate between accepted project structure and placement reasoning. `STEP-05-reusable-contexts.md` owns Catalog locations, sparse project-Node ← reusable-Context assignments, and the durable Why for each relationship. Human operators no longer have to reconstruct Source UUIDs, package digests, target Node keys, or one-time Catalog/owner-selection CLI options during normal onboarding. Exact immutable identities remain machine state.
+
+The generated onboarding PLAN is now a ten-step operator console. Each STEP keeps the same number/title vocabulary as its artifact, a novice-oriented explanation, completion checkbox, exact command, and artifact guidance together instead of splitting a top checklist from lower instructions. STEP 05 precedes the placement LLM, and accepted assignments plus their Why are explicit placement-reasoning input so inherited reusable guidance is not proposed again as duplicate local meaning.
+
+Source relationship rationale is durable provenance rather than a Rule: direct Source authoring records the Why, immutable imported context carries it through accepted Parent packages, and descendants can therefore explain both where inherited reusable Context came from and why it was attached. Ordinary builds remain offline and Parent/Source package pins remain immutable.
+
+The final product commit is created only after the focused onboarding/Parent/package regressions, the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, diff hygiene, temporary-helper cleanup, and a second post-cleanup check all succeed. PR #13 remains draft and unmerged; the next action is the project owner's real `ai-workstation` test starting again at STEP 05.

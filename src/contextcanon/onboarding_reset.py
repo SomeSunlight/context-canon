@@ -16,6 +16,7 @@ from .onboarding_workspace import (
     DEFAULT_WORKSPACE_NAME,
     LEGACY_ARTIFACT_NAMES,
     PLACEMENT_AUDIT_NAME,
+    REUSABLE_CONTEXTS_NAME,
     PLACEMENT_FOLLOWUP_NAME,
     PLACEMENT_INSTRUCTION_NAME,
     PLACEMENT_PREVIEW_NAME,
@@ -44,12 +45,13 @@ _ARTIFACT_STEPS = {
     STRUCTURE_PROPOSAL_NAME: 2,
     STRUCTURE_REVIEW_NAME: 3,
     STRUCTURE_PREVIEW_NAME: 4,
-    PLACEMENT_INSTRUCTION_NAME: 5,
-    PLACEMENT_PROPOSAL_NAME: 5,
-    PLACEMENT_REVIEW_NAME: 7,
-    PLACEMENT_AUDIT_NAME: 7,
-    PLACEMENT_PREVIEW_NAME: 8,
-    PLACEMENT_FOLLOWUP_NAME: 9,
+    REUSABLE_CONTEXTS_NAME: 5,
+    PLACEMENT_INSTRUCTION_NAME: 6,
+    PLACEMENT_PROPOSAL_NAME: 6,
+    PLACEMENT_REVIEW_NAME: 8,
+    PLACEMENT_AUDIT_NAME: 8,
+    PLACEMENT_PREVIEW_NAME: 9,
+    PLACEMENT_FOLLOWUP_NAME: 10,
 }
 _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGACY_ARTIFACT_NAMES.items()}
 
@@ -193,7 +195,7 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
     if result != 0:
         return result
     after = _managed_state(project, extra_paths)
-    step = 4 if argv[1] == "structure-materialize" else 9
+    step = 4 if argv[1] == "structure-materialize" else 10
     record_transition(snapshot, project, step=step, command=list(argv), before=before, after=after)
     return result
 
@@ -321,41 +323,9 @@ def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
 
 
 def _rewrite_plan_after_reset(workspace_root: Path, snapshot_root: Path, from_step: int) -> None:
-    path = workspace_root / "PLAN.md"
-    if not path.is_file():
-        return
-    text = path.read_text(encoding="utf-8")
-    if PLAN_MARKER not in text:
-        return
-    if CHECKLIST_START in text and CHECKLIST_END in text:
-        start = text.index(CHECKLIST_START)
-        end = text.index(CHECKLIST_END, start) + len(CHECKLIST_END)
-        block = text[start:end]
-        block = re.sub(
-            r"- \[[ x]\] (?P<n>\d+)\.",
-            lambda match: f"- [{'x' if int(match.group('n')) < from_step else ' '}] {match.group('n')}.",
-            block,
-        )
-        text = text[:start] + block + text[end:]
-    if CHECKPOINT_START in text and CHECKPOINT_END in text:
-        start = text.index(CHECKPOINT_START)
-        end = text.index(CHECKPOINT_END, start) + len(CHECKPOINT_END)
-        snapshot = snapshot_root.resolve()
-        try:
-            label = snapshot.relative_to(find_repo_root(snapshot)).as_posix()
-        except ValueError:
-            label = str(snapshot)
-        block = (
-            CHECKPOINT_START + "\n"
-            + f"- Evidence: `{snapshot.name}`\n"
-            + f"- Snapshot: `{label}`\n"
-            + f"- Stage: **reset before step {from_step}**\n\n"
-            + f"**Next:** restart at numbered step {from_step} using the exact command in this PLAN.\n"
-            + CHECKPOINT_END
-        )
-        text = text[:start] + block + text[end:]
-    write_utf8(path, text)
-
+    # update_workspace_checkpoint already regenerates the integrated step/command surface
+    # from the reset stage. Keep this compatibility hook intentionally empty.
+    return None
 
 def reset_onboarding(
     snapshot_root: Path,
@@ -364,8 +334,8 @@ def reset_onboarding(
     workspace_root: Path | None = None,
     project_root: Path | None = None,
 ) -> dict[str, object]:
-    if from_step < 2 or from_step > 9:
-        raise _error("--from must be a numbered onboarding step from 2 through 9; frozen Evidence is intentionally preserved")
+    if from_step < 2 or from_step > 10:
+        raise _error("--from must be a numbered onboarding step from 2 through 10; frozen Evidence is intentionally preserved")
     snapshot = snapshot_root.resolve()
     project = (project_root or find_repo_root(snapshot)).resolve()
     workspace_state = open_onboarding_workspace(
@@ -381,7 +351,7 @@ def reset_onboarding(
         legacy_files = _remove_legacy_skeletons(project)
     workspace_files = _reset_workspace(workspace, from_step)
 
-    if 9 in selected_steps:
+    if 10 in selected_steps:
         acceptance = snapshot / "placement-acceptance.json"
         try:
             acceptance_rel = acceptance.relative_to(project).as_posix()

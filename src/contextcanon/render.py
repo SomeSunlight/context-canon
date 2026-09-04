@@ -40,8 +40,9 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         lines.extend(["**Resulting imported Contexts:**", ""])
         for dependency in compiled.imported_contexts:
             relation, link = _import_carrier(compiled, dependency)
+            why = f" — Why: {dependency.why}" if dependency.why else ""
             lines.append(
-                f"- **{dependency.name}** — `{dependency.version}` — {relation} — "
+                f"- **{dependency.name}** — `{dependency.version}` — {relation}{why} — "
                 f"[inspect accepted carrier]({link})"
             )
         lines.append("")
@@ -276,6 +277,8 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
                 f"    normalized_digest: {q(dependency.normalized_digest)}",
                 f"    package_digest: {q(dependency.package_digest)}",
             ])
+            if dependency.why:
+                lines.append(f"    why: {q(dependency.why)}")
     else:
         lines.append("imports: []")
 

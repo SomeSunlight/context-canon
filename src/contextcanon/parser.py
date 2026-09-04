@@ -244,6 +244,16 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 raise ContextCanonError(f"{source_path}:{i+1}: Git Source ref must not be empty")
             _validate_node_path(node_path or "", source_path, i + 1)
 
+        block_end = i + 1
+        while block_end < end and SOURCE_RE.match(lines[block_end]) is None:
+            block_end += 1
+        why = None
+        for detail in lines[i + 1 : block_end]:
+            stripped = detail.strip()
+            if stripped.startswith("Why:"):
+                why = stripped[4:].strip() or None
+                break
+
         result.append(
             SourceRef(
                 attrs["id"],
@@ -255,6 +265,7 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 transport,
                 transport_ref,
                 node_path,
+                why,
             )
         )
         i += 1

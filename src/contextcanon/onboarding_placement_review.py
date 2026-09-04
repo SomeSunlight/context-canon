@@ -6,7 +6,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from .model import CompiledPackage
 from .onboarding_placement import (
@@ -128,6 +128,7 @@ class PlacementReviewSource:
     source_package_digest: str
     review_note: str
     proposal_id: str | None
+    relationship_why: str = ""
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -142,6 +143,7 @@ class PlacementReviewSource:
             "source_package_digest": self.source_package_digest,
             "review_note": self.review_note,
             "proposal_id": self.proposal_id,
+            "relationship_why": self.relationship_why,
         }
 
 
@@ -463,11 +465,49 @@ def _package_by_id(proposal: OnboardingPlacementProposal) -> dict[str, CompiledP
 def _initial_sources(
     proposal: OnboardingPlacementProposal,
     owner_source_specs: Iterable[str],
+    *,
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
 ) -> tuple[PlacementReviewSource, ...]:
     result: list[PlacementReviewSource] = []
     seen: set[tuple[str, str]] = set()
+    packages = _package_by_id(proposal)
+    node_keys = {node.key for node in proposal.structure.nodes}
+    why_by_spec = dict(owner_source_whys or {})
+
+    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage]] = {}
+    nodes_by_key = {node.key: node for node in proposal.structure.nodes}
+
+    def is_same_or_descendant(candidate_key: str, ancestor_key: str) -> bool:
+        current = candidate_key
+        seen_keys: set[str] = set()
+        while current is not None and current not in seen_keys:
+            if current == ancestor_key:
+                return True
+            seen_keys.add(current)
+            node = nodes_by_key.get(current)
+            current = None if node is None else node.parent_key
+        return False
+    for spec in owner_source_specs:
+        if "=" not in spec:
+            raise _error("--owner-source must be TARGET_NODE_KEY=SOURCE_NODE_ID")
+        target, source_id = (part.strip() for part in spec.split("=", 1))
+        if target not in node_keys:
+            raise _error(f"owner-selected Source references unknown target Node {target}")
+        package = packages.get(source_id)
+        if package is None:
+            raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
+        owner_pairs[(target, source_id)] = (spec, package)
+
+    # Evidence-derived suggestions that duplicate an already accepted STEP-05
+    # relationship do not create a second decision in Placement.
     for reuse in proposal.source_reuses:
         pair = (reuse.target_node_key, reuse.source_node_id)
+        if any(
+            source_id == reuse.source_node_id and is_same_or_descendant(reuse.target_node_key, owner_target)
+            for owner_target, source_id in owner_pairs
+        ):
+            continue
         seen.add(pair)
         result.append(
             PlacementReviewSource(
@@ -482,30 +522,22 @@ def _initial_sources(
                 source_package_digest=reuse.source_package_digest,
                 review_note="",
                 proposal_id=reuse.id,
+                relationship_why=reuse.reason,
             )
         )
 
-    packages = _package_by_id(proposal)
-    node_keys = {node.key for node in proposal.structure.nodes}
-    for spec in owner_source_specs:
-        if "=" not in spec:
-            raise _error("--owner-source must be TARGET_NODE_KEY=SOURCE_NODE_ID")
-        target, source_id = (part.strip() for part in spec.split("=", 1))
-        if target not in node_keys:
-            raise _error(f"owner-selected Source references unknown target Node {target}")
-        package = packages.get(source_id)
-        if package is None:
-            raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
-        pair = (target, source_id)
+    for pair, (spec, package) in owner_pairs.items():
         if pair in seen:
             continue
         seen.add(pair)
+        target, source_id = pair
+        why = why_by_spec.get(spec, "").strip() or "Explicitly selected by the project owner."
         result.append(
             PlacementReviewSource(
                 review_id="O-" + uuid.uuid4().hex[:10].upper(),
                 origin="owner-selected",
                 target_node_key=target,
-                decision="pending",
+                decision="accept" if preaccepted_owner_sources else "pending",
                 source_node_id=source_id,
                 source_name=package.metadata.name,
                 source_version=package.metadata.version,
@@ -513,16 +545,18 @@ def _initial_sources(
                 source_package_digest=package.package_digest,
                 review_note="",
                 proposal_id=None,
+                relationship_why=why,
             )
         )
     return tuple(result)
-
 
 def render_placement_review(
     proposal: OnboardingPlacementProposal,
     snapshot_root: Path,
     *,
     owner_source_specs: Iterable[str] = (),
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
 ) -> str:
     snapshot = load_evidence_snapshot(snapshot_root)
     review_items = tuple(
@@ -555,7 +589,12 @@ def render_placement_review(
         )
         for edit in candidate_edits
     )
-    sources = _initial_sources(proposal, owner_source_specs)
+    sources = _initial_sources(
+        proposal,
+        owner_source_specs,
+        owner_source_whys=owner_source_whys,
+        preaccepted_owner_sources=preaccepted_owner_sources,
+    )
     lines = [
         "# ContextCanon onboarding placement review",
         "",
@@ -605,6 +644,7 @@ def render_placement_review(
                     f"Destination: `{target.key}` — [**{target.name}**]({_node_entry_link(target.path)}) (`{target.path}`)",
                     f"Decision: `{source.decision}`",
                     f"Origin: `{source.origin}`",
+                    f"Why this Source applies: {source.relationship_why or '-'}",
                     f"Review note: {source.review_note or '-'}",
                     "",
                     f"Exact package: `{source.source_version}` · `{source.source_package_digest}`",
@@ -620,7 +660,7 @@ def render_placement_review(
             else:
                 lines.extend(
                     [
-                        "This Source was selected explicitly by the project owner from the supplied exact catalog. It is design input, not a claim derived from frozen project Evidence.",
+                        "This Source was selected explicitly by the project owner. When it came from STEP 05, that relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
                         "",
                     ]
                 )
@@ -1005,6 +1045,10 @@ def load_placement_review(
         if proposal_id is not None and proposal_id not in {reuse.id for reuse in proposal.source_reuses}:
             raise _error(f"Source {review_id} is not present in the placement proposal")
         note = _find_line(block, "Review note: ", "Review note")
+        why_line = next((entry for entry in block if entry.startswith("Why this Source applies: ")), None)
+        relationship_why = "" if why_line is None else why_line[len("Why this Source applies: "):].strip()
+        if relationship_why == "-":
+            relationship_why = ""
         parsed_sources.append(
             PlacementReviewSource(
                 review_id=review_id,
@@ -1018,6 +1062,7 @@ def load_placement_review(
                 source_package_digest=package.package_digest,
                 review_note="" if note == "-" else note,
                 proposal_id=proposal_id,
+                relationship_why=relationship_why,
             )
         )
 
@@ -1035,6 +1080,8 @@ def create_or_load_placement_review(
     snapshot_root: Path,
     *,
     owner_source_specs: Iterable[str] = (),
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
 ) -> tuple[OnboardingPlacementReview, bool]:
     path = path.resolve()
     if path.exists():
@@ -1045,7 +1092,13 @@ def create_or_load_placement_review(
         return load_placement_review(path, proposal, snapshot_root), False
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        render_placement_review(proposal, snapshot_root, owner_source_specs=owner_source_specs),
+        render_placement_review(
+            proposal,
+            snapshot_root,
+            owner_source_specs=owner_source_specs,
+            owner_source_whys=owner_source_whys,
+            preaccepted_owner_sources=preaccepted_owner_sources,
+        ),
         encoding="utf-8",
         newline="\n",
     )

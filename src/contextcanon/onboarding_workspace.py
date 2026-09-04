@@ -30,12 +30,13 @@ STRUCTURE_INSTRUCTION_NAME = "STEP-02a-structure-instruction.md"
 STRUCTURE_PROPOSAL_NAME = "STEP-02b-structure-proposal.json"
 STRUCTURE_REVIEW_NAME = "STEP-03-structure.md"
 STRUCTURE_PREVIEW_NAME = "STEP-04-structure-preview.md"
-PLACEMENT_INSTRUCTION_NAME = "STEP-05a-placement-instruction.md"
-PLACEMENT_PROPOSAL_NAME = "STEP-05b-placement-proposal.json"
-PLACEMENT_REVIEW_NAME = "STEP-07-placement.md"
-PLACEMENT_AUDIT_NAME = "STEP-07a-source-audit.md"
-PLACEMENT_PREVIEW_NAME = "STEP-08-placement-preview.md"
-PLACEMENT_FOLLOWUP_NAME = "STEP-09-placement-followup.md"
+REUSABLE_CONTEXTS_NAME = "STEP-05-reusable-contexts.md"
+PLACEMENT_INSTRUCTION_NAME = "STEP-06a-placement-instruction.md"
+PLACEMENT_PROPOSAL_NAME = "STEP-06b-placement-proposal.json"
+PLACEMENT_REVIEW_NAME = "STEP-08-placement.md"
+PLACEMENT_AUDIT_NAME = "STEP-08a-source-audit.md"
+PLACEMENT_PREVIEW_NAME = "STEP-09-placement-preview.md"
+PLACEMENT_FOLLOWUP_NAME = "STEP-10-placement-followup.md"
 
 LEGACY_ARTIFACT_NAMES = {
     "structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
@@ -47,6 +48,12 @@ LEGACY_ARTIFACT_NAMES = {
     "placement.md": PLACEMENT_REVIEW_NAME,
     "placement-preview.md": PLACEMENT_PREVIEW_NAME,
     "placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
+    "STEP-05a-placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
+    "STEP-05b-placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
+    "STEP-07-placement.md": PLACEMENT_REVIEW_NAME,
+    "STEP-07a-source-audit.md": PLACEMENT_AUDIT_NAME,
+    "STEP-08-placement-preview.md": PLACEMENT_PREVIEW_NAME,
+    "STEP-09-placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
 }
 
 
@@ -77,6 +84,10 @@ class OnboardingWorkspace:
     @property
     def structure_preview_path(self) -> Path:
         return self.root / STRUCTURE_PREVIEW_NAME
+
+    @property
+    def reusable_contexts_path(self) -> Path:
+        return self.root / REUSABLE_CONTEXTS_NAME
 
     @property
     def placement_instruction_path(self) -> Path:
@@ -128,9 +139,10 @@ The repository's old directory tree is evidence about the project, not a taxonom
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
 - `{STRUCTURE_PREVIEW_NAME}` — deterministic preview before missing Node skeletons/directories are created.
+- `{REUSABLE_CONTEXTS_NAME}` — human-owned reusable Context Catalog locations, sparse assignments, and Why rationale.
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
-- Step 06 is validation-only and therefore intentionally has no separate artifact.
+- Step 07 is validation-only and therefore intentionally has no separate artifact.
 - `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.
 - `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
@@ -160,28 +172,12 @@ def _workspace_plan() -> str:
     return f"""# ContextCanon onboarding plan
 {PLAN_MARKER}
 
-This is the **operator console** for the current onboarding. Read the numbered steps for meaning; copy commands from **Exact commands for this run** rather than reconstructing IDs/options from memory.
+This is the **operator console** for the current onboarding. Work from top to bottom. Each step keeps its explanation, completion checkbox, exact command and produced artifact together so you do not have to scroll between a checklist and a separate command manual.
 
-> **Exact commands:** the checklist is the overview; the copy/paste commands are in **Exact commands for this run** below.
-
-## Checklist
-
-{CHECKLIST_START}
-- [ ] 1. Freeze Evidence — create or deliberately reuse one exact Evidence snapshot.
-- [ ] 2. Structure proposal — generate `{STRUCTURE_INSTRUCTION_NAME}`, run LLM handoff 1, save `{STRUCTURE_PROPOSAL_NAME}`, validate it.
-- [ ] 3. Structure review — create/edit `{STRUCTURE_REVIEW_NAME}` and validate the human shelf map.
-- [ ] 4. Materialize shelves — review `{STRUCTURE_PREVIEW_NAME}`, then create only missing accepted Node skeletons.
-- [ ] 5. Placement proposal — generate `{PLACEMENT_INSTRUCTION_NAME}`, run LLM handoff 2, save `{PLACEMENT_PROPOSAL_NAME}`.
-- [ ] 6. Placement validate — validate the LLM proposal against the frozen Evidence, accepted structure, and exact Source catalog.
-- [ ] 7. Placement review — create/edit `{PLACEMENT_REVIEW_NAME}`; every review validation regenerates `{PLACEMENT_AUDIT_NAME}` for source-file-first semantic-loss checking.
-- [ ] 8. Publication preview — review exact `{PLACEMENT_PREVIEW_NAME}` changes.
-- [ ] 9. Publish placement — publish reviewed canonical Context and inspect `{PLACEMENT_FOLLOWUP_NAME}`.
-{CHECKLIST_END}
-
-## Exact commands for this run
+## Onboarding steps
 
 {COMMANDS_START}
-The exact snapshot-bound commands appear here after ContextCanon opens this workspace.
+The exact snapshot-bound steps appear here after ContextCanon opens this workspace.
 {COMMANDS_END}
 
 ## Current checkpoint
@@ -190,18 +186,18 @@ The exact snapshot-bound commands appear here after ContextCanon opens this work
 No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
 {CHECKPOINT_END}
 
-The checkpoint is the **last state ContextCanon validated**, not a file watcher. If you edit `{STRUCTURE_REVIEW_NAME}` or `{PLACEMENT_REVIEW_NAME}`, rerun that step's validation/review command before advancing.
+The checkpoint is the **last state ContextCanon validated**, not a file watcher. After editing a human gate, rerun that same step before advancing.
 
 ## Human gates
 
-- **LLM handoff 1:** `{STRUCTURE_INSTRUCTION_NAME}` + only the frozen `evidence/` tree → `{STRUCTURE_PROPOSAL_NAME}`.
-- **Human gate 1:** review/edit `{STRUCTURE_REVIEW_NAME}`.
-- **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
-- **Human gate 2:** review/edit `{PLACEMENT_REVIEW_NAME}`.
+- **LLM handoff 1:** `STEP-02a-structure-instruction.md` + only the frozen `evidence/` tree → `STEP-02b-structure-proposal.json`.
+- **Human gate 1:** review/edit `STEP-03-structure.md`.
+- **Reusable Context gate:** review/edit `STEP-05-reusable-contexts.md`; this owns Catalog locations, Source assignments and their Why rationale.
+- **LLM handoff 2:** `STEP-06a-placement-instruction.md` + only the same frozen `evidence/` tree → `STEP-06b-placement-proposal.json`.
+- **Human gate 2:** review/edit `STEP-08-placement.md`.
 
-`--owner-source` is a one-time choice only when a new placement review is first created. The exact Source catalog paths are persisted in this PLAN so subsequent commands can be copied rather than reconstructed.
+Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.
 """
-
 
 def write_utf8(path: Path, text: str) -> None:
     """Atomically write UTF-8 without depending on shell redirection/codepages."""
@@ -274,11 +270,11 @@ def _exact_commands(
     snapshot_root: Path,
     catalog_inputs: tuple[str, ...],
     owner_source_specs: tuple[str, ...],
+    completed: set[int] | None = None,
 ) -> str:
+    completed = completed or set()
     snapshot = _snapshot_label(snapshot_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
-    catalog = _catalog_args(catalog_inputs)
-    owner = _owner_args(owner_source_specs)
     snapshot_literal = _quote_cli(snapshot)
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
@@ -293,179 +289,175 @@ def _exact_commands(
         command = _render_command(parts)
         return command.replace(snapshot_literal, snapshot_token, 1)
 
-    def cmd(name: str, *, cat: bool = False, own: bool = False) -> str:
-        parts = ["contextcanon", "onboard", name, snapshot, *workspace_args]
-        if cat:
-            parts.extend(catalog)
-        if own:
-            parts.extend(owner)
-        return render(parts)
+    def cmd(name: str) -> str:
+        return render(["contextcanon", "onboard", name, snapshot, *workspace_args])
+
+    def mark(step: int) -> str:
+        return "x" if step in completed else " "
 
     lines = [
         COMMANDS_START,
-        "These are the commands for **this exact snapshot**. Copy them; do not rebuild them from IDs or terminal history.",
+        "These commands are for **this exact Evidence snapshot**. ContextCanon carries forward machine identities and accepted human inputs; copy the short command shown in the current step.",
         "",
-        "Set this run variable once in your terminal; every snapshot-bound command below reuses it:",
+        "Set this run variable once in your terminal:",
         "",
         f"```{shell}",
         snapshot_assignment,
         "```",
         "",
-        "### 1. Freeze Evidence",
+        "### STEP 01 — Freeze Evidence",
+        f"- [{mark(1)}] **Done**",
         "",
-        "Only run this when you intentionally need a new Evidence basis. Reusing the current frozen snapshot is valid.",
+        "ContextCanon freezes the exact project files used as onboarding Evidence so every later LLM/human decision refers to the same bytes. Reuse the current snapshot unless you intentionally want new Evidence.",
         "",
         "```text",
         "contextcanon onboard prepare .",
         "```",
         "",
-        "### 2. Structure proposal",
+        "### STEP 02 — Structure proposal",
+        f"- [{mark(2)}] **Done**",
         "",
-        "Generate the instruction:",
+        "A reasoning LLM proposes the project's **semantic Context Node structure** — the responsibility shelves, not merely the existing directory tree.",
+        "",
+        "Generate `STEP-02a-structure-instruction.md`:",
         "",
         "```text",
-        cmd("structure-instruction", cat=True),
+        cmd("structure-instruction"),
         "```",
         "",
-        f"Give `{STRUCTURE_INSTRUCTION_NAME}` plus only the frozen `evidence/` tree to the reasoning LLM. Save its JSON exactly as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
+        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-02b-structure-proposal.json`. Then validate:",
         "",
         "```text",
         cmd("structure-validate"),
         "```",
         "",
-        "### 3. Structure review",
+        "### STEP 03 — Structure review",
+        f"- [{mark(3)}] **Done**",
+        "",
+        "You review the proposed project Context Node hierarchy: which semantic shelves exist, their names, paths and parent/child grouping.",
         "",
         "```text",
         cmd("structure-review"),
         "```",
         "",
-        f"Edit `{STRUCTURE_REVIEW_NAME}` as needed, then run the same command again to validate the edited human gate.",
+        "Edit `STEP-03-structure.md` as needed, then run the same command again to validate the human gate.",
         "",
-        "### 4. Materialize shelves",
+        "### STEP 04 — Materialize shelves",
+        f"- [{mark(4)}] **Done**",
+        "",
+        "ContextCanon previews and then creates only the missing accepted Context Node directories/skeletons. No project knowledge is placed yet.",
         "",
         "```text",
         cmd("structure-preview"),
         cmd("structure-materialize"),
         "```",
         "",
-        "### 5. Placement proposal",
+        "Review `STEP-04-structure-preview.md` between the two commands.",
+        "",
+        "### STEP 05 — Reusable Contexts",
+        f"- [{mark(5)}] **Done**",
+        "",
+        "You tell ContextCanon **where reusable external Context Nodes can be found, which accepted project Nodes they apply to, and why**. This prepares the foreign shelves before the placement LLM distributes project knowledge.",
         "",
         "```text",
-        cmd("placement-instruction", cat=True),
+        cmd("reusable-contexts"),
         "```",
         "",
-        f"Give `{PLACEMENT_INSTRUCTION_NAME}` plus only the same frozen `evidence/` tree to the reasoning LLM. Save its JSON exactly as `{PLACEMENT_PROPOSAL_NAME}`.",
+        "The first run creates `STEP-05-reusable-contexts.md`. Edit its Catalog locations and sparse Assignments, set `Decision` to `accept` when correct, and rerun the same command after every edit. You work with names/path/version; ContextCanon owns IDs and digests.",
         "",
-        "### 6. Placement validate",
+        "### STEP 06 — Placement proposal",
+        f"- [{mark(6)}] **Done**",
+        "",
+        "A reasoning LLM now places the project's frozen knowledge onto the already accepted own/reusable Context shelves and proposes any reviewed source-document cleanup.",
+        "",
+        "Generate `STEP-06a-placement-instruction.md`:",
         "",
         "```text",
-        cmd("placement-validate", cat=True),
+        cmd("placement-instruction"),
         "```",
         "",
-        "### 7. Placement review",
+        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-06b-placement-proposal.json`.",
         "",
-        "Create/load the review:",
+        "### STEP 07 — Placement validate",
+        f"- [{mark(7)}] **Done**",
+        "",
+        "ContextCanon checks the LLM proposal against the frozen Evidence, accepted project structure and exact reusable Context packages. This is machine validation; there is no separate STEP-07 artifact.",
         "",
         "```text",
-        cmd("placement-review", cat=True, own=bool(owner)),
+        cmd("placement-validate"),
         "```",
         "",
+        "### STEP 08 — Placement review",
+        f"- [{mark(8)}] **Done**",
+        "",
+        "You review **which project knowledge goes into which Context Node**. Reusable Context assignments from STEP 05 are already decided and appear only as compact traceability, not as a giant selection matrix.",
+        "",
+        "```text",
+        cmd("placement-review"),
+        "```",
+        "",
+        "Edit `STEP-08-placement.md` as needed and rerun the same command to validate it. Every successful run regenerates read-only `STEP-08a-source-audit.md` for source-file-first semantic-loss checking.",
+        "",
+        "### STEP 09 — Publication preview",
+        f"- [{mark(9)}] **Done**",
+        "",
+        "ContextCanon shows the exact Context/source-document changes that publication would make, including semantic Parent pins and reusable Source installation.",
+        "",
+        "```text",
+        cmd("placement-preview"),
+        "```",
+        "",
+        "Review `STEP-09-placement-preview.md` before publishing.",
+        "",
+        "### STEP 10 — Publish placement",
+        f"- [{mark(10)}] **Done**",
+        "",
+        "ContextCanon transactionally publishes the fully reviewed Context Node authoring and produces the durable follow-up report.",
+        "",
+        "```text",
+        cmd("placement-publish"),
+        "```",
+        "",
+        "Inspect `STEP-10-placement-followup.md` afterwards.",
+        "",
+        "## Reset commands for testing",
+        "",
+        "Frozen Evidence is preserved. Restart from the semantic step you want to retest:",
+        "",
+        "```text",
     ]
-    if owner:
-        lines.extend(
-            [
-                "`--owner-source` above is only for first creation. After editing the existing review, validate it with this command **without** `--owner-source`:",
-                "",
-                "```text",
-                cmd("placement-review", cat=True),
-                "```",
-                "",
-            ]
-        )
-    else:
-        lines.extend(
-            [
-                f"Edit `{PLACEMENT_REVIEW_NAME}`. Run the same command again after every edit until all decisions validate. If you deliberately choose an owner Source, add `--owner-source TARGET_NODE_KEY=SOURCE_NODE_ID` only when creating the review.",
-                "",
-            ]
-        )
-    lines.extend(
-        [
-            f"`{PLACEMENT_AUDIT_NAME}` is read-only and is regenerated by every successful placement-review validation. Use it to audit Source After transformations by original file/range; make corrections only in `{PLACEMENT_REVIEW_NAME}`.",
-            "",
-            "### 8. Publication preview",
-            "",
-            "```text",
-            cmd("placement-preview", cat=True),
-            "```",
-            "",
-            "### 9. Publish placement",
-            "",
-            "```text",
-            cmd("placement-publish", cat=True),
-            "```",
-            "",
-            "## Reset commands for testing",
-            "",
-            "Frozen Evidence is preserved. Pick the step you want to restart from and copy the corresponding line:",
-            "",
-            "```text",
-        ]
-    )
-    for step in range(2, 10):
-        parts = ["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]
-        lines.append(render(parts))
+    for step in range(2, 11):
+        lines.append(render(["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]))
     lines.extend(["```", COMMANDS_END])
     return "\n".join(lines)
 
-
 def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[int]:
-    completed = {1}
-    after_structure_proposal = {
-        "structure proposal validated", "human structure validated", "structure previewed", "structure materialized",
-        "placement instruction ready", "placement proposal validated", "human placement review",
-        "placement publication previewed", "placement published",
-    }
-    after_structure_review = after_structure_proposal - {"structure proposal validated"}
-    after_materialize = {
-        "structure materialized", "placement instruction ready", "placement proposal validated",
-        "human placement review", "placement publication previewed", "placement published",
-    }
-    after_placement_validate = {
-        "placement proposal validated", "human placement review", "placement publication previewed", "placement published",
-    }
-    if stage in after_structure_proposal:
-        completed.add(2)
-    if stage in after_structure_review:
-        completed.add(3)
-    if stage in after_materialize:
-        completed.add(4)
-    if stage in after_placement_validate:
-        completed.update({5, 6})
-    if stage in {"placement publication previewed", "placement published"} or (
-        stage == "human placement review" and placement_review_complete is True
-    ):
-        completed.add(7)
-    if stage in {"placement publication previewed", "placement published"}:
+    reset = re.fullmatch(r"reset before step (\d+)", stage)
+    if reset is not None:
+        target = int(reset.group(1))
+        return set(range(1, max(1, target)))
+
+    rank = {
+        "structure instruction ready": 1,
+        "structure proposal validated": 2,
+        "human structure validated": 3,
+        "structure previewed": 3,
+        "structure materialized": 4,
+        "reusable contexts review": 4,
+        "reusable contexts accepted": 5,
+        "placement instruction ready": 5,
+        "placement proposal validated": 7,
+        "human placement review": 7,
+        "placement publication previewed": 9,
+        "placement published": 10,
+    }.get(stage, 1)
+    completed = set(range(1, rank + 1))
+    if stage == "human placement review" and placement_review_complete is True:
         completed.add(8)
-    if stage == "placement published":
-        completed.add(9)
     return completed
 
-
 def _rewrite_checklist(text: str, completed: set[int], path: Path) -> str:
-    if text.count(CHECKLIST_START) != 1 or text.count(CHECKLIST_END) != 1:
-        raise ContextCanonError(f"Malformed onboarding checklist markers in {path}")
-    start = text.index(CHECKLIST_START)
-    end = text.index(CHECKLIST_END, start) + len(CHECKLIST_END)
-    template = _workspace_plan()
-    template_start = template.index(CHECKLIST_START)
-    template_end = template.index(CHECKLIST_END, template_start) + len(CHECKLIST_END)
-    block = template[template_start:template_end]
-    for step in completed:
-        block = block.replace(f"- [ ] {step}.", f"- [x] {step}.")
-    return text[:start] + block + text[end:]
-
+    return text
 
 def _replace_commands(
     text: str,
@@ -473,8 +465,15 @@ def _replace_commands(
     snapshot_root: Path,
     catalog_inputs: tuple[str, ...],
     owner_source_specs: tuple[str, ...],
+    completed: set[int] | None = None,
 ) -> str:
-    block = _exact_commands(workspace, snapshot_root, catalog_inputs, owner_source_specs)
+    block = _exact_commands(
+        workspace,
+        snapshot_root,
+        catalog_inputs,
+        owner_source_specs,
+        completed=completed,
+    )
     if COMMANDS_START not in text or COMMANDS_END not in text:
         anchor = "## Current checkpoint"
         if anchor not in text:
@@ -483,7 +482,6 @@ def _replace_commands(
     start = text.index(COMMANDS_START)
     end = text.index(COMMANDS_END, start) + len(COMMANDS_END)
     return text[:start] + block + text[end:]
-
 
 def _remembered_values(text: str, heading: str) -> tuple[str, ...]:
     lines = text.splitlines()
@@ -586,8 +584,8 @@ def update_workspace_checkpoint(
             snapshot_root, catalog_inputs=catalog_inputs, owner_source_specs=owner_specs
         )
 
-    text = _rewrite_checklist(text, _completed_steps(stage, placement_review_complete), workspace.plan_path)
-    text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs)
+    completed = _completed_steps(stage, placement_review_complete)
+    text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs, completed=completed)
 
     lines = [
         f"- Evidence: `{snapshot_root.resolve().name}`",
@@ -601,15 +599,8 @@ def update_workspace_checkpoint(
     if placement_review_digest is not None:
         state = "complete" if placement_review_complete else "still has pending decisions"
         lines.append(f"- Placement review: `{placement_review_digest}` — {state}")
-    if source_catalog:
-        lines.append("- Exact reusable Source catalog:")
-        lines.extend(f"  - `{item}`" for item in source_catalog)
-    if catalog_inputs:
-        lines.append("- Reuse these exact `--catalog-package` inputs for copy/paste commands:")
-        lines.extend(f"  - `{item}`" for item in catalog_inputs)
-    if owner_specs:
-        lines.append("- Owner-selected Source choices already recorded in the human review (do not repeat on preview/publish):")
-        lines.extend(f"  - `{item}`" for item in owner_specs)
+    # Catalog paths, package identities and Source assignments are domain inputs owned by
+    # STEP-05-reusable-contexts.md / machine state, not by this orchestration PLAN.
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")
     lines.extend([

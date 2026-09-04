@@ -113,14 +113,16 @@
       "name": "ContextCanon Foundation",
       "normalized_digest": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
       "package_digest": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44",
-      "version": "0.1.0-draft"
+      "version": "0.1.0-draft",
+      "why": null
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
       "normalized_digest": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
       "package_digest": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653",
-      "version": "0.2.0-draft"
+      "version": "0.2.0-draft",
+      "why": null
     }
   ],
   "node": {
@@ -439,14 +441,16 @@
       "name": "ContextCanon Foundation",
       "normalized_digest": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
       "package_digest": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44",
-      "version": "0.1.0-draft"
+      "version": "0.1.0-draft",
+      "why": null
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
       "normalized_digest": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
       "package_digest": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653",
-      "version": "0.2.0-draft"
+      "version": "0.2.0-draft",
+      "why": null
     }
   ],
   "topics": [

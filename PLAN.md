@@ -357,3 +357,17 @@ Goal: finish PR #13 with a publishing surface that explains composition at first
 - [x] 6. Add focused regressions for heading migration/order, effective-context composition/provenance, sibling exclusion, offline rendering, and README ownership/collision safety. Regenerate self-hosted Context output, run the complete deterministic suite plus `contextcanon build --all .`, `contextcanon check --all .`, and diff hygiene, then update STATE/PR review wording.
 - [ ] 7. Re-run the final `ai-workstation` readability acceptance on the owner test branch: root, Goose and Ansible must visibly explain their effective composition and still prove the already-verified inheritance/sibling isolation. Keep the real `ai-workstation` unpublished until this final readability pass is accepted.
 - [ ] 8. After the exact clean PR #13 head passes the normal merge gate, leave the PR unmerged for the project owner to perform the final GitHub merge explicitly. After that merge, return framework development to normal slow-track cadence.
+
+## Final owner-UX block: reusable Context setup and novice-safe runbook
+
+**Status: COMPLETE — framework implementation and verification complete; owner test pending.**
+
+Purpose: remove the last onboarding step that required a human to remember Catalog paths, target Node keys, Source Node IDs and one-time CLI syntax. Reusable Context composition becomes its own human gate after project shelves are materialized and before placement reasoning begins.
+
+- [x] 1. Add `STEP-05-reusable-contexts.md` as the single human surface for reusable Context Catalog locations, sparse Source→project-Node assignments, and a durable Why rationale; keep IDs/digests generated and read-only.
+- [x] 2. Discover verified compiled Context Nodes from one or more Catalog directories, allow empty/no-reuse acceptance, and persist exact machine state so subsequent placement commands need no repeated Catalog/owner parameters.
+- [x] 3. Move reusable Context decisions before the placement LLM; preaccepted STEP-05 relationships appear only as compact traceability in placement review, while duplicate LLM Source suggestions do not create a second owner decision.
+- [x] 4. Publish the Source relationship Why into local `CONTEXT.src.md` and carry it as authenticated import provenance so generated descendants can explain not only where inherited Context came from but why the reusable Context was attached.
+- [x] 5. Renumber downstream human artifacts to `STEP-06...STEP-10`, retain migration aliases for prior workspace filenames, and extend reset semantics through step 10.
+- [x] 6. Replace the split top checklist / lower command manual with one integrated PLAN chapter per numbered STEP: same title vocabulary as the artifact names, novice-oriented subject/action explanation, completion checkbox, exact command, and artifact guidance in one place.
+- [x] 7. Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head to the project owner for the final real `ai-workstation` onboarding/readability test. PR remains draft/unmerged until explicit owner approval.
