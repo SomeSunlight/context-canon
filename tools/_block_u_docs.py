@@ -18,9 +18,7 @@ def exact(old: str, new: str, count: int = 1) -> None:
 
 def section(start_heading: str, next_heading: str, replacement: str) -> None:
     global text
-    pattern = re.compile(
-        rf"(?ms)^{re.escape(start_heading)}\n.*?(?=^{re.escape(next_heading)}\n)"
-    )
+    pattern = re.compile(rf"(?ms)^{re.escape(start_heading)}\n.*?(?=^{re.escape(next_heading)}\n)")
     matches = list(pattern.finditer(text))
     if len(matches) != 1:
         raise SystemExit(f"docs/onboarding.md: section {start_heading!r} found {len(matches)} times")
@@ -275,3 +273,11 @@ exact(
 )
 
 PATH.write_text(text, encoding="utf-8", newline="\n")
+
+# Permanent contract: the first-user walkthrough must describe the same human
+# flow as the generated PLAN, without reintroducing legacy operator plumbing.
+(ROOT / "tests" / "test_onboarding_walkthrough_current.py").write_text(
+    '''from __future__ import annotations\n\nfrom pathlib import Path\nimport unittest\n\n\nROOT = Path(__file__).resolve().parents[1]\n\n\nclass OnboardingWalkthroughCurrentTests(unittest.TestCase):\n    def test_walkthrough_matches_human_first_ten_step_flow(self) -> None:\n        text = (ROOT / "docs" / "onboarding.md").read_text(encoding="utf-8")\n        self.assertIn("## 5. Select reusable Contexts", text)\n        self.assertIn("STEP-05-reusable-contexts.md", text)\n        self.assertIn("sparse relationships", text)\n        self.assertIn("Why this whole reusable Context", text)\n        self.assertIn("## 6. Generate the content-placement assignment", text)\n        self.assertIn("STEP-06a-placement-instruction.md", text)\n        self.assertIn("## 8. Review and revalidate `STEP-08-placement.md`", text)\n        self.assertIn("STEP-09-placement-preview.md", text)\n        self.assertIn("STEP-10-placement-followup.md", text)\n        self.assertIn("PLAN is orchestration only", text)\n        current = text.split("## Legacy single-pass first adoption", 1)[0]\n        self.assertNotIn("--owner-source", current)\n        self.assertNotIn("--catalog-package", current)\n        self.assertNotIn("STEP-07-placement.md", current)\n        self.assertNotIn("STEP-05a-placement-instruction.md", current)\n\n\nif __name__ == "__main__":\n    unittest.main()\n''',
+    encoding="utf-8",
+    newline="\n",
+)
