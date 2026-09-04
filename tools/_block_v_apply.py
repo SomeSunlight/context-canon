@@ -181,3 +181,8 @@ The correction makes Catalog path input forgiving and canonicalizing: plain path
 '''
 if "## Latest STEP-05 path-input owner-test correction" not in state:
     write("STATE.md", state.rstrip() + state_block + "\n")
+
+# Durable Markdown should end in exactly one newline; raw checkpoint blocks above
+# intentionally start with spacing for readability but must not create EOF blanks.
+write("PLAN.md", read("PLAN.md").rstrip() + "\n")
+write("STATE.md", read("STATE.md").rstrip() + "\n")
