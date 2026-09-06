@@ -396,13 +396,15 @@ Purpose: remove the remaining grammar reconstruction from STEP 05. The generated
 
 Purpose: resolve Issues #14, #15, #16 and #17 with small explicit rules, then restore the intended multi-Parent model without adding speculative semantic automation.
 
-- [ ] Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.
-- [ ] Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.
-- [ ] Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.
-- [ ] Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.
-- [ ] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
-- [ ] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
-- [ ] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
+- [x] Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.
+- [x] Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.
+- [x] Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.
+- [x] Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.
+- [x] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
+- [x] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
+- [x] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
+
+Checkpoint: Issues #14–#17 are implemented in draft PR #18. Multi-Parent composition is order-independent, onboarding intentionally remains a single primary navigation hierarchy, legacy `package/v0` remains readable beside plural `package/v1`, and the exact product candidate passed 226 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene. PR #18 remains unmerged pending explicit project-owner approval.
 
 ### Later semantic contradiction audit
 
