@@ -16,7 +16,28 @@ jobs:
       - name: Find single-parent assumptions
         shell: bash
         run: |
-          echo '=== implementation/tests parent references ==='
-          rg -n --glob '*.py' '(\.parent\b|parent_package|ctx:parent|ParentRef|parent_key|parent-candidate|parent review|parent accept|parent_pin|parent package)' src tests || true
-          echo '=== authored/documented parent references ==='
-          rg -n --glob '*.md' '(one semantic Parent|one Parent|Parent Context Node|ctx:parent|multiple conceptual parents|parent_key|parent review|parent accept|semantic Parent)' nodes docs README.md CONTRIBUTING.md CONTEXT.src.md || true
+          python - <<'PY'
+          from pathlib import Path
+
+          needles = (
+              '.parent', 'parent_package', 'ctx:parent', 'ParentRef', 'parent_key',
+              'parent-candidate', 'parent review', 'parent accept', 'parent_pin',
+              'Parent Context Node', 'semantic Parent', 'one Parent',
+              'multiple conceptual parents',
+          )
+          roots = [Path('src'), Path('tests'), Path('nodes'), Path('docs')]
+          files = [Path('README.md'), Path('CONTRIBUTING.md'), Path('CONTEXT.src.md')]
+          for root in roots:
+              if root.exists():
+                  files.extend(p for p in root.rglob('*') if p.suffix in {'.py', '.md'})
+          for path in sorted(set(files)):
+              if not path.is_file():
+                  continue
+              try:
+                  lines = path.read_text(encoding='utf-8').splitlines()
+              except UnicodeDecodeError:
+                  continue
+              for number, line in enumerate(lines, 1):
+                  if any(needle.lower() in line.lower() for needle in needles):
+                      print(f'{path}:{number}:{line}')
+          PY
