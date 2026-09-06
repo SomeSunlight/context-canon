@@ -391,3 +391,15 @@ Purpose: remove the remaining grammar reconstruction from STEP 05. The generated
 - [x] Make clear that these generated pairings are syntax helpers rather than recommendations; the editable Assignment list remains sparse and human-selected.
 - [x] Point incomplete-Assignment errors directly at the copy-ready section instead of restating grammar the operator must reconstruct.
 - [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.
+
+## Active development block: issue traceability, layout transparency, and multi-Parent semantics
+
+Purpose: resolve Issues #14, #15, #16 and #17 with small explicit rules, then restore the intended multi-Parent model without adding speculative semantic automation.
+
+- [ ] Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.
+- [ ] Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.
+- [ ] Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.
+- [ ] Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.
+- [ ] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
+- [ ] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
+- [ ] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
