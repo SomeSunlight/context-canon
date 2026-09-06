@@ -57,10 +57,18 @@ jobs:
           PY
       - name: Apply bounded product patch
         run: python .github/tmp/apply_multi_parent.py
-      - name: Align updated regression expectations
+      - name: Apply compatibility follow-ups
         run: |
           python - <<'PY'
           from pathlib import Path
+
+          path = Path('src/contextcanon/onboarding_structure_materialize.py')
+          text = path.read_text(encoding='utf-8')
+          old = '    if manifest is None or manifest.get("schema") != "contextcanon/package/v0":\n        return None\n'
+          new = '    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1"}:\n        return None\n'
+          if text.count(old) != 1:
+              raise SystemExit('Materialization package-schema anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
           path = Path('tests/test_parent_relationship.py')
           text = path.read_text(encoding='utf-8')
@@ -76,6 +84,27 @@ jobs:
           new = '        self.assertIn("existing directory tree as the default", first.text)\n        self.assertIn("files it primarily governs", first.text)\n'
           if text.count(old) != 1:
               raise SystemExit('Structure-instruction regression anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          path = Path('tests/test_onboarding_owner_review_followup.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        self.assertIn("a new repository-relative directory that does not exist yet", instruction.text)\n        self.assertIn("document-heavy repositories", instruction.text)\n'
+          new = '        self.assertIn("New repository-relative directories remain allowed", instruction.text)\n'
+          if text.count(old) != 1:
+              raise SystemExit('Owner-review structure wording anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          path = Path('tests/test_walking_skeleton.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        self.assertIn(\'"schema": "contextcanon/package/v0"\', node.package_manifest)\n'
+          new = '        self.assertIn(\'"schema": "contextcanon/package/v1"\', node.package_manifest)\n'
+          if text.count(old) != 1:
+              raise SystemExit('Package-schema regression anchor mismatch')
+          text = text.replace(old, new, 1)
+          old = '        self.assertIn("compiler_version: \\\"0.5.0\\\"", node.machine_yaml)\n'
+          new = '        self.assertIn("compiler_version: \\\"0.6.0\\\"", node.machine_yaml)\n'
+          if text.count(old) != 1:
+              raise SystemExit('Compiler-version regression anchor mismatch')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
       - name: Install ContextCanon
