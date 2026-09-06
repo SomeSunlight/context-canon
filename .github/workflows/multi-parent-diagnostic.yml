@@ -1,0 +1,22 @@
+name: multi-parent diagnostic
+
+on:
+  push:
+    branches:
+      - agent/issues-14-15-multi-parent
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find single-parent assumptions
+        shell: bash
+        run: |
+          echo '=== implementation/tests parent references ==='
+          rg -n --glob '*.py' '(\.parent\b|parent_package|ctx:parent|ParentRef|parent_key|parent-candidate|parent review|parent accept|parent_pin|parent package)' src tests || true
+          echo '=== authored/documented parent references ==='
+          rg -n --glob '*.md' '(one semantic Parent|one Parent|Parent Context Node|ctx:parent|multiple conceptual parents|parent_key|parent review|parent accept|semantic Parent)' nodes docs README.md CONTRIBUTING.md CONTEXT.src.md || true
