@@ -23,7 +23,9 @@ jobs:
               '.parent', 'parent_package', 'ctx:parent', 'ParentRef', 'parent_key',
               'parent-candidate', 'parent review', 'parent accept', 'parent_pin',
               'Parent Context Node', 'semantic Parent', 'one Parent',
-              'multiple conceptual parents',
+              'multiple conceptual parents', 'CompiledPackage(', 'ParsedNode(',
+              'CompiledNode(', 'semantic_digest(', 'semantic_payload(',
+              'package_parent_dependency(',
           )
           roots = [Path('src'), Path('tests'), Path('nodes'), Path('docs')]
           files = [Path('README.md'), Path('CONTRIBUTING.md'), Path('CONTEXT.src.md')]
