@@ -26,23 +26,30 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           path = Path('PLAN.md')
           text = path.read_text(encoding='utf-8')
-          old = '''- [ ] Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.
-- [ ] Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.
-- [ ] Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.
-- [ ] Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.
-- [ ] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
-- [ ] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
-- [ ] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
-'''
-          new = old.replace('- [ ]', '- [x]') + '''
-Checkpoint: Issues #14–#17 are implemented in draft PR #18. Multi-Parent composition is order-independent, onboarding intentionally remains a single primary navigation hierarchy, legacy `package/v0` remains readable beside plural `package/v1`, and the exact product candidate passed 226 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene. PR #18 remains unmerged pending explicit project-owner approval.
-'''
-          if text.count(old) != 1:
-              raise SystemExit('Active issue block PLAN anchor mismatch')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          items = [
+              'Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.',
+              'Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.',
+              'Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.',
+              'Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.',
+              'Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.',
+              'Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.',
+              'Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.',
+          ]
+          for item in items:
+              old = f'- [ ] {item}'
+              new = f'- [x] {item}'
+              if text.count(old) != 1:
+                  raise SystemExit(f'PLAN item anchor mismatch: {item}')
+              text = text.replace(old, new, 1)
+          checkpoint = 'Checkpoint: Issues #14–#17 are implemented in draft PR #18. Multi-Parent composition is order-independent, onboarding intentionally remains a single primary navigation hierarchy, legacy `package/v0` remains readable beside plural `package/v1`, and the exact product candidate passed 226 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene. PR #18 remains unmerged pending explicit project-owner approval.'
+          if checkpoint not in text:
+              marker = '\n### Later semantic contradiction audit\n'
+              if text.count(marker) != 1:
+                  raise SystemExit('Later semantic audit anchor mismatch')
+              text = text.replace(marker, f'\n{checkpoint}\n{marker}', 1)
+          path.write_text(text, encoding='utf-8')
           PY
       - name: Install ContextCanon
         run: python -m pip install -e .
