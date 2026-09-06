@@ -33,6 +33,11 @@ jobs:
           block_start = text.index('t = exact(\n    t,\n    "    machine_yaml: str = \\\"\\\"')
           block_end = text.index('t = exact(\n    t,\n    "    parents: tuple[PackageDependency, ...] = ()\\n",', block_start)
           text = text[:block_start] + text[block_end:]
+          newline_target = '_atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\\n")'
+          newline_replacement = '_atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\\\\n")'
+          if newline_target not in text:
+              raise SystemExit('Parent-review newline helper anchor missing')
+          text = text.replace(newline_target, newline_replacement, 1)
           helper.write_text(text, encoding='utf-8')
 
           model = Path('src/contextcanon/model.py')
