@@ -57,6 +57,27 @@ jobs:
           PY
       - name: Apply bounded product patch
         run: python .github/tmp/apply_multi_parent.py
+      - name: Align updated regression expectations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/test_parent_relationship.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        self.assertIn("parent:\\n", compiled.machine_yaml)\n'
+          new = '        self.assertIn("parents:\\n", compiled.machine_yaml)\n'
+          if text.count(old) != 1:
+              raise SystemExit('Machine-parent regression anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          path = Path('tests/test_onboarding_structure.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        self.assertIn("project\'s apparent mental model", first.text)\n'
+          new = '        self.assertIn("existing directory tree as the default", first.text)\n        self.assertIn("files it primarily governs", first.text)\n'
+          if text.count(old) != 1:
+              raise SystemExit('Structure-instruction regression anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Python syntax gate
