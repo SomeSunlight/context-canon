@@ -177,17 +177,14 @@ def _node_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
 
 
 def _parent_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
-    parent = compiled.parent_package
-    if parent is None:
-        return {}
     return {
         parent.metadata.id: {
             "version": parent.metadata.version,
             "normalized_digest": parent.normalized_digest,
             "package_digest": parent.package_digest,
         }
+        for parent in compiled.parent_packages
     }
-
 
 def _source_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     return {

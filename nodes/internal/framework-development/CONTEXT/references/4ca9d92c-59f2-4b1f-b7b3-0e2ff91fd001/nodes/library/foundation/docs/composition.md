@@ -1,6 +1,6 @@
 # Context Composition
 
-ContextCanon combines one optional explicit semantic Parent with any number of independent reusable Sources. Filesystem nesting never creates either relationship implicitly.
+ContextCanon combines zero or more explicit semantic Parents with any number of independent reusable Sources. Filesystem nesting creates neither relationship.
 
 ```text
 Business Context ──────┐
@@ -15,7 +15,9 @@ Local development Sources can be resolved directly from another Node in the same
 
 ## Semantic Parent
 
-A Node has at most one Parent. The relationship must be written explicitly in `CONTEXT.src.md`; repository directories are only locations and do not imply Parent/Child composition.
+A Node may have several Parents. Every relationship is explicit, and Parent order has no precedence. Repository directories remain locations only.
+
+Parents should normally represent orthogonal context. The compiler catches structural conflicts for the same stable identity; broader natural-language contradictions remain a human review responsibility for now.
 
 Parent and Sources are composed through the same `CompiledPackage` boundary. This means no special "parent text merge" exists: the Child consumes the Parent's complete effective Rules, Topics, removals, overrides and materialized Topic Resources exactly as an immutable package. The Parent role remains separately visible in human output, machine state, package metadata and deterministic diff.
 
@@ -24,22 +26,22 @@ The accepted Parent pin is intentionally non-live. Editing or rebuilding the Par
 For the normal same-project semantic hierarchy the operator does not manage candidate paths manually:
 
 ```text
-contextcanon parent review --node <child-node>
+contextcanon parent review [<parent-node-id>] --node <child-node>
         ↓
 explicitly compile the current Parent locator into .context/parent-candidates/<package-digest>/
         ↓
 exact package diff + Child structural validation + parent-review receipt
         ↓
-contextcanon parent accept --node <child-node>
+contextcanon parent accept [<parent-node-id>] --node <child-node>
         ↓
 install exactly the reviewed immutable package + update only the Child's Parent pin
 ```
 
-`parent review` is the only step that consults the live Parent locator. `build`, `check`, and `parent accept` continue to use immutable local package bytes; even if the live Parent changes again after review, acceptance means the exact reviewed candidate snapshot.
+`parent review` is the only step that consults a live Parent locator. When several Parents exist, name the Parent Node ID; the ID may be omitted for a singleton Parent. `build`, `check`, and `parent accept` continue to use immutable local package bytes; even if the live Parent changes again after review, acceptance means the exact reviewed candidate snapshot.
 
 ## Parent chains define scoped context
 
-A semantic Parent chain is the normal way to work inside one project subtree without loading sibling context. Each accepted Parent package already contains its complete effective Rules, Topics and Topic Resources, including reusable Sources attached farther up the chain. A Child therefore needs only its direct accepted Parent package.
+Semantic Parent paths scope context without loading unrelated siblings. Each accepted Parent package already carries its complete effective Rules, Topics, Resources, and transitive imports.
 
 For example:
 
@@ -65,7 +67,7 @@ The compiler canonicalizes direct Source order in normalized semantics. Reorderi
 
 Source relationships form a directed acyclic graph. The compiler deterministically detects structural problems such as dependency cycles, invalid Source identities/versions, dangling Changes, and incompatible transitive states of the same stable Rule.
 
-Compiler 0.5 supports one immutable semantic Parent, local unpinned Sources and immutable pinned external Sources. All become `CompiledPackage` before Rule/Topic composition, so the same transitive composition and conflict rules apply while Parent remains a distinct relationship role.
+Compiler 0.6 supports multiple immutable semantic Parents plus local and pinned Sources. All become `CompiledPackage` before composition, with no Parent or Source-order precedence.
 
 ## Structural Rule conflicts
 
@@ -236,6 +238,6 @@ Keeping these relationships distinct prevents navigation choices from silently c
 
 Every Context Node is physically rooted in its own directory, but that directory is only its location. A parent directory, nested directory, Git repository, or sibling directory does not become a Source automatically.
 
-This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships.
+This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships. Prefer a Node root that contains the files it chiefly governs; when several semantic Parents apply, choose one clear physical home for navigation.
 
 The same principle applies to Git transport. A `node-path` says where the Node is found inside a retrieved repository snapshot; the stable Node ID says which Node it is.

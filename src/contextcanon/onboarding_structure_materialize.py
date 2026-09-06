@@ -136,7 +136,7 @@ def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _Recovere
 
 def _manifest_file_hash(root: Path, rel: str) -> str | None:
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is None or manifest.get("schema") != "contextcanon/package/v0":
+    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1"}:
         return None
     files = manifest.get("files")
     if not isinstance(files, list):

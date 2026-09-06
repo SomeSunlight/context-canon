@@ -40,6 +40,10 @@ Framework bookkeeping belongs under `.context/` and should not be required readi
 
 Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
 
+#### `CC-013` — Parents are unordered
+
+A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.
+
 ### Identity
 
 #### `CC-005` — Stable identity
@@ -69,6 +73,10 @@ Keep the official entry context compact and use Topics to load deeper context on
 Project code and canonical project context must not depend on a particular LLM or agent harness; harness-specific files are thin generated adapters at the edge.
 
 ### Repository conventions
+
+#### `CC-012` — Align Node roots with governed files
+
+Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.
 
 #### `CC-010` — Keep familiar repository documents useful
 

@@ -399,9 +399,11 @@ def main(argv: list[str] | None = None) -> int:
 
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
     parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
-    parent_review = parent_sub.add_parser("review", help="compile the live Parent explicitly and review its immutable candidate snapshot")
+    parent_review = parent_sub.add_parser("review", help="compile one live Parent explicitly and review its immutable candidate snapshot")
+    parent_review.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_review.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
-    parent_accept = parent_sub.add_parser("accept", help="accept exactly the most recently reviewed Parent snapshot")
+    parent_accept = parent_sub.add_parser("accept", help="accept exactly the reviewed snapshot for one Parent")
+    parent_accept.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_accept.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
 
     source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
@@ -887,7 +889,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "parent":
             node_root = _node_root(Path(args.node))
             if args.parent_command == "review":
-                result, receipt = review_parent_candidate(node_root)
+                result, receipt = review_parent_candidate(node_root, args.parent_id)
                 print(render_diff(result), end="")
                 try:
                     label = receipt.relative_to(node_root).as_posix()
@@ -896,7 +898,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Parent review receipt: {label}")
                 print("Accepted Parent pin is unchanged until 'contextcanon parent accept'.")
                 return 0
-            accepted = accept_parent_candidate(node_root)
+            accepted = accept_parent_candidate(node_root, args.parent_id)
             print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
             print(f"Next: contextcanon build {node_root}")
             print(f"Then: contextcanon check {node_root}")

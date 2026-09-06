@@ -44,7 +44,7 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
 
     if candidate.metadata.id == parsed.metadata.id:
         raise ContextCanonError(f"{parsed.metadata.name}: a Node cannot adopt itself as a Source")
-    if parsed.parent is not None and parsed.parent.id == candidate.metadata.id:
+    if any(parent.id == candidate.metadata.id for parent in parsed.parents):
         raise ContextCanonError(
             f"{parsed.metadata.name}: Node {candidate.metadata.id} is already the semantic Parent and cannot also be a Source"
         )
@@ -257,21 +257,15 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     return candidate
 
 
-def review_parent_candidate(node_root: Path) -> tuple[ContextDiff, Path]:
-    """Compile the live semantic Parent explicitly and review it as an immutable candidate.
-
-    Ordinary child builds never call this function and therefore remain bound
-    to the accepted Parent package pin. Review snapshots the live Parent into a
-    content-addressed candidate store without changing the accepted Child.
-    """
+def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tuple[ContextDiff, Path]:
+    """Review one live semantic Parent as an immutable candidate."""
 
     node_root = node_root.resolve()
     repo_root = find_repo_root(node_root)
     compiler = Compiler(repo_root)
     compiled = compiler.compile(node_root)
-    parent_ref = _parent_ref(compiled)
-    current = compiled.parent_package
-    assert current is not None
+    parent_index, parent_ref = _parent_index(compiled, parent_id)
+    current = compiled.parent_packages[parent_index]
 
     parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
     live_parent = Compiler(repo_root).compile(parent_root)
@@ -281,7 +275,7 @@ def review_parent_candidate(node_root: Path) -> tuple[ContextDiff, Path]:
             f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
         )
 
-    _validate_parent_candidate_composition(compiler, compiled, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     candidate_root = _store_parent_candidate(node_root, live_parent)
     result = diff_packages(current, candidate)
     receipt = {
@@ -303,31 +297,31 @@ def review_parent_candidate(node_root: Path) -> tuple[ContextDiff, Path]:
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
-    path = _parent_review_path(node_root)
+    path = _parent_review_path(node_root, parent_ref.id)
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
 
 
-def accept_parent_candidate(node_root: Path) -> CompiledPackage:
-    """Accept exactly the most recently reviewed semantic Parent snapshot."""
+def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> CompiledPackage:
+    """Accept exactly the reviewed candidate for one semantic Parent."""
 
     node_root = node_root.resolve()
-    receipt_path = _parent_review_path(node_root)
+    compiler = Compiler(find_repo_root(node_root))
+    compiled = compiler.compile(node_root)
+    parent_index, parent_ref = _parent_index(compiled, parent_id)
+    current = compiled.parent_packages[parent_index]
+    receipt_path = _parent_review_path(node_root, parent_ref.id)
     if not receipt_path.is_file():
-        raise ContextCanonError("Parent has no review receipt; run 'contextcanon parent review' first")
+        raise ContextCanonError(
+            f"Parent {parent_ref.id} has no review receipt; run 'contextcanon parent review {parent_ref.id}' first"
+        )
     try:
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContextCanonError(f"Invalid Parent review receipt {receipt_path}: {exc}") from exc
     if not isinstance(receipt, dict) or receipt.get("schema") != PARENT_REVIEW_SCHEMA:
         raise ContextCanonError(f"Invalid Parent review receipt schema in {receipt_path}")
-
-    compiler = Compiler(find_repo_root(node_root))
-    compiled = compiler.compile(node_root)
-    parent_ref = _parent_ref(compiled)
-    current = compiled.parent_package
-    assert current is not None
     if receipt.get("parent_id") != parent_ref.id:
         raise ContextCanonError("Parent review receipt belongs to a different Parent")
     if receipt.get("consumer_node_id") != compiled.metadata.id:
@@ -362,25 +356,35 @@ def accept_parent_candidate(node_root: Path) -> CompiledPackage:
     if receipt.get("structural_validation") != "passed":
         raise ContextCanonError("Parent candidate review did not pass structural validation")
 
-    _validate_parent_candidate_composition(compiler, compiled, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     _install_package(node_root, candidate_root, candidate)
-    _write_parent_pin(node_root, candidate)
+    _write_parent_pin(node_root, parent_ref.id, candidate)
     return candidate
 
 
-def _parent_ref(compiled: CompiledNode) -> ParentRef:
-    parent = compiled.parsed.parent
-    if parent is None or compiled.parent_package is None:
+def _parent_index(compiled: CompiledNode, parent_id: str | None) -> tuple[int, ParentRef]:
+    if not compiled.parsed.parents:
         raise ContextCanonError(f"{compiled.metadata.name}: Node has no semantic Parent")
-    return parent
-
+    if parent_id is None:
+        if len(compiled.parsed.parents) != 1:
+            ids = ", ".join(parent.id for parent in compiled.parsed.parents)
+            raise ContextCanonError(
+                f"{compiled.metadata.name}: Node has multiple semantic Parents ({ids}); specify the Parent Node ID"
+            )
+        return 0, compiled.parsed.parents[0]
+    matches = [(index, parent) for index, parent in enumerate(compiled.parsed.parents) if parent.id == parent_id]
+    if not matches:
+        raise ContextCanonError(f"{compiled.metadata.name}: no semantic Parent with Node ID {parent_id}")
+    return matches[0]
 
 def _validate_parent_candidate_composition(
     compiler: Compiler,
     compiled: CompiledNode,
+    parent_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = [candidate, *compiled.source_packages]
+    packages = [*compiled.parent_packages, *compiled.source_packages]
+    packages[parent_index] = candidate
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
         inherited,
@@ -399,7 +403,6 @@ def _validate_parent_candidate_composition(
         seen[rule.id] = rule
     inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
     compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
-
 
 def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> Path:
     package = compiled_package(compiled_parent)
@@ -432,11 +435,14 @@ def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> P
     return destination
 
 
-def _parent_review_path(node_root: Path) -> Path:
-    return node_root / ".context" / "parent-review.json"
+def _parent_review_path(node_root: Path, parent_id: str) -> Path:
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", parent_id):
+        token = parent_id
+    else:
+        token = "sha256-" + hashlib.sha256(parent_id.encode("utf-8")).hexdigest()
+    return node_root / ".context" / "parent-reviews" / f"{token}.json"
 
-
-def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
+def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackage) -> None:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -450,11 +456,9 @@ def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
             if not comment:
                 continue
             attrs = _ATTR_RE.findall(comment.group("attrs"))
-            if not attrs:
+            if not attrs or dict(attrs).get("id") != parent_id:
                 continue
             found += 1
-            if found > 1:
-                raise ContextCanonError(f"More than one semantic Parent appears in {path}")
             lines[index] = visible.group("prefix") + f"`{candidate.metadata.version}`" + visible.group("ending")
             updated: list[tuple[str, str]] = []
             seen_version = False
@@ -474,9 +478,8 @@ def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
             lines[comment_index] = f"{comment.group('indent')}<!-- ctx:parent {attrs_text} -->{comment.group('ending')}"
             break
     if found != 1:
-        raise ContextCanonError(f"Could not find exactly one semantic Parent in {path}")
+        raise ContextCanonError(f"Could not find exactly one semantic Parent Node ID {parent_id} in {path}")
     _atomic_write_text(path, "".join(lines))
-
 
 def install_source_package(node_root: Path, package_root: Path) -> CompiledPackage:
     """Verify and install one immutable Source package without changing pins.
@@ -507,8 +510,8 @@ def _validate_candidate_composition(
     source_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = ([compiled.parent_package] if compiled.parent_package is not None else []) + list(compiled.source_packages)
-    candidate_index = source_index + (1 if compiled.parent_package is not None else 0)
+    packages = [*compiled.parent_packages, *compiled.source_packages]
+    candidate_index = source_index + len(compiled.parent_packages)
     packages[candidate_index] = candidate
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(

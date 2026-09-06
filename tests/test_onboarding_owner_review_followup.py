@@ -81,8 +81,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         instruction = build_onboarding_structure_instruction(prepared.snapshot_root)
 
         self.assertIn("not the taxonomy you must preserve", instruction.text)
-        self.assertIn("a new repository-relative directory that does not exist yet", instruction.text)
-        self.assertIn("document-heavy repositories", instruction.text)
+        self.assertIn("New repository-relative directories remain allowed", instruction.text)
         self.assertIn("does not have to exist yet", instruction.text)
 
     def test_human_structure_can_create_a_new_semantic_directory(self):

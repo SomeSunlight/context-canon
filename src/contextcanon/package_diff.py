@@ -83,17 +83,14 @@ def _node_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
 
 
 def _parent_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
-    parent = package.parent
-    if parent is None:
-        return {}
     return {
         parent.id: {
             "version": parent.version,
             "normalized_digest": parent.normalized_digest,
             "package_digest": parent.package_digest,
         }
+        for parent in package.parents
     }
-
 
 def _source_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
     return {

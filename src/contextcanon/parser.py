@@ -95,9 +95,11 @@ def parse_node(
     overview = _parse_overview(lines, _section_range(sections, source_path, "Local Overview", "Overview"))
     state = _parse_overview(lines, _section_range(sections, source_path, "Local State", "State"))
     plan = _parse_overview(lines, _section_range(sections, source_path, "Local Plan", "Plan"))
-    parent = _parse_parent(lines, _section_range(sections, source_path, "Parent Context Node", "Parent"), source_path)
-    if parent is not None and parent.id == metadata.id:
-        raise ContextCanonError(f"{source_path}: Parent cannot be the Node itself")
+    parents = _parse_parents(lines, _section_range(sections, source_path, "Parent Context Node", "Parent"), source_path)
+    for parent in parents:
+        if parent.id == metadata.id:
+            raise ContextCanonError(f"{source_path}: Parent cannot be the Node itself")
+    _ensure_unique([parent.id for parent in parents], f"{source_path}: duplicate Parent Node ID")
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
     rules = _parse_rules(lines, _section_range(sections, source_path, "Local Rules", "Rules"), source_path, metadata)
     topics = _parse_topics(lines, _section_range(sections, source_path, "Local Topics", "Topics"), source_path, metadata)
@@ -116,7 +118,7 @@ def parse_node(
         sources=tuple(sources),
         rules=tuple(rules),
         topics=tuple(topics),
-        parent=parent,
+        parents=tuple(parents),
         changes=tuple(changes),
         overview=overview,
         state=state,
@@ -148,48 +150,52 @@ def _parse_overview(lines: list[str], section: tuple[int, int] | None) -> str:
     return "\n".join(body)
 
 
-def _parse_parent(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> ParentRef | None:
+def _parse_parents(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> list[ParentRef]:
     if not section:
-        return None
+        return []
     start, end = section
     entries: list[tuple[int, re.Match[str]]] = []
     for i in range(start, end):
         match = SOURCE_RE.match(lines[i])
         if match:
             entries.append((i, match))
-    if len(entries) != 1:
-        raise ContextCanonError(f"{source_path}: Parent section must contain exactly one Parent entry")
+    if not entries:
+        raise ContextCanonError(f"{source_path}: Parent section must contain at least one Parent entry")
 
-    i, match = entries[0]
-    attrs = _find_ctx_attrs(lines, PARENT_COMMENT_RE, i + 1, min(i + 5, end))
-    if not attrs or not attrs.get("id") or not attrs.get("version"):
-        raise ContextCanonError(f"{source_path}:{i+1}: Parent needs ctx:parent id/version metadata")
-    if attrs["version"] != match.group("version"):
-        raise ContextCanonError(f"{source_path}:{i+1}: Parent display version and ctx:parent version differ")
+    result: list[ParentRef] = []
+    for index, (i, match) in enumerate(entries):
+        block_end = entries[index + 1][0] if index + 1 < len(entries) else end
+        attrs = _find_ctx_attrs(lines, PARENT_COMMENT_RE, i + 1, block_end)
+        if not attrs or not attrs.get("id") or not attrs.get("version"):
+            raise ContextCanonError(f"{source_path}:{i+1}: Parent needs ctx:parent id/version metadata")
+        if attrs["version"] != match.group("version"):
+            raise ContextCanonError(f"{source_path}:{i+1}: Parent display version and ctx:parent version differ")
 
-    normalized_digest = attrs.get("normalized-digest")
-    package_digest = attrs.get("package-digest")
-    if not normalized_digest or not package_digest:
-        raise ContextCanonError(
-            f"{source_path}:{i+1}: Parent must pin both normalized-digest and package-digest"
+        normalized_digest = attrs.get("normalized-digest")
+        package_digest = attrs.get("package-digest")
+        if not normalized_digest or not package_digest:
+            raise ContextCanonError(
+                f"{source_path}:{i+1}: Parent must pin both normalized-digest and package-digest"
+            )
+        if not DIGEST_RE.fullmatch(normalized_digest):
+            raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent normalized-digest")
+        if not DIGEST_RE.fullmatch(package_digest):
+            raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent package-digest")
+        if {"transport", "ref", "node-path"}.intersection(attrs):
+            raise ContextCanonError(
+                f"{source_path}:{i+1}: Parent transport metadata is not supported yet; the locator is candidate-discovery metadata only"
+            )
+        result.append(
+            ParentRef(
+                id=attrs["id"],
+                name=match.group("name"),
+                version=attrs["version"],
+                locator=match.group("path"),
+                normalized_digest=normalized_digest,
+                package_digest=package_digest,
+            )
         )
-    if not DIGEST_RE.fullmatch(normalized_digest):
-        raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent normalized-digest")
-    if not DIGEST_RE.fullmatch(package_digest):
-        raise ContextCanonError(f"{source_path}:{i+1}: invalid Parent package-digest")
-    if {"transport", "ref", "node-path"}.intersection(attrs):
-        raise ContextCanonError(
-            f"{source_path}:{i+1}: Parent transport metadata is not supported yet; the locator is candidate-discovery metadata only"
-        )
-
-    return ParentRef(
-        id=attrs["id"],
-        name=match.group("name"),
-        version=attrs["version"],
-        locator=match.group("path"),
-        normalized_digest=normalized_digest,
-        package_digest=package_digest,
-    )
+    return sorted(result, key=lambda parent: (parent.id, parent.version, parent.normalized_digest, parent.package_digest))
 
 def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_path: Path) -> list[SourceRef]:
     if not section:

@@ -1,6 +1,6 @@
 {
   "changes": [],
-  "compiler_version": "0.5.0",
+  "compiler_version": "0.6.0",
   "digests": {
     "normalized": "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683",
     "package": "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"
@@ -33,10 +33,10 @@
     "name": "ContextCanon Gateway",
     "version": "0.1.0-draft"
   },
-  "parent": null,
+  "parents": [],
   "removed_rules": [],
   "rules": [],
-  "schema": "contextcanon/package/v0",
+  "schema": "contextcanon/package/v1",
   "sources": [],
   "topics": [
     {

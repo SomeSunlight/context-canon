@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.5.0",
+  "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99",
-    "package": "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653"
+    "normalized": "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a",
+    "package": "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "eee3ddfbab1292f0c6d5e0024909d05b318d9a4afeef31c01e7a35bdceb99f5a",
-      "size": 5105
+      "sha256": "7a56bb6deaf7f426232bc1b115cab978d99a54770161d1565a851912d16f17d5",
+      "size": 5440
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
-      "sha256": "bbd8fff080a48458badd28f6a996f67c0b5a818ccf76a8d797763ba660abf17f",
-      "size": 9519
+      "sha256": "0f1d4fd50389971c92268b6f06809d2533908b3694e27239267647725165303d",
+      "size": 9660
     }
   ],
   "imports": [],
@@ -28,9 +28,19 @@
     "name": "Development Workflow",
     "version": "0.2.0-draft"
   },
-  "parent": null,
+  "parents": [],
   "removed_rules": [],
   "rules": [
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-010",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.",
+      "title": "Back every change with an Issue",
+      "why": "Repository history should show the reason without reconstructing chat history."
+    },
     {
       "group": "Recoverable planning",
       "id": "CCW-001",
@@ -103,6 +113,16 @@
     },
     {
       "group": "Human review gate",
+      "id": "CCW-011",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Applicable Context constrains a task; it does not silently expand its writable scope.",
+      "title": "Expand change scope explicitly",
+      "why": "A local task must not acquire wider impact merely because broader Context was loaded."
+    },
+    {
+      "group": "Human review gate",
       "id": "CCW-006",
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
@@ -122,7 +142,7 @@
       "why": "The merge itself creates project facts after the merge candidate was frozen. Without a post-merge checkpoint, the accepted code can be correct while recovery documentation still describes the pre-merge state."
     }
   ],
-  "schema": "contextcanon/package/v0",
+  "schema": "contextcanon/package/v1",
   "sources": [],
   "topics": [
     {

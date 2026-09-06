@@ -403,3 +403,7 @@ Purpose: resolve Issues #14, #15, #16 and #17 with small explicit rules, then re
 - [ ] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
 - [ ] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
 - [ ] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
+
+### Later semantic contradiction audit
+
+- [ ] When optional LLM semantic analysis is introduced, flag likely contradictions between inherited Contexts/Parents for human review; never infer precedence automatically.

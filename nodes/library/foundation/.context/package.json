@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.5.0",
+  "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-    "package": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"
+    "normalized": "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9",
+    "package": "1e3c98ccfe4e7208b29f99af6a8412c069f3f1b0fc07bbe03dd8fc0a3201ade0"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "469ce5a15a55a4394cca7c3b69c68b3f19153bc6c78f0742049eb9fc11de6ebf",
-      "size": 4378
+      "sha256": "c3457c29187e4b7e08bb2b7c1a4e48345e98dbaf76e53daed15eff42dc9d67a5",
+      "size": 4732
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
-      "size": 13945
+      "sha256": "e08e6c5722ea0fbea8dd06812409421ee580f5d45d84506e35820a487687f4c2",
+      "size": 14139
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
-      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "sha256": "6061fc524967436d06313dec29de8074e4ae06518a7301b59842116970f62566",
       "size": 7074
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
-      "size": 13069
+      "sha256": "3b847d488c8ffb7d6ee8d002eb731ee09c5dcc463c978cbbd7b5143886e01073",
+      "size": 12949
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -48,7 +48,7 @@
     "name": "ContextCanon Foundation",
     "version": "0.1.0-draft"
   },
-  "parent": null,
+  "parents": [],
   "removed_rules": [],
   "rules": [
     {
@@ -90,6 +90,16 @@
       "statement": "Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.",
       "title": "No implicit Source precedence",
       "why": "Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-013",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.",
+      "title": "Parents are unordered",
+      "why": "Orthogonal context commonly meets at one Node; ordering must never hide a contradiction."
     },
     {
       "group": "Identity",
@@ -143,6 +153,16 @@
     },
     {
       "group": "Repository conventions",
+      "id": "CC-012",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.",
+      "title": "Align Node roots with governed files",
+      "why": "Humans and agents should encounter the applicable Context naturally from the files they change."
+    },
+    {
+      "group": "Repository conventions",
       "id": "CC-010",
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
@@ -162,7 +182,7 @@
       "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
     }
   ],
-  "schema": "contextcanon/package/v0",
+  "schema": "contextcanon/package/v1",
   "sources": [],
   "topics": [
     {

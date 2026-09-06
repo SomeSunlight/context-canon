@@ -33,9 +33,9 @@ Keep an Overview compact. It is always-read entry context, so deeper explanation
 
 ## Parent Context Node
 
-A Context Node may have **one semantic Parent**. Parent is an explicit accepted relationship, not a filesystem convention. A directory above the Node, or a Node whose path contains this Node, does not become Parent automatically.
+A Context Node may have zero, one, or several semantic Parents. Parents are explicit accepted relationships; filesystem nesting creates none. Parent order has no precedence.
 
-Parent is always an exact immutable package pin:
+Each Parent is an exact immutable package pin:
 
 ```markdown
 ## Parent Context Node
@@ -48,7 +48,7 @@ The visible locator records where a newer Parent candidate may later be discover
 
 Parent and ordinary Sources are intentionally different roles. Parent expresses the human-accepted semantic hierarchy; Sources express independent reusable composition. Both feed the same immutable package-composition engine, so inherited Rules, Topics and Resources use the same deterministic conflict rules without creating a second inheritance implementation.
 
-Changing the Parent's live repository files therefore does not silently change the Child. The Child continues using its accepted Parent package until an explicit update is reviewed and accepted.
+Changing a Parent's live files does not silently change the Child. Each Parent advances only through explicit review and acceptance.
 
 ## Sources
 

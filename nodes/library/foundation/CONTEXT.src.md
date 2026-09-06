@@ -37,6 +37,10 @@
   Why: Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain.
   <!-- ctx:rule id="CC-004" -->
 
+- **Parents are unordered:** A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.
+  Why: Orthogonal context commonly meets at one Node; ordering must never hide a contradiction.
+  <!-- ctx:rule id="CC-013" -->
+
 ### Identity
 
 - **Stable identity:** Every addressable context element has a stable ID independent of its title, wording, file location, and presentation.
@@ -66,6 +70,10 @@
   <!-- ctx:rule id="CC-009" -->
 
 ### Repository conventions
+
+- **Align Node roots with governed files:** Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.
+  Why: Humans and agents should encounter the applicable Context naturally from the files they change.
+  <!-- ctx:rule id="CC-012" -->
 
 - **Keep familiar repository documents useful:** Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.
   Why: ContextCanon should complement familiar project navigation rather than replace it.

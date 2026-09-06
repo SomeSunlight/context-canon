@@ -26,6 +26,10 @@ For the current task, evaluate each Topic condition. When one matches, read ever
 
 ### Recoverable planning
 
+#### `CCW-010` — Back every change with an Issue
+
+Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.
+
 #### `CCW-001` — Plan a coherent change block before editing
 
 Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.
@@ -57,6 +61,10 @@ When the project owner explicitly approves a coherent implementation scope and s
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
 
 ### Human review gate
+
+#### `CCW-011` — Expand change scope explicitly
+
+Applicable Context constrains a task; it does not silently expand its writable scope.
 
 #### `CCW-006` — Do not merge without explicit project-owner approval
 

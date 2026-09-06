@@ -30,7 +30,7 @@ A tiny node with no materialized resources may legitimately have no `CONTEXT/` d
 
 ## Effective composition must be visible
 
-When a Node composes a Parent Context Node or reusable Sources, `CONTEXT.md` names the direct Parent and lists the resulting effective imported Context Nodes with their accepted versions. Transitive imports are flattened from authenticated immutable package metadata, so a deep Node can explain why a rule applies without dereferencing live ancestors or the network. Each list item links to the exact direct accepted carrier package (or the local development Source) that supplied that context. Unrelated sibling Nodes never appear merely because they share filesystem ancestry.
+When a Node composes Parent Context Nodes or reusable Sources, `CONTEXT.md` names the direct Parents and lists the resulting effective imported Context Nodes with their accepted versions. Transitive imports are flattened from authenticated immutable package metadata, so a deep Node can explain why a rule applies without dereferencing live ancestors or the network. Each list item links to the exact direct accepted carrier package (or the local development Source) that supplied that context. Unrelated sibling Nodes never appear merely because they share filesystem ancestry.
 
 The list is deliberately compact provenance, not a second rule surface: the actual effective Rules and Topics remain grouped below by origin. Exact low-level machine state and digests remain available in `.context/context.yaml` and package manifests.
 

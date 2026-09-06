@@ -11,6 +11,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
 
 ### Recoverable planning
 
+- **Back every change with an Issue:** Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.
+  Why: Repository history should show the reason without reconstructing chat history.
+  <!-- ctx:rule id="CCW-010" -->
+
 - **Plan a coherent change block before editing:** Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.
   Why: Repository state must explain what work is in progress even if the chat, model session, or tool run disappears.
   <!-- ctx:rule id="CCW-001" -->
@@ -42,6 +46,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
   <!-- ctx:rule id="CCW-005" -->
 
 ### Human review gate
+
+- **Expand change scope explicitly:** Applicable Context constrains a task; it does not silently expand its writable scope.
+  Why: A local task must not acquire wider impact merely because broader Context was loaded.
+  <!-- ctx:rule id="CCW-011" -->
 
 - **Do not merge without explicit project-owner approval:** Keep a review PR or equivalent change set open until the project owner explicitly approves the reviewed result.
   Why: Green automation proves only the properties it checks; it does not prove that the product, architecture, or documentation is acceptable to its human owner.

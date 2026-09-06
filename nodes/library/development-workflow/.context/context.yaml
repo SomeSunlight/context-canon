@@ -3,7 +3,7 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.5.0"
+compiler_version: "0.6.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
@@ -11,8 +11,8 @@ node:
   name: "Development Workflow"
   version: "0.2.0-draft"
 
-# Accepted semantic Parent package. The locator is discovery metadata; build uses only the exact pin.
-parent: null
+# Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
+parents: []
 
 # Accepted reusable Source packages used by this build. Both digests are exact pins.
 sources: []
@@ -25,6 +25,7 @@ local:
   state: null
   plan: null
   rules:
+    - {"id": "CCW-010", "title": "Back every change with an Issue", "group": "Recoverable planning"}
     - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "group": "Recoverable planning"}
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "group": "Recoverable planning"}
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "group": "Recoverable planning"}
@@ -32,6 +33,7 @@ local:
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "group": "Proportional verification"}
     - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
+    - {"id": "CCW-011", "title": "Expand change scope explicitly", "group": "Human review gate"}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "group": "Human review gate"}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "group": "Accepted baseline"}
   changes: []
@@ -41,6 +43,7 @@ local:
 # Compiled effective Rule/Topic view with provenance.
 official:
   rules:
+    - {"id": "CCW-010", "title": "Back every change with an Issue", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-001", "title": "Plan a coherent change block before editing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -48,6 +51,7 @@ official:
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-011", "title": "Expand change scope explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
   removed_rules: []
@@ -69,5 +73,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "360fce40e173bb58f72c25be3092771b74094ab5d428ffc615c09c2e5bb84e99"
-  package_digest: "67392242f1cc1e305607a19b8c82b1a3a5e9fbf7f85640af5f90daaf3a992653"
+  normalized_digest: "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a"
+  package_digest: "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
