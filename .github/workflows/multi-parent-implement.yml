@@ -30,15 +30,25 @@ jobs:
           text = helper.read_text(encoding='utf-8')
           text = text.replace("path.write_text(r'''from __future__ import annotations", 'path.write_text(r"""from __future__ import annotations')
           text = text.replace("    unittest.main()\n''', encoding=\"utf-8\")", '    unittest.main()\n""", encoding="utf-8")')
+          block_start = text.index('t = exact(\n    t,\n    "    machine_yaml: str = \\\"\\\"')
+          block_end = text.index('t = exact(\n    t,\n    "    parents: tuple[PackageDependency, ...] = ()\\n",', block_start)
+          text = text[:block_start] + text[block_end:]
           helper.write_text(text, encoding='utf-8')
 
           model = Path('src/contextcanon/model.py')
           text = model.read_text(encoding='utf-8')
-          old = '    machine_yaml: str = ""\n    adapters: dict[str, str] = field(default_factory=dict)\n'
-          new = '    adapters: dict[str, str] = field(default_factory=dict)\n    machine_yaml: str = ""\n'
-          if old not in text:
-              raise SystemExit('CompiledNode helper anchor preparation failed')
-          model.write_text(text.replace(old, new, 1), encoding='utf-8')
+          anchor = '    @property\n    def metadata(self) -> NodeMetadata:\n'
+          replacement = (
+              '    @property\n'
+              '    def parent_package(self) -> CompiledPackage | None:\n'
+              '        if len(self.parent_packages) > 1:\n'
+              '            raise ValueError("Node has multiple semantic Parents; use .parent_packages")\n'
+              '        return self.parent_packages[0] if self.parent_packages else None\n\n'
+              + anchor
+          )
+          if anchor not in text:
+              raise SystemExit('CompiledNode metadata anchor missing')
+          model.write_text(text.replace(anchor, replacement, 1), encoding='utf-8')
           PY
       - name: Apply bounded product patch
         run: python .github/tmp/apply_multi_parent.py
