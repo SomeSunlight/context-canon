@@ -438,3 +438,15 @@ Owner-test consistency follow-up under #22: accepted Source and Parent visible l
 Owner-test correction under #22: `source list` and human Source selectors must use the accepted package's canonical Node name; a stale/damaged consumer display label may be shown as a warning/legacy alias but must not force UUID archaeology. Successful Source acceptance should normalize the visible consumer label back to the accepted package name.
 
 Checkpoint: Issues #21–#24 are implemented on draft PR #18. The human-scale update path supports version display, Source discovery by name, one-off Git refs, central Git/local repository configuration, guided legacy-to-central discovery migration, and top-down Parent propagation without per-Node exclusions. Parent propagation updates every applicable edge; project-specific differences belong in normal local Override/Remove semantics. The exact candidate passes 231 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene before owner testing resumes.
+
+## Owner-test format correction: Issue #25
+
+Purpose: remove hidden machine semantics from the Markdown H1. Canonical Context Node name becomes explicit `ctx:node` metadata; ordinary Markdown presentation no longer defines Node identity/name.
+
+- [ ] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.
+- [ ] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.
+- [ ] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.
+- [ ] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.
+- [ ] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.
+
+Checkpoint: Issue #25 is an explicit scope expansion of draft PR #18, discovered during the real `ai-workstation` Source-name UX test. The project owner selected the explicit-machine-metadata design; no PR merge is authorized.
