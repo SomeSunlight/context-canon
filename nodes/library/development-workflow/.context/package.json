@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996",
-    "package": "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
+    "normalized": "e7e7deedddfa8110296a1e7039d89214ebdccd1a65afa3ca1b639f51723df850",
+    "package": "d124abf6ac9f31acbae6ea69219ab3061131aaf71289ab67246e2e0e218cf045"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "a9ee2134de8021519f4dbe044f9280bec4ed6201f8dab1905a4e31f2abe77cac",
+      "sha256": "d60ed84966252d3432c71a77109c51df9f7241b761bee98e7e3ccbaa10e4a15a",
       "size": 6011
     },
     {
@@ -26,7 +26,7 @@
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
-    "version": "0.2.0-draft"
+    "version": "0.2.1-draft"
   },
   "parents": [],
   "removed_rules": [],

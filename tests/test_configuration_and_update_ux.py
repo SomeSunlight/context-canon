@@ -138,6 +138,9 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
                 rc = cli_main(["source", "update", "Shared", "--node", str(consumer), "--ref", "feature", "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
             self.assertIn("Migrated legacy Source discovery", out.getvalue())
+            self.assertIn("This migration only changes where future Source candidates are discovered.", out.getvalue())
+            self.assertIn("It does not change the accepted Source; acceptance happens only after this review.", out.getvalue())
+            self.assertIn("Fetched candidate: Shared", out.getvalue())
 
             source_cfg, repo_cfg = configured_source(project, "source-id")
             self.assertEqual(repo_cfg.kind, "git")

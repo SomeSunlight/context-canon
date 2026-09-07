@@ -309,3 +309,7 @@ For existing projects such as the owner-tested `ai-workstation`, the first guide
 ## Explicit Node-name metadata correction
 
 Issue #25 removes the implicit Node-name syntax from the Markdown H1. Canonical Node names are explicit `ctx:node name="..."` machine metadata; H1 wording is ordinary presentation and may change without changing normalized Context semantics. Structure materialization and all self-hosted ContextCanon Nodes use the explicit form.
+
+## Latest Source-update review readability and version discipline
+
+The real `ai-workstation` owner test confirmed that guided Source update, one-off `--ref`, and automatic `contextcanon.yaml` migration work correctly. The same run exposed two UX/integrity issues: immutable digests appeared before semantic meaning, and the changed Development Workflow still reused `0.2.0-draft`. PR #18 now presents a compact human summary before technical fingerprints and enforces human-meaningful package versions. SemVer-shaped unchanged versions receive only the minimum automatic patch bump, with an explicit reminder to consider a higher minor/major version; deliberately higher human versions are preserved. External candidates that changed package identity while reusing the accepted version are rejected.

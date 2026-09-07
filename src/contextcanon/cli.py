@@ -46,6 +46,7 @@ from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
+from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
 def _node_root(path: Path) -> Path:
@@ -170,6 +171,13 @@ def _migrate_legacy_source_discovery(node_root: Path, source_id: str) -> Path | 
     legacy_ref = source.transport_ref
     discovery_ref = None if len(legacy_ref) == 40 and all(char in "0123456789abcdef" for char in legacy_ref) else legacy_ref
     return upsert_git_source(repo_root, source.id, source.locator, discovery_ref, source.node_path)
+
+
+def _report_version_bump(bump: VersionBump | None) -> None:
+    if bump is None:
+        return
+    print(f"Auto-bumped Context Node version: {bump.before} -> {bump.after} (package changed).")
+    print("  This is the minimum patch bump; consider a higher minor or major version if the change warrants it.")
 
 
 def _confirm(prompt: str) -> bool:
@@ -1030,7 +1038,8 @@ def main(argv: list[str] | None = None) -> int:
                     print("No semantic Parent edges found.")
                     return 0
                 accepted_count = 0
-                for child_root, parent, _ in edges:
+                for child_root, parent, parent_root in edges:
+                    _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
                     child = parse_node(child_root, repo_root)
                     child_label = child_root.relative_to(repo_root).as_posix() or "."
                     print(f"\n=== {child.metadata.name} ({child_label}) ← {parent.name} ===")
@@ -1045,6 +1054,7 @@ def main(argv: list[str] | None = None) -> int:
                     accepted = accept_parent_candidate(child_root, parent.id)
                     accepted_count += 1
                     print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+                    _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
                 print(f"Propagated {accepted_count} Parent edge(s) top-down.")
                 print(f"Next: contextcanon build --all {repo_root}")
                 print(f"Then: contextcanon check --all {repo_root}")
@@ -1063,6 +1073,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             accepted = accept_parent_candidate(node_root, args.parent_id)
             print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+            _report_version_bump(ensure_node_version_advanced(node_root))
             print(f"Next: contextcanon build {node_root}")
             print(f"Then: contextcanon check {node_root}")
             return 0
@@ -1098,6 +1109,8 @@ def main(argv: list[str] | None = None) -> int:
                 adopted, changed = adopt_source_package(node_root, Path(args.package))
                 verb = "adopted" if changed else "already adopted"
                 print(f"{verb} Source {adopted.metadata.name} {adopted.metadata.version} ({adopted.package_digest})")
+                if changed:
+                    _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
                 print(f"Discovery configuration: {config_path(repo_root)}")
                 print(f"Next: contextcanon build {node_root}")
                 print(f"Then: contextcanon check {node_root}")
@@ -1110,19 +1123,22 @@ def main(argv: list[str] | None = None) -> int:
                     label = location.relative_to(node_root).as_posix()
                 except ValueError:
                     label = str(location)
-                print(f"fetched candidate {candidate.metadata.name} {candidate.metadata.version} ({candidate.package_digest})")
+                print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                print(f"  Package digest: {candidate.package_digest}")
                 provenance = load_candidate_provenance(node_root, candidate.package_digest)
                 if provenance is not None and provenance.get("candidate_ref"):
-                    print(f"Candidate Git commit: {provenance['candidate_ref']}")
+                    print(f"  Git commit: {provenance['candidate_ref']}")
                 elif provenance is not None and provenance.get("kind") == "local":
-                    print(f"Candidate local repository: {provenance['location']}")
-                print(f"Candidate package: {label}")
+                    print(f"  Local repository: {provenance['location']}")
+                print(f"  Cached package: {label}")
                 parsed = parse_node(node_root, repo_root)
                 current = next(source for source in parsed.sources if source.id == source_id)
                 if args.source_command == "update":
                     migrated = _migrate_legacy_source_discovery(node_root, source_id)
                     if migrated is not None:
-                        print(f"Migrated legacy Source discovery to {migrated}")
+                        print(f"Migrated legacy Source discovery to central configuration: {migrated}")
+                        print("  This migration only changes where future Source candidates are discovered.")
+                        print("  It does not change the accepted Source; acceptance happens only after this review.")
                 if current.package_digest == candidate.package_digest:
                     print("Accepted Source is already this exact package.")
                     return 0
@@ -1136,6 +1152,7 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 accepted = accept_source_candidate(node_root, source_id, location)
                 print(f"accepted Source {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
                 print("If this Node has descendants, run 'contextcanon parent propagate --all' from the repository root.")
                 return 0
 
@@ -1152,6 +1169,7 @@ def main(argv: list[str] | None = None) -> int:
 
             accepted = accept_source_candidate(node_root, source_id, candidate)
             print(f"accepted {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+            _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
             return 0
 
         repo_root, node_roots = _targets(Path(args.path), args.all)
@@ -1160,14 +1178,19 @@ def main(argv: list[str] | None = None) -> int:
         compiler = Compiler(repo_root)
         failed = False
         for node_root in node_roots:
-            compiled = compiler.compile(node_root)
             label = node_root.relative_to(repo_root).as_posix() or "."
             if args.command == "build":
+                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                compiled = Compiler(repo_root).compile(node_root)
                 changed = write_outputs(compiled)
                 suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
                 print(f"built {label}{suffix}")
             else:
+                compiled = compiler.compile(node_root)
                 drift = check_outputs(compiled)
+                version_problem = version_reuse_problem(compiled)
+                if version_problem is not None:
+                    drift = [version_problem, *drift]
                 if drift:
                     failed = True
                     print(f"drift {label}:")

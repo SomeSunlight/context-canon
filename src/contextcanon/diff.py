@@ -118,33 +118,79 @@ def diff_compiled(before: CompiledNode, after: CompiledNode) -> ContextDiff:
     )
 
 
+_CATEGORY_NOUNS = {
+    "node": ("node metadata item", "node metadata items"),
+    "parent": ("parent", "parents"),
+    "source": ("source", "sources"),
+    "change": ("local change", "local changes"),
+    "rule": ("rule", "rules"),
+    "topic": ("topic", "topics"),
+    "resource": ("resource", "resources"),
+}
+
+
+def _transition(before: str, after: str) -> str:
+    return f"unchanged ({before})" if before == after else f"{before} -> {after}"
+
+
+def _summary_parts(diff: ContextDiff) -> list[str]:
+    counts: dict[tuple[str, DiffChange], int] = {}
+    for entry in diff.entries:
+        key = (entry.category, entry.change)
+        counts[key] = counts.get(key, 0) + 1
+
+    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    parts: list[str] = []
+    for category in sorted(_CATEGORY_ORDER, key=_CATEGORY_ORDER.get):
+        singular, plural = _CATEGORY_NOUNS[category]
+        for change in ("added", "removed", "modified"):
+            count = counts.get((category, change), 0)
+            if count:
+                noun = singular if count == 1 else plural
+                parts.append(f"{count} {noun} {action[change]}")
+    return parts
+
+
 def render_diff(diff: ContextDiff) -> str:
+    summary = ", ".join(_summary_parts(diff))
+    if not summary:
+        summary = (
+            "package presentation changed; semantic and Resource content unchanged"
+            if not diff.is_empty
+            else "no compiled context changes"
+        )
+
     lines = [
         f"ContextCanon diff: {diff.before_name} ({diff.node_id})",
-        f"  version: {diff.before_version} -> {diff.after_version}",
-        f"  normalized: {diff.before_normalized_digest} -> {diff.after_normalized_digest}",
-        f"  package: {diff.before_package_digest} -> {diff.after_package_digest}",
+        f"  Version: {_transition(diff.before_version, diff.after_version)}",
+        f"  Summary: {summary}",
     ]
-    if diff.is_empty:
-        lines.append("No compiled context changes.")
-        return "\n".join(lines) + "\n"
 
-    if not diff.entries:
-        lines.append("Package presentation changed without semantic or Resource content changes.")
-        return "\n".join(lines) + "\n"
+    if diff.entries:
+        current_category = None
+        symbol = {"added": "+", "removed": "-", "modified": "~"}
+        for entry in diff.entries:
+            if entry.category != current_category:
+                current_category = entry.category
+                lines.extend(["", current_category.title() + "s:"])
+            detail = ""
+            if entry.change == "modified" and entry.changed_fields:
+                detail = " [" + ", ".join(entry.changed_fields) + "]"
+            lines.append(f"  {symbol[entry.change]} {entry.identity}{detail}")
+    elif diff.is_empty:
+        lines.extend(["", "No compiled context changes."])
+    else:
+        lines.extend(["", "Package presentation changed without semantic or Resource content changes."])
 
-    current_category = None
-    symbol = {"added": "+", "removed": "-", "modified": "~"}
-    for entry in diff.entries:
-        if entry.category != current_category:
-            current_category = entry.category
-            lines.extend(["", current_category.title() + "s:"])
-        detail = ""
-        if entry.change == "modified" and entry.changed_fields:
-            detail = " [" + ", ".join(entry.changed_fields) + "]"
-        lines.append(f"  {symbol[entry.change]} {entry.identity}{detail}")
+    lines.extend(
+        [
+            "",
+            "Technical details:",
+            f"  Normalized digest: {_transition(diff.before_normalized_digest, diff.after_normalized_digest)}",
+            f"  Package digest: {_transition(diff.before_package_digest, diff.after_package_digest)}",
+        ]
+    )
     return "\n".join(lines) + "\n"
-
 
 def _diff_maps(
     category: str,

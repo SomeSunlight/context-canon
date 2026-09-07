@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.1.0-draft"
+  version: "0.1.1-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,29 +18,29 @@ parents: []
 sources:
   - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
     name: "ContextCanon Foundation"
-    version: "0.1.0-draft"
+    version: "0.1.1-draft"
     locator: "../../library/foundation/"
-    normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "50e6ad5a2ab725483a7d5b08fc3f8c3b31b13f549702a7b1207e3e339efc94d6"
+    normalized_digest: "bf58de9bf5690793ceffc0aec0ebfcf911005033e338c5e89742b68d08bc5c0d"
+    package_digest: "e35ca7151b0f0780b2d57c73b447da49c4cf61b098ce2f8e49d165285b6863b5"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.2.0-draft"
+    version: "0.2.1-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996"
-    package_digest: "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
+    normalized_digest: "e7e7deedddfa8110296a1e7039d89214ebdccd1a65afa3ca1b639f51723df850"
+    package_digest: "d124abf6ac9f31acbae6ea69219ab3061131aaf71289ab67246e2e0e218cf045"
 
 # Effective imported Context origins, flattened through accepted Parent/Source packages.
 imports:
   - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
     name: "ContextCanon Foundation"
-    version: "0.1.0-draft"
-    normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "50e6ad5a2ab725483a7d5b08fc3f8c3b31b13f549702a7b1207e3e339efc94d6"
+    version: "0.1.1-draft"
+    normalized_digest: "bf58de9bf5690793ceffc0aec0ebfcf911005033e338c5e89742b68d08bc5c0d"
+    package_digest: "e35ca7151b0f0780b2d57c73b447da49c4cf61b098ce2f8e49d165285b6863b5"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.2.0-draft"
-    normalized_digest: "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996"
-    package_digest: "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
+    version: "0.2.1-draft"
+    normalized_digest: "e7e7deedddfa8110296a1e7039d89214ebdccd1a65afa3ca1b639f51723df850"
+    package_digest: "d124abf6ac9f31acbae6ea69219ab3061131aaf71289ab67246e2e0e218cf045"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -259,5 +259,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "87c368a30907e26fcb9096abd54887c55c5dc62243cdfee6cb523680aa6c36a5"
-  package_digest: "d7dc8446618b8fb2b1a783d6355b4bdd1b27baa1cb816b9518b27ac23ae2db0a"
+  normalized_digest: "c855b86d2b0b67b422e621f6ba833e1d3437fb130c4a86992b91da689fa3f90f"
+  package_digest: "b232a321fd9f35062447df974cdd19bc1cba3499382805a5c9b41a65cbb51da0"

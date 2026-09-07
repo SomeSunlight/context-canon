@@ -17,6 +17,7 @@ from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .package_diff import diff_packages
 from .parser import ContextCanonError, find_repo_root, parse_node
+from .versioning import ensure_node_version_advanced
 
 REVIEW_SCHEMA = "contextcanon/source-review/v0"
 PARENT_REVIEW_SCHEMA = "contextcanon/parent-review/v0"
@@ -158,6 +159,14 @@ def _insert_source_entry(text: str, entry: str) -> str:
     return result.rstrip() + "\n"
 
 
+def _require_candidate_version_advance(current: CompiledPackage, candidate: CompiledPackage, relation: str) -> None:
+    if current.package_digest != candidate.package_digest and current.metadata.version == candidate.metadata.version:
+        raise ContextCanonError(
+            f"{relation} candidate {candidate.metadata.name} changed package identity but reused version "
+            f"{candidate.metadata.version!r}; advance the provider Node version before accepting this candidate"
+        )
+
+
 def review_source_candidate(
     node_root: Path,
     source_id: str,
@@ -181,6 +190,7 @@ def review_source_candidate(
         raise ContextCanonError(
             f"Candidate Node ID {candidate.metadata.id} does not match Source {source_ref.name} ({source_ref.id})"
         )
+    _require_candidate_version_advance(current, candidate, "Source")
 
     transport_candidate = _validated_candidate_provenance(node_root, source_ref, candidate)
     _validate_candidate_composition(compiler, compiled, index, candidate)
@@ -294,12 +304,14 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
     current = compiled.parent_packages[parent_index]
 
     parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
+    ensure_node_version_advanced(parent_root, repo_root)
     live_parent = Compiler(repo_root).compile(parent_root)
     candidate = compiled_package(live_parent)
     if candidate.metadata.id != parent_ref.id:
         raise ContextCanonError(
             f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
         )
+    _require_candidate_version_advance(current, candidate, "Parent")
 
     _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     candidate_root = _store_parent_candidate(node_root, live_parent)

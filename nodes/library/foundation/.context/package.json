@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9",
-    "package": "50e6ad5a2ab725483a7d5b08fc3f8c3b31b13f549702a7b1207e3e339efc94d6"
+    "normalized": "bf58de9bf5690793ceffc0aec0ebfcf911005033e338c5e89742b68d08bc5c0d",
+    "package": "e35ca7151b0f0780b2d57c73b447da49c4cf61b098ce2f8e49d165285b6863b5"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "c3457c29187e4b7e08bb2b7c1a4e48345e98dbaf76e53daed15eff42dc9d67a5",
+      "sha256": "1718df860fd94f1c308b63d3e02c854de72e235dc81cd931611c50aab20cabc6",
       "size": 4732
     },
     {
@@ -33,8 +33,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "cf6011578d1133e8c7a4ffedc79175825ceb1b7533c0f7d91f4729a8b9042380",
-      "size": 17237
+      "sha256": "c2ae75b88bd843cd9d9f27f092a3f1b085650628958771ab089b16b0eedb0132",
+      "size": 18394
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -46,7 +46,7 @@
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
-    "version": "0.1.0-draft"
+    "version": "0.1.1-draft"
   },
   "parents": [],
   "removed_rules": [],

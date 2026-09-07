@@ -280,3 +280,11 @@ A useful Change template is:
 ## Current compiler contract
 
 The executable compiler may intentionally support a narrower language than later specification layers. Unsupported syntax must fail clearly rather than be inferred. Implementation-specific module details belong to the implementation's own development documentation; this Foundation document describes the reusable authoring contract rather than one repository's internal module status.
+
+### Version advancement
+
+A Context Node version is the human-facing release identity for one published package generation. Different package bytes for the same stable Node ID must not silently reuse the same version.
+
+When a prior generated package exists and `contextcanon build` detects changed package identity while `ctx:node version` is still unchanged, a SemVer-shaped version (`X.Y.Z`, optionally with a suffix such as `-draft`) receives the minimum automatic patch bump. For example, `0.2.0-draft` becomes `0.2.1-draft`. ContextCanon reports that this is only the mechanical minimum and asks the owner to consider a higher minor or major version when the semantic or compatibility significance warrants it. A version already advanced deliberately by the human is preserved.
+
+ContextCanon does not infer whether a change is breaking or feature-level. Versions that cannot be safely patch-bumped are left for explicit human editing, with an actionable error. Consumers also reject Source candidates whose package identity changed while the provider reused the currently accepted version; the consumer must not repair the provider's release identity.
