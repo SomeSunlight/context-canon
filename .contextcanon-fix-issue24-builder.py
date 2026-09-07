@@ -13,4 +13,9 @@ closing = text.rfind("'''", start, write_call)
 if closing < 0:
     raise RuntimeError("Issue 24 builder test end delimiter missing")
 text = text[:closing] + '"""' + text[closing + 3:]
+old_state_write = 'state_path.write_text(state, encoding="utf-8")'
+new_state_write = 'state_path.write_text(state.rstrip() + "\\n", encoding="utf-8")'
+if text.count(old_state_write) != 1:
+    raise RuntimeError("Issue 24 STATE write target missing")
+text = text.replace(old_state_write, new_state_write, 1)
 path.write_text(text, encoding="utf-8")
