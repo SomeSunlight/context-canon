@@ -32,12 +32,17 @@ jobs:
             git commit -m "Plan owner-test update UX block (#21 #22 #23 #24)"
             git push origin HEAD:agent/issues-14-15-multi-parent
           fi
-      - name: Repair prepared test-string delimiter
+      - name: Repair prepared builder mechanics
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('.contextcanon-issue-21-24-builder.py')
           text = path.read_text(encoding='utf-8')
+          old = '    result, count = re.subn(pattern, replacement, text, count=1, flags=re.S)'
+          new = '    result, count = re.subn(pattern, lambda _match: replacement, text, count=1, flags=re.S)'
+          if old not in text:
+              raise SystemExit('sub_once replacement target not found')
+          text = text.replace(old, new, 1)
           start = text.rfind("    r'''from __future__ import annotations")
           if start < 0:
               raise SystemExit('test block start delimiter not found')
