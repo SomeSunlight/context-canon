@@ -2,9 +2,11 @@
 
 ## Accepted baseline
 
-The current accepted `main` baseline is PR #12, squash-merged as `bac1f52048b3d82cedb00b04fccd114607c4c915`.
+The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
 
-The structure-first onboarding architecture, reusable Development Workflow Source, two-pass placement semantics and real `ai-workstation` structure materialization are accepted. PR #13 is the active review branch for finishing reviewed placement publication.
+The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#19 and remains unmerged pending explicit project-owner approval.
+
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
 
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
@@ -405,6 +407,16 @@ Purpose: resolve Issues #14, #15, #16 and #17 with small explicit rules, then re
 - [x] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
 
 Checkpoint: Issues #14–#17 are implemented in draft PR #18. Multi-Parent composition is order-independent, onboarding intentionally remains a single primary navigation hierarchy, legacy `package/v0` remains readable beside plural `package/v1`, and the exact product candidate passed 226 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene. PR #18 remains unmerged pending explicit project-owner approval.
+
+## Documentation reconciliation: Issue #19
+
+Purpose: make durable current-state pointers match the accepted `main` history after PR #13 merged.
+
+- [x] Update the accepted baseline in `STATE.md` and `PLAN.md`.
+- [x] Distinguish historical PR #13 checkpoint wording from current repository status.
+- [x] Point current work at draft PR #18 without changing product semantics or re-running onboarding.
+
+Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/check/diff gate is required before the PR review head is updated.
 
 ### Later semantic contradiction audit
 

@@ -1,10 +1,12 @@
 # Current State
 
-The accepted `main` baseline remains PR #12, squash-merged as:
+The accepted `main` baseline is PR #13, squash-merged as:
 
-`bac1f52048b3d82cedb00b04fccd114607c4c915`
+`df847ba031bfa3965ca53626249e18a1074cb8af`
 
-PR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval.
+PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19. It remains subject to explicit project-owner approval.
+
+Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
 
 ## What is implemented in PR #13
 
@@ -124,7 +126,7 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.
+Review the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval.
 
 ## Latest live Step-4 owner-test verification
 
