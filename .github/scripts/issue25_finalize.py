@@ -34,41 +34,68 @@ def append_plan_checkpoint() -> None:
     text = path.read_text(encoding='utf-8').rstrip()
     marker = '## Owner-test format correction: Issue #25'
     if marker not in text:
-        text += '''\n\n## Owner-test format correction: Issue #25\n\nPurpose: remove hidden machine semantics from the Markdown H1. Canonical Context Node name becomes explicit `ctx:node` metadata; ordinary Markdown presentation no longer defines Node identity/name.\n\n- [ ] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.\n- [ ] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.\n- [ ] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.\n- [ ] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.\n- [ ] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.\n\nCheckpoint: Issue #25 is an explicit scope expansion of draft PR #18, discovered during the real `ai-workstation` Source-name UX test. The project owner selected the explicit-machine-metadata design; no PR merge is authorized.\n'''
-        path.write_text(text, encoding='utf-8')
-        run('git', 'add', 'PLAN.md')
-        run('git', 'commit', '-m', 'Plan explicit Context Node name metadata (#25)')
-        run('git', 'push', 'origin', 'HEAD:agent/issues-14-15-multi-parent')
+        raise RuntimeError('Issue #25 PLAN checkpoint must exist before product edits')
+
+
+def _insert_name(attrs: str, name: str) -> str:
+    if re.search(r'\bname="', attrs):
+        return attrs
+    if '"' in name:
+        raise RuntimeError(f'Cannot migrate ctx:node name containing double quote: {name!r}')
+    match = re.match(r'(?P<id>id="[^"]+")(?P<rest>.*)', attrs.rstrip())
+    if match is None:
+        raise RuntimeError(f'ctx:node metadata does not begin with id: {attrs!r}')
+    return f'{match.group("id")} name="{name.strip()}"{match.group("rest")}'
 
 
 def migrate_ctx_node_literals(text: str) -> str:
-    pattern = re.compile(
+    # Real Markdown / triple-quoted fixtures with an actual newline.
+    actual = re.compile(
         r'(?m)^(?P<prefix>[^\n]*?#\s+)(?P<name>.+?)\s+—\s+Local Context Source(?P<h1tail>[^\n]*)\n'
         r'(?P<indent>[ \t]*)(?P<open><!--\s*ctx:node\s+)(?P<attrs>[^>\n]*?)(?P<close>\s*-->)'
     )
 
-    def repl(match: re.Match[str]) -> str:
-        attrs = match.group('attrs')
-        if re.search(r'\bname="', attrs):
-            return match.group(0)
-        name = match.group('name').strip()
-        if '"' in name:
-            raise RuntimeError(f'Cannot migrate ctx:node name containing double quote: {name!r}')
-        attrs = attrs.rstrip()
-        id_match = re.match(r'(?P<id>id="[^"]+")(?P<rest>.*)', attrs)
-        if id_match is None:
-            raise RuntimeError(f'ctx:node metadata does not begin with id: {attrs!r}')
-        migrated = f'{id_match.group("id")} name="{name}"{id_match.group("rest")}'
+    def actual_repl(match: re.Match[str]) -> str:
+        attrs = _insert_name(match.group('attrs'), match.group('name'))
         return (
             match.group('prefix') + match.group('name') + ' — Local Context Source' + match.group('h1tail') + '\n'
-            + match.group('indent') + match.group('open') + migrated + match.group('close')
+            + match.group('indent') + match.group('open') + attrs + match.group('close')
         )
 
-    return pattern.sub(repl, text)
+    text = actual.sub(actual_repl, text)
+
+    # Python string fixtures that contain a literal "\\n" between H1 and metadata.
+    escaped = re.compile(
+        r'(?P<h1>#\s+(?P<name>.+?)\s+—\s+Local Context Source)\\n'
+        r'(?P<open><!--\s*ctx:node\s+)(?P<attrs>[^>\n]*?)(?P<close>\s*-->)'
+    )
+
+    def escaped_repl(match: re.Match[str]) -> str:
+        attrs = _insert_name(match.group('attrs'), match.group('name'))
+        return match.group('h1') + r'\n' + match.group('open') + attrs + match.group('close')
+
+    return escaped.sub(escaped_repl, text)
+
+
+def migrate_nearby_python_literals(text: str) -> str:
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        if '<!-- ctx:node' not in line or 'name=' in line or '{name_attr}' in line:
+            continue
+        nearby = ''.join(lines[max(0, index - 8): index + 1])
+        names = re.findall(r'#\s+(.+?)\s+—\s+Local Context Source', nearby)
+        if not names:
+            continue
+        name = names[-1].strip()
+        match = re.search(r'<!--\s*ctx:node\s+(id="[^"]+")', line)
+        if match is None:
+            continue
+        line = line[:match.end()] + f' name="{name}"' + line[match.end():]
+        lines[index] = line
+    return ''.join(lines)
 
 
 def migrate_files() -> None:
-    # One-time migration of real authored Nodes.
     for path in ROOT.rglob('CONTEXT.src.md'):
         rel = path.relative_to(ROOT).as_posix()
         if '/.context/' in f'/{rel}/' or '/CONTEXT/references/' in f'/{rel}/':
@@ -80,10 +107,9 @@ def migrate_files() -> None:
         if after != before:
             path.write_text(after, encoding='utf-8')
 
-    # Test fixtures intentionally mirror the source format and must move with it.
     for path in (ROOT / 'tests').glob('test_*.py'):
         before = path.read_text(encoding='utf-8')
-        after = migrate_ctx_node_literals(before)
+        after = migrate_nearby_python_literals(migrate_ctx_node_literals(before))
         if after != before:
             path.write_text(after, encoding='utf-8')
 
@@ -96,11 +122,22 @@ def update_parser() -> None:
     replace_once(path, old, new)
 
 
-def update_materializer() -> None:
+def update_generators() -> None:
     path = 'src/contextcanon/onboarding_structure_materialize.py'
     old = '''    return (\n        f"# {canonical_name or node.name} — Local Context Source\\n"\n        f'<!-- ctx:node id="{node_id}" version="{version}" -->\\n\\n'\n        "## Local Overview\\n\\n"\n'''
     new = '''    name = canonical_name or node.name\n    if '"' in name:\n        raise ContextCanonError('Context Node name must not contain a double quote')\n    return (\n        f"# {name} — Local Context Source\\n"\n        f'<!-- ctx:node id="{node_id}" name="{name}" version="{version}" -->\\n\\n'\n        "## Local Overview\\n\\n"\n'''
     replace_once(path, old, new)
+
+    replace_once(
+        'src/contextcanon/onboarding_review.py',
+        '''        f'<!-- ctx:node id="{node.id}" version="{node.version}" -->',\n''',
+        '''        f'<!-- ctx:node id="{node.id}" name="{node.name}" version="{node.version}" -->',\n''',
+    )
+    replace_once(
+        'src/contextcanon/onboarding_reset.py',
+        '''        r'<!-- ctx:node id="[^"]+" version="0\\.1\\.0-draft" -->\\n\\n'\n''',
+        '''        r'<!-- ctx:node id="[^"]+" name="[^"]+" version="0\\.1\\.0-draft" -->\\n\\n'\n''',
+    )
 
 
 def update_docs() -> None:
@@ -123,7 +160,7 @@ def verify_no_legacy_literals() -> None:
     for base in (ROOT / 'src', ROOT / 'tests'):
         for path in base.rglob('*.py'):
             for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
-                if '<!-- ctx:node' in line and 'name=' not in line:
+                if '<!-- ctx:node' in line and 'name=' not in line and '{name_attr}' not in line:
                     offenders.append(f'{path.relative_to(ROOT)}:{number}: {line.strip()}')
     for path in ROOT.rglob('CONTEXT.src.md'):
         rel = path.relative_to(ROOT).as_posix()
@@ -138,15 +175,18 @@ def verify_no_legacy_literals() -> None:
 
 def finalize_plan_and_state() -> None:
     plan = read('PLAN.md')
-    plan = plan.replace('- [ ] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.', '- [x] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.')
-    plan = plan.replace('- [ ] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.', '- [x] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.')
-    plan = plan.replace('- [ ] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.', '- [x] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.')
-    plan = plan.replace('- [ ] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.', '- [x] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.')
-    plan = plan.replace('- [ ] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.', '- [x] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.')
+    for old, new in (
+        ('- [ ] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.', '- [x] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.'),
+        ('- [ ] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.', '- [x] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.'),
+        ('- [ ] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.', '- [x] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.'),
+        ('- [ ] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.', '- [x] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.'),
+        ('- [ ] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.', '- [x] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.'),
+    ):
+        plan = plan.replace(old, new)
     plan += '\nIssue #25 implementation checkpoint: canonical Node names now come only from explicit `ctx:node name` metadata. H1 presentation is non-semantic, all ContextCanon authored Nodes and fixtures are migrated, structure materialization emits the explicit field, and regression coverage protects the boundary.\n'
     write('PLAN.md', plan)
 
-    state = read('STATE.md').rstrip() + '''\n\n## Explicit Node-name metadata correction\n\nIssue #25 removes the last implicit Node-name syntax from the Markdown H1. Canonical Node names are now explicit `ctx:node name="..."` machine metadata; H1 wording is ordinary presentation and may change without changing normalized Context semantics. Structure materialization and all self-hosted ContextCanon Nodes use the explicit form.\n'''
+    state = read('STATE.md').rstrip() + '''\n\n## Explicit Node-name metadata correction\n\nIssue #25 removes the implicit Node-name syntax from the Markdown H1. Canonical Node names are explicit `ctx:node name="..."` machine metadata; H1 wording is ordinary presentation and may change without changing normalized Context semantics. Structure materialization and all self-hosted ContextCanon Nodes use the explicit form.\n'''
     write('STATE.md', state)
 
 
@@ -154,9 +194,8 @@ def main() -> None:
     run('git', 'config', 'user.name', 'github-actions[bot]')
     run('git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
     append_plan_checkpoint()
-
     update_parser()
-    update_materializer()
+    update_generators()
     migrate_files()
     update_docs()
     add_regression_tests()
@@ -170,7 +209,6 @@ def main() -> None:
     run('contextcanon', 'check', '--all', '.')
     run('git', 'diff', '--check')
 
-    # The harness is implementation-only; do not leave it in the product tree.
     run('git', 'rm', '.github/scripts/issue25_finalize.py', '.github/workflows/issue25-finalizer.yml')
     run('git', 'add', '-A')
     run('git', 'commit', '-m', 'Make Context Node name explicit machine metadata (#25)')
