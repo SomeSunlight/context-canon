@@ -1,5 +1,6 @@
 name: finalize issue 24 legacy migration
 
+# Keep workflow YAML orchestration-only; implementation logic lives in Python helpers.
 on:
   push:
     branches:
