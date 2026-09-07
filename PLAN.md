@@ -421,3 +421,16 @@ Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/c
 ### Later semantic contradiction audit
 
 - [ ] When optional LLM semantic analysis is introduced, flag likely contradictions between inherited Contexts/Parents for human review; never infer precedence automatically.
+
+
+## Active owner-test UX block: Issues #21–#24
+
+Purpose: turn the first real post-onboarding update into a human-scale workflow while preserving immutable acceptance and offline operation.
+
+- [ ] #21 expose the installed ContextCanon version through `contextcanon --version`.
+- [ ] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.
+- [ ] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.
+- [ ] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.
+- [ ] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.
+
+Checkpoint: the project owner approved this coherent Issues #21–#24 block during the real `ai-workstation` pre-merge test. Parent propagation must update every applicable edge top-down; project-specific differences belong in normal local Override/Remove semantics rather than propagation exclusions.
