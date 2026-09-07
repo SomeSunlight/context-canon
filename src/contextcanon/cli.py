@@ -118,16 +118,33 @@ def _add_structure_inputs(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _source_identity_rows(node_root: Path):
+    repo_root = find_repo_root(node_root)
+    parsed = parse_node(node_root, repo_root)
+    compiled = Compiler(repo_root).compile(node_root)
+    packages = {package.metadata.id: package for package in compiled.source_packages}
+    return tuple((source, packages[source.id]) for source in parsed.sources)
+
+
 def _resolve_source_id(node_root: Path, selector: str) -> str:
-    parsed = parse_node(node_root, find_repo_root(node_root))
-    for source in parsed.sources:
+    rows = _source_identity_rows(node_root)
+    for source, _ in rows:
         if source.id == selector:
             return source.id
-    matches = [source for source in parsed.sources if source.name.casefold() == selector.casefold()]
-    if len(matches) == 1:
-        return matches[0].id
-    choices = ", ".join(f"{source.name} ({source.id})" for source in parsed.sources) or "none"
-    if len(matches) > 1:
+    folded = selector.casefold()
+    matches = []
+    for source, package in rows:
+        names = {package.metadata.name.casefold(), source.name.casefold()}
+        if folded in names:
+            matches.append((source, package))
+    ids = {source.id for source, _ in matches}
+    if len(ids) == 1:
+        return next(iter(ids))
+    choices = ", ".join(
+        f"{package.metadata.name} ({source.id})"
+        for source, package in rows
+    ) or "none"
+    if matches:
         raise ContextCanonError(f"Source name {selector!r} is ambiguous; available Sources: {choices}")
     raise ContextCanonError(f"No Source named or identified by {selector!r}; available Sources: {choices}")
 
@@ -1058,7 +1075,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not parsed.sources:
                     print(f"{parsed.metadata.name}: no Sources")
                     return 0
-                for source in parsed.sources:
+                for source, package in _source_identity_rows(node_root):
                     configured = configured_source(repo_root, source.id)
                     if configured is None:
                         discovery = (
@@ -1072,7 +1089,9 @@ def main(argv: list[str] | None = None) -> int:
                             discovery = f"git {repository.location} @ {repository.ref or 'default'} :: {source_config.node_path}"
                         else:
                             discovery = f"local {repository.location} :: {source_config.node_path}"
-                    print(f"{source.name} | {source.id} | accepted {source.version} | {discovery}")
+                    print(f"{package.metadata.name} | {source.id} | accepted {source.version} | {discovery}")
+                    if source.name != package.metadata.name:
+                        print(f"  warning: consumer display label is {source.name!r}; accepted package name is {package.metadata.name!r}")
                 return 0
 
             if args.source_command == "adopt":

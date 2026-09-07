@@ -151,6 +151,54 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             shutil.rmtree(project, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)
 
+    def test_source_list_and_update_use_accepted_package_name_when_consumer_label_is_stale(self):
+        project = Path(tempfile.mkdtemp())
+        provider = Path(tempfile.mkdtemp())
+        try:
+            (project / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", "-b", "main", str(provider)], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.email", "test@example.com"], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.name", "Test"], check=True)
+            main_package = write_node(provider, "source-id", "Shared Canonical", "1.0.0", "Main meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "main"], check=True)
+            main_head = subprocess.run(
+                ["git", "-C", str(provider), "rev-parse", "HEAD"], check=True, text=True, capture_output=True
+            ).stdout.strip()
+            subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
+            feature_package = write_node(provider, "source-id", "Shared Canonical", "1.1.0", "Feature meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "feature"], check=True)
+
+            consumer = project
+            source_text = (
+                '# Consumer — Local Context Source\n'
+                '<!-- ctx:node id="consumer" version="0.1.0" -->\n\n'
+                '## Sources\n\n'
+                f'- [stale accidental label]({provider.as_posix()}) — `1.0.0`\n'
+                f'  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n'
+            )
+            (consumer / "CONTEXT.src.md").write_text(source_text, encoding="utf-8")
+            install_package(consumer, main_package)
+
+            listed = io.StringIO()
+            with contextlib.redirect_stdout(listed):
+                rc = cli_main(["source", "list", "--node", str(consumer)])
+            self.assertEqual(rc, 0, listed.getvalue())
+            self.assertIn("Shared Canonical | source-id | accepted 1.0.0", listed.getvalue())
+            self.assertIn("consumer display label is 'stale accidental label'", listed.getvalue())
+
+            updated = io.StringIO()
+            with contextlib.redirect_stdout(updated):
+                rc = cli_main(["source", "update", "Shared Canonical", "--node", str(consumer), "--ref", "feature", "--yes"])
+            self.assertEqual(rc, 0, updated.getvalue())
+            self.assertEqual(Compiler(project).compile(project).source_packages[0].package_digest, feature_package.package_digest)
+            self.assertIn("- [Shared Canonical]", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
+            self.assertNotIn("stale accidental label", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+            shutil.rmtree(provider, ignore_errors=True)
+
     def test_parent_propagate_updates_chain_top_down_in_one_command(self):
         repo = Path(tempfile.mkdtemp())
         try:

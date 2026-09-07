@@ -24,7 +24,7 @@ _ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 _SOURCE_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _SOURCE_LINE_RE = re.compile(
-    r'^(?P<prefix>- \[[^]]+\]\([^)]+\)\s+—\s+)`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
+    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>[^)]+)\)(?P<separator>\s+—\s+))`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
 )
 
 
@@ -654,8 +654,12 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
             if found > 1:
                 raise ContextCanonError(f"Source Node ID {source_id} appears more than once in {path}")
 
+            if any(char in candidate.metadata.name for char in "]\n\r"):
+                raise ContextCanonError(f"Source name cannot be represented safely: {candidate.metadata.name!r}")
             lines[index] = (
-                visible.group("prefix")
+                visible.group("bullet")
+                + f"[{candidate.metadata.name}]({visible.group('path')})"
+                + visible.group("separator")
                 + f"`{candidate.metadata.version}`"
                 + visible.group("ending")
             )
