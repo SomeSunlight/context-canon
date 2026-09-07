@@ -1,0 +1,38 @@
+name: finalize relationship label consistency
+
+on:
+  push:
+    branches:
+      - agent/issues-14-15-multi-parent
+    paths:
+      - .github/workflows/finalize-label-consistency.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Checkpoint PLAN
+        run: python .contextcanon-fix-label-consistency.py plan && git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com" && git add PLAN.md && git diff --cached --check && git commit -m "Checkpoint relationship label consistency (#22)"
+      - name: Apply product correction
+        run: python .contextcanon-fix-label-consistency.py product
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Python syntax gate
+        run: python -m compileall -q src tests
+      - name: Complete deterministic suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate self-hosted Context
+        run: contextcanon build --all .
+      - name: Verify generated Context
+        run: contextcanon check --all .
+      - name: Commit clean candidate
+        run: rm -f .contextcanon-fix-label-consistency.py .github/workflows/finalize-label-consistency.yml && git add -A && git diff --cached --check && git commit -m "Check accepted relationship labels (#22)" && git push origin HEAD:agent/issues-14-15-multi-parent
