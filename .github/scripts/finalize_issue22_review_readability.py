@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -8,9 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def run(*args: str, capture: bool = False) -> str:
-    result = subprocess.run(args, cwd=ROOT, check=True, text=True, capture_output=capture)
-    return result.stdout if capture else ""
+def run(*args: str) -> None:
+    subprocess.run(args, cwd=ROOT, check=True, text=True)
 
 
 def replace_once(path: Path, old: str, new: str) -> None:
@@ -146,7 +144,7 @@ def update_tests() -> None:
     text = path.read_text(encoding="utf-8")
     marker = "    def test_render_diff_prioritizes_human_summary_before_technical_details(self):"
     if marker not in text:
-        insert = r'''
+        insert = r"""
     def test_render_diff_prioritizes_human_summary_before_technical_details(self):
         before_root = self.make_repo()
         added_local_rule = '''
@@ -174,7 +172,7 @@ def update_tests() -> None:
         self.assertIn("Normalized digest:", rendered)
         self.assertIn("Package digest:", rendered)
 
-'''
+"""
         needle = '\n\nif __name__ == "__main__":\n'
         if needle not in text:
             raise RuntimeError("Could not locate test_diff.py insertion point")
