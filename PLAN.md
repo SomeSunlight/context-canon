@@ -427,10 +427,10 @@ Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/c
 
 Purpose: turn the first real post-onboarding update into a human-scale workflow while preserving immutable acceptance and offline operation.
 
-- [ ] #21 expose the installed ContextCanon version through `contextcanon --version`.
-- [ ] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.
-- [ ] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.
-- [ ] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.
-- [ ] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.
+- [x] #21 expose the installed ContextCanon version through `contextcanon --version`.
+- [x] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.
+- [x] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.
+- [x] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.
+- [x] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.
 
-Checkpoint: the project owner approved this coherent Issues #21–#24 block during the real `ai-workstation` pre-merge test. Parent propagation must update every applicable edge top-down; project-specific differences belong in normal local Override/Remove semantics rather than propagation exclusions.
+Checkpoint: Issues #21–#24 are implemented on draft PR #18. The human-scale update path supports version display, Source discovery by name, one-off Git refs, central Git/local repository configuration, guided legacy-to-central discovery migration, and top-down Parent propagation without per-Node exclusions. Parent propagation updates every applicable edge; project-specific differences belong in normal local Override/Remove semantics. The exact candidate passes 231 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene before owner testing resumes.

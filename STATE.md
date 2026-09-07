@@ -4,7 +4,7 @@ The accepted `main` baseline is PR #13, squash-merged as:
 
 `df847ba031bfa3965ca53626249e18a1074cb8af`
 
-PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19. It remains subject to explicit project-owner approval.
+PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#24. It remains subject to explicit project-owner approval.
 
 Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
 
@@ -126,7 +126,7 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Review the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval.
+Resume the real `ai-workstation` owner test on the exact clean head of draft PR #18 using the Issues #21–#24 human-scale Source-update and Parent-propagation UX. Do not merge without explicit project-owner approval.
 
 ## Latest live Step-4 owner-test verification
 
@@ -299,3 +299,9 @@ The correction makes Catalog path input forgiving and canonicalizing: plain path
 The next real owner interaction exposed a presentation/grammar mismatch: the generated project Context Node list looked like material intended to be copied upward, but its lines contained only the Assignment target. Pasting such a line into the editable Assignment section necessarily failed because the reusable Context name/version were absent.
 
 STEP 05 now renders complete copy-ready Assignment first lines after Catalog discovery. They are grouped by reusable Context and pair each visible project Node with that Source using exactly the syntax the parser accepts. The list is explicitly a syntactic copy aid, not a semantic recommendation or preselection. ContextCanon deliberately does not infer a Source from an incomplete line; instead the error points directly to the generated copy-ready section. The operator copies one complete line, adds the durable `Why:`, and keeps only the relationships that should actually exist.
+
+## Latest owner-test update UX checkpoint
+
+Issues #21–#24 now turn the first normal post-onboarding reusable-Context update into an operator-scale workflow. `contextcanon --version` exposes the installed tool version; Sources can be selected by human name; central `contextcanon.yaml` holds concise operational Git/local discovery configuration while accepted immutable pins remain inside each consumer Node; `source update` supports one-off refs without persisting them; and `parent propagate --all` reviews/accepts every applicable semantic Parent edge top-down without per-Node skip policy. Local exceptions remain ordinary ContextCanon Override/Remove semantics.
+
+For existing projects such as the owner-tested `ai-workstation`, the first guided `source update` can start from legacy inline Git metadata and, after candidate discovery succeeds, record equivalent central discovery configuration without changing the accepted package pin. Exact legacy commit refs migrate to default-branch discovery so the old update semantics are preserved, while an explicit one-off `--ref` remains ephemeral. The implementation is guarded by 231 deterministic tests plus self-build, zero-drift `check --all`, and diff hygiene.

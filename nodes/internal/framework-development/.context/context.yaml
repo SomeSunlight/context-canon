@@ -21,7 +21,7 @@ sources:
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
     normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "7adfef0934fede43578b9c6ccdddc193c86d28c4e04aa27256f15a76556f42d5"
+    package_digest: "7ebe7840c92705385d46309d723e77654a87a92dfc1b2fe49b4f3d7570b1b0fc"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
@@ -35,7 +35,7 @@ imports:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "7adfef0934fede43578b9c6ccdddc193c86d28c4e04aa27256f15a76556f42d5"
+    package_digest: "7ebe7840c92705385d46309d723e77654a87a92dfc1b2fe49b4f3d7570b1b0fc"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
@@ -259,4 +259,4 @@ resources:
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
   normalized_digest: "a921efe92f42b14a81d45e60d268a8e99448ab7f192b8f6209d16132911cfea2"
-  package_digest: "7200b164488a20e246d478f71b11600fdd6afb939319ec63e6f3fdc433f9c089"
+  package_digest: "83c2f597f587d6259f58f97a4516b9c99541ebe0744d590de60d4dd3aea3c05c"

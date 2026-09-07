@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from .authoring import add_rule, add_topic
-from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config
+from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config, upsert_git_source
 from .version import __version__
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
@@ -130,6 +130,29 @@ def _resolve_source_id(node_root: Path, selector: str) -> str:
     if len(matches) > 1:
         raise ContextCanonError(f"Source name {selector!r} is ambiguous; available Sources: {choices}")
     raise ContextCanonError(f"No Source named or identified by {selector!r}; available Sources: {choices}")
+
+
+def _migrate_legacy_source_discovery(node_root: Path, source_id: str) -> Path | None:
+    """Record equivalent central discovery after a successful legacy update fetch.
+
+    This changes discovery configuration only. Accepted immutable package state
+    remains untouched, and a one-off CLI --ref is never persisted here.
+    """
+
+    repo_root = find_repo_root(node_root)
+    if configured_source(repo_root, source_id) is not None:
+        return None
+    parsed = parse_node(node_root, repo_root)
+    matches = [source for source in parsed.sources if source.id == source_id]
+    if len(matches) != 1:
+        raise ContextCanonError(f"Could not resolve exactly one legacy Source {source_id} for discovery migration")
+    source = matches[0]
+    if source.transport != "git" or not source.transport_ref or source.node_path is None:
+        return None
+
+    legacy_ref = source.transport_ref
+    discovery_ref = None if len(legacy_ref) == 40 and all(char in "0123456789abcdef" for char in legacy_ref) else legacy_ref
+    return upsert_git_source(repo_root, source.id, source.locator, discovery_ref, source.node_path)
 
 
 def _confirm(prompt: str) -> bool:
@@ -1077,6 +1100,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Candidate package: {label}")
                 parsed = parse_node(node_root, repo_root)
                 current = next(source for source in parsed.sources if source.id == source_id)
+                if args.source_command == "update":
+                    migrated = _migrate_legacy_source_discovery(node_root, source_id)
+                    if migrated is not None:
+                        print(f"Migrated legacy Source discovery to {migrated}")
                 if current.package_digest == candidate.package_digest:
                     print("Accepted Source is already this exact package.")
                     return 0

@@ -116,6 +116,8 @@ Local paths may be relative to the consuming project root or absolute. They requ
 
 `contextcanon source list` shows human names, stable IDs and the resolved discovery configuration. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
 
+When that guided `source update` starts from a legacy inline Git Source and no central mapping exists yet, ContextCanon records the equivalent durable discovery mapping in `contextcanon.yaml` after the legacy fetch succeeds. An exact 40-character legacy commit pin becomes default-branch discovery rather than a permanently frozen central ref, preserving the old "discover something newer" behavior; a one-off `--ref` is never persisted. This migration changes discovery configuration only, not the accepted immutable package pin. The legacy inline metadata remains readable as a compatibility fallback while the central mapping takes precedence.
+
 After an ancestor Source is accepted, `contextcanon parent propagate --all` walks semantic Parent edges top-down, shows each exact diff, and asks before accepting that edge. `--yes` is available for an already-reviewed scripted run. This removes UUID/path archaeology without turning Parent updates into live inheritance.
 
 ### Legacy inline Git update transport

@@ -107,6 +107,50 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             shutil.rmtree(project, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)
 
+    def test_guided_update_migrates_legacy_git_discovery_without_persisting_one_off_ref(self):
+        project = Path(tempfile.mkdtemp())
+        provider = Path(tempfile.mkdtemp())
+        try:
+            (project / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", "-b", "main", str(provider)], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.email", "test@example.com"], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.name", "Test"], check=True)
+            main_package = write_node(provider, "source-id", "Shared", "1.0.0", "Main meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "main"], check=True)
+            main_head = subprocess.run(
+                ["git", "-C", str(provider), "rev-parse", "HEAD"], check=True, text=True, capture_output=True
+            ).stdout.strip()
+            subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
+            feature_package = write_node(provider, "source-id", "Shared", "1.1.0", "Feature meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "feature"], check=True)
+
+            consumer = project
+            (consumer / "CONTEXT.src.md").write_text(
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared]({provider.as_posix()}) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n''',
+                encoding="utf-8",
+            )
+            install_package(consumer, main_package)
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["source", "update", "Shared", "--node", str(consumer), "--ref", "feature", "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            self.assertIn("Migrated legacy Source discovery", out.getvalue())
+
+            source_cfg, repo_cfg = configured_source(project, "source-id")
+            self.assertEqual(repo_cfg.kind, "git")
+            self.assertEqual(repo_cfg.location, provider.as_posix())
+            self.assertIsNone(repo_cfg.ref)
+            self.assertEqual(source_cfg.node_path, ".")
+            accepted = Compiler(project).compile(project).source_packages[0]
+            self.assertEqual(accepted.package_digest, feature_package.package_digest)
+            self.assertIn('ref="', (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+            shutil.rmtree(provider, ignore_errors=True)
+
     def test_parent_propagate_updates_chain_top_down_in_one_command(self):
         repo = Path(tempfile.mkdtemp())
         try:
