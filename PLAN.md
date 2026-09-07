@@ -452,3 +452,7 @@ Purpose: remove hidden machine semantics from the Markdown H1. Canonical Context
 Checkpoint: Issue #25 is an explicit scope expansion of draft PR #18, discovered during the real `ai-workstation` Source-name UX test. The project owner selected the explicit-machine-metadata design; no PR merge is authorized.
 
 Issue #25 implementation checkpoint: canonical Node names now come only from explicit `ctx:node name` metadata. H1 presentation is non-semantic, all ContextCanon authored Nodes and fixtures are migrated, structure materialization emits the explicit field, and regression coverage protects the boundary.
+
+Owner-test review-readability follow-up under #22: keep immutable digests visible, but make the human meaning of Source/Parent review primary. Review output should summarize semantic/content changes before technical fingerprints, and legacy-to-central discovery migration must state explicitly that migration alone does not change the accepted Source.
+
+Owner-test version-discipline follow-up under #26: a changed Context package must not silently reuse the previous human version. If a prior generated package exists and the authored SemVer-shaped version is unchanged, ContextCanon applies the minimum patch bump automatically and explicitly tells the owner to consider a higher minor/major bump when warranted. A human-selected higher version wins. External Source candidates that changed package identity while reusing the accepted version are rejected rather than repaired by the consumer.
