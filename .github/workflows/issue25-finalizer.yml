@@ -19,4 +19,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: sed -i "s/'''        r'<!-- ctx:node/'''    r'<!-- ctx:node/" .github/scripts/issue25_finalize.py
       - run: python .github/scripts/issue25_finalize.py
