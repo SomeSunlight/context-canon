@@ -1,0 +1,126 @@
+name: finalize issue 19 baseline reconciliation
+
+on:
+  push:
+    branches:
+      - agent/issues-14-15-multi-parent
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-issue-19
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reconcile durable current-state pointers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          state = Path('STATE.md')
+          text = state.read_text(encoding='utf-8')
+          old = '''# Current State
+
+The accepted `main` baseline remains PR #12, squash-merged as:
+
+`bac1f52048b3d82cedb00b04fccd114607c4c915`
+
+PR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval.
+'''
+          new = '''# Current State
+
+The accepted `main` baseline is PR #13, squash-merged as:
+
+`df847ba031bfa3965ca53626249e18a1074cb8af`
+
+PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19. It remains subject to explicit project-owner approval.
+
+Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
+'''
+          if text.count(old) != 1:
+              raise SystemExit('STATE baseline anchor mismatch')
+          text = text.replace(old, new, 1)
+          old_next = '''## Immediate next step
+
+Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.
+'''
+          new_next = '''## Immediate next step
+
+Review the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval.
+'''
+          if text.count(old_next) != 1:
+              raise SystemExit('STATE immediate-next-step anchor mismatch')
+          state.write_text(text.replace(old_next, new_next, 1), encoding='utf-8')
+
+          plan = Path('PLAN.md')
+          text = plan.read_text(encoding='utf-8')
+          old = '''# Plan
+
+## Accepted baseline
+
+The current accepted `main` baseline is PR #12, squash-merged as `bac1f52048b3d82cedb00b04fccd114607c4c915`.
+
+The structure-first onboarding architecture, reusable Development Workflow Source, two-pass placement semantics and real `ai-workstation` structure materialization are accepted. PR #13 is the active review branch for finishing reviewed placement publication.
+'''
+          new = '''# Plan
+
+## Accepted baseline
+
+The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
+
+The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#19 and remains unmerged pending explicit project-owner approval.
+
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
+'''
+          if text.count(old) != 1:
+              raise SystemExit('PLAN baseline anchor mismatch')
+          text = text.replace(old, new, 1)
+          marker = '### Later semantic contradiction audit\n'
+          block = '''## Documentation reconciliation: Issue #19
+
+Purpose: make durable current-state pointers match the accepted `main` history after PR #13 merged.
+
+- [x] Update the accepted baseline in `STATE.md` and `PLAN.md`.
+- [x] Distinguish historical PR #13 checkpoint wording from current repository status.
+- [x] Point current work at draft PR #18 without changing product semantics or re-running onboarding.
+
+Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/check/diff gate is required before the PR review head is updated.
+
+'''
+          if marker not in text:
+              raise SystemExit('PLAN later-audit marker missing')
+          if '## Documentation reconciliation: Issue #19' in text:
+              raise SystemExit('Issue #19 PLAN block already exists')
+          plan.write_text(text.replace(marker, block + marker, 1), encoding='utf-8')
+          PY
+      - name: Install ContextCanon
+        run: python -m pip install -e .
+      - name: Python syntax gate
+        run: python -m compileall -q src tests
+      - name: Complete deterministic suite
+        run: python -m unittest discover -s tests -v
+      - name: Regenerate self-hosted Context
+        run: contextcanon build --all .
+      - name: Verify generated Context
+        run: contextcanon check --all .
+      - name: Remove finalizer
+        run: rm -f .github/workflows/finalize-issue-19.yml
+      - name: Diff hygiene
+        run: git diff --check
+      - name: Commit reconciled documentation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Reconcile STATE and PLAN baseline (#19)"
+          git push origin HEAD:${GITHUB_REF_NAME}
