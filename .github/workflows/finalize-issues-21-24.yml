@@ -24,12 +24,32 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      - name: Checkpoint Issues 21-24 plan before product edits
+      - name: Ensure Issues 21-24 plan checkpoint exists
         run: |
-          python -c 'from pathlib import Path; p=Path("PLAN.md"); p.write_text(p.read_text(encoding="utf-8") + "\n\n## Active owner-test UX block: Issues #21–#24\n\nPurpose: turn the first real post-onboarding update into a human-scale workflow while preserving immutable acceptance and offline operation.\n\n- [ ] #21 expose the installed ContextCanon version through `contextcanon --version`.\n- [ ] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.\n- [ ] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.\n- [ ] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.\n- [ ] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.\n\nCheckpoint: the project owner approved this coherent Issues #21–#24 block during the real `ai-workstation` pre-merge test. Parent propagation must update every applicable edge top-down; project-specific differences belong in normal local Override/Remove semantics rather than propagation exclusions.\n", encoding="utf-8")'
-          git add PLAN.md
-          git commit -m "Plan owner-test update UX block (#21 #22 #23 #24)"
-          git push origin HEAD:agent/issues-14-15-multi-parent
+          if ! grep -q '^## Active owner-test UX block: Issues #21–#24$' PLAN.md; then
+            python -c 'from pathlib import Path; p=Path("PLAN.md"); p.write_text(p.read_text(encoding="utf-8") + "\n\n## Active owner-test UX block: Issues #21–#24\n\nPurpose: turn the first real post-onboarding update into a human-scale workflow while preserving immutable acceptance and offline operation.\n\n- [ ] #21 expose the installed ContextCanon version through `contextcanon --version`.\n- [ ] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.\n- [ ] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.\n- [ ] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.\n- [ ] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.\n\nCheckpoint: the project owner approved this coherent Issues #21–#24 block during the real `ai-workstation` pre-merge test. Parent propagation must update every applicable edge top-down; project-specific differences belong in normal local Override/Remove semantics rather than propagation exclusions.\n", encoding="utf-8")'
+            git add PLAN.md
+            git commit -m "Plan owner-test update UX block (#21 #22 #23 #24)"
+            git push origin HEAD:agent/issues-14-15-multi-parent
+          fi
+      - name: Repair prepared test-string delimiter
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.contextcanon-issue-21-24-builder.py')
+          text = path.read_text(encoding='utf-8')
+          start = text.rfind("    r'''from __future__ import annotations")
+          if start < 0:
+              raise SystemExit('test block start delimiter not found')
+          text = text[:start] + '    r"""from __future__ import annotations' + text[start + len("    r'''from __future__ import annotations"):]
+          end_marker = "\n''',\n)\n\nprint(\"Issues #21-#24 product edits prepared\")"
+          end = text.rfind(end_marker)
+          if end < 0:
+              raise SystemExit('test block end delimiter not found')
+          replacement = '\n""",\n)\n\nprint("Issues #21-#24 product edits prepared")'
+          text = text[:end] + replacement + text[end + len(end_marker):]
+          path.write_text(text, encoding='utf-8')
+          PY
       - name: Apply prepared product edits
         run: python .contextcanon-issue-21-24-builder.py
       - name: Install ContextCanon
@@ -42,40 +62,6 @@ jobs:
         run: contextcanon build --all .
       - name: Verify generated Context
         run: contextcanon check --all .
-      - name: Complete PLAN and STATE checkpoint
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          plan = Path("PLAN.md")
-          text = plan.read_text(encoding="utf-8")
-          pairs = [
-              ("- [ ] #21 expose the installed ContextCanon version", "- [x] #21 expose the installed ContextCanon version"),
-              ("- [ ] #22 let humans discover Sources by name", "- [x] #22 let humans discover Sources by name"),
-              ("- [ ] #23 allow one-off Source candidate discovery", "- [x] #23 allow one-off Source candidate discovery"),
-              ("- [ ] #24 centralize operational repository/Source discovery", "- [x] #24 centralize operational repository/Source discovery"),
-              ("- [ ] Preserve compatibility with existing inline Git transport metadata", "- [x] Preserve compatibility with existing inline Git transport metadata"),
-          ]
-          for old, new in pairs:
-              if old not in text:
-                  raise SystemExit(f"PLAN completion target missing: {old}")
-              text = text.replace(old, new, 1)
-          text += "\nCheckpoint: Issues #21–#24 are implemented on draft PR #18. `contextcanon.yaml` is the extensible project-level operational configuration; Git and pure-local repositories are supported, accepted pins remain immutable per consumer, Source names replace routine UUID lookup, explicit `--ref` supports pre-merge candidates, and Parent propagation walks every repository Parent edge top-down with review before acceptance. The complete suite, self-build/check and diff hygiene gate passed on the product candidate.\n"
-          plan.write_text(text, encoding="utf-8")
-          state = Path("STATE.md")
-          text = state.read_text(encoding="utf-8")
-          old = "PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19."
-          new = "PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#24."
-          if old not in text:
-              raise SystemExit("STATE active-PR target missing")
-          text = text.replace(old, new, 1)
-          old = "Review the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval."
-          new = "Continue the real `ai-workstation` pre-merge update test against the exact clean head of draft PR #18, now including Issues #21–#24. Do not merge without explicit project-owner approval."
-          if old not in text:
-              raise SystemExit("STATE immediate-next-step target missing")
-          text = text.replace(old, new, 1)
-          text += "\n\n## Latest post-onboarding update UX\n\nThe first real `ai-workstation` update test exposed three operator problems and one configuration-boundary problem: the installed CLI version was invisible, Source updates required raw UUIDs, an unmerged Source candidate could not be selected explicitly, and repository discovery settings were duplicated/hidden in consumer Source declarations. Draft PR #18 now addresses these together. `contextcanon --version` exposes the installed tool version; `source list` and name-or-ID selectors remove routine UUID archaeology; `source update` combines candidate discovery, deterministic review and explicit acceptance; `--ref` selects a one-off Git branch/tag/commit without rewriting central or accepted state; and `parent propagate` advances every semantic Parent edge top-down without inventing per-Node propagation exceptions.\n\nOperational discovery now has one extensible repository-root `contextcanon.yaml`. Repository entries may be remote Git or pure local filesystem checkouts, so normal candidate discovery can be fully offline. Source mappings bind stable Node IDs to one repository entry and node path. Changing this configuration changes only where candidates are found; each consumer's accepted version/digests remain its immutable reviewed state. Existing inline Git transport declarations remain readable as a migration fallback.\n"
-          state.write_text(text, encoding="utf-8")
-          PY
       - name: Remove temporary implementation helpers
         run: rm -f .contextcanon-issue-21-24-builder.py .github/workflows/finalize-issues-21-24.yml
       - name: Diff hygiene
