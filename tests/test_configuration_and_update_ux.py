@@ -1,0 +1,141 @@
+from __future__ import annotations
+
+import contextlib
+import io
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from contextcanon.cli import main as cli_main
+from contextcanon.compiler import Compiler
+from contextcanon.config import configured_source, load_project_config, upsert_git_source, upsert_local_mapping
+from contextcanon.git_transport import fetch_git_candidate
+from contextcanon.outputs import write_outputs
+from contextcanon.package import artifact_files
+from contextcanon.parser import parse_node
+from contextcanon.sources import accept_parent_candidate, review_parent_candidate
+
+
+def write_node(root: Path, node_id: str, name: str, version: str, statement: str) -> object:
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "CONTEXT.src.md").write_text(
+        f'''# {name} — Local Context Source\n<!-- ctx:node id="{node_id}" version="{version}" -->\n\n## Local Rules\n\n### General\n\n- **Policy:** {statement}\n  Why: Test policy.\n  <!-- ctx:rule id="RULE-1" -->\n''',
+        encoding="utf-8",
+    )
+    compiled = Compiler(root if (root / ".git").exists() else root.parent).compile(root)
+    write_outputs(compiled)
+    return Compiler(root if (root / ".git").exists() else root.parent).compile(root)
+
+
+def install_package(child: Path, compiled) -> None:
+    destination = child / ".context" / "sources" / compiled.package_digest
+    for rel, content in artifact_files(compiled).items():
+        path = destination / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+
+
+def parent_source(child_id: str, child_name: str, parent_path: str, parent) -> str:
+    return f'''# {child_name} — Local Context Source\n<!-- ctx:node id="{child_id}" version="0.1.0" -->\n\n## Parent Context Node\n\n- [{parent.metadata.name}]({parent_path}) — `{parent.metadata.version}`\n  <!-- ctx:parent id="{parent.metadata.id}" version="{parent.metadata.version}" normalized-digest="{parent.normalized_digest}" package-digest="{parent.package_digest}" -->\n'''
+
+
+class ConfigurationAndUpdateUXTests(unittest.TestCase):
+    def test_cli_version_is_available(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
+            cli_main(["--version"])
+        self.assertEqual(raised.exception.code, 0)
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.6.0")
+
+    def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
+        project = Path(tempfile.mkdtemp())
+        source_repo = Path(tempfile.mkdtemp())
+        try:
+            (project / ".git").mkdir()
+            (source_repo / ".git").mkdir()
+            source = write_node(source_repo, "source-id", "Shared", "1.0.0", "Old meaning.")
+            consumer = project
+            (consumer / "CONTEXT.src.md").write_text(
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{source.normalized_digest}" package-digest="{source.package_digest}" -->\n''',
+                encoding="utf-8",
+            )
+            install_package(consumer, source)
+            upsert_local_mapping(project, "source-id", source_repo, ".")
+            config = load_project_config(project)
+            self.assertEqual(config.repositories[config.sources["source-id"].repository].kind, "local")
+            candidate, _ = fetch_git_candidate(consumer, "source-id")
+            self.assertEqual(candidate.package_digest, source.package_digest)
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+            shutil.rmtree(source_repo, ignore_errors=True)
+
+    def test_explicit_ref_fetches_unmerged_git_candidate_without_rewriting_config(self):
+        project = Path(tempfile.mkdtemp())
+        provider = Path(tempfile.mkdtemp())
+        try:
+            (project / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", "-b", "main", str(provider)], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.email", "test@example.com"], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.name", "Test"], check=True)
+            main_package = write_node(provider, "source-id", "Shared", "1.0.0", "Main meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "main"], check=True)
+            subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
+            feature_package = write_node(provider, "source-id", "Shared", "1.1.0", "Feature meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "feature"], check=True)
+
+            consumer = project
+            (consumer / "CONTEXT.src.md").write_text(
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" -->\n''',
+                encoding="utf-8",
+            )
+            install_package(consumer, main_package)
+            upsert_git_source(project, "source-id", str(provider), "main", ".")
+            candidate, _ = fetch_git_candidate(consumer, "source-id", discovery_ref="feature")
+            self.assertEqual(candidate.package_digest, feature_package.package_digest)
+            source_cfg, repo_cfg = configured_source(project, "source-id")
+            self.assertEqual(repo_cfg.ref, "main")
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+            shutil.rmtree(provider, ignore_errors=True)
+
+    def test_parent_propagate_updates_chain_top_down_in_one_command(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            parent = write_node(repo, "root", "Root", "1.0.0", "Initial meaning.")
+            child_root = repo / "child"
+            child_root.mkdir()
+            (child_root / "CONTEXT.src.md").write_text(parent_source("child", "Child", "..", parent), encoding="utf-8")
+            install_package(child_root, parent)
+            child = Compiler(repo).compile(child_root)
+            write_outputs(child)
+
+            grand_root = child_root / "grand"
+            grand_root.mkdir()
+            (grand_root / "CONTEXT.src.md").write_text(parent_source("grand", "Grand", "..", child), encoding="utf-8")
+            install_package(grand_root, child)
+            write_outputs(Compiler(repo).compile(grand_root))
+
+            write_node(repo, "root", "Root", "1.1.0", "Updated meaning.")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["parent", "propagate", str(repo), "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            grand = Compiler(repo).compile(grand_root)
+            self.assertEqual([rule.statement for rule in grand.inherited_rules], ["Updated meaning."])
+            self.assertIn("Propagated 2 Parent edge(s) top-down.", out.getvalue())
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -3,7 +3,7 @@
   "compiler_version": "0.6.0",
   "digests": {
     "normalized": "a921efe92f42b14a81d45e60d268a8e99448ab7f192b8f6209d16132911cfea2",
-    "package": "a689f90c795af3a7f6811757148b7b69af1d1ae6f109bd86c92522afa38f48ba"
+    "package": "7200b164488a20e246d478f71b11600fdd6afb939319ec63e6f3fdc433f9c089"
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "e08e6c5722ea0fbea8dd06812409421ee580f5d45d84506e35820a487687f4c2",
-      "size": 14139
+      "sha256": "ae02dd267a897d8b96b0718affff669d255e2e2e9b9fbf613a6cfc11104ed9e8",
+      "size": 14841
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -33,8 +33,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "3b847d488c8ffb7d6ee8d002eb731ee09c5dcc463c978cbbd7b5143886e01073",
-      "size": 12949
+      "sha256": "a7b389df9463f025b63f91037d9976da38c33ac33fe689cfcd62ef161e4239af",
+      "size": 15112
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -78,8 +78,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md",
-      "sha256": "e08e6c5722ea0fbea8dd06812409421ee580f5d45d84506e35820a487687f4c2",
-      "size": 14139
+      "sha256": "ae02dd267a897d8b96b0718affff669d255e2e2e9b9fbf613a6cfc11104ed9e8",
+      "size": 14841
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md",
@@ -93,8 +93,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md",
-      "sha256": "3b847d488c8ffb7d6ee8d002eb731ee09c5dcc463c978cbbd7b5143886e01073",
-      "size": 12949
+      "sha256": "a7b389df9463f025b63f91037d9976da38c33ac33fe689cfcd62ef161e4239af",
+      "size": 15112
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md",
@@ -112,7 +112,7 @@
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
       "normalized_digest": "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9",
-      "package_digest": "1e3c98ccfe4e7208b29f99af6a8412c069f3f1b0fc07bbe03dd8fc0a3201ade0",
+      "package_digest": "7adfef0934fede43578b9c6ccdddc193c86d28c4e04aa27256f15a76556f42d5",
       "version": "0.1.0-draft",
       "why": null
     },
@@ -490,7 +490,7 @@
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
       "normalized_digest": "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9",
-      "package_digest": "1e3c98ccfe4e7208b29f99af6a8412c069f3f1b0fc07bbe03dd8fc0a3201ade0",
+      "package_digest": "7adfef0934fede43578b9c6ccdddc193c86d28c4e04aa27256f15a76556f42d5",
       "version": "0.1.0-draft",
       "why": null
     },

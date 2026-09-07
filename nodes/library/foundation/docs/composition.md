@@ -167,7 +167,9 @@ This means Source-update workflows do not need to infer change from prose or Git
 
 ## Source updates are change requests
 
-Consumers remain pinned to an accepted immutable Source package. A newly published Source version is an update candidate, not live inheritance.
+Consumers remain pinned to an accepted immutable Source package. A newly published Source version is an update candidate, not live inheritance. Repository/discovery parameters live centrally in `contextcanon.yaml`; changing a Git ref or switching the same repository to a local/offline checkout changes only where candidates are discovered, never the currently accepted package. Existing inline Git transport metadata remains a compatibility fallback for older projects.
+
+Human operators may address a Source by its unique visible name instead of copying its stable UUID. `contextcanon source list` exposes both. `contextcanon source update <name-or-id>` combines fetch, deterministic review and explicit acceptance, while `contextcanon parent propagate --all` then advances descendant Parent pins top-down with a diff/confirmation at each edge.
 
 Compiler 0.4 implements this workflow explicitly:
 

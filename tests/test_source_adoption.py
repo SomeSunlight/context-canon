@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
+from contextcanon.config import load_project_config
 from contextcanon.package import artifact_files
 from contextcanon.parser import ContextCanonError, parse_node
 from contextcanon.sources import adopt_source_package
@@ -64,10 +65,16 @@ class SourceAdoptionTests(unittest.TestCase):
         source = parsed.sources[0]
         self.assertEqual(source.id, "node-python")
         self.assertEqual(source.package_digest, self.v2.package_digest)
-        self.assertEqual(source.transport, "git")
-        self.assertEqual(source.transport_ref, head)
-        self.assertEqual(source.node_path, "nodes/library/python-development")
-        self.assertEqual(source.locator, "https://example.test/shared-context.git")
+        self.assertIsNone(source.transport)
+        self.assertIsNone(source.transport_ref)
+        self.assertIsNone(source.node_path)
+        self.assertEqual(source.locator, "contextcanon.yaml")
+        config = load_project_config(self.consumer)
+        source_config = config.sources["node-python"]
+        repository = config.repositories[source_config.repository]
+        self.assertEqual(repository.kind, "local")
+        self.assertEqual(repository.resolve_local(self.consumer), self.provider.resolve())
+        self.assertEqual(source_config.node_path, "nodes/library/python-development")
         self.assertTrue((self.consumer / ".context/sources" / self.v2.package_digest).is_dir())
 
         again, second_changed = adopt_source_package(self.consumer, self.package_root)

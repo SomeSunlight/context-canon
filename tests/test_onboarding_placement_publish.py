@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
+from contextcanon.config import load_project_config
 from contextcanon.onboarding_placement import load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_publish import (
     build_placement_publication_preview,
@@ -269,8 +270,15 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertIn("Migration is in progress.", parsed_root.state)
         self.assertIn("Open question: Should the project and release version surfaces be aligned?", parsed_root.state)
         self.assertIn("Continue Goose changes through reviewed pull requests.", parsed_root.plan)
-        self.assertIn('transport="git"', root_text)
-        self.assertIn(f'ref="{head}"', root_text)
+        self.assertNotIn('transport="git"', root_text)
+        self.assertIn("(contextcanon.yaml)", root_text)
+        config = load_project_config(repo)
+        source_config = config.sources["c4c94726-3cc7-4df6-b779-72bbf9c06f40"]
+        repository = config.repositories[source_config.repository]
+        self.assertEqual(repository.kind, "git")
+        self.assertEqual(source_config.node_path, "catalog-workflow")
+        acceptance_payload = json.loads(acceptance.read_text(encoding="utf-8"))
+        self.assertEqual(acceptance_payload["sources"][0]["discovery"]["ref"], head)
         self.assertIn("../../docs/architecture.md", child_text)
         parsed_child = parse_node(child_root, repo)
         self.assertIsNotNone(parsed_child.parent)

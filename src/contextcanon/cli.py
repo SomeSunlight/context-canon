@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 from .authoring import add_rule, add_topic
+from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config
+from .version import __version__
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff
 from .git_transport import fetch_git_candidate, load_candidate_provenance
@@ -42,7 +44,7 @@ from .onboarding_structure_materialize import (
 from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
-from .parser import ContextCanonError, find_repo_root
+from .parser import ContextCanonError, find_repo_root, parse_node
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
 
 
@@ -116,8 +118,75 @@ def _add_structure_inputs(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _resolve_source_id(node_root: Path, selector: str) -> str:
+    parsed = parse_node(node_root, find_repo_root(node_root))
+    for source in parsed.sources:
+        if source.id == selector:
+            return source.id
+    matches = [source for source in parsed.sources if source.name.casefold() == selector.casefold()]
+    if len(matches) == 1:
+        return matches[0].id
+    choices = ", ".join(f"{source.name} ({source.id})" for source in parsed.sources) or "none"
+    if len(matches) > 1:
+        raise ContextCanonError(f"Source name {selector!r} is ambiguous; available Sources: {choices}")
+    raise ContextCanonError(f"No Source named or identified by {selector!r}; available Sources: {choices}")
+
+
+def _confirm(prompt: str) -> bool:
+    try:
+        answer = input(f"{prompt} [y/N] ").strip().casefold()
+    except EOFError:
+        return False
+    return answer in {"y", "yes"}
+
+
+def _parent_edges(repo_root: Path):
+    compiler = Compiler(repo_root)
+    roots = [root.resolve() for root in discover_nodes(repo_root)]
+    parsed = {root: parse_node(root, repo_root) for root in roots}
+    parent_roots: dict[Path, list[tuple[object, Path]]] = {}
+    for child_root, node in parsed.items():
+        for parent in node.parents:
+            parent_root = compiler._resolve_source_root(child_root, parent.locator).resolve()
+            if parent_root not in parsed:
+                raise ContextCanonError(
+                    f"{node.metadata.name}: Parent {parent.name} is outside the repository-wide propagation set; update that edge explicitly"
+                )
+            parent_roots.setdefault(child_root, []).append((parent, parent_root))
+
+    depths: dict[Path, int] = {}
+    active: set[Path] = set()
+
+    def depth(root: Path) -> int:
+        if root in depths:
+            return depths[root]
+        if root in active:
+            raise ContextCanonError("Semantic Parent cycle prevents top-down propagation")
+        active.add(root)
+        parents = parent_roots.get(root, [])
+        value = 0 if not parents else 1 + max(depth(parent_root) for _, parent_root in parents)
+        active.remove(root)
+        depths[root] = value
+        return value
+
+    edges = [
+        (child_root, parent, parent_root)
+        for child_root, items in parent_roots.items()
+        for parent, parent_root in items
+    ]
+    return sorted(
+        edges,
+        key=lambda item: (
+            depth(item[0]),
+            item[0].relative_to(repo_root).as_posix(),
+            item[1].id,
+        ),
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="contextcanon", description="Deterministic ContextCanon compiler")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("build", "check"):
         command = sub.add_parser(name)
@@ -405,23 +474,40 @@ def main(argv: list[str] | None = None) -> int:
     parent_accept = parent_sub.add_parser("accept", help="accept exactly the reviewed snapshot for one Parent")
     parent_accept.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_accept.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
+    parent_propagate = parent_sub.add_parser("propagate", help="review and accept stale Parent edges top-down across a repository")
+    parent_propagate.add_argument("path", nargs="?", default=".", help="repository root or path inside it (default: current directory)")
+    parent_propagate.add_argument("--all", action="store_true", help="explicitly select all semantic Parent edges in the repository")
+    parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed Parent diff without interactive confirmation")
 
-    source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
+    source_parser = sub.add_parser("source", help="discover, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
-    source_adopt = source_sub.add_parser("adopt", help="explicitly adopt one exact published Git package as a new Source")
+    source_list = source_sub.add_parser("list", help="list Sources by human name, stable ID and discovery configuration")
+    source_list.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_adopt = source_sub.add_parser("adopt", help="adopt one exact local package and register its local repository centrally")
     source_adopt.add_argument("package", help="local root of the exact published Source package Node")
     source_adopt.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
-    source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate through its declared transport")
-    source_fetch.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate from central configuration or legacy inline transport")
+    source_fetch.add_argument("source", help="Source name or stable Node ID")
     source_fetch.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_fetch.add_argument("--ref", help="one-off Git discovery ref/branch/commit; does not rewrite accepted or central configuration")
+    source_update = source_sub.add_parser("update", help="fetch, review and optionally accept one Source in a single human-scale flow")
+    source_update.add_argument("source", help="Source name or stable Node ID")
+    source_update.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_update.add_argument("--ref", help="one-off Git discovery ref/branch/commit")
+    source_update.add_argument("--yes", action="store_true", help="accept the displayed Source diff without interactive confirmation")
     source_review = source_sub.add_parser("review", help="diff and structurally validate a Source candidate")
-    source_review.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_review.add_argument("source", help="Source name or stable Node ID")
     source_review.add_argument("candidate", help="local root of the candidate immutable package")
     source_review.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
     source_accept = source_sub.add_parser("accept", help="accept exactly a previously reviewed Source candidate")
-    source_accept.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_accept.add_argument("source", help="Source name or stable Node ID")
     source_accept.add_argument("candidate", help="local root of the reviewed immutable package")
     source_accept.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+
+    config_parser = sub.add_parser("config", help=f"inspect the central {CONFIG_FILENAME} operational configuration")
+    config_sub = config_parser.add_subparsers(dest="config_command", required=True)
+    config_show = config_sub.add_parser("show", help="validate and print the central project configuration")
+    config_show.add_argument("path", nargs="?", default=".", help="repository root or path inside it")
 
     args = parser.parse_args(argv)
 
@@ -860,6 +946,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Acceptance record: {acceptance.acceptance_path}")
             return 0
 
+        if args.command == "config":
+            root = find_repo_root(_node_root(Path(args.path)))
+            load_project_config(root)
+            path = config_path(root)
+            if not path.is_file():
+                print(f"No {CONFIG_FILENAME} exists at {path}")
+            else:
+                print(path.read_text(encoding="utf-8"), end="")
+            return 0
+
         if args.command == "author":
             node_root = _node_root(Path(args.path))
             if args.author_command == "rule":
@@ -887,6 +983,33 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "parent":
+            if args.parent_command == "propagate":
+                repo_root = find_repo_root(Path(args.path).resolve())
+                edges = _parent_edges(repo_root)
+                if not edges:
+                    print("No semantic Parent edges found.")
+                    return 0
+                accepted_count = 0
+                for child_root, parent, _ in edges:
+                    child = parse_node(child_root, repo_root)
+                    child_label = child_root.relative_to(repo_root).as_posix() or "."
+                    print(f"\n=== {child.metadata.name} ({child_label}) ← {parent.name} ===")
+                    result, receipt = review_parent_candidate(child_root, parent.id)
+                    print(render_diff(result), end="")
+                    if result.is_empty:
+                        print("Parent pin is already current; no acceptance needed.")
+                        continue
+                    if not args.yes and not _confirm(f"Accept this reviewed Parent update for {child.metadata.name}?"):
+                        print("Stopped before acceptance; the reviewed receipt remains available for explicit acceptance.")
+                        return 0
+                    accepted = accept_parent_candidate(child_root, parent.id)
+                    accepted_count += 1
+                    print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+                print(f"Propagated {accepted_count} Parent edge(s) top-down.")
+                print(f"Next: contextcanon build --all {repo_root}")
+                print(f"Then: contextcanon check --all {repo_root}")
+                return 0
+
             node_root = _node_root(Path(args.node))
             if args.parent_command == "review":
                 result, receipt = review_parent_candidate(node_root, args.parent_id)
@@ -906,30 +1029,73 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "source":
             node_root = _node_root(Path(args.node))
+            repo_root = find_repo_root(node_root)
+            if args.source_command == "list":
+                parsed = parse_node(node_root, repo_root)
+                if not parsed.sources:
+                    print(f"{parsed.metadata.name}: no Sources")
+                    return 0
+                for source in parsed.sources:
+                    configured = configured_source(repo_root, source.id)
+                    if configured is None:
+                        discovery = (
+                            f"legacy git {source.locator} ({source.transport_ref or 'default'})"
+                            if source.transport == "git"
+                            else "no central discovery configuration"
+                        )
+                    else:
+                        source_config, repository = configured
+                        if repository.kind == "git":
+                            discovery = f"git {repository.location} @ {repository.ref or 'default'} :: {source_config.node_path}"
+                        else:
+                            discovery = f"local {repository.location} :: {source_config.node_path}"
+                    print(f"{source.name} | {source.id} | accepted {source.version} | {discovery}")
+                return 0
+
             if args.source_command == "adopt":
                 adopted, changed = adopt_source_package(node_root, Path(args.package))
                 verb = "adopted" if changed else "already adopted"
                 print(f"{verb} Source {adopted.metadata.name} {adopted.metadata.version} ({adopted.package_digest})")
+                print(f"Discovery configuration: {config_path(repo_root)}")
                 print(f"Next: contextcanon build {node_root}")
                 print(f"Then: contextcanon check {node_root}")
                 return 0
-            if args.source_command == "fetch":
-                candidate, location = fetch_git_candidate(node_root, args.source_id)
+
+            source_id = _resolve_source_id(node_root, args.source)
+            if args.source_command in {"fetch", "update"}:
+                candidate, location = fetch_git_candidate(node_root, source_id, discovery_ref=args.ref)
                 try:
                     label = location.relative_to(node_root).as_posix()
                 except ValueError:
                     label = str(location)
                 print(f"fetched candidate {candidate.metadata.name} {candidate.metadata.version} ({candidate.package_digest})")
                 provenance = load_candidate_provenance(node_root, candidate.package_digest)
-                if provenance is not None:
+                if provenance is not None and provenance.get("candidate_ref"):
                     print(f"Candidate Git commit: {provenance['candidate_ref']}")
+                elif provenance is not None and provenance.get("kind") == "local":
+                    print(f"Candidate local repository: {provenance['location']}")
                 print(f"Candidate package: {label}")
-                print("Accepted Source pin is unchanged until explicit review and accept.")
+                parsed = parse_node(node_root, repo_root)
+                current = next(source for source in parsed.sources if source.id == source_id)
+                if current.package_digest == candidate.package_digest:
+                    print("Accepted Source is already this exact package.")
+                    return 0
+                if args.source_command == "fetch":
+                    print("Accepted Source pin is unchanged until explicit review and accept.")
+                    return 0
+                result, receipt = review_source_candidate(node_root, source_id, location)
+                print(render_diff(result), end="")
+                if not args.yes and not _confirm(f"Accept this reviewed Source update for {current.name}?"):
+                    print(f"Stopped before acceptance. Review receipt: {receipt}")
+                    return 0
+                accepted = accept_source_candidate(node_root, source_id, location)
+                print(f"accepted Source {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+                print("If this Node has descendants, run 'contextcanon parent propagate --all' from the repository root.")
                 return 0
 
             candidate = Path(args.candidate).resolve()
             if args.source_command == "review":
-                result, receipt = review_source_candidate(node_root, args.source_id, candidate)
+                result, receipt = review_source_candidate(node_root, source_id, candidate)
                 print(render_diff(result), end="")
                 try:
                     label = receipt.relative_to(node_root).as_posix()
@@ -938,7 +1104,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Review receipt: {label}")
                 return 0
 
-            accepted = accept_source_candidate(node_root, args.source_id, candidate)
+            accepted = accept_source_candidate(node_root, source_id, candidate)
             print(f"accepted {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
             return 0
 

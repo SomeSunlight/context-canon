@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
+from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
@@ -45,6 +46,8 @@ class SourceGitProvenance:
     ref: str
     node_path: str
     package_root: Path
+    kind: str = "git"
+    discovery_ref: str = ""
 
     def to_dict(self) -> dict[str, str]:
         return {
@@ -243,35 +246,80 @@ def _run_git(root: Path, *args: str) -> str:
     return completed.stdout.strip()
 
 
+def _try_git(root: Path, *args: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return None
+    return completed.stdout.strip() if completed.returncode == 0 else None
+
+
 def _git_provenance(source: PlacementReviewSource, package_root: Path) -> SourceGitProvenance:
-    repository = Path(_run_git(package_root, "rev-parse", "--show-toplevel")).resolve()
+    repository_text = _try_git(package_root, "rev-parse", "--show-toplevel")
+    if repository_text is None:
+        return SourceGitProvenance(
+            source_node_id=source.source_node_id,
+            source_name=source.source_name,
+            source_version=source.source_version,
+            source_package_digest=source.source_package_digest,
+            origin=source.origin,
+            locator=str(package_root.resolve()),
+            ref="",
+            node_path=".",
+            package_root=package_root,
+            kind="local",
+            discovery_ref="",
+        )
+
+    repository = Path(repository_text).resolve()
     try:
         node_path = package_root.relative_to(repository).as_posix() or "."
     except ValueError as exc:
-        raise _error(f"catalog package root is not inside its Git repository: {package_root}") from exc
-    status = _run_git(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
+        raise _error(f"catalog package root is not inside its repository: {package_root}") from exc
+    status = _try_git(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
     if status:
         raise _error(
-            f"accepted Source {source.source_name} has uncommitted package-path changes; exact Git provenance would be ambiguous"
+            f"accepted Source {source.source_name} has uncommitted package-path changes; exact package provenance would be ambiguous"
         )
-    ref = _run_git(repository, "rev-parse", "HEAD")
-    locator = _run_git(repository, "remote", "get-url", "origin")
-    if not re.fullmatch(r"[0-9a-f]{40}", ref):
-        raise _error(f"Source Git HEAD is not an exact commit SHA: {ref!r}")
-    if '"' in locator or '"' in node_path:
-        raise _error("Source Git provenance contains unsupported quote characters")
+    exact = _try_git(repository, "rev-parse", "HEAD")
+    origin = _try_git(repository, "remote", "get-url", "origin")
+    branch = _try_git(repository, "branch", "--show-current") or ""
+    if origin and exact and re.fullmatch(r"[0-9a-f]{40}", exact):
+        if '"' in origin or '"' in node_path:
+            raise _error("Source Git provenance contains unsupported quote characters")
+        return SourceGitProvenance(
+            source_node_id=source.source_node_id,
+            source_name=source.source_name,
+            source_version=source.source_version,
+            source_package_digest=source.source_package_digest,
+            origin=source.origin,
+            locator=origin,
+            ref=exact,
+            node_path=node_path,
+            package_root=package_root,
+            kind="git",
+            discovery_ref=branch or exact,
+        )
     return SourceGitProvenance(
         source_node_id=source.source_node_id,
         source_name=source.source_name,
         source_version=source.source_version,
         source_package_digest=source.source_package_digest,
         origin=source.origin,
-        locator=locator,
-        ref=ref,
+        locator=str(repository),
+        ref=exact or "",
         node_path=node_path,
         package_root=package_root,
+        kind="local",
+        discovery_ref="",
     )
-
 
 def _source_provenance(
     review: OnboardingPlacementReview,
@@ -466,14 +514,14 @@ def _render_topics(items: list[PlacementReviewItem], project_root: Path, node_ro
 def _render_sources(
     sources: list[PlacementReviewSource],
     provenance_by_id: dict[str, SourceGitProvenance],
+    config_locator: str,
 ) -> str:
     lines: list[str] = []
     for source in sources:
-        provenance = provenance_by_id[source.source_node_id]
         name = _safe_line(source.source_name, f"Source {source.review_id} name")
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
-        lines.append(f"- [{name}]({provenance.locator}) — `{source.source_version}`")
+        lines.append(f"- [{name}]({config_locator}) — `{source.source_version}`")
         if source.relationship_why:
             lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
         lines.extend(
@@ -481,14 +529,12 @@ def _render_sources(
                 (
                     f'  <!-- ctx:source id="{source.source_node_id}" version="{source.source_version}" '
                     f'normalized-digest="{source.source_normalized_digest}" '
-                    f'package-digest="{source.source_package_digest}" transport="git" '
-                    f'ref="{provenance.ref}" node-path="{provenance.node_path}" -->'
+                    f'package-digest="{source.source_package_digest}" -->'
                 ),
                 "",
             ]
         )
     return "\n".join(lines).rstrip()
-
 
 def _managed_ids_outside_blocks(text: str) -> tuple[set[str], set[str], set[str]]:
     stripped = text
@@ -533,7 +579,8 @@ def _render_node_source(
     text = _replace_managed_section(text, "Local Overview", "overview", _render_overviews(overviews), aliases=("Overview",))
     text = _replace_managed_section(text, "Local State", "state", _render_state(states), aliases=("State",))
     text = _replace_managed_section(text, "Local Plan", "plan", _render_summaries(plans, "plan"), aliases=("Plan",))
-    text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id))
+    config_locator = Path(os.path.relpath(project_root / CONFIG_FILENAME, node_root)).as_posix()
+    text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id, config_locator))
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
     text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
     return text
@@ -845,8 +892,10 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
                 f"  - Source Node: `{source.source_node_id}`",
                 f"  - version: `{source.source_version}`",
                 f"  - package: `{source.source_package_digest}`",
-                f"  - Git: `{source.locator}` @ `{source.ref}`",
+                f"  - discovery: `{source.kind}` `{source.locator}`" + (f" @ `{source.discovery_ref}`" if source.discovery_ref else ""),
+                f"  - exact candidate commit: `{source.ref}`" if source.kind == "git" and source.ref else "  - exact candidate: local immutable package bytes",
                 f"  - node-path: `{source.node_path}`",
+                f"  - central project configuration: `{CONFIG_FILENAME}`",
                 "  - the exact reviewed immutable package will be copied into the consumer Node's local `.context/sources/` store",
             ]
         )
@@ -1024,12 +1073,10 @@ def _acceptance_payload(
         if source.decision != "accept":
             continue
         provenance = source_by_id[source.source_node_id]
-        accepted_sources.append(
-            {
-                **source.to_dict(),
-                "git": provenance.to_dict(),
-            }
-        )
+        entry = {**source.to_dict(), "discovery": {**provenance.to_dict(), "kind": provenance.kind, "discovery_ref": provenance.discovery_ref}}
+        if provenance.kind == "git":
+            entry["git"] = provenance.to_dict()
+        accepted_sources.append(entry)
     return {
         "schema": PLACEMENT_ACCEPTANCE_SCHEMA,
         "evidence_digest": preview.evidence_digest,
@@ -1175,6 +1222,8 @@ def publish_placement_review(
     generated_snapshots: dict[Path, dict[str, bytes | None]] = {}
     generated_new_rels: dict[Path, set[str]] = {}
     acceptance_before = acceptance_path.read_bytes() if acceptance_path.is_file() else None
+    project_config_path = config_path(project)
+    project_config_before = project_config_path.read_bytes() if project_config_path.is_file() else None
     legacy_parent_upgrade = _legacy_parent_acceptance_upgrade(acceptance_before, preview)
 
     try:
@@ -1259,6 +1308,13 @@ def publish_placement_review(
                 state["parent_package_digest"] = compiled.parent_package.package_digest
             node_digests[delta.key] = state
 
+        for source in preview.sources:
+            if source.kind == "git":
+                upsert_git_source(project, source.source_node_id, source.locator, source.discovery_ref or None, source.node_path)
+            else:
+                repository_root = Path(source.locator).resolve()
+                upsert_local_mapping(project, source.source_node_id, repository_root, source.node_path)
+
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
         if acceptance_path.is_file() and acceptance_path.read_bytes() != encoded and not legacy_parent_upgrade:
@@ -1288,4 +1344,8 @@ def publish_placement_review(
             acceptance_path.unlink(missing_ok=True)
         else:
             _atomic_write(acceptance_path, acceptance_before)
+        if project_config_before is None:
+            project_config_path.unlink(missing_ok=True)
+        else:
+            _atomic_write(project_config_path, project_config_before)
         raise

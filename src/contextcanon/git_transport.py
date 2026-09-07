@@ -8,12 +8,14 @@ import subprocess
 import tempfile
 from pathlib import Path, PurePosixPath
 
+from .config import configured_source
 from .model import CompiledPackage, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError, find_repo_root, parse_node
 
 
 CANDIDATE_PROVENANCE_SCHEMA = "contextcanon/git-candidate-provenance/v0"
+CONFIGURED_CANDIDATE_PROVENANCE_SCHEMA = "contextcanon/source-candidate-provenance/v1"
 _GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -78,22 +80,77 @@ def resolve_git_package_provenance(package_root: Path) -> dict[str, str]:
     return {"locator": locator, "ref": ref, "node_path": node_path}
 
 
-def fetch_git_candidate(node_root: Path, source_id: str) -> tuple[CompiledPackage, Path]:
-    """Fetch one immutable Source candidate through generic Git transport.
-
-    This function discovers candidate bytes only. It never changes the accepted
-    Source store or CONTEXT.src.md and it has no composition semantics.
-    """
+def fetch_git_candidate(
+    node_root: Path,
+    source_id: str,
+    discovery_ref: str | None = None,
+) -> tuple[CompiledPackage, Path]:
+    """Fetch one immutable Source candidate through central or legacy transport metadata."""
 
     node_root = node_root.resolve()
     parsed = parse_node(node_root, find_repo_root(node_root))
     source = _find_source(parsed.sources, source_id, parsed.metadata.name)
-    _validate_git_source(source, node_root)
+    configured = configured_source(parsed.repo_root, source_id)
 
+    if configured is not None:
+        source_config, repository = configured
+        if repository.kind == "local":
+            if discovery_ref is not None:
+                raise ContextCanonError("--ref cannot be used with a local ContextCanon repository")
+            repository_root = repository.resolve_local(parsed.repo_root)
+            candidate_root = _configured_candidate_node_root(repository_root, source_config.node_path, source.name)
+            candidate = load_package(candidate_root)
+            if candidate.metadata.id != source.id:
+                raise ContextCanonError(
+                    f"Configured Source {source.name} expects Node ID {source.id}, got {candidate.metadata.id}"
+                )
+            persisted = _persist_candidate(node_root, candidate_root, candidate)
+            _persist_configured_candidate_provenance(
+                node_root,
+                source,
+                candidate,
+                kind="local",
+                location=repository.location,
+                discovery_ref="",
+                candidate_ref="",
+                node_path=source_config.node_path,
+            )
+            return candidate, persisted
+
+        ref = discovery_ref if discovery_ref is not None else repository.ref
+        checkout_parent = Path(tempfile.mkdtemp(prefix="contextcanon-git-"))
+        checkout = checkout_parent / "repository"
+        try:
+            candidate_ref = _clone_location(repository.location, checkout, ref)
+            candidate_root = _configured_candidate_node_root(checkout, source_config.node_path, source.name)
+            candidate = load_package(candidate_root)
+            if candidate.metadata.id != source.id:
+                raise ContextCanonError(
+                    f"Configured Source {source.name} expects Node ID {source.id}, got {candidate.metadata.id}"
+                )
+            persisted = _persist_candidate(node_root, candidate_root, candidate)
+            _persist_configured_candidate_provenance(
+                node_root,
+                source,
+                candidate,
+                kind="git",
+                location=repository.location,
+                discovery_ref=ref or "",
+                candidate_ref=candidate_ref,
+                node_path=source_config.node_path,
+            )
+            return candidate, persisted
+        finally:
+            shutil.rmtree(checkout_parent, ignore_errors=True)
+
+    _validate_git_source(source, node_root)
     checkout_parent = Path(tempfile.mkdtemp(prefix="contextcanon-git-"))
     checkout = checkout_parent / "repository"
     try:
-        candidate_ref = _clone(source, checkout)
+        if discovery_ref is None:
+            candidate_ref = _clone(source, checkout)
+        else:
+            candidate_ref = _clone_location(source.locator, checkout, discovery_ref)
         candidate_root = _candidate_node_root(checkout, source)
         candidate = load_package(candidate_root)
         if candidate.metadata.id != source.id:
@@ -102,11 +159,22 @@ def fetch_git_candidate(node_root: Path, source_id: str) -> tuple[CompiledPackag
                 f"at node-path {source.node_path}"
             )
         persisted = _persist_candidate(node_root, candidate_root, candidate)
-        _persist_candidate_provenance(node_root, source, candidate, candidate_ref)
+        if discovery_ref is None:
+            _persist_candidate_provenance(node_root, source, candidate, candidate_ref)
+        else:
+            _persist_configured_candidate_provenance(
+                node_root,
+                source,
+                candidate,
+                kind="git",
+                location=source.locator,
+                discovery_ref=discovery_ref,
+                candidate_ref=candidate_ref,
+                node_path=source.node_path or ".",
+            )
         return candidate, persisted
     finally:
         shutil.rmtree(checkout_parent, ignore_errors=True)
-
 
 def _find_source(sources: tuple[SourceRef, ...], source_id: str, node_name: str) -> SourceRef:
     matches = [source for source in sources if source.id == source_id]
@@ -129,18 +197,21 @@ def _validate_git_source(source: SourceRef, node_root: Path) -> None:
 
 
 def _clone(source: SourceRef, destination: Path) -> str:
-    """Clone the update-discovery snapshot and return its exact Git commit.
+    """Clone legacy discovery semantics while keeping exact accepted SHAs non-live."""
+    ref = source.transport_ref
+    if ref and _GIT_SHA_RE.fullmatch(ref):
+        ref = None
+    return _clone_location(source.locator, destination, ref)
 
-    New onboarding records an exact accepted commit SHA in ``ref``. Reusing
-    that SHA for discovery would fetch the already accepted package forever,
-    so an exact SHA means: discover from the remote default branch. Historical
-    symbolic refs remain supported as explicit discovery branches/tags.
-    """
 
-    command = ["git", "clone", "--quiet", "--depth", "1", "--single-branch"]
-    if source.transport_ref and not _GIT_SHA_RE.fullmatch(source.transport_ref):
-        command.extend(["--branch", source.transport_ref])
-    command.extend([source.locator, str(destination)])
+def _clone_location(locator: str, destination: Path, ref: str | None) -> str:
+    if ref and _GIT_SHA_RE.fullmatch(ref):
+        command = ["git", "clone", "--quiet", "--no-checkout", locator, str(destination)]
+    else:
+        command = ["git", "clone", "--quiet", "--depth", "1", "--single-branch"]
+        if ref:
+            command.extend(["--branch", ref])
+        command.extend([locator, str(destination)])
     try:
         completed = subprocess.run(
             command,
@@ -154,13 +225,33 @@ def _clone(source: SourceRef, destination: Path) -> str:
         raise ContextCanonError("Git Source transport requires the 'git' executable on PATH") from exc
     except OSError as exc:
         raise ContextCanonError(f"Could not start Git Source transport: {exc}") from exc
-
     if completed.returncode != 0:
         detail = completed.stderr.strip() or completed.stdout.strip() or f"exit code {completed.returncode}"
-        discovery = source.transport_ref if source.transport_ref and not _GIT_SHA_RE.fullmatch(source.transport_ref) else "remote default branch"
-        raise ContextCanonError(
-            f"Git Source fetch failed for {source.name} discovery ref {discovery}: {detail}"
+        raise ContextCanonError(f"Git Source fetch failed for discovery ref {ref or 'remote default branch'}: {detail}")
+
+    if ref and _GIT_SHA_RE.fullmatch(ref):
+        fetch = subprocess.run(
+            ["git", "-C", str(destination), "fetch", "--quiet", "--depth", "1", "origin", ref],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
         )
+        if fetch.returncode != 0:
+            detail = fetch.stderr.strip() or fetch.stdout.strip() or f"exit code {fetch.returncode}"
+            raise ContextCanonError(f"Git Source fetch failed for exact ref {ref}: {detail}")
+        checkout = subprocess.run(
+            ["git", "-C", str(destination), "checkout", "--quiet", "FETCH_HEAD"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if checkout.returncode != 0:
+            detail = checkout.stderr.strip() or checkout.stdout.strip() or f"exit code {checkout.returncode}"
+            raise ContextCanonError(f"Could not checkout exact Git Source ref {ref}: {detail}")
 
     exact = subprocess.run(
         ["git", "-C", str(destination), "rev-parse", "HEAD"],
@@ -176,6 +267,18 @@ def _clone(source: SourceRef, destination: Path) -> str:
         raise ContextCanonError(f"Could not resolve exact Git Source candidate commit: {detail}")
     return candidate_ref
 
+
+def _configured_candidate_node_root(repository: Path, node_path: str, source_name: str) -> Path:
+    root = repository.resolve()
+    path = PurePosixPath(node_path)
+    candidate = root.joinpath(*path.parts).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError as exc:
+        raise ContextCanonError(f"Configured Source {source_name} path escapes repository: {node_path}") from exc
+    if not candidate.is_dir():
+        raise ContextCanonError(f"Configured Source {source_name} path does not exist: {candidate}")
+    return candidate
 
 def _candidate_node_root(checkout: Path, source: SourceRef) -> Path:
     node_path = PurePosixPath(source.node_path or ".")
@@ -245,17 +348,64 @@ def load_candidate_provenance(node_root: Path, package_digest: str) -> dict[str,
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ContextCanonError(f"Invalid Git Source candidate provenance {path}: {exc}") from exc
-    required = {"schema", "source_id", "locator", "accepted_ref", "candidate_ref", "node_path", "package_digest"}
-    if not isinstance(raw, dict) or set(raw) != required or raw.get("schema") != CANDIDATE_PROVENANCE_SCHEMA:
-        raise ContextCanonError(f"Invalid Git Source candidate provenance schema in {path}")
-    values = {key: str(value) for key, value in raw.items()}
-    if not _GIT_SHA_RE.fullmatch(values["candidate_ref"]):
-        raise ContextCanonError(f"Invalid exact Git Source candidate commit in {path}")
+        raise ContextCanonError(f"Invalid Source candidate provenance {path}: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise ContextCanonError(f"Invalid Source candidate provenance schema in {path}")
+    schema = raw.get("schema")
+    if schema == CANDIDATE_PROVENANCE_SCHEMA:
+        required = {"schema", "source_id", "locator", "accepted_ref", "candidate_ref", "node_path", "package_digest"}
+        if set(raw) != required:
+            raise ContextCanonError(f"Invalid Git Source candidate provenance schema in {path}")
+        values = {key: str(value) for key, value in raw.items()}
+        if not _GIT_SHA_RE.fullmatch(values["candidate_ref"]):
+            raise ContextCanonError(f"Invalid exact Git Source candidate commit in {path}")
+    elif schema == CONFIGURED_CANDIDATE_PROVENANCE_SCHEMA:
+        required = {"schema", "source_id", "kind", "location", "discovery_ref", "candidate_ref", "node_path", "package_digest"}
+        if set(raw) != required or raw.get("kind") not in {"git", "local"}:
+            raise ContextCanonError(f"Invalid configured Source candidate provenance schema in {path}")
+        values = {key: str(value) for key, value in raw.items()}
+        if values["kind"] == "git" and not _GIT_SHA_RE.fullmatch(values["candidate_ref"]):
+            raise ContextCanonError(f"Invalid exact configured Git Source candidate commit in {path}")
+        if values["kind"] == "local" and values["candidate_ref"]:
+            raise ContextCanonError(f"Local Source candidate provenance must not invent a Git commit in {path}")
+    else:
+        raise ContextCanonError(f"Invalid Source candidate provenance schema in {path}")
     if values["package_digest"] != package_digest:
-        raise ContextCanonError(f"Git Source candidate provenance digest mismatch in {path}")
+        raise ContextCanonError(f"Source candidate provenance digest mismatch in {path}")
     return values
 
+
+def _persist_configured_candidate_provenance(
+    node_root: Path,
+    source: SourceRef,
+    candidate: CompiledPackage,
+    *,
+    kind: str,
+    location: str,
+    discovery_ref: str,
+    candidate_ref: str,
+    node_path: str,
+) -> Path:
+    path = candidate_provenance_path(node_root, candidate.package_digest)
+    payload = {
+        "schema": CONFIGURED_CANDIDATE_PROVENANCE_SCHEMA,
+        "source_id": source.id,
+        "kind": kind,
+        "location": location,
+        "discovery_ref": discovery_ref,
+        "candidate_ref": candidate_ref,
+        "node_path": node_path,
+        "package_digest": candidate.package_digest,
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_text(encoded, encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return path
 
 def _persist_candidate_provenance(
     node_root: Path,

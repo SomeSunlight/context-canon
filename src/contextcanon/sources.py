@@ -5,12 +5,14 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 
 from .compiler import Compiler
 from .diff import ContextDiff
-from .git_transport import load_candidate_provenance, resolve_git_package_provenance
+from .config import CONFIG_FILENAME, config_path, upsert_local_source
+from .git_transport import load_candidate_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .package_diff import diff_packages
@@ -26,18 +28,39 @@ _SOURCE_LINE_RE = re.compile(
 )
 
 
-def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledPackage, bool]:
-    """Explicitly adopt one exact published Git-backed package as a new Source.
+def _validate_local_adoption_checkout(package_root: Path) -> None:
+    """Reject dirty Git-backed package bytes without requiring Git or a remote for pure local repositories."""
+    try:
+        repository_result = subprocess.run(
+            ["git", "-C", str(package_root), "rev-parse", "--show-toplevel"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return
+    if repository_result.returncode != 0:
+        return
+    repository = Path(repository_result.stdout.strip()).resolve()
+    try:
+        node_path = package_root.resolve().relative_to(repository).as_posix() or "."
+    except ValueError as exc:
+        raise ContextCanonError(f"Source package root is not inside its Git repository: {package_root}") from exc
+    status = subprocess.run(
+        ["git", "-C", str(repository), "status", "--porcelain", "--untracked-files=all", "--", node_path],
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
+    if status.returncode != 0:
+        detail = status.stderr.strip() or status.stdout.strip() or f"exit code {status.returncode}"
+        raise ContextCanonError(f"Could not verify local Source package cleanliness: {detail}")
+    if status.stdout.strip():
+        raise ContextCanonError("Source package path has uncommitted changes; exact adoption bytes would be ambiguous")
 
-    The operator's invocation is the first-adoption decision. ContextCanon
-    resolves exact clean Git provenance, validates the *future* consumer
-    composition in memory, installs the immutable package, and only then
-    atomically publishes one Source declaration. Existing Source identities are
-    never upgraded through this path; they stay on fetch/review/accept.
-    """
+
+def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledPackage, bool]:
+    """Explicitly adopt one exact published local package and register local discovery centrally."""
 
     node_root = node_root.resolve()
     package_root = package_root.resolve()
+    _validate_local_adoption_checkout(package_root)
     repo_root = find_repo_root(node_root)
     parsed = parse_node(node_root, repo_root)
     candidate = load_package(package_root)
@@ -52,9 +75,7 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     matches = [source for source in parsed.sources if source.id == candidate.metadata.id]
     if matches:
         if len(matches) != 1:
-            raise ContextCanonError(
-                f"{parsed.metadata.name}: Source Node ID {candidate.metadata.id} is not unique"
-            )
+            raise ContextCanonError(f"{parsed.metadata.name}: Source Node ID {candidate.metadata.id} is not unique")
         existing = matches[0]
         if (
             existing.is_pinned
@@ -63,14 +84,16 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
             and existing.package_digest == candidate.package_digest
         ):
             _install_package(node_root, package_root, candidate)
+            upsert_local_source(repo_root, candidate.metadata.id, package_root)
             Compiler(repo_root).compile(node_root)
             return candidate, False
         raise ContextCanonError(
-            f"{parsed.metadata.name}: Source {candidate.metadata.name} ({candidate.metadata.id}) already exists with a different accepted package; use 'contextcanon source fetch/review/accept' for updates"
+            f"{parsed.metadata.name}: Source {candidate.metadata.name} ({candidate.metadata.id}) already exists with a different accepted package; use 'contextcanon source update' or fetch/review/accept"
         )
 
-    provenance = resolve_git_package_provenance(package_root)
-    entry = _render_adopted_source(candidate, provenance)
+    config = config_path(repo_root)
+    config_before = config.read_bytes() if config.is_file() else None
+    entry = _render_adopted_source(node_root, repo_root, candidate)
     source_path = node_root / "CONTEXT.src.md"
     before = source_path.read_text(encoding="utf-8")
     after = _insert_source_entry(before, entry)
@@ -91,32 +114,35 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     existed = destination.exists()
     _install_package(node_root, package_root, candidate)
     try:
+        upsert_local_source(repo_root, candidate.metadata.id, package_root)
         _atomic_write_text(source_path, after)
         Compiler(repo_root).compile(node_root)
     except Exception:
         _atomic_write_text(source_path, before)
         if not existed and destination.exists():
             shutil.rmtree(destination, ignore_errors=True)
+        if config_before is None:
+            config.unlink(missing_ok=True)
+        else:
+            config.write_bytes(config_before)
         raise
     return candidate, True
 
-
-def _render_adopted_source(candidate: CompiledPackage, provenance: dict[str, str]) -> str:
+def _render_adopted_source(node_root: Path, repo_root: Path, candidate: CompiledPackage) -> str:
     name = candidate.metadata.name
     if any(char in name for char in "]\n\r"):
         raise ContextCanonError(f"Source name cannot be represented safely: {name!r}")
+    locator = Path(os.path.relpath(repo_root / CONFIG_FILENAME, node_root)).as_posix()
     return "\n".join(
         [
-            f"- [{name}]({provenance['locator']}) — `{candidate.metadata.version}`",
+            f"- [{name}]({locator}) — `{candidate.metadata.version}`",
             (
                 f'  <!-- ctx:source id="{candidate.metadata.id}" version="{candidate.metadata.version}" '
                 f'normalized-digest="{candidate.normalized_digest}" '
-                f'package-digest="{candidate.package_digest}" transport="git" '
-                f'ref="{provenance["ref"]}" node-path="{provenance["node_path"]}" -->'
+                f'package-digest="{candidate.package_digest}" -->'
             ),
         ]
     )
-
 
 def _insert_source_entry(text: str, entry: str) -> str:
     heading = re.search(r"(?m)^## Sources\s*$", text)
@@ -252,7 +278,7 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
 
     _validate_candidate_composition(compiler, compiled, index, candidate)
     _install_package(node_root, candidate_root, candidate)
-    accepted_ref = None if transport_candidate is None else transport_candidate["candidate_ref"]
+    accepted_ref = None if transport_candidate is None else (transport_candidate.get("candidate_ref") or None)
     _write_source_pin(node_root, source_id, candidate, accepted_ref=accepted_ref)
     return candidate
 
@@ -544,7 +570,11 @@ def _validated_candidate_provenance(
     if provenance is None:
         return None
     if provenance["source_id"] != source_ref.id:
-        raise ContextCanonError("Git Source candidate provenance belongs to a different Source")
+        raise ContextCanonError("Source candidate provenance belongs to a different Source")
+    if provenance["package_digest"] != candidate.package_digest:
+        raise ContextCanonError("Source candidate provenance package digest mismatch")
+    if provenance.get("schema") == "contextcanon/source-candidate-provenance/v1":
+        return provenance
     if provenance["locator"] != source_ref.locator:
         raise ContextCanonError("Git Source candidate provenance locator differs from the accepted Source")
     if provenance["node_path"] != (source_ref.node_path or "."):
@@ -553,10 +583,7 @@ def _validated_candidate_provenance(
         raise ContextCanonError(
             "Accepted Git Source ref changed after candidate discovery; fetch the candidate again before review"
         )
-    if provenance["package_digest"] != candidate.package_digest:
-        raise ContextCanonError("Git Source candidate provenance package digest mismatch")
     return provenance
-
 
 def _review_path(node_root: Path, candidate_package_digest: str) -> Path:
     return node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"

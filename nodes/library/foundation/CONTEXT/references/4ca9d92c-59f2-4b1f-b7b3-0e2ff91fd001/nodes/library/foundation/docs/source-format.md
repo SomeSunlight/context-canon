@@ -84,9 +84,43 @@ For a pinned Source, the visible link is provenance/update location rather than 
 
 This keeps normal builds offline and prevents a Source repository update from silently changing a consumer.
 
-### Git update transport
+### Central Source discovery configuration
 
-A pinned Source may additionally describe how candidate updates are retrieved:
+Operational Source discovery belongs in one repository-visible `contextcanon.yaml`, not duplicated across consuming Nodes. A pinned Source declaration keeps only accepted immutable identity (version plus both digests); its visible link may point to the central configuration. Existing inline `transport`/`ref`/`node-path` metadata remains readable as a compatibility fallback.
+
+The v1 YAML configuration separates reusable Source identity from repository discovery:
+
+```yaml
+schema: contextcanon/config/v1
+repositories:
+  context-canon:
+    kind: git
+    location: https://github.com/SomeSunlight/context-canon.git
+    ref: main
+sources:
+  c4c94726-3cc7-4df6-b779-72bbf9c06f40:
+    repository: context-canon
+    path: nodes/library/development-workflow
+```
+
+The same Source can be made completely local/offline by changing the repository once:
+
+```yaml
+repositories:
+  context-canon:
+    kind: local
+    location: ../context-canon
+```
+
+Local paths may be relative to the consuming project root or absolute. They require no network access. Accepted package pins remain unchanged until explicit review/accept; changing discovery configuration never silently changes effective Context. The YAML file is deliberately the project-level operational configuration surface so later non-semantic ContextCanon settings can be added under a future schema version instead of inventing one file per setting.
+
+`contextcanon source list` shows human names, stable IDs and the resolved discovery configuration. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
+
+After an ancestor Source is accepted, `contextcanon parent propagate --all` walks semantic Parent edges top-down, shows each exact diff, and asks before accepting that edge. `--yes` is available for an already-reviewed scripted run. This removes UUID/path archaeology without turning Parent updates into live inheritance.
+
+### Legacy inline Git update transport
+
+A pinned Source may additionally describe how candidate updates are retrieved when no central Source mapping exists:
 
 ```markdown
 - [Python Development](https://example.org/context-nodes.git) — `1.2.0`
