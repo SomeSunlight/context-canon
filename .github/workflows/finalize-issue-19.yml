@@ -29,74 +29,26 @@ jobs:
 
           state = Path('STATE.md')
           text = state.read_text(encoding='utf-8')
-          old = '''# Current State
-
-The accepted `main` baseline remains PR #12, squash-merged as:
-
-`bac1f52048b3d82cedb00b04fccd114607c4c915`
-
-PR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval.
-'''
-          new = '''# Current State
-
-The accepted `main` baseline is PR #13, squash-merged as:
-
-`df847ba031bfa3965ca53626249e18a1074cb8af`
-
-PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19. It remains subject to explicit project-owner approval.
-
-Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
-'''
+          old = "The accepted `main` baseline remains PR #12, squash-merged as:\n\n`bac1f52048b3d82cedb00b04fccd114607c4c915`\n\nPR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval."
+          new = "The accepted `main` baseline is PR #13, squash-merged as:\n\n`df847ba031bfa3965ca53626249e18a1074cb8af`\n\nPR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#19. It remains subject to explicit project-owner approval.\n\nHistorical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state."
           if text.count(old) != 1:
               raise SystemExit('STATE baseline anchor mismatch')
           text = text.replace(old, new, 1)
-          old_next = '''## Immediate next step
-
-Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.
-'''
-          new_next = '''## Immediate next step
-
-Review the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval.
-'''
+          old_next = "## Immediate next step\n\nObtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval."
+          new_next = "## Immediate next step\n\nReview the exact clean head of draft PR #18 for Issues #14–#19. This documentation reconciliation does not require re-running `ai-workstation` onboarding. Do not merge without explicit project-owner approval."
           if text.count(old_next) != 1:
               raise SystemExit('STATE immediate-next-step anchor mismatch')
           state.write_text(text.replace(old_next, new_next, 1), encoding='utf-8')
 
           plan = Path('PLAN.md')
           text = plan.read_text(encoding='utf-8')
-          old = '''# Plan
-
-## Accepted baseline
-
-The current accepted `main` baseline is PR #12, squash-merged as `bac1f52048b3d82cedb00b04fccd114607c4c915`.
-
-The structure-first onboarding architecture, reusable Development Workflow Source, two-pass placement semantics and real `ai-workstation` structure materialization are accepted. PR #13 is the active review branch for finishing reviewed placement publication.
-'''
-          new = '''# Plan
-
-## Accepted baseline
-
-The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
-
-The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#19 and remains unmerged pending explicit project-owner approval.
-
-Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
-'''
+          old = "The current accepted `main` baseline is PR #12, squash-merged as `bac1f52048b3d82cedb00b04fccd114607c4c915`.\n\nThe structure-first onboarding architecture, reusable Development Workflow Source, two-pass placement semantics and real `ai-workstation` structure materialization are accepted. PR #13 is the active review branch for finishing reviewed placement publication."
+          new = "The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.\n\nThe reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#19 and remains unmerged pending explicit project-owner approval.\n\nHistorical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical."
           if text.count(old) != 1:
               raise SystemExit('PLAN baseline anchor mismatch')
           text = text.replace(old, new, 1)
           marker = '### Later semantic contradiction audit\n'
-          block = '''## Documentation reconciliation: Issue #19
-
-Purpose: make durable current-state pointers match the accepted `main` history after PR #13 merged.
-
-- [x] Update the accepted baseline in `STATE.md` and `PLAN.md`.
-- [x] Distinguish historical PR #13 checkpoint wording from current repository status.
-- [x] Point current work at draft PR #18 without changing product semantics or re-running onboarding.
-
-Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/check/diff gate is required before the PR review head is updated.
-
-'''
+          block = "## Documentation reconciliation: Issue #19\n\nPurpose: make durable current-state pointers match the accepted `main` history after PR #13 merged.\n\n- [x] Update the accepted baseline in `STATE.md` and `PLAN.md`.\n- [x] Distinguish historical PR #13 checkpoint wording from current repository status.\n- [x] Point current work at draft PR #18 without changing product semantics or re-running onboarding.\n\nCheckpoint: Issue #19 reconciles documentation only; the same full suite/build/check/diff gate is required before the PR review head is updated.\n\n"
           if marker not in text:
               raise SystemExit('PLAN later-audit marker missing')
           if '## Documentation reconciliation: Issue #19' in text:
