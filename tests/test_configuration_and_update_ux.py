@@ -17,7 +17,7 @@ from contextcanon.cli import main as cli_main
 from contextcanon.compiler import Compiler
 from contextcanon.config import configured_source, load_project_config, upsert_git_source, upsert_local_mapping
 from contextcanon.git_transport import fetch_git_candidate
-from contextcanon.outputs import write_outputs
+from contextcanon.outputs import check_outputs, write_outputs
 from contextcanon.package import artifact_files
 from contextcanon.parser import parse_node
 from contextcanon.sources import accept_parent_candidate, review_parent_candidate
@@ -180,6 +180,11 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             )
             (consumer / "CONTEXT.src.md").write_text(source_text, encoding="utf-8")
             install_package(consumer, main_package)
+            write_outputs(Compiler(project).compile(project))
+            self.assertIn(
+                "Source label mismatch for source-id: 'stale accidental label' != accepted package name 'Shared Canonical'",
+                check_outputs(Compiler(project).compile(project)),
+            )
 
             listed = io.StringIO()
             with contextlib.redirect_stdout(listed):
@@ -195,9 +200,30 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertEqual(Compiler(project).compile(project).source_packages[0].package_digest, feature_package.package_digest)
             self.assertIn("- [Shared Canonical]", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
             self.assertNotIn("stale accidental label", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
+            write_outputs(Compiler(project).compile(project))
+            self.assertEqual(check_outputs(Compiler(project).compile(project)), [])
         finally:
             shutil.rmtree(project, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)
+
+    def test_check_reports_stale_parent_display_name(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            parent = write_node(repo, "root", "Canonical Parent", "1.0.0", "Meaning.")
+            child_root = repo / "child"
+            child_root.mkdir()
+            source = parent_source("child", "Child", "..", parent).replace("[Canonical Parent]", "[stale parent label]")
+            (child_root / "CONTEXT.src.md").write_text(source, encoding="utf-8")
+            install_package(child_root, parent)
+            compiled = Compiler(repo).compile(child_root)
+            write_outputs(compiled)
+            self.assertIn(
+                "Parent label mismatch for root: 'stale parent label' != accepted package name 'Canonical Parent'",
+                check_outputs(Compiler(repo).compile(child_root)),
+            )
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
 
     def test_parent_propagate_updates_chain_top_down_in_one_command(self):
         repo = Path(tempfile.mkdtemp())

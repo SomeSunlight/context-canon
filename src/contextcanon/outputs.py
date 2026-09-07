@@ -71,6 +71,19 @@ def check_outputs(compiled: CompiledNode) -> list[str]:
     outputs = expected_outputs(compiled)
     root = compiled.parsed.root
     drift: list[str] = []
+
+    for relation, authored, packages in (
+        ("Source", compiled.parsed.sources, compiled.source_packages),
+        ("Parent", compiled.parsed.parents, compiled.parent_packages),
+    ):
+        canonical_names = {package.metadata.id: package.metadata.name for package in packages}
+        for dependency in authored:
+            canonical_name = canonical_names.get(dependency.id)
+            if canonical_name is not None and dependency.name != canonical_name:
+                drift.append(
+                    f"{relation} label mismatch for {dependency.id}: "
+                    f"{dependency.name!r} != accepted package name {canonical_name!r}"
+                )
     for rel, content in outputs.items():
         destination = root / rel
         if not destination.is_file():

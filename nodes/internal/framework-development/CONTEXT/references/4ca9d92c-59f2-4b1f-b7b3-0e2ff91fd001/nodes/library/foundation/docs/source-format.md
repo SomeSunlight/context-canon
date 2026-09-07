@@ -44,7 +44,7 @@ Each Parent is an exact immutable package pin:
   <!-- ctx:parent id="<stable-parent-node-id>" version="0.1.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
-The visible locator records where a newer Parent candidate may later be discovered. Ordinary `contextcanon build` never dereferences it. Build loads only the accepted Parent artifact from the Child's local `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests and package files.
+The visible label must match the canonical Node name of the accepted Parent package; the link target records where a newer Parent candidate may later be discovered. Stable ID/version/digests remain the technical identity. `contextcanon check` reports a stale or accidentally edited Parent label. Ordinary `contextcanon build` never dereferences the locator. Build loads only the accepted Parent artifact from the Child's local `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests and package files.
 
 Parent and ordinary Sources are intentionally different roles. Parent expresses the human-accepted semantic hierarchy; Sources express independent reusable composition. Both feed the same immutable package-composition engine, so inherited Rules, Topics and Resources use the same deterministic conflict rules without creating a second inheritance implementation.
 
@@ -52,7 +52,7 @@ Changing a Parent's live files does not silently change the Child. Each Parent a
 
 ## Sources
 
-`## Sources` lists accepted Context Nodes. The visible link names the Source location; the adjacent compiler-managed comment preserves stable identity and accepted version.
+`## Sources` lists accepted Context Nodes. The visible link label must match the canonical Node name of the accepted Source package, while the link target is its provenance/update location. The adjacent compiler-managed comment preserves stable identity and accepted version. Stable ID/version/digests define technical identity; `contextcanon check` reports a stale or accidentally edited visible Source label.
 
 ### Local development Source
 
@@ -114,7 +114,7 @@ repositories:
 
 Local paths may be relative to the consuming project root or absolute. They require no network access. Accepted package pins remain unchanged until explicit review/accept; changing discovery configuration never silently changes effective Context. The YAML file is deliberately the project-level operational configuration surface so later non-semantic ContextCanon settings can be added under a future schema version instead of inventing one file per setting.
 
-`contextcanon source list` shows the canonical name from each accepted Source package, stable IDs and the resolved discovery configuration. If a consumer carries a stale visible label, the list warns about it while name-based commands still accept the canonical package name. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
+`contextcanon source list` shows the canonical name from each accepted Source package, stable IDs and the resolved discovery configuration. If a consumer carries a stale visible label, the list warns about it while name-based commands still accept the canonical package name; `contextcanon check` reports that mismatch until the source is repaired or a successful acceptance normalizes the label. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
 
 When that guided `source update` starts from a legacy inline Git Source and no central mapping exists yet, ContextCanon records the equivalent durable discovery mapping in `contextcanon.yaml` after the legacy fetch succeeds. An exact 40-character legacy commit pin becomes default-branch discovery rather than a permanently frozen central ref, preserving the old "discover something newer" behavior; a one-off `--ref` is never persisted. This migration changes discovery configuration only, not the accepted immutable package pin. The legacy inline metadata remains readable as a compatibility fallback while the central mapping takes precedence.
 
