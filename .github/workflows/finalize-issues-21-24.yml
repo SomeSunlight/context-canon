@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - agent/issues-14-15-multi-parent
+    paths:
+      - .github/workflows/finalize-issues-21-24.yml
 
 permissions:
   contents: write
 
 jobs:
   finalize:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +25,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Verify starting head
-        run: test "$(git rev-parse HEAD)" = "84093bbd60f550e5811637922d12622116b1e9bd"
+        run: test "$(git rev-parse HEAD)" = "6ef8cbbe54f96c6e0695b7e4e8bece9157857fff"
       - name: Checkpoint Issues 21-24 plan before product edits
         run: |
           cat >> PLAN.md <<'EOF'
