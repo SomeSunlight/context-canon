@@ -1,0 +1,22 @@
+name: Issue 25 finalizer
+
+on:
+  push:
+    branches:
+      - agent/issues-14-15-multi-parent
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.event.head_commit.message == 'Run issue 25 finalizer'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python .github/scripts/issue25_finalize.py
