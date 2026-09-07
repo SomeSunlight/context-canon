@@ -26,7 +26,7 @@ from contextcanon.sources import accept_parent_candidate, review_parent_candidat
 def write_node(root: Path, node_id: str, name: str, version: str, statement: str) -> object:
     root.mkdir(parents=True, exist_ok=True)
     (root / "CONTEXT.src.md").write_text(
-        f'''# {name} — Local Context Source\n<!-- ctx:node id="{node_id}" version="{version}" -->\n\n## Local Rules\n\n### General\n\n- **Policy:** {statement}\n  Why: Test policy.\n  <!-- ctx:rule id="RULE-1" -->\n''',
+        f'''# {name} — Local Context Source\n<!-- ctx:node id="{node_id}" name="{name}" version="{version}" -->\n\n## Local Rules\n\n### General\n\n- **Policy:** {statement}\n  Why: Test policy.\n  <!-- ctx:rule id="RULE-1" -->\n''',
         encoding="utf-8",
     )
     compiled = Compiler(root if (root / ".git").exists() else root.parent).compile(root)
@@ -43,7 +43,7 @@ def install_package(child: Path, compiled) -> None:
 
 
 def parent_source(child_id: str, child_name: str, parent_path: str, parent) -> str:
-    return f'''# {child_name} — Local Context Source\n<!-- ctx:node id="{child_id}" version="0.1.0" -->\n\n## Parent Context Node\n\n- [{parent.metadata.name}]({parent_path}) — `{parent.metadata.version}`\n  <!-- ctx:parent id="{parent.metadata.id}" version="{parent.metadata.version}" normalized-digest="{parent.normalized_digest}" package-digest="{parent.package_digest}" -->\n'''
+    return f'''# {child_name} — Local Context Source\n<!-- ctx:node id="{child_id}" name="{child_name}" version="0.1.0" -->\n\n## Parent Context Node\n\n- [{parent.metadata.name}]({parent_path}) — `{parent.metadata.version}`\n  <!-- ctx:parent id="{parent.metadata.id}" version="{parent.metadata.version}" normalized-digest="{parent.normalized_digest}" package-digest="{parent.package_digest}" -->\n'''
 
 
 class ConfigurationAndUpdateUXTests(unittest.TestCase):
@@ -63,7 +63,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             source = write_node(source_repo, "source-id", "Shared", "1.0.0", "Old meaning.")
             consumer = project
             (consumer / "CONTEXT.src.md").write_text(
-                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{source.normalized_digest}" package-digest="{source.package_digest}" -->\n''',
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{source.normalized_digest}" package-digest="{source.package_digest}" -->\n''',
                 encoding="utf-8",
             )
             install_package(consumer, source)
@@ -94,7 +94,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
 
             consumer = project
             (consumer / "CONTEXT.src.md").write_text(
-                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" -->\n''',
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" -->\n''',
                 encoding="utf-8",
             )
             install_package(consumer, main_package)
@@ -128,7 +128,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
 
             consumer = project
             (consumer / "CONTEXT.src.md").write_text(
-                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared]({provider.as_posix()}) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n''',
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared]({provider.as_posix()}) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n''',
                 encoding="utf-8",
             )
             install_package(consumer, main_package)
@@ -173,7 +173,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             consumer = project
             source_text = (
                 '# Consumer — Local Context Source\n'
-                '<!-- ctx:node id="consumer" version="0.1.0" -->\n\n'
+                '<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n'
                 '## Sources\n\n'
                 f'- [stale accidental label]({provider.as_posix()}) — `1.0.0`\n'
                 f'  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n'

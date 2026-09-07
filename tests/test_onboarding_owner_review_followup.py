@@ -35,7 +35,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         )
         (repo / "CONTEXT.src.md").write_text(
             "# Knowledge Project — Local Context Source\n"
-            f'<!-- ctx:node id="{ROOT_ID}" version="0.1.0" -->\n\n'
+            f'<!-- ctx:node id="{ROOT_ID}" name="Knowledge Project" version="0.1.0" -->\n\n'
             "## Overview\n\nExisting accepted root.\n",
             encoding="utf-8",
         )

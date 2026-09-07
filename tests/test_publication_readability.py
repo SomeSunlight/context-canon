@@ -20,7 +20,7 @@ class PublicationReadabilityTests(unittest.TestCase):
         source = repo / "CONTEXT.src.md"
         source.write_text(
             """# Example — Local Context Source
-<!-- ctx:node id="example" version="1.0.0" -->
+<!-- ctx:node id="example" name="Example" version="1.0.0" -->
 
 ## Local Overview
 
@@ -80,7 +80,7 @@ Required:
         repo = self._repo()
         (repo / "CONTEXT.src.md").write_text(
             """# Example — Local Context Source
-<!-- ctx:node id="example" version="1.0.0" -->
+<!-- ctx:node id="example" name="Example" version="1.0.0" -->
 
 ## Local Overview
 
@@ -108,7 +108,7 @@ A small Node.
         repo = self._repo()
         (repo / "CONTEXT.src.md").write_text(
             """# Example — Local Context Source
-<!-- ctx:node id="example" version="1.0.0" -->
+<!-- ctx:node id="example" name="Example" version="1.0.0" -->
 
 ## Local Overview
 

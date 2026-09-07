@@ -21,7 +21,7 @@ class AuthoringTests(unittest.TestCase):
         subprocess.run(["git", "init", "-q", str(root)], check=True)
         (root / "CONTEXT.src.md").write_text(
             "# Example — Local Context Source\n"
-            '<!-- ctx:node id="example-node" version="0.1.0" -->\n',
+            '<!-- ctx:node id="example-node" name="Example" version="0.1.0" -->\n',
             encoding="utf-8",
         )
         return root

@@ -13,7 +13,6 @@ PARENT_COMMENT_RE = re.compile(r'<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->')
 CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
-H1_RE = re.compile(r'^#\s+(.+?)\s+—\s+Local Context Source\s*$')
 SOURCE_RE = re.compile(r'^- \[(?P<name>[^]]+)\]\((?P<path>[^)]+)\)\s+—\s+`(?P<version>[^`]+)`\s*$')
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
 CHANGE_TARGET_RE = re.compile(r'^- `(?P<source>.+?) / (?P<rule_id>[^`]+)`(?:\s+—\s+.*)?\s*$')
@@ -76,18 +75,10 @@ def parse_node(
     text = source_text if source_text is not None else source_path.read_text(encoding="utf-8")
     lines = text.splitlines()
 
-    name = None
-    for line in lines:
-        match = H1_RE.match(line)
-        if match:
-            name = match.group(1).strip()
-            break
-    if not name:
-        raise ContextCanonError(f"{source_path}: first H1 must end with '— Local Context Source'")
-
     node_attrs = _find_ctx_attrs(lines, NODE_COMMENT_RE)
-    if not node_attrs or not node_attrs.get("id") or not node_attrs.get("version"):
-        raise ContextCanonError(f"{source_path}: missing compiler-managed ctx:node id/version metadata")
+    if not node_attrs or not all(node_attrs.get(key) for key in ("id", "name", "version")):
+        raise ContextCanonError(f"{source_path}: missing compiler-managed ctx:node id/name/version metadata")
+    name = node_attrs["name"].strip()
     adapters = tuple(filter(None, (part.strip() for part in node_attrs.get("adapters", "").split(","))))
     metadata = NodeMetadata(node_attrs["id"], name, node_attrs["version"], adapters)
 

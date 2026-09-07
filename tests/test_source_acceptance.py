@@ -17,7 +17,7 @@ from contextcanon.sources import accept_source_candidate, review_source_candidat
 
 
 PROVIDER_TEMPLATE = '''# Shared Python Development — Local Context Source
-<!-- ctx:node id="node-python" version="{version}" -->
+<!-- ctx:node id="node-python" name="Shared Python Development" version="{version}" -->
 
 ## Rules
 
@@ -32,7 +32,7 @@ RULE_TEMPLATE = '''- **Use explicit Python:** {statement}
 '''
 
 CONSUMER_TEMPLATE = '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 

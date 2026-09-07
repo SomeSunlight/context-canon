@@ -6,12 +6,16 @@ The format is deliberately constrained Markdown: readable without special toolin
 
 ## Node header
 
-A source begins with a human-readable H1 and compiler-managed Node metadata:
+A source normally begins with a human-readable Markdown H1 followed by explicitly machine-marked Node metadata:
 
 ```markdown
-# Example Project — Local Context Source
-<!-- ctx:node id="<stable-node-id>" version="0.1.0" -->
+# Example Project
+<!-- ctx:node id="<stable-node-id>" name="Example Project" version="0.1.0" -->
 ```
+
+The `ctx:node` comment is authoritative for machine-significant Node metadata. `id`, `name`, and `version` are required. The Markdown H1 is ordinary human presentation: ContextCanon does not derive Node identity or the canonical Node name from its wording, and changing only the H1 does not change canonical semantics. A project may keep the descriptive `— Local Context Source` suffix as presentation if useful; it is not syntax.
+
+This is a general authoring boundary: machine-significant ContextCanon fields are carried in visibly marked `ctx:*` metadata or other explicitly specified control structures, not hidden in presentation wording that merely looks like ordinary Markdown.
 
 The stable ID is independent of the Node's directory path or display name. A root Node may additionally declare generated harness adapters, for example `adapters="agents,goose"`.
 

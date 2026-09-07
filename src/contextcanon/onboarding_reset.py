@@ -57,7 +57,7 @@ _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGAC
 
 _SKELETON_RE = re.compile(
     r'^# .+ — Local Context Source\n'
-    r'<!-- ctx:node id="[^"]+" version="0\.1\.0-draft" -->\n\n'
+    r'<!-- ctx:node id="[^"]+" name="[^"]+" version="0\.1\.0-draft" -->\n\n'
     r'## Overview\n\n'
     r'(?:This Node skeleton reserves the accepted onboarding landing point before detailed project knowledge is distributed\.|'
     r'This area is intentionally reserved by the project owner; implementation details are not yet decided\.)\n\n'

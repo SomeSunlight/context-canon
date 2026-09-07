@@ -16,7 +16,7 @@ from contextcanon.parser import ContextCanonError
 
 
 FOUNDATION = '''# Demo Foundation — Local Context Source
-<!-- ctx:node id="node-foundation" version="1.0.0" -->
+<!-- ctx:node id="node-foundation" name="Demo Foundation" version="1.0.0" -->
 
 ## Rules
 
@@ -32,7 +32,7 @@ FOUNDATION = '''# Demo Foundation — Local Context Source
 '''
 
 TEAM = '''# Demo Team Standard — Local Context Source
-<!-- ctx:node id="node-team" version="2.0.0" -->
+<!-- ctx:node id="node-team" name="Demo Team Standard" version="2.0.0" -->
 
 ## Sources
 

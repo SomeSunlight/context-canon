@@ -443,10 +443,12 @@ Checkpoint: Issues #21–#24 are implemented on draft PR #18. The human-scale up
 
 Purpose: remove hidden machine semantics from the Markdown H1. Canonical Context Node name becomes explicit `ctx:node` metadata; ordinary Markdown presentation no longer defines Node identity/name.
 
-- [ ] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.
-- [ ] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.
-- [ ] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.
-- [ ] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.
-- [ ] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.
+- [x] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.
+- [x] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.
+- [x] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.
+- [x] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.
+- [x] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.
 
 Checkpoint: Issue #25 is an explicit scope expansion of draft PR #18, discovered during the real `ai-workstation` Source-name UX test. The project owner selected the explicit-machine-metadata design; no PR merge is authorized.
+
+Issue #25 implementation checkpoint: canonical Node names now come only from explicit `ctx:node name` metadata. H1 presentation is non-semantic, all ContextCanon authored Nodes and fixtures are migrated, structure materialization emits the explicit field, and regression coverage protects the boundary.

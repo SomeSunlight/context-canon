@@ -56,7 +56,7 @@ def _sha(content: bytes) -> str:
 
 
 WORKFLOW_SOURCE = '''# Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.2.0-draft" -->
 
 ## Rules
 
@@ -133,7 +133,7 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
             node.mkdir(parents=True, exist_ok=True)
             (node / "CONTEXT.src.md").write_text(
                 f"# {name} — Local Context Source\n"
-                f'<!-- ctx:node id="{node_id}" version="0.1.0-draft" -->\n\n'
+                f'<!-- ctx:node id="{node_id}" name="{name}" version="0.1.0-draft" -->\n\n'
                 "## Overview\n\n"
                 f"Legacy parentless onboarding content for {name}.\n",
                 encoding="utf-8",

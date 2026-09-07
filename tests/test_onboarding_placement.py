@@ -87,7 +87,7 @@ class OnboardingPlacementTests(unittest.TestCase):
         source_root.mkdir()
         (source_root / "CONTEXT.src.md").write_text(
             "# Development Workflow — Local Context Source\n"
-            '<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->\n\n'
+            '<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.2.0-draft" -->\n\n'
             "## Rules\n\n"
             "### Review\n"
             "- **Review before merge:** Keep coherent changes under human review before merge.\n"

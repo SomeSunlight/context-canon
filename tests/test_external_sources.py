@@ -15,7 +15,7 @@ from contextcanon.parser import ContextCanonError, parse_node
 
 
 SOURCE = '''# Shared Python Development — Local Context Source
-<!-- ctx:node id="node-python" version="1.2.0" -->
+<!-- ctx:node id="node-python" name="Shared Python Development" version="1.2.0" -->
 
 ## Rules
 
@@ -37,7 +37,7 @@ Required:
 '''
 
 CONSUMER_TEMPLATE = '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 
@@ -129,7 +129,7 @@ class ExternalSourceTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         (root / ".git").mkdir()
         text = '''# Invalid Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Invalid Consumer" version="0.1.0" -->
 
 ## Sources
 

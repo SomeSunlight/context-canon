@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a",
-    "package": "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
+    "normalized": "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996",
+    "package": "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "7a56bb6deaf7f426232bc1b115cab978d99a54770161d1565a851912d16f17d5",
-      "size": 5440
+      "sha256": "a9ee2134de8021519f4dbe044f9280bec4ed6201f8dab1905a4e31f2abe77cac",
+      "size": 6011
     },
     {
       "path": "CONTEXT/README.md",
@@ -80,6 +80,16 @@
       "statement": "When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.",
       "title": "Resume recent explicit continuation without re-proving unchanged state",
       "why": "In a controlled single-owner workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption."
+    },
+    {
+      "group": "Transparent machine semantics",
+      "id": "CCW-012",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.",
+      "title": "Mark machine-significant Markdown explicitly",
+      "why": "Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior."
     },
     {
       "group": "Proportional verification",

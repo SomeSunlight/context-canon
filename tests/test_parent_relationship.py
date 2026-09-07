@@ -16,7 +16,7 @@ from contextcanon.parser import ContextCanonError, parse_node
 
 
 PARENT_SOURCE = """# Shared Parent — Local Context Source
-<!-- ctx:node id="node-parent" version="1.0.0" -->
+<!-- ctx:node id="node-parent" name="Shared Parent" version="1.0.0" -->
 
 ## Rules
 
@@ -41,7 +41,7 @@ Required:
 def child_source(normalized: str, package: str, relation: str = "Parent") -> str:
     if relation == "Parent":
         return f"""# Child — Local Context Source
-<!-- ctx:node id="node-child" version="0.1.0" -->
+<!-- ctx:node id="node-child" name="Child" version="0.1.0" -->
 
 ## Parent
 
@@ -49,7 +49,7 @@ def child_source(normalized: str, package: str, relation: str = "Parent") -> str
   <!-- ctx:parent id="node-parent" version="1.0.0" normalized-digest="{normalized}" package-digest="{package}" -->
 """
     return f"""# Child — Local Context Source
-<!-- ctx:node id="node-child" version="0.1.0" -->
+<!-- ctx:node id="node-child" name="Child" version="0.1.0" -->
 
 ## Sources
 
@@ -133,7 +133,7 @@ class ParentRelationshipTests(unittest.TestCase):
         (root / ".git").mkdir()
         (root / "CONTEXT.src.md").write_text(
             """# Child — Local Context Source
-<!-- ctx:node id="node-child" version="0.1.0" -->
+<!-- ctx:node id="node-child" name="Child" version="0.1.0" -->
 
 ## Parent
 

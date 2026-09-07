@@ -21,7 +21,7 @@ from tests.test_git_transport import GitTransportTests
 
 
 CONSUMER = '''# AI Workstation — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="AI Workstation" version="0.1.0" -->
 
 ## Overview
 

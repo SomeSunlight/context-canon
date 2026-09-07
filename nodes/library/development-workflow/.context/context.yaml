@@ -30,6 +30,7 @@ local:
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "group": "Recoverable planning"}
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "group": "Recoverable planning"}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "group": "Recoverable planning"}
+    - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "group": "Transparent machine semantics"}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "group": "Proportional verification"}
     - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
@@ -48,6 +49,7 @@ official:
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -73,5 +75,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a"
-  package_digest: "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
+  normalized_digest: "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996"
+  package_digest: "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"

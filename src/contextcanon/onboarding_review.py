@@ -621,7 +621,7 @@ def _render_context_source(
     _publishable(node.version, "node.version")
     lines = [
         f"# {node.name} — Local Context Source",
-        f'<!-- ctx:node id="{node.id}" version="{node.version}" -->',
+        f'<!-- ctx:node id="{node.id}" name="{node.name}" version="{node.version}" -->',
         "",
     ]
 

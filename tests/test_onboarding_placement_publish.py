@@ -66,7 +66,7 @@ class PlacementPublicationTests(unittest.TestCase):
 
         (repo / "CONTEXT.src.md").write_text(
             "# AI Workstation — Local Context Source\n"
-            '<!-- ctx:node id="aea56adf-2a26-43f0-b712-3bbeab7a3097" version="0.1.0" -->\n\n'
+            '<!-- ctx:node id="aea56adf-2a26-43f0-b712-3bbeab7a3097" name="AI Workstation" version="0.1.0" -->\n\n'
             "## Overview\n\n"
             "Existing authored root orientation that placement must preserve.\n",
             encoding="utf-8",
@@ -75,7 +75,7 @@ class PlacementPublicationTests(unittest.TestCase):
         goose.mkdir(parents=True)
         (goose / "CONTEXT.src.md").write_text(
             "# Goose — Local Context Source\n"
-            '<!-- ctx:node id="11111111-2222-4333-8444-555555555555" version="0.1.0-draft" -->\n\n'
+            '<!-- ctx:node id="11111111-2222-4333-8444-555555555555" name="Goose" version="0.1.0-draft" -->\n\n'
             "## Overview\n\n"
             "Existing authored Goose orientation.\n",
             encoding="utf-8",

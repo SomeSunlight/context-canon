@@ -25,7 +25,7 @@ from contextcanon.outputs import write_outputs
 
 
 ROOT_SOURCE = """# Root — Local Context Source
-<!-- ctx:node id="11111111-1111-4111-8111-111111111111" version="0.1.0" -->
+<!-- ctx:node id="11111111-1111-4111-8111-111111111111" name="Root" version="0.1.0" -->
 
 ## Overview
 
@@ -33,7 +33,7 @@ Root context.
 """
 
 CHILD_SOURCE = """# Child — Local Context Source
-<!-- ctx:node id="22222222-2222-4222-8222-222222222222" version="0.1.0-draft" -->
+<!-- ctx:node id="22222222-2222-4222-8222-222222222222" name="Child" version="0.1.0-draft" -->
 
 ## Overview
 
@@ -41,7 +41,7 @@ Journal-created child.
 """
 
 LEGACY_SKELETON = """# Child — Local Context Source
-<!-- ctx:node id="33333333-3333-4333-8333-333333333333" version="0.1.0-draft" -->
+<!-- ctx:node id="33333333-3333-4333-8333-333333333333" name="Child" version="0.1.0-draft" -->
 
 ## Overview
 

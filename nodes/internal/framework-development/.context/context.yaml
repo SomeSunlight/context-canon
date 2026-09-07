@@ -21,13 +21,13 @@ sources:
     version: "0.1.0-draft"
     locator: "../../library/foundation/"
     normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "40f2e10d4049d6a22ffd331bdc7ca0fe3ea17a5d1d94a4738d55f017f9cb6146"
+    package_digest: "50e6ad5a2ab725483a7d5b08fc3f8c3b31b13f549702a7b1207e3e339efc94d6"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a"
-    package_digest: "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
+    normalized_digest: "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996"
+    package_digest: "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
 
 # Effective imported Context origins, flattened through accepted Parent/Source packages.
 imports:
@@ -35,12 +35,12 @@ imports:
     name: "ContextCanon Foundation"
     version: "0.1.0-draft"
     normalized_digest: "4ac88380a9997b76dae87636cbfb2c622fcbd86a4860c3de3783eb46f3c0cdb9"
-    package_digest: "40f2e10d4049d6a22ffd331bdc7ca0fe3ea17a5d1d94a4738d55f017f9cb6146"
+    package_digest: "50e6ad5a2ab725483a7d5b08fc3f8c3b31b13f549702a7b1207e3e339efc94d6"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.2.0-draft"
-    normalized_digest: "471bec20a9d8ded921c5fa0b5778b5cd47b0f6af1616a160dd46a61592db6b6a"
-    package_digest: "9208da82fcec46fd87bb0dba08c3d404833c91423f06778916e49ef43d372af3"
+    normalized_digest: "4a341c006b9fbc49f17a814fd3dbb8a6cd4659ac0baaa9643b7fb19260297996"
+    package_digest: "3dece5dc569c1e493cac02c2f7024e59229aca45483bbf6bc4b68b3db5213d1f"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -91,6 +91,7 @@ official:
     - {"id": "CCW-002", "title": "Checkpoint completed plan items immediately", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -258,5 +259,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "a921efe92f42b14a81d45e60d268a8e99448ab7f192b8f6209d16132911cfea2"
-  package_digest: "09d9e032a94a1bd90b51eddc404f8a41e2a1ab991ab6a970db09dcb1b8b03d2b"
+  normalized_digest: "87c368a30907e26fcb9096abd54887c55c5dc62243cdfee6cb523680aa6c36a5"
+  package_digest: "d7dc8446618b8fb2b1a783d6355b4bdd1b27baa1cb816b9518b27ac23ae2db0a"

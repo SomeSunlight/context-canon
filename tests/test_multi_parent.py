@@ -25,7 +25,7 @@ class MultiParentTests(unittest.TestCase):
         root.mkdir(parents=True, exist_ok=True)
         (root / "CONTEXT.src.md").write_text(
             f'''# {name} — Local Context Source
-<!-- ctx:node id="{node_id}" version="1.0.0" -->
+<!-- ctx:node id="{node_id}" name="{name}" version="1.0.0" -->
 
 ## Local Rules
 

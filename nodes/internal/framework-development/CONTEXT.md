@@ -117,6 +117,12 @@ Put decisions, active constraints, accepted state, and next steps needed to resu
 
 When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.
 
+### Transparent machine semantics
+
+#### `CCW-012` — Mark machine-significant Markdown explicitly
+
+When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.
+
 ### Proportional verification
 
 #### `CCW-004` — Batch related edits before expensive final verification
