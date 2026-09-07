@@ -1,0 +1,21 @@
+name: Issue 22 review readability finalizer
+
+on:
+  push:
+    paths:
+      - .github/workflows/issue22-review-readability-finalizer.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/issues-14-15-multi-parent
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python .github/scripts/finalize_issue22_review_readability.py
