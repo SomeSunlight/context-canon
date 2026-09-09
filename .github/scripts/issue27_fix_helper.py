@@ -29,4 +29,9 @@ if text.count(old_match) != 1:
     raise SystemExit(f"unexpected duplicate-parse applicator block: {text.count(old_match)}")
 text = text.replace(old_match, new_match, 1)
 
+needle = '                print("\\nExternal Source change:")'
+if text.count(needle) != 1:
+    raise SystemExit(f"unexpected Source-change newline marker: {text.count(needle)}")
+text = text.replace(needle, '                print("\\\\nExternal Source change:")', 1)
+
 path.write_text(text, encoding="utf-8")
