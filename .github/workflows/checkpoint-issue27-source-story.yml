@@ -1,0 +1,29 @@
+name: Checkpoint issue 27 source story
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  checkpoint:
+    if: github.head_ref == 'agent/issues-14-15-multi-parent'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/issues-14-15-multi-parent
+          fetch-depth: 0
+      - run: python .github/scripts/checkpoint_issue27_source_story.py
+      - run: |
+          rm .github/scripts/checkpoint_issue27_source_story.py
+          rm .github/workflows/checkpoint-issue27-source-story.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Checkpoint novice-safe Source update narrative"
+          git push origin HEAD:agent/issues-14-15-multi-parent
