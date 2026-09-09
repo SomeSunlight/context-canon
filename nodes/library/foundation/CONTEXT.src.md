@@ -1,5 +1,5 @@
 # ContextCanon Foundation — Local Context Source
-<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.1.1-draft" -->
+<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.2.0-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the reusable ContextCanon baseline.**
