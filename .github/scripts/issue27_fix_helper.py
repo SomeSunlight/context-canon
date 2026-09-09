@@ -34,4 +34,10 @@ if text.count(needle) != 1:
     raise SystemExit(f"unexpected Source-change newline marker: {text.count(needle)}")
 text = text.replace(needle, '                print("\\\\nExternal Source change:")', 1)
 
+bad_fixture = '            write_node(repo, repo / "other", "other", "1.1.0", "Other new.")'
+good_fixture = '            write_node(repo, repo / "other", "other", "Other", "1.1.0", "Other new.")'
+if text.count(bad_fixture) != 1:
+    raise SystemExit(f"unexpected Other fixture marker: {text.count(bad_fixture)}")
+text = text.replace(bad_fixture, good_fixture, 1)
+
 path.write_text(text, encoding="utf-8")
