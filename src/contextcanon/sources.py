@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from .compiler import Compiler
-from .diff import ContextDiff
+from .diff import ContextDiff, diff_compiled
 from .config import CONFIG_FILENAME, config_path, upsert_local_source
 from .git_transport import load_candidate_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
@@ -220,6 +220,48 @@ def review_source_candidate(
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
+
+
+def preview_source_candidate_effect(
+    node_root: Path,
+    source_id: str,
+    candidate_root: Path,
+) -> ContextDiff:
+    """Preview the consumer's effective compiled Context with one candidate Source pin.
+
+    No accepted package or authored source is changed. Existing local
+    Overrides/Removes and all other imported Context are applied by the normal
+    compiler, so this diff describes what would actually become effective in
+    the consumer if the candidate were accepted.
+    """
+
+    node_root = node_root.resolve()
+    candidate_root = candidate_root.resolve()
+    repo_root = find_repo_root(node_root)
+    candidate = load_package(candidate_root)
+    current_compiled = Compiler(repo_root).compile(node_root)
+    source_index, source_ref = _source_index(current_compiled, source_id)
+    current = current_compiled.source_packages[source_index]
+
+    if candidate.metadata.id != source_ref.id:
+        raise ContextCanonError(
+            f"Candidate Node ID {candidate.metadata.id} does not match Source {source_ref.name} ({source_ref.id})"
+        )
+    _require_candidate_version_advance(current, candidate, "Source")
+    _validate_candidate_composition(Compiler(repo_root), current_compiled, source_index, candidate)
+
+    candidate_resources = {
+        file.path: (candidate_root / file.path).read_bytes()
+        for file in candidate.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+    preview_source = _render_source_pin_text(node_root, source_id, candidate)
+    preview_compiled = Compiler(
+        repo_root,
+        source_overrides={node_root: preview_source},
+        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+    ).compile(node_root)
+    return diff_compiled(current_compiled, preview_compiled)
 
 
 def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Path) -> CompiledPackage:
@@ -644,7 +686,13 @@ def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledP
             shutil.rmtree(temporary)
 
 
-def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage, *, accepted_ref: str | None = None) -> None:
+def _render_source_pin_text(
+    node_root: Path,
+    source_id: str,
+    candidate: CompiledPackage,
+    *,
+    accepted_ref: str | None = None,
+) -> str:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -700,7 +748,15 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
 
     if found != 1:
         raise ContextCanonError(f"Could not find exactly one Source Node ID {source_id} in {path}")
-    _atomic_write_text(path, "".join(lines))
+    return "".join(lines)
+
+
+def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage, *, accepted_ref: str | None = None) -> None:
+    path = node_root / "CONTEXT.src.md"
+    _atomic_write_text(
+        path,
+        _render_source_pin_text(node_root, source_id, candidate, accepted_ref=accepted_ref),
+    )
 
 
 def _atomic_write_text(path: Path, content: str) -> None:

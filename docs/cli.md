@@ -7,8 +7,8 @@ This is a navigation page, not a dump of every flag. Use `contextcanon <command>
 | Goal | Command | What it does |
 | --- | --- | --- |
 | Show installed tool version | `contextcanon --version` | Confirms the installed ContextCanon release. |
-| Inspect reusable Sources | `contextcanon source list` | Shows accepted Source versions plus candidate-discovery configuration. |
-| Review/update one Source | `contextcanon source update <name-or-id>` | Fetches a candidate, shows the external change and local effect, validates composition, and asks before acceptance. |
+| Inspect reusable Sources | `contextcanon source list` | Shows the Source versions currently used here plus candidate-discovery configuration. |
+| Review/update one Source | `contextcanon source update <name-or-id>` | Shows what is used here now, what newer candidate was found, what changed there, what would change locally, and asks before applying it. |
 | Use one exact candidate ref | `contextcanon source update <name-or-id> --ref <ref>` | Reviews one branch/tag/commit without making that ref durable configuration. |
 | Review downstream impact | `contextcanon propagate` | Reviews changed Parent → Child relationships top-down from the current Node and asks before each acceptance. |
 | Review every Parent graph | `contextcanon propagate --all` | Broadens the review scope to all semantic Parent edges in the repository; it does not imply blanket acceptance. |

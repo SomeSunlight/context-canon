@@ -52,7 +52,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.0")
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.1")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())
@@ -137,10 +137,17 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             with contextlib.redirect_stdout(out):
                 rc = cli_main(["source", "update", "Shared", "--node", str(consumer), "--ref", "feature", "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
-            self.assertIn("Migrated legacy Source discovery", out.getvalue())
-            self.assertIn("This migration only changes where future Source candidates are discovered.", out.getvalue())
-            self.assertIn("It does not change the accepted Source; acceptance happens only after this review.", out.getvalue())
-            self.assertIn("Candidate: Shared 1.1.0", out.getvalue())
+            self.assertIn("Discovery setup note:", out.getvalue())
+            self.assertIn("Legacy Source lookup settings were moved to", out.getvalue())
+            self.assertIn("This command is offering an update to Consumer; its Context has not changed yet.", out.getvalue())
+            self.assertIn("That only changes where future candidates are found; it does not apply this Source update.", out.getvalue())
+            self.assertIn("Current local Source:", out.getvalue())
+            self.assertIn("New candidate found:", out.getvalue())
+            self.assertIn("What changed in Source \"Shared\" since the version used here:", out.getvalue())
+            self.assertIn("Local update offered for Node \"Consumer\":", out.getvalue())
+            self.assertIn("Effective Context after existing local Overrides/Removes and other imports: 1 rule changed", out.getvalue())
+            self.assertIn("Before choosing Y, check:", out.getvalue())
+            self.assertNotIn("\nNodes:\n", out.getvalue())
 
             source_cfg, repo_cfg = configured_source(project, "source-id")
             self.assertEqual(repo_cfg.kind, "git")
@@ -150,6 +157,53 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             accepted = Compiler(project).compile(project).source_packages[0]
             self.assertEqual(accepted.package_digest, feature_package.package_digest)
             self.assertIn('ref="', (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+            shutil.rmtree(provider, ignore_errors=True)
+
+    def test_source_update_explains_downstream_parent_child_review_and_guided_command(self):
+        project = Path(tempfile.mkdtemp())
+        provider = Path(tempfile.mkdtemp())
+        try:
+            (project / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", "-b", "main", str(provider)], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.email", "test@example.com"], check=True)
+            subprocess.run(["git", "-C", str(provider), "config", "user.name", "Test"], check=True)
+            old_source = write_node(provider, "source-id", "Shared", "1.0.0", "Old meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "old"], check=True)
+            subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
+            write_node(provider, "source-id", "Shared", "1.1.0", "New meaning.")
+            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
+            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "new"], check=True)
+
+            (project / "CONTEXT.src.md").write_text(
+                f'''# Consumer — Local Context Source\n<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n## Sources\n\n- [Shared](contextcanon.yaml) — `1.0.0`\n  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{old_source.normalized_digest}" package-digest="{old_source.package_digest}" -->\n''',
+                encoding="utf-8",
+            )
+            install_package(project, old_source)
+            upsert_git_source(project, "source-id", str(provider), "main", ".")
+            current_consumer = Compiler(project).compile(project)
+            write_outputs(current_consumer)
+
+            child_root = project / "child"
+            child_root.mkdir()
+            (child_root / "CONTEXT.src.md").write_text(
+                parent_source("child", "Child", "..", current_consumer),
+                encoding="utf-8",
+            )
+            install_package(child_root, current_consumer)
+            write_outputs(Compiler(project).compile(child_root))
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["source", "update", "Shared", "--node", str(project), "--ref", "feature", "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            self.assertIn("What comes after this local update:", out.getvalue())
+            self.assertIn("Consumer -> Child (child)", out.getvalue())
+            self.assertIn("review that chain top-down in one guided run:", out.getvalue())
+            self.assertIn("contextcanon propagate", out.getvalue())
+            self.assertIn("asks separately before applying each changed Parent -> Child step", out.getvalue())
         finally:
             shutil.rmtree(project, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)
@@ -193,7 +247,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             with contextlib.redirect_stdout(listed):
                 rc = cli_main(["source", "list", "--node", str(consumer)])
             self.assertEqual(rc, 0, listed.getvalue())
-            self.assertIn("Shared Canonical | source-id | accepted 1.0.0", listed.getvalue())
+            self.assertIn("Shared Canonical | source-id | using 1.0.0", listed.getvalue())
             self.assertIn("consumer display label is 'stale accidental label'", listed.getvalue())
 
             updated = io.StringIO()

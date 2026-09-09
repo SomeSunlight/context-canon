@@ -45,7 +45,7 @@ from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root, parse_node
-from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
+from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
@@ -186,6 +186,103 @@ def _confirm(prompt: str) -> bool:
     except EOFError:
         return False
     return answer in {"y", "yes"}
+
+
+_HUMAN_CHANGE_NOUNS = {
+    "parent": ("imported Parent", "imported Parents"),
+    "source": ("imported Source", "imported Sources"),
+    "change": ("local resolution", "local resolutions"),
+    "rule": ("rule", "rules"),
+    "topic": ("topic", "topics"),
+    "resource": ("resource", "resources"),
+}
+
+
+def _human_change_summary(diff, *, include_categories: set[str] | None = None, exclude_categories: set[str] | None = None) -> str:
+    include = include_categories
+    exclude = exclude_categories or set()
+    counts: dict[tuple[str, str], int] = {}
+    for entry in diff.entries:
+        if entry.category in exclude or (include is not None and entry.category not in include):
+            continue
+        key = (entry.category, entry.change)
+        counts[key] = counts.get(key, 0) + 1
+    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    parts: list[str] = []
+    for category in ("parent", "source", "change", "rule", "topic", "resource"):
+        singular, plural = _HUMAN_CHANGE_NOUNS[category]
+        for change in ("added", "removed", "modified"):
+            count = counts.get((category, change), 0)
+            if count:
+                parts.append(f"{count} {singular if count == 1 else plural} {action[change]}")
+    return ", ".join(parts) if parts else "no effective Rule, Topic, or Resource changes"
+
+
+def _human_entry_label(entry) -> str:
+    data = entry.after or entry.before or {}
+    if entry.category in {"rule", "topic"}:
+        stable_id = entry.identity.rsplit("#", 1)[-1]
+        title = data.get("title")
+        return f"{stable_id} — {title}" if title else stable_id
+    return entry.identity
+
+
+def _print_human_change_details(diff, *, exclude_categories: set[str] | None = None) -> None:
+    exclude = exclude_categories or set()
+    headings = {
+        "parent": "Imported Parent changes",
+        "source": "Imported Source changes",
+        "change": "Local resolution changes",
+        "rule": "Rules",
+        "topic": "Topics",
+        "resource": "Resources",
+    }
+    symbols = {"added": "+", "removed": "-", "modified": "~"}
+    grouped: dict[str, list[object]] = {}
+    for entry in diff.entries:
+        if entry.category in exclude:
+            continue
+        grouped.setdefault(entry.category, []).append(entry)
+    for category in ("parent", "source", "change", "rule", "topic", "resource"):
+        entries = grouped.get(category, [])
+        if not entries:
+            continue
+        print(f"{headings[category]}:")
+        for entry in entries:
+            detail = ""
+            if entry.change == "modified" and entry.changed_fields and entry.category != "resource":
+                detail = " [" + ", ".join(entry.changed_fields) + "]"
+            print(f"  {symbols[entry.change]} {_human_entry_label(entry)}{detail}")
+            if entry.category == "rule":
+                before = entry.before or {}
+                after = entry.after or {}
+                if entry.change == "added" and after.get("statement"):
+                    print(f"      {after['statement']}")
+                elif entry.change == "removed" and before.get("statement"):
+                    print(f"      {before['statement']}")
+                elif entry.change == "modified" and before.get("statement") != after.get("statement"):
+                    if before.get("statement"):
+                        print(f"      before: {before['statement']}")
+                    if after.get("statement"):
+                        print(f"      after:  {after['statement']}")
+            elif entry.category == "topic" and entry.change == "added":
+                after = entry.after or {}
+                if after.get("condition"):
+                    print(f"      When: {after['condition']}")
+
+
+def _source_lookup_description(repo_root: Path, current, source_id: str, requested_ref: str | None) -> str:
+    configured = configured_source(repo_root, source_id)
+    if configured is not None:
+        _, repository = configured
+        if repository.kind == "git":
+            selected = requested_ref or repository.ref or "default branch"
+            return f"{repository.location} @ {selected}"
+        return f"local repository {repository.location}"
+    if current.transport == "git":
+        selected = requested_ref or current.transport_ref or "default branch"
+        return f"legacy Git discovery {current.locator} @ {selected}"
+    return current.locator
 
 
 def _parent_edges(repo_root: Path, start_root: Path | None = None):
@@ -1183,7 +1280,7 @@ def main(argv: list[str] | None = None) -> int:
                             discovery = f"git {repository.location} @ {repository.ref or 'default'} :: {source_config.node_path}"
                         else:
                             discovery = f"local {repository.location} :: {source_config.node_path}"
-                    print(f"{package.metadata.name} | {source.id} | accepted {source.version} | {discovery}")
+                    print(f"{package.metadata.name} | {source.id} | using {source.version} | {discovery}")
                     if source.name != package.metadata.name:
                         print(f"  warning: consumer display label is {source.name!r}; accepted package name is {package.metadata.name!r}")
                 return 0
@@ -1203,74 +1300,140 @@ def main(argv: list[str] | None = None) -> int:
             if args.source_command in {"fetch", "update"}:
                 parsed = parse_node(node_root, repo_root)
                 current = next(source for source in parsed.sources if source.id == source_id)
-                if args.source_command == "update":
-                    print(f"Reviewing Source update for local Node: {parsed.metadata.name}")
-                    print(f"Accepted Source: {current.name} {current.version}")
-                    print("This first reviews the external Source candidate. Nothing local changes until you accept it.")
-                    print("")
+                lookup = _source_lookup_description(repo_root, current, source_id, args.ref)
                 candidate, location = fetch_git_candidate(node_root, source_id, discovery_ref=args.ref)
                 try:
-                    label = location.relative_to(node_root).as_posix()
+                    cache_label = location.relative_to(node_root).as_posix()
                 except ValueError:
-                    label = str(location)
-                print(f"Candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                    cache_label = str(location)
                 provenance = load_candidate_provenance(node_root, candidate.package_digest)
+
+                migrated = None
                 if args.source_command == "update":
                     migrated = _migrate_legacy_source_discovery(node_root, source_id)
-                    if migrated is not None:
-                        print(f"Migrated legacy Source discovery to central configuration: {migrated}")
-                        print("  This migration only changes where future Source candidates are discovered.")
-                        print("  It does not change the accepted Source; acceptance happens only after this review.")
+
                 if current.package_digest == candidate.package_digest:
-                    print("Accepted Source is already this exact package.")
+                    if args.source_command == "update":
+                        print(f"Source update for local Node: {parsed.metadata.name}")
+                        print(f"Current local Source: {candidate.metadata.name} {candidate.metadata.version}")
+                        print(f"Looked up from: {lookup}")
+                        print("Result: this local Node already uses this exact Source package; no update is needed.")
+                    else:
+                        print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                        print("Current Source is already this exact package.")
                     return 0
+
                 if args.source_command == "fetch":
-                    print("Accepted Source pin is unchanged until explicit review and accept.")
+                    print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                    print(f"Looked up from: {lookup}")
+                    print("The Source version currently used by this Node is unchanged until explicit review and apply.")
+                    print("Technical details:")
+                    print(f"  Candidate package digest: {candidate.package_digest}")
+                    if provenance is not None and provenance.get("candidate_ref"):
+                        print(f"  Git commit: {provenance['candidate_ref']}")
+                    print(f"  Cached package: {cache_label}")
                     return 0
+
                 result, receipt = review_source_candidate(node_root, source_id, location)
-                print("\nExternal Source change:")
-                print(render_diff(result, include_technical=False), end="")
-                print("Local effect if accepted:")
-                print(f"  - {parsed.metadata.name} will accept Source {candidate.metadata.name} {candidate.metadata.version}.")
-                print("  - The reviewed Source changes become input to this Node's effective Context; explicit local Override/Remove still apply.")
-                print("  - Generated CONTEXT.md is not rebuilt by this acceptance.")
-                downstream = _parent_edges(repo_root, node_root)
-                downstream_nodes = []
-                seen_downstream = set()
-                for child_root, _, _ in downstream:
-                    child = parse_node(child_root, repo_root)
-                    if child.metadata.id in seen_downstream:
-                        continue
-                    seen_downstream.add(child.metadata.id)
-                    downstream_nodes.append((child.metadata.name, child_root.relative_to(repo_root).as_posix() or "."))
-                if downstream_nodes:
-                    print("Downstream review still pending:")
-                    print("  No Child is changed by this Source acceptance.")
-                    print("  Potentially affected dependent Nodes:")
-                    for name, label in downstream_nodes:
-                        print(f"    - {name} ({label})")
-                else:
-                    print("Downstream review: this Node has no dependent Child Nodes in the repository propagation graph.")
+                local_effect = preview_source_candidate_effect(node_root, source_id, location)
+
+                print(f"Source update for local Node: {parsed.metadata.name}")
                 print("")
-                print(render_diff_technical(result), end="")
+                print("Current local Source:")
+                print(f"  {current.name} {current.version}")
+                print(f"  This is the last Source version put into use for {parsed.metadata.name}.")
+                print("New candidate found:")
+                print(f"  {candidate.metadata.name} {candidate.metadata.version}")
+                print(f"  Looked up from: {lookup}")
+                print(f"This command is offering an update to {parsed.metadata.name}; its Context has not changed yet.")
+
+                if migrated is not None:
+                    print("")
+                    print("Discovery setup note:")
+                    print(f"  Legacy Source lookup settings were moved to {migrated}.")
+                    print("  That only changes where future candidates are found; it does not apply this Source update.")
+
+                print("")
+                print(f'What changed in Source "{candidate.metadata.name}" since the version used here:')
+                print(f"  Version: {current.version} -> {candidate.metadata.version}")
+                print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
+                _print_human_change_details(result, exclude_categories={"node"})
+
+                print("")
+                print(f'Local update offered for Node "{parsed.metadata.name}":')
+                print(f"  Source: {current.name} {current.version} -> {candidate.metadata.name} {candidate.metadata.version}")
+                print(
+                    "  Effective Context after existing local Overrides/Removes and other imports: "
+                    + _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
+                )
+                print("  Existing local Overrides/Removes and other imported Context are already reflected in this preview.")
+                print("  This Node's own version will be checked and may receive the automatic minimum patch bump.")
+                print("  Generated CONTEXT.md is rebuilt later; choosing Y here does not rebuild it.")
+
+                downstream = _parent_edges(repo_root, node_root)
+                if downstream:
+                    print("")
+                    print("What comes after this local update:")
+                    print(
+                        f"  {len({child_root for child_root, _, _ in downstream})} downstream Node(s) are connected through this Parent/Child chain."
+                    )
+                    print("  They keep their current Parent snapshots until their own review.")
+                    print("  Relationships that may need review:")
+                    for child_root, parent, parent_root in downstream:
+                        child = parse_node(child_root, repo_root)
+                        parent_node = parse_node(parent_root, repo_root)
+                        child_label = child_root.relative_to(repo_root).as_posix() or "."
+                        print(f"    - {parent_node.metadata.name} -> {child.metadata.name} ({child_label})")
+                    start_label = node_root.relative_to(repo_root).as_posix() or "."
+                    propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
+                    print("  After applying this update, review that chain top-down in one guided run:")
+                    print(f"    {propagate_command}")
+                    print("  It still asks separately before applying each changed Parent -> Child step.")
+                else:
+                    print("")
+                    print("What comes after this local update:")
+                    print("  No Child Nodes depend on this Node through a semantic Parent relationship.")
+
+                print("")
+                print("Before choosing Y, check:")
+                print(f"  1. Do these changes make sense for {parsed.metadata.name}?")
+                print("  2. Are they compatible with this Node's other imported Contexts, or is an explicit local resolution needed?")
+                print(f"  3. Are the changes in {candidate.metadata.name} themselves correct, complete, and well-scoped? If not, fix the Source upstream.")
+
+                print("")
+                print("Technical details:")
+                print(f"  Source Node ID: {source_id}")
+                print(f"  Source normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
+                print(f"  Source package digest: {result.before_package_digest} -> {result.after_package_digest}")
+                print("  Exact changed identities:")
+                symbols = {"added": "+", "removed": "-", "modified": "~"}
+                for entry in result.entries:
+                    if entry.category == "node":
+                        continue
+                    print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
                 print("  Candidate discovery:")
                 if provenance is not None and provenance.get("candidate_ref"):
                     print(f"    Git commit: {provenance['candidate_ref']}")
                 elif provenance is not None and provenance.get("kind") == "local":
                     print(f"    Local repository: {provenance['location']}")
-                print(f"    Cached package: {label}")
-                if not args.yes and not _confirm(f"Accept this reviewed Source update for {candidate.metadata.name}?"):
-                    print(f"Stopped before acceptance. Review receipt: {receipt}")
+                print(f"    Cached package: {cache_label}")
+
+                if not args.yes and not _confirm(f"Apply this Source update to local Node {parsed.metadata.name}?"):
+                    print("No local Source update applied.")
+                    print(f"Technical review receipt kept at: {receipt}")
                     return 0
+
                 accepted = accept_source_candidate(node_root, source_id, location)
-                print(f"accepted Source {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+                print(f"Updated local Source for {parsed.metadata.name}: {current.version} -> {accepted.metadata.version}")
                 _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
-                if downstream_nodes:
+                print("Generated CONTEXT.md has not been rebuilt yet.")
+                if downstream:
                     start_label = node_root.relative_to(repo_root).as_posix() or "."
-                    print("Next: review downstream applicability when ready; this is not automatic acceptance:")
-                    print(f"  contextcanon propagate {start_label}")
-                    print("The propagation review checks each changed Parent -> Child edge and asks before acceptance.")
-                    print("After the intended propagation reviews: contextcanon build --all . && contextcanon check --all .")
+                    propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
+                    print("Next: review the downstream Parent/Child updates in one guided run:")
+                    print(f"  {propagate_command}")
+                    print("ContextCanon still asks separately before applying each changed step.")
+                    print("After the intended reviews: contextcanon build --all . && contextcanon check --all .")
                 else:
                     print("Next from the repository root: contextcanon build --all .")
                     print("Then: contextcanon check --all .")

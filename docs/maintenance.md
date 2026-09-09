@@ -22,7 +22,7 @@ Think of a student's notes from a lecture: the lecture material may be revised l
 
 ## Update a reusable Source
 
-First see what this Node currently accepts:
+First see which reusable Source version this Node currently uses:
 
 ```text
 contextcanon source list
@@ -40,9 +40,11 @@ For a one-off branch, tag, or exact commit candidate:
 contextcanon source update "Development Workflow" --ref <git-ref>
 ```
 
-The review first describes **what changed in the external Source package**. Accepting it changes the Source snapshot used by the direct consumer Node. It does not silently update descendant Nodes and it does not rebuild generated Markdown yet.
+The guided review tells the story in this order: **what this Node uses now → what newer Source candidate was found → what changed in that Source → what would effectively change here → what to check before applying it → which Child chain needs review afterwards**. Technical digests and cache/provenance details stay below that human view.
 
-Imported Rules normally become part of the consumer's effective Context. A project-specific difference is expressed explicitly with a local Override or Remove and a rationale; Source order is never hidden precedence.
+Before applying a Source update, use the same three quick questions as for downstream propagation: does it make sense here, is it compatible with the other imported Contexts, and is the upstream change itself correct/complete enough? ContextCanon previews the effective local result after current Overrides/Removes and other imports. A project-specific difference remains explicit; import order is never hidden precedence.
+
+Applying the Source update changes only this direct consumer's Source snapshot. It does not silently advance Child Nodes and it does not rebuild generated Markdown yet. If Children exist, the command lists the Parent/Child chain and points to `contextcanon propagate` for the subsequent guided review.
 
 ## Propagation is downstream review, not blind copying
 
