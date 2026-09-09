@@ -3,7 +3,7 @@
 Once a project is onboarded, normal ContextCanon maintenance is a short loop:
 
 ```text
-inspect / update  →  propagate  →  build  →  check
+inspect / update  →  review downstream impact when needed  →  build  →  check
 ```
 
 You normally start from the project's `CONTEXT.md`. It tells you what applies here and where deeper context lives. `CONTEXT.src.md` is the human-edited local source; generated `CONTEXT.md`, `CONTEXT/`, and `.context/` state are not hand-maintained.
@@ -44,15 +44,37 @@ The review first describes **what changed in the external Source package**. Acce
 
 Imported Rules normally become part of the consumer's effective Context. A project-specific difference is expressed explicitly with a local Override or Remove and a rationale; Source order is never hidden precedence.
 
-## Propagate an accepted change
+## Propagation is downstream review, not blind copying
 
-After a higher-level Node changes, carry that accepted Context through dependent Child Nodes:
+When an accepted higher-level Context changes, dependent Children may need to move to a newer Parent snapshot. **Propagation** is the guided review of those Parent → Child edges, top-down.
+
+For every changed edge, make this quick conceptual check before accepting it:
+
+1. **Still applicable here?** Do the incoming changes make sense for this Child, or does this Child need a justified local Override/Remove?
+2. **Compatible with the other imported Contexts?** If another Parent or Source says something incompatible, resolve the scopes explicitly. Import order is never precedence.
+3. **Is the upstream change itself good enough?** From this Child's viewpoint, is the Parent change correct, complete, and well-scoped? If not, improve the Parent/Source instead of compensating locally for a bad reusable rule.
+
+If a question fails, the usual choices are deliberately different:
+
+- fix the Parent or Source when the reusable rule itself is wrong, incomplete, or too broad;
+- use a local Override/Remove when the upstream rule is valid generally but intentionally does not apply here;
+- add a narrower local Rule when the apparent conflict is really missing scope or precision.
+
+Then do the detailed pass: read the actual changed Rules, Topics, Resources, and relevant local changes before accepting the edge. ContextCanon handles deterministic structural checks such as stable-identity conflicts and dangling changes; semantic correctness remains a human review decision.
+
+From one changed Node, start the guided downstream review with:
+
+```text
+contextcanon propagate
+```
+
+From a repository root, `--all` deliberately broadens the **review scope** to every semantic Parent graph in the repository:
 
 ```text
 contextcanon propagate --all
 ```
 
-**Propagation** means: compare each Child's last accepted Parent snapshot with the newer Parent, show the difference, and accept the newer snapshot only after review. ContextCanon walks Parent edges top-down so a change can flow from a project root through subsystems to deeper Children without updating unrelated siblings.
+`--all` is not blanket approval. Normal interactive propagation still stops at each changed Parent → Child edge for review and confirmation. The explicit `--yes` option exists for controlled automation and removes that per-edge confirmation; it is not the normal novice workflow.
 
 The explicit Parent-edge commands remain available when you want to work on one relationship only:
 
@@ -61,9 +83,11 @@ contextcanon parent review [<parent-node-id>] --node <child>
 contextcanon parent accept [<parent-node-id>] --node <child>
 ```
 
+A Child that accepts a newer Parent may itself become a changed Parent for deeper Children. Propagation therefore walks top-down, but each Child keeps its own last accepted snapshot until its turn is reviewed.
+
 ## Render and verify
 
-After accepted updates and propagation:
+After the intended updates and propagation reviews are accepted:
 
 ```text
 contextcanon build --all .
@@ -76,7 +100,7 @@ contextcanon check --all .
 
 ```text
 Update      inspect and accept a newer Source or Parent snapshot
-Propagate   carry an accepted Context change through dependent Parent edges
+Propagate   review whether an accepted change should advance each dependent Child
 Build       render accepted effective Context
 Check       verify that authored, accepted, and generated state agree
 ```
