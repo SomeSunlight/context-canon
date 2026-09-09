@@ -20,6 +20,11 @@ replace_once(
     '<!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.1-draft" -->',
     '<!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.0-draft" -->',
 )
+replace_once(
+    "tests/test_configuration_and_update_ux.py",
+    'self.assertIn("Fetched candidate: Shared", out.getvalue())',
+    'self.assertIn("Candidate: Shared 1.1.0", out.getvalue())',
+)
 
 '''
 if text.count(insert_marker) != 1:
