@@ -8,14 +8,18 @@ This is a navigation page, not a dump of every flag. Use `contextcanon <command>
 | --- | --- | --- |
 | Show installed tool version | `contextcanon --version` | Confirms the installed ContextCanon release. |
 | Inspect reusable Sources | `contextcanon source list` | Shows accepted Source versions plus candidate-discovery configuration. |
-| Review/update one Source | `contextcanon source update <name-or-id>` | Fetches a candidate, shows the external change, validates local composition, and asks before acceptance. |
+| Review/update one Source | `contextcanon source update <name-or-id>` | Fetches a candidate, shows the external change and local effect, validates composition, and asks before acceptance. |
 | Use one exact candidate ref | `contextcanon source update <name-or-id> --ref <ref>` | Reviews one branch/tag/commit without making that ref durable configuration. |
-| Propagate accepted Context | `contextcanon propagate --all` | Reviews Parent relationships top-down and carries accepted Context to dependent Nodes. |
+| Review downstream impact | `contextcanon propagate` | Reviews changed Parent → Child relationships top-down from the current Node and asks before each acceptance. |
+| Review every Parent graph | `contextcanon propagate --all` | Broadens the review scope to all semantic Parent edges in the repository; it does not imply blanket acceptance. |
 | Render generated Context | `contextcanon build --all .` | Rebuilds every Context Node in the repository. |
 | Verify generated state | `contextcanon check --all .` | Reports drift or consistency problems. |
 | Inspect central discovery config | `contextcanon config show` | Validates and prints `contextcanon.yaml`. |
 
-The normal loop is **Update → Propagate → Build → Check**. See [Maintain an existing ContextCanon project](maintenance.md).
+The normal loop is **Update → review propagation when needed → Build → Check**. See [Maintain an existing ContextCanon project](maintenance.md) for the short propagation checklist.
+
+> [!IMPORTANT]
+> `--all` means **all Parent edges are in review scope**. Interactive propagation still asks at every changed edge. `--yes` suppresses those confirmations and is intended for controlled automation, not as the default human workflow.
 
 ## Work on one Parent relationship
 
@@ -24,10 +28,12 @@ The normal loop is **Update → Propagate → Build → Check**. See [Maintain a
 ```text
 contextcanon parent review [<parent-node-id>] --node <child>
 contextcanon parent accept [<parent-node-id>] --node <child>
-contextcanon parent propagate --all
+contextcanon parent propagate [path] [--all]
 ```
 
-The first two commands are useful for one explicit edge. `contextcanon parent propagate --all` remains the explicit Parent-oriented form of the normal user command `contextcanon propagate --all`.
+The first two commands are useful for one explicit edge. `contextcanon parent propagate` remains the explicit Parent-oriented form of the normal user command `contextcanon propagate`.
+
+Before accepting a Parent update, check three things: **does it still apply here, does it coexist with the Child's other imported Contexts, and is the upstream change itself correct and complete from this Child's viewpoint?** If not, fix upstream or make an explicit justified local resolution rather than relying on import order.
 
 ## Author normal Context
 
