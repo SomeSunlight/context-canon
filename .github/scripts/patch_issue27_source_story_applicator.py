@@ -24,6 +24,11 @@ extra = '''replace_once(
     'self.assertIn("Migrated legacy Source discovery", out.getvalue())',
     'self.assertIn("Discovery setup note:", out.getvalue())\\n            self.assertIn("Legacy Source lookup settings were moved to", out.getvalue())',
 )
+replace_once(
+    "tests/test_configuration_and_update_ux.py",
+    'self.assertIn("This migration only changes where future Source candidates are discovered.", out.getvalue())',
+    'self.assertIn("This command is offering an update to Consumer; its Context has not changed yet.", out.getvalue())',
+)
 '''
 if text.count(marker) != 1:
     raise SystemExit("source-story test-update marker missing")
