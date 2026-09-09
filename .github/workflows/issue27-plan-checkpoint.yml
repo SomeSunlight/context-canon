@@ -1,16 +1,14 @@
 name: Issue 27 PLAN checkpoint
 
 on:
-  push:
-    branches:
-      - agent/issues-14-15-multi-parent
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
   checkpoint:
-    if: github.event.head_commit.message == 'Start Issue #27 PLAN checkpoint'
+    if: github.event.pull_request.head.ref == 'agent/issues-14-15-multi-parent'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
