@@ -188,7 +188,7 @@ def _confirm(prompt: str) -> bool:
     return answer in {"y", "yes"}
 
 
-def _parent_edges(repo_root: Path):
+def _parent_edges(repo_root: Path, start_root: Path | None = None):
     compiler = Compiler(repo_root)
     roots = [root.resolve() for root in discover_nodes(repo_root)]
     parsed = {root: parse_node(root, repo_root) for root in roots}
@@ -222,14 +222,103 @@ def _parent_edges(repo_root: Path):
         for child_root, items in parent_roots.items()
         for parent, parent_root in items
     ]
-    return sorted(
-        edges,
+    edges.sort(
         key=lambda item: (
             depth(item[0]),
             item[0].relative_to(repo_root).as_posix(),
             item[1].id,
-        ),
+        )
     )
+    if start_root is None:
+        return edges
+
+    start_root = start_root.resolve()
+    if start_root not in parsed:
+        raise ContextCanonError(f"Propagation start is not a Context Node root: {start_root}")
+    reachable = {start_root}
+    changed = True
+    while changed:
+        changed = False
+        for child_root, _, parent_root in edges:
+            if parent_root in reachable and child_root not in reachable:
+                reachable.add(child_root)
+                changed = True
+    return [edge for edge in edges if edge[2] in reachable]
+
+
+def _containing_node_root(path: Path, repo_root: Path) -> Path | None:
+    cursor = path.resolve()
+    if cursor.is_file():
+        cursor = cursor.parent
+    while True:
+        if (cursor / "CONTEXT.src.md").is_file():
+            return cursor
+        if cursor == repo_root or cursor.parent == cursor:
+            return None
+        cursor = cursor.parent
+
+
+def _propagation_scope(path: Path, all_edges: bool):
+    resolved = path.resolve()
+    repo_root = resolved if (resolved / ".git").exists() else find_repo_root(resolved)
+    if all_edges:
+        return repo_root, None, _parent_edges(repo_root)
+    start_root = _containing_node_root(resolved, repo_root)
+    if start_root is None:
+        raise ContextCanonError(
+            "Propagation without --all must start in a Context Node; run from that Node or use --all for every Parent graph"
+        )
+    return repo_root, start_root, _parent_edges(repo_root, start_root)
+
+
+def _print_propagation_review_guide(scope: str, edge_count: int) -> None:
+    print("Propagation review")
+    print(f"Scope: {scope} ({edge_count} Parent edge(s))")
+    print("Before accepting each changed Parent -> Child edge, check:")
+    print("  1. Applies here? If not, does this Child need a justified Override/Remove?")
+    print("  2. Compatible with other imported Contexts? Import order is never precedence.")
+    print("  3. Upstream change itself correct, complete, and well-scoped from this Child's viewpoint?")
+    print("If not: fix upstream, make an explicit local Override/Remove, or add a narrower local Rule.")
+    print("ContextCanon checks deterministic structural conflicts; semantic correctness remains a human decision.")
+
+
+def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
+    repo_root, start_root, edges = _propagation_scope(path, all_edges)
+    if not edges:
+        print("No semantic Parent edges found in the selected propagation scope.")
+        return 0
+    if all_edges:
+        scope = "all semantic Parent graphs in this repository"
+    else:
+        start = parse_node(start_root, repo_root)
+        scope = f"descendants of {start.metadata.name}"
+    _print_propagation_review_guide(scope, len(edges))
+
+    accepted_count = 0
+    for index, (child_root, parent, parent_root) in enumerate(edges, start=1):
+        _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
+        child = parse_node(child_root, repo_root)
+        child_label = child_root.relative_to(repo_root).as_posix() or "."
+        print(f"\nReview {index}/{len(edges)}: Parent {parent.name} -> Child {child.metadata.name} ({child_label})")
+        print("Quick check: applicability · compatibility with other imports · upstream quality")
+        result, receipt = review_parent_candidate(child_root, parent.id)
+        print("Parent package change:")
+        print(render_diff(result), end="")
+        if result.is_empty:
+            print("Parent pin is already current; no acceptance needed.")
+            continue
+        if not yes and not _confirm(f"Accept this reviewed Parent update for Child {child.metadata.name}?"):
+            print("Stopped before acceptance; the reviewed receipt remains available for explicit acceptance.")
+            return 0
+        accepted = accept_parent_candidate(child_root, parent.id)
+        accepted_count += 1
+        print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} for Child {child.metadata.name}")
+        _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
+
+    print(f"Propagation review complete: accepted {accepted_count} changed Parent edge(s).")
+    print("Next from the repository root: contextcanon build --all .")
+    print("Then: contextcanon check --all .")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -514,6 +603,23 @@ def main(argv: list[str] | None = None) -> int:
     author_topic.add_argument("--required-node", action="append", default=[], metavar="PATH", help="required Context Node navigation target; may be repeated")
     author_topic.add_argument("--optional-node", action="append", default=[], metavar="PATH", help="optional Context Node navigation target; may be repeated")
 
+    propagate_parser = sub.add_parser(
+        "propagate",
+        help="review downstream Parent updates top-down; each changed edge remains an explicit acceptance",
+    )
+    propagate_parser.add_argument(
+        "path", nargs="?", default=".",
+        help="starting Context Node; with --all any path inside the repository (default: current directory)",
+    )
+    propagate_parser.add_argument(
+        "--all", action="store_true",
+        help="broaden review scope to every semantic Parent edge in the repository",
+    )
+    propagate_parser.add_argument(
+        "--yes", action="store_true",
+        help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)",
+    )
+
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
     parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
     parent_review = parent_sub.add_parser("review", help="compile one live Parent explicitly and review its immutable candidate snapshot")
@@ -522,10 +628,10 @@ def main(argv: list[str] | None = None) -> int:
     parent_accept = parent_sub.add_parser("accept", help="accept exactly the reviewed snapshot for one Parent")
     parent_accept.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_accept.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
-    parent_propagate = parent_sub.add_parser("propagate", help="review and accept stale Parent edges top-down across a repository")
-    parent_propagate.add_argument("path", nargs="?", default=".", help="repository root or path inside it (default: current directory)")
-    parent_propagate.add_argument("--all", action="store_true", help="explicitly select all semantic Parent edges in the repository")
-    parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed Parent diff without interactive confirmation")
+    parent_propagate = parent_sub.add_parser("propagate", help="explicit Parent-oriented form of guided downstream propagation")
+    parent_propagate.add_argument("path", nargs="?", default=".", help="starting Context Node; with --all any path inside the repository")
+    parent_propagate.add_argument("--all", action="store_true", help="broaden review scope to every semantic Parent edge in the repository")
+    parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
 
     source_parser = sub.add_parser("source", help="discover, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
@@ -1030,35 +1136,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Then: contextcanon check {node_root}")
             return 0
 
+        if args.command == "propagate":
+            return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
+
         if args.command == "parent":
             if args.parent_command == "propagate":
-                repo_root = find_repo_root(Path(args.path).resolve())
-                edges = _parent_edges(repo_root)
-                if not edges:
-                    print("No semantic Parent edges found.")
-                    return 0
-                accepted_count = 0
-                for child_root, parent, parent_root in edges:
-                    _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
-                    child = parse_node(child_root, repo_root)
-                    child_label = child_root.relative_to(repo_root).as_posix() or "."
-                    print(f"\n=== {child.metadata.name} ({child_label}) ← {parent.name} ===")
-                    result, receipt = review_parent_candidate(child_root, parent.id)
-                    print(render_diff(result), end="")
-                    if result.is_empty:
-                        print("Parent pin is already current; no acceptance needed.")
-                        continue
-                    if not args.yes and not _confirm(f"Accept this reviewed Parent update for {child.metadata.name}?"):
-                        print("Stopped before acceptance; the reviewed receipt remains available for explicit acceptance.")
-                        return 0
-                    accepted = accept_parent_candidate(child_root, parent.id)
-                    accepted_count += 1
-                    print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
-                    _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
-                print(f"Propagated {accepted_count} Parent edge(s) top-down.")
-                print(f"Next: contextcanon build --all {repo_root}")
-                print(f"Then: contextcanon check --all {repo_root}")
-                return 0
+                return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
 
             node_root = _node_root(Path(args.node))
             if args.parent_command == "review":
@@ -1118,6 +1201,13 @@ def main(argv: list[str] | None = None) -> int:
 
             source_id = _resolve_source_id(node_root, args.source)
             if args.source_command in {"fetch", "update"}:
+                parsed = parse_node(node_root, repo_root)
+                current = next(source for source in parsed.sources if source.id == source_id)
+                if args.source_command == "update":
+                    print(f"Reviewing Source update for local Node: {parsed.metadata.name}")
+                    print(f"Accepted Source: {current.name} {current.version}")
+                    print("This first reviews the external Source candidate. Nothing local changes until you accept it.")
+                    print("")
                 candidate, location = fetch_git_candidate(node_root, source_id, discovery_ref=args.ref)
                 try:
                     label = location.relative_to(node_root).as_posix()
@@ -1131,8 +1221,6 @@ def main(argv: list[str] | None = None) -> int:
                 elif provenance is not None and provenance.get("kind") == "local":
                     print(f"  Local repository: {provenance['location']}")
                 print(f"  Cached package: {label}")
-                parsed = parse_node(node_root, repo_root)
-                current = next(source for source in parsed.sources if source.id == source_id)
                 if args.source_command == "update":
                     migrated = _migrate_legacy_source_discovery(node_root, source_id)
                     if migrated is not None:
@@ -1146,14 +1234,44 @@ def main(argv: list[str] | None = None) -> int:
                     print("Accepted Source pin is unchanged until explicit review and accept.")
                     return 0
                 result, receipt = review_source_candidate(node_root, source_id, location)
+                print("\nExternal Source change:")
                 print(render_diff(result), end="")
-                if not args.yes and not _confirm(f"Accept this reviewed Source update for {current.name}?"):
+                print("Local effect if accepted:")
+                print(f"  - {parsed.metadata.name} will accept Source {candidate.metadata.name} {candidate.metadata.version}.")
+                print("  - The reviewed Source changes become input to this Node's effective Context; explicit local Override/Remove still apply.")
+                print("  - Generated CONTEXT.md is not rebuilt by this acceptance.")
+                downstream = _parent_edges(repo_root, node_root)
+                downstream_nodes = []
+                seen_downstream = set()
+                for child_root, _, _ in downstream:
+                    child = parse_node(child_root, repo_root)
+                    if child.metadata.id in seen_downstream:
+                        continue
+                    seen_downstream.add(child.metadata.id)
+                    downstream_nodes.append((child.metadata.name, child_root.relative_to(repo_root).as_posix() or "."))
+                if downstream_nodes:
+                    print("Downstream review still pending:")
+                    print("  No Child is changed by this Source acceptance.")
+                    print("  Potentially affected dependent Nodes:")
+                    for name, label in downstream_nodes:
+                        print(f"    - {name} ({label})")
+                else:
+                    print("Downstream review: this Node has no dependent Child Nodes in the repository propagation graph.")
+                if not args.yes and not _confirm(f"Accept this reviewed Source update for {candidate.metadata.name}?"):
                     print(f"Stopped before acceptance. Review receipt: {receipt}")
                     return 0
                 accepted = accept_source_candidate(node_root, source_id, location)
                 print(f"accepted Source {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
                 _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
-                print("If this Node has descendants, run 'contextcanon parent propagate --all' from the repository root.")
+                if downstream_nodes:
+                    start_label = node_root.relative_to(repo_root).as_posix() or "."
+                    print("Next: review downstream applicability when ready; this is not automatic acceptance:")
+                    print(f"  contextcanon propagate {start_label}")
+                    print("The propagation review checks each changed Parent -> Child edge and asks before acceptance.")
+                    print("After the intended propagation reviews: contextcanon build --all . && contextcanon check --all .")
+                else:
+                    print("Next from the repository root: contextcanon build --all .")
+                    print("Then: contextcanon check --all .")
                 return 0
 
             candidate = Path(args.candidate).resolve()
