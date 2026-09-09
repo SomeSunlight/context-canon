@@ -4,7 +4,7 @@ The accepted `main` baseline is PR #13, squash-merged as:
 
 `df847ba031bfa3965ca53626249e18a1074cb8af`
 
-PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#24. It remains subject to explicit project-owner approval.
+PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#27. It remains subject to explicit project-owner approval.
 
 Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
 

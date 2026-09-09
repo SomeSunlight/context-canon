@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** Development Workflow  
-**Context version:** `0.2.1-draft`
+**Context version:** `0.3.0-draft`
 
 ## Local Overview
 

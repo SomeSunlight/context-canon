@@ -17,7 +17,7 @@ small CONTEXT.md ────┼─ logging task ──────────�
 
 A project keeps a compact dependable entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. Detailed guidance can live close to the narrow context where it belongs without bloating every higher-level overview; humans and agents still get clear landing points when they enter anywhere in the tree.
 
-Reusable Sources also give shared guidance one maintained origin. When accepted Sources or authored context change, deterministic rebuilds propagate the updated result into consuming Nodes instead of requiring the same static prompt bundle to be rewritten in several places.
+Reusable Sources also give shared guidance one maintained origin. When accepted Sources or authored context change, deterministic builds render the accepted result without rewriting copied prompt bundles. Dependent Child Nodes advance to newer Parent snapshots only through an explicit propagation review.
 
 That matters especially for **smaller, cheaper and local models**. ContextCanon cannot turn a weak model into a strong one, but it can avoid wasting model capability on reconstructing project structure and conventions from scratch. A well-scoped task with the right project knowledge gives smaller models a better chance to do useful work reliably.
 
@@ -144,6 +144,18 @@ The older single-pass first-adoption `instruction → validate → review → ac
 
 For the user walkthrough and technical trust boundaries, read **[Onboard an existing project](docs/onboarding.md)**.
 
+## Maintain an onboarded project
+
+After onboarding, the normal operator loop is short:
+
+```text
+inspect / update  →  review downstream propagation when needed  →  build  →  check
+```
+
+Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**. It explains Source versus Parent from the user's point of view, the three-question propagation review, and when to fix upstream versus use a justified local Override/Remove. Use the **[CLI quick reference](docs/cli.md)** as the compact command map; exact flags remain available through `contextcanon <command> --help`.
+
+`contextcanon propagate` reviews only semantic descendants of the selected Context Node. `--all` deliberately broadens the review scope to every Parent graph in the repository; it is not blanket approval.
+
 ## One simple physical rule: a Node has its own directory
 
 A **Context Node lives in exactly one node-root directory**.
@@ -199,11 +211,11 @@ This repository does not explain ContextCanon from outside and then switch it on
 
 **The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses two Topics to route only the tasks that need more depth: onboarding an existing project and developing ContextCanon itself.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses three Topics to route only the tasks that need more depth: onboarding an existing project, maintaining an onboarded project, and developing ContextCanon itself.
 
 ```text
                          ┌─ Topic ──> onboarding guide
-ContextCanon Gateway ───┤
+ContextCanon Gateway ───┼─ Topic ──> maintenance + CLI guide
                          └─ Topic ──> ContextCanon Framework Development
                                            ▲              ▲
                                            │ Source       │ Source
@@ -259,7 +271,9 @@ context-canon/
 │
 ├── docs/                # Gateway-owned user documentation
 │   ├── README.md
-│   └── onboarding.md
+│   ├── onboarding.md
+│   ├── maintenance.md
+│   └── cli.md
 │
 └── nodes/               # organizes additional Nodes; not itself a Node
     ├── README.md
@@ -336,6 +350,8 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 If the five-second idea above is enough, the best next reads are:
 
 - [Onboard an existing project](docs/onboarding.md) — first-user walkthrough and current structure-first experiment.
+- [Maintain an existing ContextCanon project](docs/maintenance.md) — Source updates, downstream propagation review, build, and check.
+- [CLI quick reference](docs/cli.md) — compact command map for normal operation.
 - [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable planning, review, merge-gate and baseline-closure workflow.
 - [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](nodes/library/foundation/docs/composition.md) — Sources, local deltas, conflicts and updates.

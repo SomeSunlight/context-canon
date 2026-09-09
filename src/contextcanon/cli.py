@@ -8,7 +8,7 @@ from .authoring import add_rule, add_topic
 from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config, upsert_git_source
 from .version import __version__
 from .compiler import Compiler, discover_nodes
-from .diff import diff_compiled, render_diff
+from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
@@ -1213,14 +1213,8 @@ def main(argv: list[str] | None = None) -> int:
                     label = location.relative_to(node_root).as_posix()
                 except ValueError:
                     label = str(location)
-                print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
-                print(f"  Package digest: {candidate.package_digest}")
+                print(f"Candidate: {candidate.metadata.name} {candidate.metadata.version}")
                 provenance = load_candidate_provenance(node_root, candidate.package_digest)
-                if provenance is not None and provenance.get("candidate_ref"):
-                    print(f"  Git commit: {provenance['candidate_ref']}")
-                elif provenance is not None and provenance.get("kind") == "local":
-                    print(f"  Local repository: {provenance['location']}")
-                print(f"  Cached package: {label}")
                 if args.source_command == "update":
                     migrated = _migrate_legacy_source_discovery(node_root, source_id)
                     if migrated is not None:
@@ -1235,7 +1229,7 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 result, receipt = review_source_candidate(node_root, source_id, location)
                 print("\nExternal Source change:")
-                print(render_diff(result), end="")
+                print(render_diff(result, include_technical=False), end="")
                 print("Local effect if accepted:")
                 print(f"  - {parsed.metadata.name} will accept Source {candidate.metadata.name} {candidate.metadata.version}.")
                 print("  - The reviewed Source changes become input to this Node's effective Context; explicit local Override/Remove still apply.")
@@ -1257,6 +1251,14 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"    - {name} ({label})")
                 else:
                     print("Downstream review: this Node has no dependent Child Nodes in the repository propagation graph.")
+                print("")
+                print(render_diff_technical(result), end="")
+                print("  Candidate discovery:")
+                if provenance is not None and provenance.get("candidate_ref"):
+                    print(f"    Git commit: {provenance['candidate_ref']}")
+                elif provenance is not None and provenance.get("kind") == "local":
+                    print(f"    Local repository: {provenance['location']}")
+                print(f"    Cached package: {label}")
                 if not args.yes and not _confirm(f"Accept this reviewed Source update for {candidate.metadata.name}?"):
                     print(f"Stopped before acceptance. Review receipt: {receipt}")
                     return 0

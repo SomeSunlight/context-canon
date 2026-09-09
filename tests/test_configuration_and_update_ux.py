@@ -52,7 +52,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.6.0")
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.0")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())
@@ -140,7 +140,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertIn("Migrated legacy Source discovery", out.getvalue())
             self.assertIn("This migration only changes where future Source candidates are discovered.", out.getvalue())
             self.assertIn("It does not change the accepted Source; acceptance happens only after this review.", out.getvalue())
-            self.assertIn("Fetched candidate: Shared", out.getvalue())
+            self.assertIn("Candidate: Shared 1.1.0", out.getvalue())
 
             source_cfg, repo_cfg = configured_source(project, "source-id")
             self.assertEqual(repo_cfg.kind, "git")
@@ -253,7 +253,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertEqual(rc, 0, out.getvalue())
             grand = Compiler(repo).compile(grand_root)
             self.assertEqual([rule.statement for rule in grand.inherited_rules], ["Updated meaning."])
-            self.assertIn("Propagated 2 Parent edge(s) top-down.", out.getvalue())
+            self.assertIn("Propagation review complete: accepted 2 changed Parent edge(s).", out.getvalue())
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 

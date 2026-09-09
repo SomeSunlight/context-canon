@@ -151,7 +151,7 @@ def _summary_parts(diff: ContextDiff) -> list[str]:
     return parts
 
 
-def render_diff(diff: ContextDiff) -> str:
+def render_diff(diff: ContextDiff, *, include_technical: bool = True) -> str:
     summary = ", ".join(_summary_parts(diff))
     if not summary:
         summary = (
@@ -182,15 +182,19 @@ def render_diff(diff: ContextDiff) -> str:
     else:
         lines.extend(["", "Package presentation changed without semantic or Resource content changes."])
 
-    lines.extend(
+    if include_technical:
+        lines.extend(["", *render_diff_technical(diff).rstrip("\n").split("\n")])
+    return "\n".join(lines) + "\n"
+
+
+def render_diff_technical(diff: ContextDiff) -> str:
+    return "\n".join(
         [
-            "",
             "Technical details:",
             f"  Normalized digest: {_transition(diff.before_normalized_digest, diff.after_normalized_digest)}",
             f"  Package digest: {_transition(diff.before_package_digest, diff.after_package_digest)}",
         ]
-    )
-    return "\n".join(lines) + "\n"
+    ) + "\n"
 
 def _diff_maps(
     category: str,

@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683",
-    "package": "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"
+    "normalized": "5a10976ebb319f31763bac39b330e3bb70a578309360ff10ced52fe88ed7428d",
+    "package": "a8f5634a80b89f29aa760db7d35bfa9247fdacaf07815eb09c65fea8de6bd2f6"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "e96ac67b5a2caa4dbb3f48e4cf4d9b7c031918056dbd9c561e98b19ce1afc274",
-      "size": 2535
+      "sha256": "9d2199892fb314e7554cd94c44083c43dd101003488ae5de3edfd9569f943762",
+      "size": 3117
     },
     {
       "path": "CONTEXT/README.md",
@@ -17,21 +17,41 @@
       "size": 2088
     },
     {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
+      "sha256": "6f17766109b65c6c958654ac8636a145fc766aaa10e3c94a745fc47882e5f81d",
+      "size": 4143
+    },
+    {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
+      "sha256": "abdd4ee60eeca0d01ca7709adfdf1166989097ea6f76727e59526f9976b80388",
+      "size": 5951
+    },
+    {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
       "sha256": "ed41166188dcc17a7d0c9c2564a6fdfcabca8ef6a66cfe0a26605db12ccaf3e8",
       "size": 23204
     },
     {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
+      "sha256": "b330151386039fd962b4c96b008588b4425f6500613660ca0ce616b3c724db92",
+      "size": 15768
+    },
+    {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md",
       "sha256": "0ccbab6d59e0d44b857cc9675af30c753e14aa22b282f3fdf134a85f0b387f03",
       "size": 41000
+    },
+    {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md",
+      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
+      "size": 17026
     }
   ],
   "imports": [],
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.1.0-draft"
+    "version": "0.2.0-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -52,6 +72,25 @@
         }
       ],
       "title": "Onboard an existing project"
+    },
+    {
+      "condition": "When inspecting, updating, propagating, building, checking, or learning the normal CLI workflow in an already-onboarded ContextCanon project:",
+      "id": "CCG-TOPIC-MAINTENANCE",
+      "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "origin_node_name": "ContextCanon Gateway",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"
+        }
+      ],
+      "title": "Use and maintain ContextCanon"
     },
     {
       "condition": "When changing ContextCanon's specification, documentation, Context Nodes, compiler, examples, harness integration, or project tooling:",

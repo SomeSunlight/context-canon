@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "bf58de9bf5690793ceffc0aec0ebfcf911005033e338c5e89742b68d08bc5c0d",
-    "package": "e35ca7151b0f0780b2d57c73b447da49c4cf61b098ce2f8e49d165285b6863b5"
+    "normalized": "62a1bc6b9fffa838fbdf2b434f9fd2057de38fb6017734115ae2fb3ed56c100e",
+    "package": "7da87dcee0e716db35b62935f9980d27dd06986af93e61d4d28eb59783a58b8c"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "1718df860fd94f1c308b63d3e02c854de72e235dc81cd931611c50aab20cabc6",
+      "sha256": "80bfb3aa464d5257610d04bdcf2b831c858050cc1a32ef852070eeb81b1fc6bd",
       "size": 4732
     },
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "ae02dd267a897d8b96b0718affff669d255e2e2e9b9fbf613a6cfc11104ed9e8",
-      "size": 14841
+      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
+      "size": 17026
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -46,7 +46,7 @@
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
-    "version": "0.1.1-draft"
+    "version": "0.2.0-draft"
   },
   "parents": [],
   "removed_rules": [],

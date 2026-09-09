@@ -4,7 +4,7 @@
 
 The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
 
-The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#19 and remains unmerged pending explicit project-owner approval.
+The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#27 and remains unmerged pending explicit project-owner approval.
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
 
@@ -457,18 +457,18 @@ Owner-test review-readability follow-up under #22: keep immutable digests visibl
 
 Owner-test version-discipline follow-up under #26: a changed Context package must not silently reuse the previous human version. If a prior generated package exists and the authored SemVer-shaped version is unchanged, ContextCanon applies the minimum patch bump automatically and explicitly tells the owner to consider a higher minor/major bump when warranted. A human-selected higher version wins. External Source candidates that changed package identity while reusing the accepted version are rejected rather than repaired by the consumer.
 
-Issues #22/#26 owner-test implementation checkpoint: review output now leads with version and a compact semantic/content summary, followed by category details and a separate Technical details fingerprint section. Legacy discovery migration explicitly says acceptance is unchanged. Context Node package reuse under the same version is prevented: SemVer-shaped unchanged versions receive only a minimum patch bump with a visible minor/major reminder, human-selected higher versions are preserved, unsafe version formats require manual advancement, and external same-version/different-package Source candidates are rejected. Development Workflow advances to `0.2.1-draft`; affected self-hosted Context Nodes are versioned consistently. Full deterministic tests, self-build/check, and diff hygiene must remain green on the final product head.
+Issues #22/#26 owner-test implementation checkpoint: review output now leads with version and a compact semantic/content summary, followed by category details and a separate Technical details fingerprint section. Legacy discovery migration explicitly says acceptance is unchanged. Context Node package reuse under the same version is prevented: SemVer-shaped unchanged versions receive only a minimum patch bump with a visible minor/major reminder, human-selected higher versions are preserved, unsafe version formats require manual advancement, and external same-version/different-package Source candidates are rejected. Development Workflow first received the automatic minimum `0.2.1-draft` bump; owner review then correctly classified the accumulated workflow change as feature-level and advances it deliberately to `0.3.0-draft`. Affected self-hosted Context Nodes are versioned consistently. Full deterministic tests, self-build/check, and diff hygiene must remain green on the final product head.
 
 ## Owner-test everyday maintenance UX: Issue #27
 
 Purpose: make normal ContextCanon use after onboarding discoverable from the repository entrance, explain composition from the user's benefit first, and give accepted Context changes one short, consistent propagation vocabulary.
 
-- [ ] Add a user-level `contextcanon propagate --all` command for carrying accepted Context changes through dependent Parent edges; keep `contextcanon parent propagate --all` as the explicit compatibility form.
-- [ ] Make Source-update review explain the external Source change first, then the local effect if accepted, what remains unchanged until propagation/build, the downstream Nodes expected to need propagation, and the normal next command before technical fingerprints.
-- [ ] Add a concise root-owned existing-project maintenance guide and compact CLI overview covering inspect/update/propagate/build/check plus links to deeper concepts; make both discoverable from README and a new Gateway Topic.
-- [ ] Rewrite the opening of Foundation `composition.md` from the user mental model: a Child can combine several independent contexts; non-orthogonal imports can conflict and require explicit human resolution; link to the existing deeper conflict sections rather than duplicating them.
-- [ ] Keep Parent review/accept explanations short and intuitive: Parent and Child may evolve independently; the Child keeps its last accepted Parent snapshot until a newer one is reviewed and accepted.
-- [ ] Choose intentional human-facing version bumps for materially changed Context Nodes instead of relying only on automatic minimum patch bumps, regenerate self-hosted packages, add focused regressions, and pass the complete suite/build/check/diff gate before returning to the real `ai-workstation` owner test.
+- [x] Add user-level `contextcanon propagate` scoped to semantic descendants of the selected Node; `--all` broadens only the review scope to every Parent graph, while `contextcanon parent propagate` remains the explicit compatibility form.
+- [x] Make Source-update review explain the external Source change first, then the local effect if accepted, what remains unchanged until propagation/build, the downstream Nodes expected to need review, and the normal next command before technical fingerprints.
+- [x] Add a concise root-owned existing-project maintenance guide and compact CLI overview covering inspect/update/propagate/build/check plus links to deeper concepts; make both discoverable from README and a new Gateway Topic.
+- [x] Rewrite the opening of Foundation `composition.md` from the user mental model: a Child can combine several independent contexts; non-orthogonal imports can conflict and require explicit human resolution; link to the existing deeper conflict sections rather than duplicating them.
+- [x] Keep Parent review/accept explanations short and intuitive: Parent and Child may evolve independently; the Child keeps its last accepted Parent snapshot until a newer one is reviewed and accepted. Propagation presents a short applicability / cross-context compatibility / upstream-quality checklist before detailed diffs.
+- [x] Choose intentional human-facing version bumps for materially changed Context Nodes instead of relying only on automatic minimum patch bumps, regenerate self-hosted packages, add focused regressions, and pass the complete suite/build/check/diff gate before returning to the real `ai-workstation` owner test.
 
 Issue #27 is an explicit owner-approved expansion of draft PR #18 discovered during the real post-onboarding `ai-workstation` walkthrough. PR #18 remains draft and must not be merged without explicit project-owner approval.
 

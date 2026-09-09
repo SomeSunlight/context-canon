@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.1.0-draft"
+  version: "0.2.0-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -28,13 +28,14 @@ local:
   changes: []
   topics:
     - {"id": "CCG-TOPIC-ONBOARDING", "title": "Onboard an existing project"}
+    - {"id": "CCG-TOPIC-MAINTENANCE", "title": "Use and maintain ContextCanon"}
     - {"id": "CCG-TOPIC-DEVELOPMENT", "title": "ContextCanon framework development"}
 
 # Compiled effective Rule/Topic view with provenance.
 official:
   rules: []
   removed_rules: []
-  topic_ids: ["CCG-TOPIC-ONBOARDING", "CCG-TOPIC-DEVELOPMENT"]
+  topic_ids: ["CCG-TOPIC-ONBOARDING", "CCG-TOPIC-MAINTENANCE", "CCG-TOPIC-DEVELOPMENT"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -43,6 +44,18 @@ targets:
     intent: "required"
     kind: "resource"
     locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CCG-TOPIC-MAINTENANCE"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CCG-TOPIC-MAINTENANCE"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCG-TOPIC-DEVELOPMENT"
@@ -54,10 +67,14 @@ targets:
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
+  - {"source": "docs/cli.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"}
+  - {"source": "docs/maintenance.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"}
   - {"source": "docs/onboarding.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"}
+  - {"source": "nodes/internal/framework-development/docs/external-sources.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md"}
   - {"source": "nodes/internal/framework-development/docs/onboarding-reference.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "nodes/library/foundation/docs/composition.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "92f19305f317880a6f5f6a01f4decec95f296712a2e8ab2abd79bf9e6db51683"
-  package_digest: "a9c578bee5451331cd558654a74ad04f5e07571d94acde53eff17ef79a09ec16"
+  normalized_digest: "5a10976ebb319f31763bac39b330e3bb70a578309360ff10ced52fe88ed7428d"
+  package_digest: "a8f5634a80b89f29aa760db7d35bfa9247fdacaf07815eb09c65fea8de6bd2f6"

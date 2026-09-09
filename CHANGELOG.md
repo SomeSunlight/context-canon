@@ -25,6 +25,7 @@ All notable ContextCanon changes will be documented here.
 - Single `.context/context.yaml` machine-state concept per Node.
 - Public documentation-style Rule for precise, plain technical prose.
 - Executable deterministic compiler commands for build, drift checking, and exact compiled Context diff.
+- Human-scale post-onboarding maintenance UX: canonical Source-name update review, local-impact preview, scoped `contextcanon propagate`, per-Child propagation checklist, and compact root-owned maintenance/CLI documentation.
 - Inherited Rule `Remove` and `Override` with stable identity, provenance, dangling diagnostics, and deterministic diamond-conflict handling.
 - Canonical semantic normalization separated from exact package-byte identity.
 - Immutable external Source packages with complete `.context/package.json` manifests and strict integrity verification.
