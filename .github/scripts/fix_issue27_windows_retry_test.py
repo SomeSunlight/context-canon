@@ -22,7 +22,8 @@ replacement = '''    def test_package_publish_retries_transient_permission_error
         with patch("contextcanon.sources.os.replace", side_effect=flaky_replace), patch(
             "contextcanon.sources.time.sleep", return_value=None
         ):
-            sources_module._install_package(consumer, candidate, v2)
+            package = sources_module.load_package(candidate)
+            sources_module._install_package(consumer, candidate, package)
 
         self.assertEqual(attempts["package"], 1)
         self.assertTrue((package_destination / ".context/package.json").is_file())
