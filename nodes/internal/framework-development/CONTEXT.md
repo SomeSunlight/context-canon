@@ -8,12 +8,12 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.1.0-draft`
+**Context version:** `0.2.0-draft`
 
 **Resulting imported Contexts:**
 
-- **ContextCanon Foundation** — `0.1.0-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
-- **Development Workflow** — `0.2.0-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+- **ContextCanon Foundation** — `0.2.0-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
+- **Development Workflow** — `0.3.0-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
 
 ## How to use this context
 
@@ -45,6 +45,10 @@ Framework bookkeeping belongs under `.context/` and should not be required readi
 
 Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
 
+#### `CC-013` — Parents are unordered
+
+A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.
+
 ### Identity
 
 #### `CC-005` — Stable identity
@@ -75,6 +79,10 @@ Project code and canonical project context must not depend on a particular LLM o
 
 ### Repository conventions
 
+#### `CC-012` — Align Node roots with governed files
+
+Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.
+
 #### `CC-010` — Keep familiar repository documents useful
 
 Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.
@@ -88,6 +96,10 @@ Write technical documentation in precise, plain prose for intelligent readers; i
 ## Rules from Development Workflow
 
 ### Recoverable planning
+
+#### `CCW-010` — Back every change with an Issue
+
+Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.
 
 #### `CCW-001` — Plan a coherent change block before editing
 
@@ -105,6 +117,12 @@ Put decisions, active constraints, accepted state, and next steps needed to resu
 
 When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.
 
+### Transparent machine semantics
+
+#### `CCW-012` — Mark machine-significant Markdown explicitly
+
+When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.
+
 ### Proportional verification
 
 #### `CCW-004` — Batch related edits before expensive final verification
@@ -120,6 +138,10 @@ When the project owner explicitly approves a coherent implementation scope and s
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
 
 ### Human review gate
+
+#### `CCW-011` — Expand change scope explicitly
+
+Applicable Context constrains a task; it does not silently expand its writable scope.
 
 #### `CCW-006` — Do not merge without explicit project-owner approval
 

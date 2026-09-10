@@ -166,7 +166,7 @@ class OnboardingReviewTests(unittest.TestCase):
         (repo / ".git").mkdir()
         (repo / "CONTEXT.src.md").write_text(
             f'''# Shared Python Development — Local Context Source
-<!-- ctx:node id="{node_id}" version="{version}" -->
+<!-- ctx:node id="{node_id}" name="Shared Python Development" version="{version}" -->
 
 ## Rules
 
@@ -271,7 +271,7 @@ class OnboardingReviewTests(unittest.TestCase):
         accepted = accept_onboarding_review(prepared.snapshot_root, proposal_path, review_path, repo)
 
         source = (repo / "CONTEXT.src.md").read_text(encoding="utf-8")
-        self.assertIn('ctx:node id="demo-context" version="0.1.0"', source)
+        self.assertIn('ctx:node id="demo-context" name="Demo Context" version="0.1.0"', source)
         self.assertIn('ctx:rule id="TEST-001"', source)
         self.assertIn('ctx:topic id="ARCH"', source)
         self.assertEqual((repo / "README.md").read_bytes(), original_readme)
@@ -395,7 +395,7 @@ class OnboardingReviewTests(unittest.TestCase):
         )
         self.set_decisions(review_path, {"TEST-001": "accept"})
         (repo / "CONTEXT.src.md").write_text(
-            '# Existing — Local Context Source\n<!-- ctx:node id="existing" version="1.0.0" -->\n',
+            '# Existing — Local Context Source\n<!-- ctx:node id="existing" name="Existing" version="1.0.0" -->\n',
             encoding="utf-8",
         )
         with self.assertRaisesRegex(ContextCanonError, "will not replace an existing CONTEXT.src.md"):

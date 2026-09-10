@@ -13,7 +13,7 @@ from contextcanon.outputs import check_outputs, write_outputs
 
 
 SOURCE_WITH_RESOURCE = '''# Demo Node — Local Context Source
-<!-- ctx:node id="demo-node" version="0.1.0" -->
+<!-- ctx:node id="demo-node" name="Demo Node" version="0.1.0" -->
 
 ## Topics
 
@@ -27,7 +27,7 @@ Required:
 '''
 
 SOURCE_WITHOUT_RESOURCE = '''# Demo Node — Local Context Source
-<!-- ctx:node id="demo-node" version="0.1.0" -->
+<!-- ctx:node id="demo-node" name="Demo Node" version="0.1.0" -->
 '''
 
 

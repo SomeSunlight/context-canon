@@ -13,11 +13,12 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.compiler import Compiler
 from contextcanon.package import artifact_files
 from contextcanon.parser import ContextCanonError
+import contextcanon.sources as sources_module
 from contextcanon.sources import accept_source_candidate, review_source_candidate
 
 
 PROVIDER_TEMPLATE = '''# Shared Python Development — Local Context Source
-<!-- ctx:node id="node-python" version="{version}" -->
+<!-- ctx:node id="node-python" name="Shared Python Development" version="{version}" -->
 
 ## Rules
 
@@ -32,7 +33,7 @@ RULE_TEMPLATE = '''- **Use explicit Python:** {statement}
 '''
 
 CONSUMER_TEMPLATE = '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 
@@ -150,6 +151,32 @@ class SourceAcceptanceTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ContextCanonError, "targets missing inherited Rule"):
             review_source_candidate(consumer, "node-python", candidate)
+
+    def test_package_publish_retries_transient_permission_error(self):
+        _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")
+        _, v2, candidate = self.make_provider("2.0.0", "Prefer explicit Python v2.")
+        consumer = self.make_consumer(v1)
+
+        package_destination = consumer / ".context" / "sources" / v2.package_digest
+        real_replace = sources_module.os.replace
+        attempts = {"package": 0}
+
+        def flaky_replace(src, dst):
+            if attempts["package"] == 0:
+                attempts["package"] += 1
+                raise PermissionError(13, "simulated transient Windows access denied")
+            return real_replace(src, dst)
+
+        with patch("contextcanon.sources.os.replace", side_effect=flaky_replace), patch(
+            "contextcanon.sources.time.sleep", return_value=None
+        ):
+            package = sources_module.load_package(candidate)
+            sources_module._install_package(consumer, candidate, package)
+
+        self.assertEqual(attempts["package"], 1)
+        self.assertTrue((package_destination / ".context/package.json").is_file())
+        installed = sources_module.load_package(package_destination)
+        self.assertEqual(installed.package_digest, v2.package_digest)
 
     def test_failed_atomic_pin_replace_preserves_old_source_and_old_build(self):
         _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")

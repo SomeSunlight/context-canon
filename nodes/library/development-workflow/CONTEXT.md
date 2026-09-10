@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** Development Workflow  
-**Context version:** `0.2.0-draft`
+**Context version:** `0.3.0-draft`
 
 ## Local Overview
 
@@ -26,6 +26,10 @@ For the current task, evaluate each Topic condition. When one matches, read ever
 
 ### Recoverable planning
 
+#### `CCW-010` — Back every change with an Issue
+
+Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.
+
 #### `CCW-001` — Plan a coherent change block before editing
 
 Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.
@@ -42,6 +46,12 @@ Put decisions, active constraints, accepted state, and next steps needed to resu
 
 When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.
 
+### Transparent machine semantics
+
+#### `CCW-012` — Mark machine-significant Markdown explicitly
+
+When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.
+
 ### Proportional verification
 
 #### `CCW-004` — Batch related edits before expensive final verification
@@ -57,6 +67,10 @@ When the project owner explicitly approves a coherent implementation scope and s
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
 
 ### Human review gate
+
+#### `CCW-011` — Expand change scope explicitly
+
+Applicable Context constrains a task; it does not silently expand its writable scope.
 
 #### `CCW-006` — Do not merge without explicit project-owner approval
 

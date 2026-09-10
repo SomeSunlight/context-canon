@@ -1,5 +1,5 @@
 # ContextCanon Gateway — Local Context Source
-<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" version="0.1.0-draft" adapters="agents,goose" -->
+<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" name="ContextCanon Gateway" version="0.2.1-draft" adapters="agents,goose" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the repository Gateway context.**
@@ -11,7 +11,7 @@
 
 Most AI projects eventually build a **static context bundle** by hand or with an LLM: a prompt, instruction file, or curated summary that tries to contain everything the model should know. It works until something important is missing; then the harness searches other repository files opportunistically, and whether it finds the right detail becomes less predictable. As the project changes, copied context also drifts and every duplicate becomes another place to review and repair.
 
-ContextCanon keeps the always-needed overview small, puts deeper detail behind explicit Topics, and makes reusable context a versioned Source instead of another copy. Humans and agents get the same landing points, while detailed knowledge can live close to the narrow context where it belongs without bloating every higher-level overview. Rebuilds propagate accepted Source and authoring changes deterministically into the generated child packages.
+ContextCanon keeps the always-needed overview small, puts deeper detail behind explicit Topics, and makes reusable context a versioned Source instead of another copy. Humans and agents get the same landing points, while detailed knowledge can live close to the narrow context where it belongs without bloating every higher-level overview. Builds render each Node's accepted effective Context deterministically. Dependent Child Nodes keep their last accepted Parent snapshot until a newer one is explicitly reviewed through propagation.
 
 The aim is simple: an unfamiliar human or agent should be able to understand where they are, what applies here, and where to go next — without depending on a lucky repository search or maintaining the same guidance in several static prompt bundles.
 
@@ -24,6 +24,15 @@ When adopting ContextCanon in an existing repository, preparing onboarding evide
 Required:
 - Resource: `docs/onboarding.md`
 <!-- ctx:topic id="CCG-TOPIC-ONBOARDING" -->
+
+### Use and maintain ContextCanon
+
+When inspecting, updating, propagating, building, checking, or learning the normal CLI workflow in an already-onboarded ContextCanon project:
+
+Required:
+- Resource: `docs/maintenance.md`
+- Resource: `docs/cli.md`
+<!-- ctx:topic id="CCG-TOPIC-MAINTENANCE" -->
 
 ### ContextCanon framework development
 

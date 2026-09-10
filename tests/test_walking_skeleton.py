@@ -15,7 +15,7 @@ from contextcanon.parser import ContextCanonError
 
 
 GATEWAY = '''# Demo Gateway — Local Context Source
-<!-- ctx:node id="node-gateway" version="0.1.0" adapters="agents,goose" -->
+<!-- ctx:node id="node-gateway" name="Demo Gateway" version="0.1.0" adapters="agents,goose" -->
 
 ## Topics
 
@@ -29,7 +29,7 @@ Required:
 '''
 
 FOUNDATION = '''# Demo Foundation — Local Context Source
-<!-- ctx:node id="node-foundation" version="0.1.0" -->
+<!-- ctx:node id="node-foundation" name="Demo Foundation" version="0.1.0" -->
 
 ## Rules
 
@@ -55,7 +55,7 @@ Required:
 '''
 
 DEVELOPMENT = '''# Demo Development — Local Context Source
-<!-- ctx:node id="node-development" version="0.1.0" -->
+<!-- ctx:node id="node-development" name="Demo Development" version="0.1.0" -->
 
 ## Sources
 
@@ -84,7 +84,7 @@ Optional:
 '''
 
 CHILD = '''# Demo Child — Local Context Source
-<!-- ctx:node id="node-child" version="0.1.0" -->
+<!-- ctx:node id="node-child" name="Demo Child" version="0.1.0" -->
 
 ## Sources
 
@@ -155,7 +155,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         )
         self.assertEqual(len(node.normalized_digest), 64)
         self.assertEqual(len(node.package_digest), 64)
-        self.assertIn('"schema": "contextcanon/package/v0"', node.package_manifest)
+        self.assertIn('"schema": "contextcanon/package/v1"', node.package_manifest)
         self.assertIn("How to use this context", node.official_markdown)
         self.assertIn("Apply all Rules below to every task in this Node.", node.official_markdown)
         self.assertIn("Rules from Demo Foundation", node.official_markdown)
@@ -202,7 +202,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("Changes to inherited Rules", node.official_markdown)
         self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
         self.assertIn("**Removed** `Demo Foundation / F-002`", node.official_markdown)
-        self.assertIn("compiler_version: \"0.5.0\"", node.machine_yaml)
+        self.assertIn("compiler_version: \"0.6.0\"", node.machine_yaml)
         self.assertIn('"kind": "override"', node.machine_yaml)
         self.assertIn('"kind": "remove"', node.machine_yaml)
         self.assertIn("removed_rules:", node.machine_yaml)
@@ -275,7 +275,7 @@ class WalkingSkeletonTests(unittest.TestCase):
             node.mkdir(parents=True)
             (node / "CONTEXT.src.md").write_text(
                 f'''# Demo {name.title()} — Local Context Source
-<!-- ctx:node id="node-{name}" version="0.1.0" -->
+<!-- ctx:node id="node-{name}" name="Demo {name.title()}" version="0.1.0" -->
 
 ## Sources
 
@@ -288,7 +288,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         consumer.mkdir(parents=True)
         (consumer / "CONTEXT.src.md").write_text(
             '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 
@@ -312,7 +312,7 @@ class WalkingSkeletonTests(unittest.TestCase):
             node.mkdir(parents=True)
             (node / "CONTEXT.src.md").write_text(
                 f'''# Demo {name.title()} — Local Context Source
-<!-- ctx:node id="node-{name}" version="0.1.0" -->
+<!-- ctx:node id="node-{name}" name="Demo {name.title()}" version="0.1.0" -->
 
 ## Topics
 
@@ -330,7 +330,7 @@ Required:
         consumer.mkdir(parents=True)
         (consumer / "CONTEXT.src.md").write_text(
             '''# Topic Consumer — Local Context Source
-<!-- ctx:node id="node-topic-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-topic-consumer" name="Topic Consumer" version="0.1.0" -->
 
 ## Sources
 
@@ -351,7 +351,7 @@ Required:
             node.mkdir(parents=True)
             (node / "CONTEXT.src.md").write_text(
                 f'''# Demo {name.title()} — Local Context Source
-<!-- ctx:node id="node-{name}" version="0.1.0" -->
+<!-- ctx:node id="node-{name}" name="Demo {name.title()}" version="0.1.0" -->
 
 ## Sources
 
@@ -373,7 +373,7 @@ Required:
         consumer.mkdir(parents=True)
         (consumer / "CONTEXT.src.md").write_text(
             '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 
@@ -396,7 +396,7 @@ Required:
         right.mkdir(parents=True)
         (left / "CONTEXT.src.md").write_text(
             '''# Demo Left — Local Context Source
-<!-- ctx:node id="node-left" version="0.1.0" -->
+<!-- ctx:node id="node-left" name="Demo Left" version="0.1.0" -->
 
 ## Sources
 
@@ -415,7 +415,7 @@ Required:
         )
         (right / "CONTEXT.src.md").write_text(
             '''# Demo Right — Local Context Source
-<!-- ctx:node id="node-right" version="0.1.0" -->
+<!-- ctx:node id="node-right" name="Demo Right" version="0.1.0" -->
 
 ## Sources
 
@@ -428,7 +428,7 @@ Required:
         consumer.mkdir(parents=True)
         (consumer / "CONTEXT.src.md").write_text(
             '''# Demo Consumer — Local Context Source
-<!-- ctx:node id="node-consumer" version="0.1.0" -->
+<!-- ctx:node id="node-consumer" name="Demo Consumer" version="0.1.0" -->
 
 ## Sources
 

@@ -33,7 +33,7 @@ class OnboardingInstructionTests(unittest.TestCase):
         repo = Path(tempfile.mkdtemp())
         (repo / ".git").mkdir()
         source = f'''# {name} — Local Context Source
-<!-- ctx:node id="{node_id}" version="1.0.0" -->
+<!-- ctx:node id="{node_id}" name="{name}" version="1.0.0" -->
 
 ## Rules
 

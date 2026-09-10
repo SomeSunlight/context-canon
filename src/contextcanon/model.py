@@ -143,7 +143,13 @@ class CompiledPackage:
     normalized_digest: str
     package_digest: str
     imports: tuple[PackageDependency, ...] = ()
-    parent: PackageDependency | None = None
+    parents: tuple[PackageDependency, ...] = ()
+
+    @property
+    def parent(self) -> PackageDependency | None:
+        if len(self.parents) > 1:
+            raise ValueError("Package has multiple semantic Parents; use .parents")
+        return self.parents[0] if self.parents else None
 
 
 @dataclass(frozen=True)
@@ -154,11 +160,17 @@ class ParsedNode:
     sources: tuple[SourceRef, ...]
     rules: tuple[Rule, ...]
     topics: tuple[Topic, ...]
-    parent: ParentRef | None = None
+    parents: tuple[ParentRef, ...] = ()
     changes: tuple[RuleChange, ...] = ()
     overview: str = ""
     state: str = ""
     plan: str = ""
+
+    @property
+    def parent(self) -> ParentRef | None:
+        if len(self.parents) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .parents")
+        return self.parents[0] if self.parents else None
 
 
 @dataclass
@@ -167,7 +179,7 @@ class CompiledNode:
     # All composition semantics consume immutable compiled packages. Local
     # Source Nodes are compiled first and immediately projected to this same
     # boundary; pinned external Sources are loaded directly into it.
-    parent_package: CompiledPackage | None = None
+    parent_packages: list[CompiledPackage] = field(default_factory=list)
     source_packages: list[CompiledPackage] = field(default_factory=list)
     imported_contexts: list[PackageDependency] = field(default_factory=list)
     inherited_rules: list[Rule] = field(default_factory=list)
@@ -183,6 +195,12 @@ class CompiledNode:
     package_manifest: str = ""
     machine_yaml: str = ""
     adapters: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def parent_package(self) -> CompiledPackage | None:
+        if len(self.parent_packages) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .parent_packages")
+        return self.parent_packages[0] if self.parent_packages else None
 
     @property
     def metadata(self) -> NodeMetadata:

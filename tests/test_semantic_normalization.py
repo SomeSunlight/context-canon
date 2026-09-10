@@ -13,7 +13,7 @@ from contextcanon.parser import ContextCanonError
 
 
 SOURCE_A = '''# Source A — Local Context Source
-<!-- ctx:node id="source-a" version="1.0.0" -->
+<!-- ctx:node id="source-a" name="Source A" version="1.0.0" -->
 
 ## Rules
 
@@ -25,7 +25,7 @@ SOURCE_A = '''# Source A — Local Context Source
 '''
 
 SOURCE_B = '''# Source B — Local Context Source
-<!-- ctx:node id="source-b" version="1.0.0" -->
+<!-- ctx:node id="source-b" name="Source B" version="1.0.0" -->
 
 ## Rules
 
@@ -39,7 +39,7 @@ SOURCE_B = '''# Source B — Local Context Source
 
 def project(sources: str) -> str:
     return f'''# Project — Local Context Source
-<!-- ctx:node id="project" version="1.0.0" -->
+<!-- ctx:node id="project" name="Project" version="1.0.0" -->
 
 ## Sources
 

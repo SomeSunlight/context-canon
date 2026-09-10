@@ -8,11 +8,11 @@ from contextcanon.compiler import Compiler
 
 
 WITHOUT_OVERVIEW = '''# Demo — Local Context Source
-<!-- ctx:node id="demo-node" version="0.1.0" -->
+<!-- ctx:node id="demo-node" name="Demo" version="0.1.0" -->
 '''
 
 WITH_OVERVIEW = '''# Demo — Local Context Source
-<!-- ctx:node id="demo-node" version="0.1.0" -->
+<!-- ctx:node id="demo-node" name="Demo" version="0.1.0" -->
 
 ## Overview
 

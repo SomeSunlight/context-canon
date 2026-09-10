@@ -16,7 +16,7 @@ from contextcanon.sources import accept_parent_candidate, review_parent_candidat
 
 
 PARENT_TEMPLATE = """# Project Parent — Local Context Source
-<!-- ctx:node id="node-parent" version="{version}" -->
+<!-- ctx:node id="node-parent" name="Project Parent" version="{version}" -->
 
 ## Rules
 
@@ -30,7 +30,7 @@ PARENT_TEMPLATE = """# Project Parent — Local Context Source
 
 def child_text(parent) -> str:
     return f"""# Child — Local Context Source
-<!-- ctx:node id="node-child" version="0.1.0" -->
+<!-- ctx:node id="node-child" name="Child" version="0.1.0" -->
 
 ## Parent
 
@@ -125,7 +125,7 @@ class ParentAcceptanceTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         (root / ".git").mkdir()
         (root / "CONTEXT.src.md").write_text(
-            '# Lone Node — Local Context Source\n<!-- ctx:node id="node-lone" version="0.1.0" -->\n',
+            '# Lone Node — Local Context Source\n<!-- ctx:node id="node-lone" name="Lone Node" version="0.1.0" -->\n',
             encoding="utf-8",
         )
         with self.assertRaisesRegex(ContextCanonError, "has no semantic Parent"):

@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.2.0-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.0-draft" -->
 
 ## Local Overview
 
@@ -10,6 +10,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
 ## Local Rules
 
 ### Recoverable planning
+
+- **Back every change with an Issue:** Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.
+  Why: Repository history should show the reason without reconstructing chat history.
+  <!-- ctx:rule id="CCW-010" -->
 
 - **Plan a coherent change block before editing:** Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.
   Why: Repository state must explain what work is in progress even if the chat, model session, or tool run disappears.
@@ -27,6 +31,12 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
   Why: In a controlled single-owner workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption.
   <!-- ctx:rule id="CCW-007" -->
 
+### Transparent machine semantics
+
+- **Mark machine-significant Markdown explicitly:** When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.
+  Why: Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior.
+  <!-- ctx:rule id="CCW-012" -->
+
 ### Proportional verification
 
 - **Batch related edits before expensive final verification:** For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
@@ -42,6 +52,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
   <!-- ctx:rule id="CCW-005" -->
 
 ### Human review gate
+
+- **Expand change scope explicitly:** Applicable Context constrains a task; it does not silently expand its writable scope.
+  Why: A local task must not acquire wider impact merely because broader Context was loaded.
+  <!-- ctx:rule id="CCW-011" -->
 
 - **Do not merge without explicit project-owner approval:** Keep a review PR or equivalent change set open until the project owner explicitly approves the reviewed result.
   Why: Green automation proves only the properties it checks; it does not prove that the product, architecture, or documentation is acceptable to its human owner.

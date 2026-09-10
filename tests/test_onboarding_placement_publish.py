@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
+from contextcanon.config import load_project_config
 from contextcanon.onboarding_placement import load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_publish import (
     build_placement_publication_preview,
@@ -65,7 +66,7 @@ class PlacementPublicationTests(unittest.TestCase):
 
         (repo / "CONTEXT.src.md").write_text(
             "# AI Workstation — Local Context Source\n"
-            '<!-- ctx:node id="aea56adf-2a26-43f0-b712-3bbeab7a3097" version="0.1.0" -->\n\n'
+            '<!-- ctx:node id="aea56adf-2a26-43f0-b712-3bbeab7a3097" name="AI Workstation" version="0.1.0" -->\n\n'
             "## Overview\n\n"
             "Existing authored root orientation that placement must preserve.\n",
             encoding="utf-8",
@@ -74,7 +75,7 @@ class PlacementPublicationTests(unittest.TestCase):
         goose.mkdir(parents=True)
         (goose / "CONTEXT.src.md").write_text(
             "# Goose — Local Context Source\n"
-            '<!-- ctx:node id="11111111-2222-4333-8444-555555555555" version="0.1.0-draft" -->\n\n'
+            '<!-- ctx:node id="11111111-2222-4333-8444-555555555555" name="Goose" version="0.1.0-draft" -->\n\n'
             "## Overview\n\n"
             "Existing authored Goose orientation.\n",
             encoding="utf-8",
@@ -269,8 +270,15 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertIn("Migration is in progress.", parsed_root.state)
         self.assertIn("Open question: Should the project and release version surfaces be aligned?", parsed_root.state)
         self.assertIn("Continue Goose changes through reviewed pull requests.", parsed_root.plan)
-        self.assertIn('transport="git"', root_text)
-        self.assertIn(f'ref="{head}"', root_text)
+        self.assertNotIn('transport="git"', root_text)
+        self.assertIn("(contextcanon.yaml)", root_text)
+        config = load_project_config(repo)
+        source_config = config.sources["c4c94726-3cc7-4df6-b779-72bbf9c06f40"]
+        repository = config.repositories[source_config.repository]
+        self.assertEqual(repository.kind, "git")
+        self.assertEqual(source_config.node_path, "catalog-workflow")
+        acceptance_payload = json.loads(acceptance.read_text(encoding="utf-8"))
+        self.assertEqual(acceptance_payload["sources"][0]["discovery"]["ref"], head)
         self.assertIn("../../docs/architecture.md", child_text)
         parsed_child = parse_node(child_root, repo)
         self.assertIsNotNone(parsed_child.parent)

@@ -19,7 +19,7 @@ from .package import (
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.5.0"
+COMPILER_VERSION = "0.6.0"
 
 CONTEXT_FOLDER_README = """# Generated Context package resources
 
@@ -97,21 +97,21 @@ class Compiler:
             compiled = CompiledNode(parsed=parsed)
             composition_packages: list[CompiledPackage] = []
             source_resource_sets: list[dict[str, bytes]] = []
-            parent_id: str | None = None
-            if parsed.parent is not None:
+            parent_ids: set[str] = set()
+            for parent in parsed.parents:
                 parent_package, parent_resources = self._load_pinned_dependency(
-                    node_root, parsed.parent, relation="Parent"
+                    node_root, parent, relation="Parent"
                 )
                 if parent_package.metadata.id == compiled.metadata.id:
                     raise ContextCanonError(f"{node_root}: Parent cannot be the Node itself")
-                compiled.parent_package = parent_package
+                compiled.parent_packages.append(parent_package)
                 composition_packages.append(parent_package)
                 source_resource_sets.append(parent_resources)
-                parent_id = parsed.parent.id
+                parent_ids.add(parent.id)
 
             seen_source_ids: set[str] = set()
             for source in parsed.sources:
-                if parent_id is not None and source.id == parent_id:
+                if source.id in parent_ids:
                     raise ContextCanonError(
                         f"{node_root}: Node {source.id} cannot be both semantic Parent and ordinary Source"
                     )

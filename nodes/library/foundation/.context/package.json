@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.5.0",
+  "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "0c276ff24aa331f4395a0657623ceafd2e5fd5ee4980a532c69f006afde7ec2b",
-    "package": "3baabe18cc791491fde53d38ceb4dbd2e18aa899ecfa9f068bc750203e67db44"
+    "normalized": "62a1bc6b9fffa838fbdf2b434f9fd2057de38fb6017734115ae2fb3ed56c100e",
+    "package": "7da87dcee0e716db35b62935f9980d27dd06986af93e61d4d28eb59783a58b8c"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "469ce5a15a55a4394cca7c3b69c68b3f19153bc6c78f0742049eb9fc11de6ebf",
-      "size": 4378
+      "sha256": "80bfb3aa464d5257610d04bdcf2b831c858050cc1a32ef852070eeb81b1fc6bd",
+      "size": 4732
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "d20e8c13c3ef39fa45f5294b7f28de8925c07431024da8d3270474984aa3c22f",
-      "size": 13945
+      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
+      "size": 17026
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
-      "sha256": "1b367193a4585168bb5951da77187f269ba8875e96bf30366358cfb2f977e8d3",
+      "sha256": "6061fc524967436d06313dec29de8074e4ae06518a7301b59842116970f62566",
       "size": 7074
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "c44bda6da8eeebb04fc9841c2337b20dc8561b3d46615c978911e6d3c7bbf3f6",
-      "size": 13069
+      "sha256": "c2ae75b88bd843cd9d9f27f092a3f1b085650628958771ab089b16b0eedb0132",
+      "size": 18394
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -46,9 +46,9 @@
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
-    "version": "0.1.0-draft"
+    "version": "0.2.0-draft"
   },
-  "parent": null,
+  "parents": [],
   "removed_rules": [],
   "rules": [
     {
@@ -90,6 +90,16 @@
       "statement": "Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.",
       "title": "No implicit Source precedence",
       "why": "Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-013",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.",
+      "title": "Parents are unordered",
+      "why": "Orthogonal context commonly meets at one Node; ordering must never hide a contradiction."
     },
     {
       "group": "Identity",
@@ -143,6 +153,16 @@
     },
     {
       "group": "Repository conventions",
+      "id": "CC-012",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.",
+      "title": "Align Node roots with governed files",
+      "why": "Humans and agents should encounter the applicable Context naturally from the files they change."
+    },
+    {
+      "group": "Repository conventions",
       "id": "CC-010",
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
@@ -162,7 +182,7 @@
       "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
     }
   ],
-  "schema": "contextcanon/package/v0",
+  "schema": "contextcanon/package/v1",
   "sources": [],
   "topics": [
     {

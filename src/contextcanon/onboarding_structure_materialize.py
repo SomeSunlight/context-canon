@@ -136,7 +136,7 @@ def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _Recovere
 
 def _manifest_file_hash(root: Path, rel: str) -> str | None:
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is None or manifest.get("schema") != "contextcanon/package/v0":
+    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1"}:
         return None
     files = manifest.get("files")
     if not isinstance(files, list):
@@ -366,9 +366,12 @@ def _render_skeleton(
         if node.lifecycle == "reserved"
         else "This Node skeleton reserves the accepted onboarding landing point before detailed project knowledge is distributed."
     )
+    name = canonical_name or node.name
+    if '"' in name:
+        raise ContextCanonError('Context Node name must not contain a double quote')
     return (
-        f"# {canonical_name or node.name} — Local Context Source\n"
-        f'<!-- ctx:node id="{node_id}" version="{version}" -->\n\n'
+        f"# {name} — Local Context Source\n"
+        f'<!-- ctx:node id="{node_id}" name="{name}" version="{version}" -->\n\n'
         "## Local Overview\n\n"
         f"{state}\n\n"
         "The later placement pass will add only the Rules, Topics, Sources, or mappings reviewed for this area.\n"

@@ -5,16 +5,20 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 from .compiler import Compiler
-from .diff import ContextDiff
-from .git_transport import load_candidate_provenance, resolve_git_package_provenance
+from .diff import ContextDiff, diff_compiled
+from .config import CONFIG_FILENAME, config_path, upsert_local_source
+from .git_transport import load_candidate_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .package_diff import diff_packages
 from .parser import ContextCanonError, find_repo_root, parse_node
+from .versioning import ensure_node_version_advanced
 
 REVIEW_SCHEMA = "contextcanon/source-review/v0"
 PARENT_REVIEW_SCHEMA = "contextcanon/parent-review/v0"
@@ -22,29 +26,50 @@ _ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 _SOURCE_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _SOURCE_LINE_RE = re.compile(
-    r'^(?P<prefix>- \[[^]]+\]\([^)]+\)\s+—\s+)`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
+    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>[^)]+)\)(?P<separator>\s+—\s+))`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
 )
 
 
-def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledPackage, bool]:
-    """Explicitly adopt one exact published Git-backed package as a new Source.
+def _validate_local_adoption_checkout(package_root: Path) -> None:
+    """Reject dirty Git-backed package bytes without requiring Git or a remote for pure local repositories."""
+    try:
+        repository_result = subprocess.run(
+            ["git", "-C", str(package_root), "rev-parse", "--show-toplevel"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return
+    if repository_result.returncode != 0:
+        return
+    repository = Path(repository_result.stdout.strip()).resolve()
+    try:
+        node_path = package_root.resolve().relative_to(repository).as_posix() or "."
+    except ValueError as exc:
+        raise ContextCanonError(f"Source package root is not inside its Git repository: {package_root}") from exc
+    status = subprocess.run(
+        ["git", "-C", str(repository), "status", "--porcelain", "--untracked-files=all", "--", node_path],
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
+    if status.returncode != 0:
+        detail = status.stderr.strip() or status.stdout.strip() or f"exit code {status.returncode}"
+        raise ContextCanonError(f"Could not verify local Source package cleanliness: {detail}")
+    if status.stdout.strip():
+        raise ContextCanonError("Source package path has uncommitted changes; exact adoption bytes would be ambiguous")
 
-    The operator's invocation is the first-adoption decision. ContextCanon
-    resolves exact clean Git provenance, validates the *future* consumer
-    composition in memory, installs the immutable package, and only then
-    atomically publishes one Source declaration. Existing Source identities are
-    never upgraded through this path; they stay on fetch/review/accept.
-    """
+
+def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledPackage, bool]:
+    """Explicitly adopt one exact published local package and register local discovery centrally."""
 
     node_root = node_root.resolve()
     package_root = package_root.resolve()
+    _validate_local_adoption_checkout(package_root)
     repo_root = find_repo_root(node_root)
     parsed = parse_node(node_root, repo_root)
     candidate = load_package(package_root)
 
     if candidate.metadata.id == parsed.metadata.id:
         raise ContextCanonError(f"{parsed.metadata.name}: a Node cannot adopt itself as a Source")
-    if parsed.parent is not None and parsed.parent.id == candidate.metadata.id:
+    if any(parent.id == candidate.metadata.id for parent in parsed.parents):
         raise ContextCanonError(
             f"{parsed.metadata.name}: Node {candidate.metadata.id} is already the semantic Parent and cannot also be a Source"
         )
@@ -52,9 +77,7 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     matches = [source for source in parsed.sources if source.id == candidate.metadata.id]
     if matches:
         if len(matches) != 1:
-            raise ContextCanonError(
-                f"{parsed.metadata.name}: Source Node ID {candidate.metadata.id} is not unique"
-            )
+            raise ContextCanonError(f"{parsed.metadata.name}: Source Node ID {candidate.metadata.id} is not unique")
         existing = matches[0]
         if (
             existing.is_pinned
@@ -63,14 +86,16 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
             and existing.package_digest == candidate.package_digest
         ):
             _install_package(node_root, package_root, candidate)
+            upsert_local_source(repo_root, candidate.metadata.id, package_root)
             Compiler(repo_root).compile(node_root)
             return candidate, False
         raise ContextCanonError(
-            f"{parsed.metadata.name}: Source {candidate.metadata.name} ({candidate.metadata.id}) already exists with a different accepted package; use 'contextcanon source fetch/review/accept' for updates"
+            f"{parsed.metadata.name}: Source {candidate.metadata.name} ({candidate.metadata.id}) already exists with a different accepted package; use 'contextcanon source update' or fetch/review/accept"
         )
 
-    provenance = resolve_git_package_provenance(package_root)
-    entry = _render_adopted_source(candidate, provenance)
+    config = config_path(repo_root)
+    config_before = config.read_bytes() if config.is_file() else None
+    entry = _render_adopted_source(node_root, repo_root, candidate)
     source_path = node_root / "CONTEXT.src.md"
     before = source_path.read_text(encoding="utf-8")
     after = _insert_source_entry(before, entry)
@@ -91,32 +116,35 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     existed = destination.exists()
     _install_package(node_root, package_root, candidate)
     try:
+        upsert_local_source(repo_root, candidate.metadata.id, package_root)
         _atomic_write_text(source_path, after)
         Compiler(repo_root).compile(node_root)
     except Exception:
         _atomic_write_text(source_path, before)
         if not existed and destination.exists():
             shutil.rmtree(destination, ignore_errors=True)
+        if config_before is None:
+            config.unlink(missing_ok=True)
+        else:
+            config.write_bytes(config_before)
         raise
     return candidate, True
 
-
-def _render_adopted_source(candidate: CompiledPackage, provenance: dict[str, str]) -> str:
+def _render_adopted_source(node_root: Path, repo_root: Path, candidate: CompiledPackage) -> str:
     name = candidate.metadata.name
     if any(char in name for char in "]\n\r"):
         raise ContextCanonError(f"Source name cannot be represented safely: {name!r}")
+    locator = Path(os.path.relpath(repo_root / CONFIG_FILENAME, node_root)).as_posix()
     return "\n".join(
         [
-            f"- [{name}]({provenance['locator']}) — `{candidate.metadata.version}`",
+            f"- [{name}]({locator}) — `{candidate.metadata.version}`",
             (
                 f'  <!-- ctx:source id="{candidate.metadata.id}" version="{candidate.metadata.version}" '
                 f'normalized-digest="{candidate.normalized_digest}" '
-                f'package-digest="{candidate.package_digest}" transport="git" '
-                f'ref="{provenance["ref"]}" node-path="{provenance["node_path"]}" -->'
+                f'package-digest="{candidate.package_digest}" -->'
             ),
         ]
     )
-
 
 def _insert_source_entry(text: str, entry: str) -> str:
     heading = re.search(r"(?m)^## Sources\s*$", text)
@@ -130,6 +158,14 @@ def _insert_source_entry(text: str, entry: str) -> str:
     if after:
         result += "\n" + after
     return result.rstrip() + "\n"
+
+
+def _require_candidate_version_advance(current: CompiledPackage, candidate: CompiledPackage, relation: str) -> None:
+    if current.package_digest != candidate.package_digest and current.metadata.version == candidate.metadata.version:
+        raise ContextCanonError(
+            f"{relation} candidate {candidate.metadata.name} changed package identity but reused version "
+            f"{candidate.metadata.version!r}; advance the provider Node version before accepting this candidate"
+        )
 
 
 def review_source_candidate(
@@ -155,6 +191,7 @@ def review_source_candidate(
         raise ContextCanonError(
             f"Candidate Node ID {candidate.metadata.id} does not match Source {source_ref.name} ({source_ref.id})"
         )
+    _require_candidate_version_advance(current, candidate, "Source")
 
     transport_candidate = _validated_candidate_provenance(node_root, source_ref, candidate)
     _validate_candidate_composition(compiler, compiled, index, candidate)
@@ -184,6 +221,48 @@ def review_source_candidate(
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
+
+
+def preview_source_candidate_effect(
+    node_root: Path,
+    source_id: str,
+    candidate_root: Path,
+) -> ContextDiff:
+    """Preview the consumer's effective compiled Context with one candidate Source pin.
+
+    No accepted package or authored source is changed. Existing local
+    Overrides/Removes and all other imported Context are applied by the normal
+    compiler, so this diff describes what would actually become effective in
+    the consumer if the candidate were accepted.
+    """
+
+    node_root = node_root.resolve()
+    candidate_root = candidate_root.resolve()
+    repo_root = find_repo_root(node_root)
+    candidate = load_package(candidate_root)
+    current_compiled = Compiler(repo_root).compile(node_root)
+    source_index, source_ref = _source_index(current_compiled, source_id)
+    current = current_compiled.source_packages[source_index]
+
+    if candidate.metadata.id != source_ref.id:
+        raise ContextCanonError(
+            f"Candidate Node ID {candidate.metadata.id} does not match Source {source_ref.name} ({source_ref.id})"
+        )
+    _require_candidate_version_advance(current, candidate, "Source")
+    _validate_candidate_composition(Compiler(repo_root), current_compiled, source_index, candidate)
+
+    candidate_resources = {
+        file.path: (candidate_root / file.path).read_bytes()
+        for file in candidate.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+    preview_source = _render_source_pin_text(node_root, source_id, candidate)
+    preview_compiled = Compiler(
+        repo_root,
+        source_overrides={node_root: preview_source},
+        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+    ).compile(node_root)
+    return diff_compiled(current_compiled, preview_compiled)
 
 
 def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Path) -> CompiledPackage:
@@ -252,36 +331,32 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
 
     _validate_candidate_composition(compiler, compiled, index, candidate)
     _install_package(node_root, candidate_root, candidate)
-    accepted_ref = None if transport_candidate is None else transport_candidate["candidate_ref"]
+    accepted_ref = None if transport_candidate is None else (transport_candidate.get("candidate_ref") or None)
     _write_source_pin(node_root, source_id, candidate, accepted_ref=accepted_ref)
     return candidate
 
 
-def review_parent_candidate(node_root: Path) -> tuple[ContextDiff, Path]:
-    """Compile the live semantic Parent explicitly and review it as an immutable candidate.
-
-    Ordinary child builds never call this function and therefore remain bound
-    to the accepted Parent package pin. Review snapshots the live Parent into a
-    content-addressed candidate store without changing the accepted Child.
-    """
+def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tuple[ContextDiff, Path]:
+    """Review one live semantic Parent as an immutable candidate."""
 
     node_root = node_root.resolve()
     repo_root = find_repo_root(node_root)
     compiler = Compiler(repo_root)
     compiled = compiler.compile(node_root)
-    parent_ref = _parent_ref(compiled)
-    current = compiled.parent_package
-    assert current is not None
+    parent_index, parent_ref = _parent_index(compiled, parent_id)
+    current = compiled.parent_packages[parent_index]
 
     parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
+    ensure_node_version_advanced(parent_root, repo_root)
     live_parent = Compiler(repo_root).compile(parent_root)
     candidate = compiled_package(live_parent)
     if candidate.metadata.id != parent_ref.id:
         raise ContextCanonError(
             f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
         )
+    _require_candidate_version_advance(current, candidate, "Parent")
 
-    _validate_parent_candidate_composition(compiler, compiled, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     candidate_root = _store_parent_candidate(node_root, live_parent)
     result = diff_packages(current, candidate)
     receipt = {
@@ -303,31 +378,73 @@ def review_parent_candidate(node_root: Path) -> tuple[ContextDiff, Path]:
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
-    path = _parent_review_path(node_root)
+    path = _parent_review_path(node_root, parent_ref.id)
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
 
 
-def accept_parent_candidate(node_root: Path) -> CompiledPackage:
-    """Accept exactly the most recently reviewed semantic Parent snapshot."""
+def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = None) -> ContextDiff:
+    """Preview the Child's effective Context with the current live Parent candidate.
+
+    The Child's accepted Parent pin and authored source remain unchanged. Local
+    Overrides/Removes, local Rules, other Parents and Sources are applied by
+    the normal compiler so the returned diff describes the effective result of
+    accepting this Parent update for this Child.
+    """
 
     node_root = node_root.resolve()
-    receipt_path = _parent_review_path(node_root)
+    repo_root = find_repo_root(node_root)
+    compiler = Compiler(repo_root)
+    current_compiled = compiler.compile(node_root)
+    parent_index, parent_ref = _parent_index(current_compiled, parent_id)
+    current = current_compiled.parent_packages[parent_index]
+
+    parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
+    ensure_node_version_advanced(parent_root, repo_root)
+    live_parent = Compiler(repo_root).compile(parent_root)
+    candidate = compiled_package(live_parent)
+    if candidate.metadata.id != parent_ref.id:
+        raise ContextCanonError(
+            f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
+        )
+    _require_candidate_version_advance(current, candidate, "Parent")
+    _validate_parent_candidate_composition(compiler, current_compiled, parent_index, candidate)
+
+    candidate_root = _store_parent_candidate(node_root, live_parent)
+    candidate_resources = {
+        file.path: (candidate_root / file.path).read_bytes()
+        for file in candidate.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+    preview_source = _render_parent_pin_text(node_root, parent_ref.id, candidate)
+    preview_compiled = Compiler(
+        repo_root,
+        source_overrides={node_root: preview_source},
+        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+    ).compile(node_root)
+    return diff_compiled(current_compiled, preview_compiled)
+
+
+def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> CompiledPackage:
+    """Accept exactly the reviewed candidate for one semantic Parent."""
+
+    node_root = node_root.resolve()
+    compiler = Compiler(find_repo_root(node_root))
+    compiled = compiler.compile(node_root)
+    parent_index, parent_ref = _parent_index(compiled, parent_id)
+    current = compiled.parent_packages[parent_index]
+    receipt_path = _parent_review_path(node_root, parent_ref.id)
     if not receipt_path.is_file():
-        raise ContextCanonError("Parent has no review receipt; run 'contextcanon parent review' first")
+        raise ContextCanonError(
+            f"Parent {parent_ref.id} has no review receipt; run 'contextcanon parent review {parent_ref.id}' first"
+        )
     try:
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContextCanonError(f"Invalid Parent review receipt {receipt_path}: {exc}") from exc
     if not isinstance(receipt, dict) or receipt.get("schema") != PARENT_REVIEW_SCHEMA:
         raise ContextCanonError(f"Invalid Parent review receipt schema in {receipt_path}")
-
-    compiler = Compiler(find_repo_root(node_root))
-    compiled = compiler.compile(node_root)
-    parent_ref = _parent_ref(compiled)
-    current = compiled.parent_package
-    assert current is not None
     if receipt.get("parent_id") != parent_ref.id:
         raise ContextCanonError("Parent review receipt belongs to a different Parent")
     if receipt.get("consumer_node_id") != compiled.metadata.id:
@@ -362,25 +479,35 @@ def accept_parent_candidate(node_root: Path) -> CompiledPackage:
     if receipt.get("structural_validation") != "passed":
         raise ContextCanonError("Parent candidate review did not pass structural validation")
 
-    _validate_parent_candidate_composition(compiler, compiled, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     _install_package(node_root, candidate_root, candidate)
-    _write_parent_pin(node_root, candidate)
+    _write_parent_pin(node_root, parent_ref.id, candidate)
     return candidate
 
 
-def _parent_ref(compiled: CompiledNode) -> ParentRef:
-    parent = compiled.parsed.parent
-    if parent is None or compiled.parent_package is None:
+def _parent_index(compiled: CompiledNode, parent_id: str | None) -> tuple[int, ParentRef]:
+    if not compiled.parsed.parents:
         raise ContextCanonError(f"{compiled.metadata.name}: Node has no semantic Parent")
-    return parent
-
+    if parent_id is None:
+        if len(compiled.parsed.parents) != 1:
+            ids = ", ".join(parent.id for parent in compiled.parsed.parents)
+            raise ContextCanonError(
+                f"{compiled.metadata.name}: Node has multiple semantic Parents ({ids}); specify the Parent Node ID"
+            )
+        return 0, compiled.parsed.parents[0]
+    matches = [(index, parent) for index, parent in enumerate(compiled.parsed.parents) if parent.id == parent_id]
+    if not matches:
+        raise ContextCanonError(f"{compiled.metadata.name}: no semantic Parent with Node ID {parent_id}")
+    return matches[0]
 
 def _validate_parent_candidate_composition(
     compiler: Compiler,
     compiled: CompiledNode,
+    parent_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = [candidate, *compiled.source_packages]
+    packages = [*compiled.parent_packages, *compiled.source_packages]
+    packages[parent_index] = candidate
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
         inherited,
@@ -399,7 +526,6 @@ def _validate_parent_candidate_composition(
         seen[rule.id] = rule
     inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
     compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
-
 
 def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> Path:
     package = compiled_package(compiled_parent)
@@ -432,11 +558,14 @@ def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> P
     return destination
 
 
-def _parent_review_path(node_root: Path) -> Path:
-    return node_root / ".context" / "parent-review.json"
+def _parent_review_path(node_root: Path, parent_id: str) -> Path:
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", parent_id):
+        token = parent_id
+    else:
+        token = "sha256-" + hashlib.sha256(parent_id.encode("utf-8")).hexdigest()
+    return node_root / ".context" / "parent-reviews" / f"{token}.json"
 
-
-def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
+def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: CompiledPackage) -> str:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -450,11 +579,9 @@ def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
             if not comment:
                 continue
             attrs = _ATTR_RE.findall(comment.group("attrs"))
-            if not attrs:
+            if not attrs or dict(attrs).get("id") != parent_id:
                 continue
             found += 1
-            if found > 1:
-                raise ContextCanonError(f"More than one semantic Parent appears in {path}")
             lines[index] = visible.group("prefix") + f"`{candidate.metadata.version}`" + visible.group("ending")
             updated: list[tuple[str, str]] = []
             seen_version = False
@@ -474,8 +601,13 @@ def _write_parent_pin(node_root: Path, candidate: CompiledPackage) -> None:
             lines[comment_index] = f"{comment.group('indent')}<!-- ctx:parent {attrs_text} -->{comment.group('ending')}"
             break
     if found != 1:
-        raise ContextCanonError(f"Could not find exactly one semantic Parent in {path}")
-    _atomic_write_text(path, "".join(lines))
+        raise ContextCanonError(f"Could not find exactly one semantic Parent Node ID {parent_id} in {path}")
+    return "".join(lines)
+
+
+def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackage) -> None:
+    path = node_root / "CONTEXT.src.md"
+    _atomic_write_text(path, _render_parent_pin_text(node_root, parent_id, candidate))
 
 
 def install_source_package(node_root: Path, package_root: Path) -> CompiledPackage:
@@ -507,8 +639,8 @@ def _validate_candidate_composition(
     source_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = ([compiled.parent_package] if compiled.parent_package is not None else []) + list(compiled.source_packages)
-    candidate_index = source_index + (1 if compiled.parent_package is not None else 0)
+    packages = [*compiled.parent_packages, *compiled.source_packages]
+    candidate_index = source_index + len(compiled.parent_packages)
     packages[candidate_index] = candidate
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
@@ -541,7 +673,11 @@ def _validated_candidate_provenance(
     if provenance is None:
         return None
     if provenance["source_id"] != source_ref.id:
-        raise ContextCanonError("Git Source candidate provenance belongs to a different Source")
+        raise ContextCanonError("Source candidate provenance belongs to a different Source")
+    if provenance["package_digest"] != candidate.package_digest:
+        raise ContextCanonError("Source candidate provenance package digest mismatch")
+    if provenance.get("schema") == "contextcanon/source-candidate-provenance/v1":
+        return provenance
     if provenance["locator"] != source_ref.locator:
         raise ContextCanonError("Git Source candidate provenance locator differs from the accepted Source")
     if provenance["node_path"] != (source_ref.node_path or "."):
@@ -550,10 +686,7 @@ def _validated_candidate_provenance(
         raise ContextCanonError(
             "Accepted Git Source ref changed after candidate discovery; fetch the candidate again before review"
         )
-    if provenance["package_digest"] != candidate.package_digest:
-        raise ContextCanonError("Git Source candidate provenance package digest mismatch")
     return provenance
-
 
 def _review_path(node_root: Path, candidate_package_digest: str) -> Path:
     return node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"
@@ -566,20 +699,47 @@ def _source_hash(node_root: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _installed_package_matches(destination: Path, candidate: CompiledPackage) -> bool:
+    if not destination.exists():
+        return False
+    existing = load_package(destination)
+    if (
+        existing.metadata.id == candidate.metadata.id
+        and existing.normalized_digest == candidate.normalized_digest
+        and existing.package_digest == candidate.package_digest
+    ):
+        return True
+    raise ContextCanonError(f"Accepted Source store path exists with different content: {destination}")
+
+
+def _publish_package_directory(temporary: Path, destination: Path, candidate: CompiledPackage) -> None:
+    # Windows can transiently deny a directory rename while a scanner/indexer
+    # has just-opened package files. Keep the publication atomic: retry only
+    # the final rename, and accept an appearing destination only after exact
+    # package verification proves that another writer published the same bytes.
+    retry_delays = (0.05, 0.10, 0.20, 0.40, 0.80)
+    for attempt in range(len(retry_delays) + 1):
+        try:
+            os.replace(temporary, destination)
+            return
+        except (PermissionError, FileExistsError) as exc:
+            if _installed_package_matches(destination, candidate):
+                return
+            if attempt == len(retry_delays):
+                raise ContextCanonError(
+                    f"Could not publish immutable package {candidate.metadata.name} {candidate.metadata.version} "
+                    f"to {destination} after retrying a temporary filesystem lock: {exc}"
+                ) from exc
+            time.sleep(retry_delays[attempt])
+
+
 def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledPackage) -> None:
     store = node_root / ".context" / "sources"
     store.mkdir(parents=True, exist_ok=True)
     destination = store / candidate.package_digest
 
-    if destination.exists():
-        existing = load_package(destination)
-        if (
-            existing.metadata.id == candidate.metadata.id
-            and existing.normalized_digest == candidate.normalized_digest
-            and existing.package_digest == candidate.package_digest
-        ):
-            return
-        raise ContextCanonError(f"Accepted Source store path exists with different content: {destination}")
+    if _installed_package_matches(destination, candidate):
+        return
 
     temporary = Path(tempfile.mkdtemp(prefix=f".{candidate.package_digest[:12]}-", dir=store))
     try:
@@ -596,13 +756,19 @@ def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledP
         staged = load_package(temporary)
         if staged.normalized_digest != candidate.normalized_digest or staged.package_digest != candidate.package_digest:
             raise ContextCanonError("Staged Source package identity changed during acceptance")
-        os.replace(temporary, destination)
+        _publish_package_directory(temporary, destination, candidate)
     finally:
         if temporary.exists():
             shutil.rmtree(temporary)
 
 
-def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage, *, accepted_ref: str | None = None) -> None:
+def _render_source_pin_text(
+    node_root: Path,
+    source_id: str,
+    candidate: CompiledPackage,
+    *,
+    accepted_ref: str | None = None,
+) -> str:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -624,8 +790,12 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
             if found > 1:
                 raise ContextCanonError(f"Source Node ID {source_id} appears more than once in {path}")
 
+            if any(char in candidate.metadata.name for char in "]\n\r"):
+                raise ContextCanonError(f"Source name cannot be represented safely: {candidate.metadata.name!r}")
             lines[index] = (
-                visible.group("prefix")
+                visible.group("bullet")
+                + f"[{candidate.metadata.name}]({visible.group('path')})"
+                + visible.group("separator")
                 + f"`{candidate.metadata.version}`"
                 + visible.group("ending")
             )
@@ -654,7 +824,15 @@ def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackag
 
     if found != 1:
         raise ContextCanonError(f"Could not find exactly one Source Node ID {source_id} in {path}")
-    _atomic_write_text(path, "".join(lines))
+    return "".join(lines)
+
+
+def _write_source_pin(node_root: Path, source_id: str, candidate: CompiledPackage, *, accepted_ref: str | None = None) -> None:
+    path = node_root / "CONTEXT.src.md"
+    _atomic_write_text(
+        path,
+        _render_source_pin_text(node_root, source_id, candidate, accepted_ref=accepted_ref),
+    )
 
 
 def _atomic_write_text(path: Path, content: str) -> None:

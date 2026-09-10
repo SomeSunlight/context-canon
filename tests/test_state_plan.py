@@ -16,7 +16,7 @@ class StatePlanTests(unittest.TestCase):
     def _write_source(self, root: Path, state: str, plan: str) -> None:
         (root / "CONTEXT.src.md").write_text(
             "# Demo Project — Local Context Source\n"
-            '<!-- ctx:node id="12345678-1234-4234-8234-123456789abc" version="0.1.0" -->\n\n'
+            '<!-- ctx:node id="12345678-1234-4234-8234-123456789abc" name="Demo Project" version="0.1.0" -->\n\n'
             "## Overview\n\n"
             "Stable demo orientation.\n\n"
             "## State\n\n"

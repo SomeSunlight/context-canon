@@ -5,8 +5,10 @@ import sys
 from pathlib import Path
 
 from .authoring import add_rule, add_topic
+from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config, upsert_git_source
+from .version import __version__
 from .compiler import Compiler, discover_nodes
-from .diff import diff_compiled, render_diff
+from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_instruction import build_onboarding_instruction
@@ -42,8 +44,9 @@ from .onboarding_structure_materialize import (
 from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
-from .parser import ContextCanonError, find_repo_root
-from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
+from .parser import ContextCanonError, find_repo_root, parse_node
+from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
+from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
 def _node_root(path: Path) -> Path:
@@ -116,8 +119,390 @@ def _add_structure_inputs(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _source_identity_rows(node_root: Path):
+    repo_root = find_repo_root(node_root)
+    parsed = parse_node(node_root, repo_root)
+    compiled = Compiler(repo_root).compile(node_root)
+    packages = {package.metadata.id: package for package in compiled.source_packages}
+    return tuple((source, packages[source.id]) for source in parsed.sources)
+
+
+def _resolve_source_id(node_root: Path, selector: str) -> str:
+    rows = _source_identity_rows(node_root)
+    for source, _ in rows:
+        if source.id == selector:
+            return source.id
+    folded = selector.casefold()
+    matches = []
+    for source, package in rows:
+        names = {package.metadata.name.casefold(), source.name.casefold()}
+        if folded in names:
+            matches.append((source, package))
+    ids = {source.id for source, _ in matches}
+    if len(ids) == 1:
+        return next(iter(ids))
+    choices = ", ".join(
+        f"{package.metadata.name} ({source.id})"
+        for source, package in rows
+    ) or "none"
+    if matches:
+        raise ContextCanonError(f"Source name {selector!r} is ambiguous; available Sources: {choices}")
+    raise ContextCanonError(f"No Source named or identified by {selector!r}; available Sources: {choices}")
+
+
+def _migrate_legacy_source_discovery(node_root: Path, source_id: str) -> Path | None:
+    """Record equivalent central discovery after a successful legacy update fetch.
+
+    This changes discovery configuration only. Accepted immutable package state
+    remains untouched, and a one-off CLI --ref is never persisted here.
+    """
+
+    repo_root = find_repo_root(node_root)
+    if configured_source(repo_root, source_id) is not None:
+        return None
+    parsed = parse_node(node_root, repo_root)
+    matches = [source for source in parsed.sources if source.id == source_id]
+    if len(matches) != 1:
+        raise ContextCanonError(f"Could not resolve exactly one legacy Source {source_id} for discovery migration")
+    source = matches[0]
+    if source.transport != "git" or not source.transport_ref or source.node_path is None:
+        return None
+
+    legacy_ref = source.transport_ref
+    discovery_ref = None if len(legacy_ref) == 40 and all(char in "0123456789abcdef" for char in legacy_ref) else legacy_ref
+    return upsert_git_source(repo_root, source.id, source.locator, discovery_ref, source.node_path)
+
+
+def _report_version_bump(bump: VersionBump | None) -> None:
+    if bump is None:
+        return
+    print(f"Auto-bumped Context Node version: {bump.before} -> {bump.after} (package changed).")
+    print("  This is the minimum patch bump; consider a higher minor or major version if the change warrants it.")
+
+
+def _confirm(prompt: str) -> bool:
+    try:
+        answer = input(f"{prompt} [y/N] ").strip().casefold()
+    except EOFError:
+        return False
+    return answer in {"y", "yes"}
+
+
+_HUMAN_CHANGE_NOUNS = {
+    "parent": ("imported Parent", "imported Parents"),
+    "source": ("imported Source", "imported Sources"),
+    "change": ("local resolution", "local resolutions"),
+    "rule": ("rule", "rules"),
+    "topic": ("topic", "topics"),
+    "resource": ("resource", "resources"),
+}
+
+
+def _human_change_summary(diff, *, include_categories: set[str] | None = None, exclude_categories: set[str] | None = None) -> str:
+    include = include_categories
+    exclude = exclude_categories or set()
+    counts: dict[tuple[str, str], int] = {}
+    for entry in diff.entries:
+        if entry.category in exclude or (include is not None and entry.category not in include):
+            continue
+        key = (entry.category, entry.change)
+        counts[key] = counts.get(key, 0) + 1
+    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    parts: list[str] = []
+    for category in ("parent", "source", "change", "rule", "topic", "resource"):
+        singular, plural = _HUMAN_CHANGE_NOUNS[category]
+        for change in ("added", "removed", "modified"):
+            count = counts.get((category, change), 0)
+            if count:
+                parts.append(f"{count} {singular if count == 1 else plural} {action[change]}")
+    return ", ".join(parts) if parts else "no effective Rule, Topic, or Resource changes"
+
+
+def _human_entry_label(entry) -> str:
+    data = entry.after or entry.before or {}
+    if entry.category in {"rule", "topic"}:
+        stable_id = entry.identity.rsplit("#", 1)[-1]
+        title = data.get("title")
+        return f"{stable_id} — {title}" if title else stable_id
+    if entry.category in {"source", "parent"}:
+        return data.get("name") or entry.identity
+    return entry.identity
+
+
+def _print_human_change_details(diff, *, exclude_categories: set[str] | None = None) -> None:
+    exclude = exclude_categories or set()
+    headings = {
+        "parent": "Imported Parent changes",
+        "source": "Imported Source changes",
+        "change": "Local resolution changes",
+        "rule": "Rules",
+        "topic": "Topics",
+        "resource": "Resources",
+    }
+    symbols = {"added": "+", "removed": "-", "modified": "~"}
+    grouped: dict[str, list[object]] = {}
+    for entry in diff.entries:
+        if entry.category in exclude:
+            continue
+        grouped.setdefault(entry.category, []).append(entry)
+    for category in ("parent", "source", "change", "rule", "topic", "resource"):
+        entries = grouped.get(category, [])
+        if not entries:
+            continue
+        print(f"{headings[category]}:")
+        for entry in entries:
+            detail = ""
+            if entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
+                detail = " [" + ", ".join(entry.changed_fields) + "]"
+            print(f"  {symbols[entry.change]} {_human_entry_label(entry)}{detail}")
+            if entry.category in {"source", "parent"} and entry.change == "modified":
+                before = entry.before or {}
+                after = entry.after or {}
+                before_version = before.get("version")
+                after_version = after.get("version")
+                if before_version and after_version and before_version != after_version:
+                    print(f"      version: {before_version} -> {after_version}")
+            elif entry.category == "rule":
+                before = entry.before or {}
+                after = entry.after or {}
+                if entry.change == "added" and after.get("statement"):
+                    print(f"      {after['statement']}")
+                elif entry.change == "removed" and before.get("statement"):
+                    print(f"      {before['statement']}")
+                elif entry.change == "modified" and before.get("statement") != after.get("statement"):
+                    if before.get("statement"):
+                        print(f"      before: {before['statement']}")
+                    if after.get("statement"):
+                        print(f"      after:  {after['statement']}")
+            elif entry.category == "topic" and entry.change == "added":
+                after = entry.after or {}
+                if after.get("condition"):
+                    print(f"      When: {after['condition']}")
+
+
+def _source_lookup_description(repo_root: Path, current, source_id: str, requested_ref: str | None) -> str:
+    configured = configured_source(repo_root, source_id)
+    if configured is not None:
+        _, repository = configured
+        if repository.kind == "git":
+            selected = requested_ref or repository.ref or "default branch"
+            return f"{repository.location} @ {selected}"
+        return f"local repository {repository.location}"
+    if current.transport == "git":
+        selected = requested_ref or current.transport_ref or "default branch"
+        return f"legacy Git discovery {current.locator} @ {selected}"
+    return current.locator
+
+
+def _parent_edges(repo_root: Path, start_root: Path | None = None):
+    compiler = Compiler(repo_root)
+    roots = [root.resolve() for root in discover_nodes(repo_root)]
+    parsed = {root: parse_node(root, repo_root) for root in roots}
+    parent_roots: dict[Path, list[tuple[object, Path]]] = {}
+    for child_root, node in parsed.items():
+        for parent in node.parents:
+            parent_root = compiler._resolve_source_root(child_root, parent.locator).resolve()
+            if parent_root not in parsed:
+                raise ContextCanonError(
+                    f"{node.metadata.name}: Parent {parent.name} is outside the repository-wide propagation set; update that edge explicitly"
+                )
+            parent_roots.setdefault(child_root, []).append((parent, parent_root))
+
+    depths: dict[Path, int] = {}
+    active: set[Path] = set()
+
+    def depth(root: Path) -> int:
+        if root in depths:
+            return depths[root]
+        if root in active:
+            raise ContextCanonError("Semantic Parent cycle prevents top-down propagation")
+        active.add(root)
+        parents = parent_roots.get(root, [])
+        value = 0 if not parents else 1 + max(depth(parent_root) for _, parent_root in parents)
+        active.remove(root)
+        depths[root] = value
+        return value
+
+    edges = [
+        (child_root, parent, parent_root)
+        for child_root, items in parent_roots.items()
+        for parent, parent_root in items
+    ]
+    edges.sort(
+        key=lambda item: (
+            depth(item[0]),
+            item[0].relative_to(repo_root).as_posix(),
+            item[1].id,
+        )
+    )
+    if start_root is None:
+        return edges
+
+    start_root = start_root.resolve()
+    if start_root not in parsed:
+        raise ContextCanonError(f"Propagation start is not a Context Node root: {start_root}")
+    reachable = {start_root}
+    changed = True
+    while changed:
+        changed = False
+        for child_root, _, parent_root in edges:
+            if parent_root in reachable and child_root not in reachable:
+                reachable.add(child_root)
+                changed = True
+    return [edge for edge in edges if edge[2] in reachable]
+
+
+def _containing_node_root(path: Path, repo_root: Path) -> Path | None:
+    cursor = path.resolve()
+    if cursor.is_file():
+        cursor = cursor.parent
+    while True:
+        if (cursor / "CONTEXT.src.md").is_file():
+            return cursor
+        if cursor == repo_root or cursor.parent == cursor:
+            return None
+        cursor = cursor.parent
+
+
+def _propagation_scope(path: Path, all_edges: bool):
+    resolved = path.resolve()
+    repo_root = resolved if (resolved / ".git").exists() else find_repo_root(resolved)
+    if all_edges:
+        return repo_root, None, _parent_edges(repo_root)
+    start_root = _containing_node_root(resolved, repo_root)
+    if start_root is None:
+        raise ContextCanonError(
+            "Propagation without --all must start in a Context Node; run from that Node or use --all for every Parent graph"
+        )
+    return repo_root, start_root, _parent_edges(repo_root, start_root)
+
+
+def _print_propagation_review_guide(scope: str, edge_count: int) -> None:
+    print("Propagation review")
+    print(f"{edge_count} Parent/Child update(s) will be checked {scope}, top-down.")
+    print("Each Child keeps its current Parent Context until you choose Y for that Child.")
+
+
+def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
+    repo_root, start_root, edges = _propagation_scope(path, all_edges)
+    if not edges:
+        print("No Parent/Child relationships found in the selected propagation scope.")
+        return 0
+    if all_edges:
+        scope = "across all Context Nodes in this repository"
+    else:
+        start = parse_node(start_root, repo_root)
+        scope = f"below {start.metadata.name}"
+    print("Propagation review")
+    print(f"{len(edges)} Parent/Child relationship(s) will be checked {scope}, top-down.")
+    print("Each Child keeps its current Parent Context until you choose Y for that Child.")
+
+    applied_count = 0
+    for index, (child_root, parent, parent_root) in enumerate(edges, start=1):
+        _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
+        child = parse_node(child_root, repo_root)
+        child_label = child_root.relative_to(repo_root).as_posix() or "."
+        child_compiled = Compiler(repo_root).compile(child_root)
+        parent_index = next(i for i, ref in enumerate(child_compiled.parsed.parents) if ref.id == parent.id)
+        current_parent = child_compiled.parent_packages[parent_index]
+        live_parent = Compiler(repo_root).compile(parent_root)
+
+        print("")
+        print("------------------------------------------------------------------------")
+        print(f"Review {index}/{len(edges)} — Child: {child.metadata.name} ({child_label})")
+        print("------------------------------------------------------------------------")
+
+        if current_parent.package_digest == live_parent.package_digest:
+            print(
+                f"Already current: {child.metadata.name} uses "
+                f"{live_parent.metadata.name} {live_parent.metadata.version}. No action needed."
+            )
+            continue
+
+        result, receipt = review_parent_candidate(child_root, parent.id)
+        local_effect = preview_parent_candidate_effect(child_root, parent.id)
+
+        print("Parent Context:")
+        print(f"  This Child currently uses: {current_parent.metadata.name} {current_parent.metadata.version}")
+        print(f"  New Parent version available: {live_parent.metadata.name} {live_parent.metadata.version}")
+        print(f"  Nothing in {child.metadata.name} has changed yet.")
+
+        print("")
+        print(f'What changed in Parent "{live_parent.metadata.name}" since the version used by this Child:')
+        print(f"  Version: {current_parent.metadata.version} -> {live_parent.metadata.version}")
+        print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
+        _print_human_change_details(result, exclude_categories={"node"})
+
+        if result.is_empty:
+            print("")
+            print(f"Result: {child.metadata.name} already uses this exact Parent package; no update is needed.")
+            continue
+
+        parent_effect_summary = _human_change_summary(result, include_categories={"rule", "topic", "resource"})
+        child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
+        print("")
+        print(f'What would change in Child "{child.metadata.name}" if you choose Y:')
+        print(f"  Effective Context: {child_effect_summary}")
+        print("  Existing Overrides/Removes, local Rules and other imported Contexts are already reflected in this preview.")
+        if child_effect_summary != parent_effect_summary:
+            print("  The effective Child change differs from the raw Parent change:")
+            _print_human_change_details(local_effect, exclude_categories={"node", "parent", "source"})
+        print("  This Child's own version will be checked and may receive the automatic minimum patch bump.")
+        print("  Its generated CONTEXT.md will continue to show the previous Context until you rebuild later.")
+
+        print("")
+        print(f'Before choosing Y for Child "{child.metadata.name}", check:')
+        print(f"  1. Should these Parent changes apply to {child.metadata.name}? If not, use a justified Override/Remove.")
+        print("  2. Do they fit with this Child's other imported Contexts and local Rules? Import order is never precedence.")
+        print(
+            f"  3. Does {child.metadata.name} expose a problem in the Parent change itself? "
+            f"If so, fix {live_parent.metadata.name} upstream rather than patching every Child."
+        )
+
+        print("")
+        print("Technical details:")
+        print(f"  Parent Node ID: {parent.id}")
+        print(f"  Child Node ID: {child.metadata.id}")
+        print(f"  Parent normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
+        print(f"  Parent package digest: {result.before_package_digest} -> {result.after_package_digest}")
+        print("  Exact changed identities:")
+        symbols = {"added": "+", "removed": "-", "modified": "~"}
+        for entry in result.entries:
+            if entry.category == "node":
+                continue
+            print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+        try:
+            receipt_label = receipt.relative_to(child_root).as_posix()
+        except ValueError:
+            receipt_label = str(receipt)
+        print(f"  Review receipt: {receipt_label}")
+
+        if not yes and not _confirm(f'Apply this Parent update to Child "{child.metadata.name}"?'):
+            print(f'No Parent update applied to Child "{child.metadata.name}".')
+            print("Propagation stopped here; earlier applied steps remain in place, and later Children were not reviewed yet.")
+            return 0
+
+        accepted = accept_parent_candidate(child_root, parent.id)
+        applied_count += 1
+        print(
+            f'Applied Parent update to Child "{child.metadata.name}": '
+            f"{current_parent.metadata.name} {current_parent.metadata.version} -> {accepted.metadata.name} {accepted.metadata.version}"
+        )
+        _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
+
+    print("")
+    print("------------------------------------------------------------------------")
+    print(f"Propagation review complete: applied {applied_count} changed Parent/Child update(s).")
+    print("The generated CONTEXT.md files still show their previous generated Context until rebuild.")
+    print("Next from the repository root:")
+    print("  contextcanon build --all .")
+    print("  contextcanon check --all .")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="contextcanon", description="Deterministic ContextCanon compiler")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("build", "check"):
         command = sub.add_parser(name)
@@ -397,29 +782,65 @@ def main(argv: list[str] | None = None) -> int:
     author_topic.add_argument("--required-node", action="append", default=[], metavar="PATH", help="required Context Node navigation target; may be repeated")
     author_topic.add_argument("--optional-node", action="append", default=[], metavar="PATH", help="optional Context Node navigation target; may be repeated")
 
+    propagate_parser = sub.add_parser(
+        "propagate",
+        help="review downstream Parent updates top-down; each changed edge remains an explicit acceptance",
+    )
+    propagate_parser.add_argument(
+        "path", nargs="?", default=".",
+        help="starting Context Node; with --all any path inside the repository (default: current directory)",
+    )
+    propagate_parser.add_argument(
+        "--all", action="store_true",
+        help="broaden review scope to every semantic Parent edge in the repository",
+    )
+    propagate_parser.add_argument(
+        "--yes", action="store_true",
+        help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)",
+    )
+
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
     parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
-    parent_review = parent_sub.add_parser("review", help="compile the live Parent explicitly and review its immutable candidate snapshot")
+    parent_review = parent_sub.add_parser("review", help="compile one live Parent explicitly and review its immutable candidate snapshot")
+    parent_review.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_review.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
-    parent_accept = parent_sub.add_parser("accept", help="accept exactly the most recently reviewed Parent snapshot")
+    parent_accept = parent_sub.add_parser("accept", help="accept exactly the reviewed snapshot for one Parent")
+    parent_accept.add_argument("parent_id", nargs="?", help="Parent Node ID; optional when the Child has exactly one Parent")
     parent_accept.add_argument("--node", default=".", help="child Context Node root (default: current directory)")
+    parent_propagate = parent_sub.add_parser("propagate", help="explicit Parent-oriented form of guided downstream propagation")
+    parent_propagate.add_argument("path", nargs="?", default=".", help="starting Context Node; with --all any path inside the repository")
+    parent_propagate.add_argument("--all", action="store_true", help="broaden review scope to every semantic Parent edge in the repository")
+    parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
 
-    source_parser = sub.add_parser("source", help="fetch, review, and explicitly accept immutable Source packages")
+    source_parser = sub.add_parser("source", help="discover, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
-    source_adopt = source_sub.add_parser("adopt", help="explicitly adopt one exact published Git package as a new Source")
+    source_list = source_sub.add_parser("list", help="list Sources by human name, stable ID and discovery configuration")
+    source_list.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_adopt = source_sub.add_parser("adopt", help="adopt one exact local package and register its local repository centrally")
     source_adopt.add_argument("package", help="local root of the exact published Source package Node")
     source_adopt.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
-    source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate through its declared transport")
-    source_fetch.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_fetch = source_sub.add_parser("fetch", help="fetch a Source candidate from central configuration or legacy inline transport")
+    source_fetch.add_argument("source", help="Source name or stable Node ID")
     source_fetch.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_fetch.add_argument("--ref", help="one-off Git discovery ref/branch/commit; does not rewrite accepted or central configuration")
+    source_update = source_sub.add_parser("update", help="fetch, review and optionally accept one Source in a single human-scale flow")
+    source_update.add_argument("source", help="Source name or stable Node ID")
+    source_update.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_update.add_argument("--ref", help="one-off Git discovery ref/branch/commit")
+    source_update.add_argument("--yes", action="store_true", help="accept the displayed Source diff without interactive confirmation")
     source_review = source_sub.add_parser("review", help="diff and structurally validate a Source candidate")
-    source_review.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_review.add_argument("source", help="Source name or stable Node ID")
     source_review.add_argument("candidate", help="local root of the candidate immutable package")
     source_review.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
     source_accept = source_sub.add_parser("accept", help="accept exactly a previously reviewed Source candidate")
-    source_accept.add_argument("source_id", help="stable Node ID of the Source in CONTEXT.src.md")
+    source_accept.add_argument("source", help="Source name or stable Node ID")
     source_accept.add_argument("candidate", help="local root of the reviewed immutable package")
     source_accept.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+
+    config_parser = sub.add_parser("config", help=f"inspect the central {CONFIG_FILENAME} operational configuration")
+    config_sub = config_parser.add_subparsers(dest="config_command", required=True)
+    config_show = config_sub.add_parser("show", help="validate and print the central project configuration")
+    config_show.add_argument("path", nargs="?", default=".", help="repository root or path inside it")
 
     args = parser.parse_args(argv)
 
@@ -858,6 +1279,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Acceptance record: {acceptance.acceptance_path}")
             return 0
 
+        if args.command == "config":
+            root = find_repo_root(_node_root(Path(args.path)))
+            load_project_config(root)
+            path = config_path(root)
+            if not path.is_file():
+                print(f"No {CONFIG_FILENAME} exists at {path}")
+            else:
+                print(path.read_text(encoding="utf-8"), end="")
+            return 0
+
         if args.command == "author":
             node_root = _node_root(Path(args.path))
             if args.author_command == "rule":
@@ -884,10 +1315,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Then: contextcanon check {node_root}")
             return 0
 
+        if args.command == "propagate":
+            return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
+
         if args.command == "parent":
+            if args.parent_command == "propagate":
+                return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
+
             node_root = _node_root(Path(args.node))
             if args.parent_command == "review":
-                result, receipt = review_parent_candidate(node_root)
+                result, receipt = review_parent_candidate(node_root, args.parent_id)
                 print(render_diff(result), end="")
                 try:
                     label = receipt.relative_to(node_root).as_posix()
@@ -896,38 +1333,206 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Parent review receipt: {label}")
                 print("Accepted Parent pin is unchanged until 'contextcanon parent accept'.")
                 return 0
-            accepted = accept_parent_candidate(node_root)
+            accepted = accept_parent_candidate(node_root, args.parent_id)
             print(f"accepted Parent {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+            _report_version_bump(ensure_node_version_advanced(node_root))
             print(f"Next: contextcanon build {node_root}")
             print(f"Then: contextcanon check {node_root}")
             return 0
 
         if args.command == "source":
             node_root = _node_root(Path(args.node))
+            repo_root = find_repo_root(node_root)
+            if args.source_command == "list":
+                parsed = parse_node(node_root, repo_root)
+                if not parsed.sources:
+                    print(f"{parsed.metadata.name}: no Sources")
+                    return 0
+                for source, package in _source_identity_rows(node_root):
+                    configured = configured_source(repo_root, source.id)
+                    if configured is None:
+                        discovery = (
+                            f"legacy git {source.locator} ({source.transport_ref or 'default'})"
+                            if source.transport == "git"
+                            else "no central discovery configuration"
+                        )
+                    else:
+                        source_config, repository = configured
+                        if repository.kind == "git":
+                            discovery = f"git {repository.location} @ {repository.ref or 'default'} :: {source_config.node_path}"
+                        else:
+                            discovery = f"local {repository.location} :: {source_config.node_path}"
+                    print(f"{package.metadata.name} | {source.id} | using {source.version} | {discovery}")
+                    if source.name != package.metadata.name:
+                        print(f"  warning: consumer display label is {source.name!r}; accepted package name is {package.metadata.name!r}")
+                return 0
+
             if args.source_command == "adopt":
                 adopted, changed = adopt_source_package(node_root, Path(args.package))
                 verb = "adopted" if changed else "already adopted"
                 print(f"{verb} Source {adopted.metadata.name} {adopted.metadata.version} ({adopted.package_digest})")
+                if changed:
+                    _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                print(f"Discovery configuration: {config_path(repo_root)}")
                 print(f"Next: contextcanon build {node_root}")
                 print(f"Then: contextcanon check {node_root}")
                 return 0
-            if args.source_command == "fetch":
-                candidate, location = fetch_git_candidate(node_root, args.source_id)
+
+            source_id = _resolve_source_id(node_root, args.source)
+            if args.source_command in {"fetch", "update"}:
+                parsed = parse_node(node_root, repo_root)
+                current = next(source for source in parsed.sources if source.id == source_id)
+                lookup = _source_lookup_description(repo_root, current, source_id, args.ref)
+                candidate, location = fetch_git_candidate(node_root, source_id, discovery_ref=args.ref)
                 try:
-                    label = location.relative_to(node_root).as_posix()
+                    cache_label = location.relative_to(node_root).as_posix()
                 except ValueError:
-                    label = str(location)
-                print(f"fetched candidate {candidate.metadata.name} {candidate.metadata.version} ({candidate.package_digest})")
+                    cache_label = str(location)
                 provenance = load_candidate_provenance(node_root, candidate.package_digest)
-                if provenance is not None:
-                    print(f"Candidate Git commit: {provenance['candidate_ref']}")
-                print(f"Candidate package: {label}")
-                print("Accepted Source pin is unchanged until explicit review and accept.")
+
+                migrated = None
+                if args.source_command == "update":
+                    migrated = _migrate_legacy_source_discovery(node_root, source_id)
+
+                if current.package_digest == candidate.package_digest:
+                    if args.source_command == "update":
+                        print(f"Source update for Node: {parsed.metadata.name}")
+                        print(f"Current local Source: {candidate.metadata.name} {candidate.metadata.version}")
+                        print(f"Looked up from: {lookup}")
+                        print("Result: this local Node already uses this exact Source package; no update is needed.")
+                    else:
+                        print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                        print("Current Source is already this exact package.")
+                    return 0
+
+                if args.source_command == "fetch":
+                    print(f"Fetched candidate: {candidate.metadata.name} {candidate.metadata.version}")
+                    print(f"Looked up from: {lookup}")
+                    print("The Source version currently used by this Node is unchanged until explicit review and apply.")
+                    print("Technical details:")
+                    print(f"  Candidate package digest: {candidate.package_digest}")
+                    if provenance is not None and provenance.get("candidate_ref"):
+                        print(f"  Git commit: {provenance['candidate_ref']}")
+                    print(f"  Cached package: {cache_label}")
+                    return 0
+
+                result, receipt = review_source_candidate(node_root, source_id, location)
+                local_effect = preview_source_candidate_effect(node_root, source_id, location)
+
+                print(f"Source update for Node: {parsed.metadata.name}")
+                print("")
+                print("Current Source:")
+                print(f"  {parsed.metadata.name} uses {current.name} {current.version}.")
+                print("Candidate found:")
+                print(f"  {candidate.metadata.name} {candidate.metadata.version}")
+                print(f"  Found at: {lookup}")
+                print(
+                    f"Review the changes below, then choose whether {parsed.metadata.name} "
+                    "should use this newer Source version."
+                )
+
+                if migrated is not None:
+                    print("")
+                    print("Discovery setup note:")
+                    print(f"  Legacy Source lookup settings were moved to {migrated}.")
+                    print("  That only changes where future candidates are found; it does not apply this Source update.")
+
+                print("")
+                print(f'What changed in Source "{candidate.metadata.name}" since the version used here:')
+                print(f"  Version: {current.version} -> {candidate.metadata.version}")
+                print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
+                _print_human_change_details(result, exclude_categories={"node"})
+
+                print("")
+                print(f'What Y would change in Node "{parsed.metadata.name}":')
+                print(
+                    f"  Source used by {parsed.metadata.name}: {current.name} {current.version} -> "
+                    f"{candidate.metadata.name} {candidate.metadata.version}"
+                )
+                print(
+                    "  Effective Context: "
+                    + _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
+                )
+                print("  This preview already includes local Overrides/Removes and other imported Contexts.")
+                print("  This Node's own version will be checked and may receive the automatic minimum patch bump.")
+                print("  Its generated CONTEXT.md will keep showing the previous Context until you rebuild later.")
+
+                downstream = _parent_edges(repo_root, node_root)
+                if downstream:
+                    print("")
+                    print("If you choose Y, review these Child Nodes next:")
+                    print("  The Y below changes this Node only; its Children keep their current Parent Context until reviewed.")
+                    print(
+                        f"  {len({child_root for child_root, _, _ in downstream})} Child Node(s) are reachable through the Parent/Child chain."
+                    )
+                    print("  Parent/Child path to review:")
+                    for child_root, parent, parent_root in downstream:
+                        child = parse_node(child_root, repo_root)
+                        parent_node = parse_node(parent_root, repo_root)
+                        child_label = child_root.relative_to(repo_root).as_posix() or "."
+                        print(f"    - {parent_node.metadata.name} -> {child.metadata.name} ({child_label})")
+                    start_label = node_root.relative_to(repo_root).as_posix() or "."
+                    propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
+                    print("  Review that path top-down in one guided run:")
+                    print(f"    {propagate_command}")
+                    print("    There you will be asked separately before each changed Child starts using its newer Parent Context.")
+                else:
+                    print("")
+                    print("If you choose Y:")
+                    print("  No Child Nodes use this Node as a semantic Parent, so no propagation review follows.")
+
+                print("")
+                print("Before choosing Y, check:")
+                print(f"  1. Do these changes make sense for {parsed.metadata.name}?")
+                print("  2. Are they compatible with this Node's other imported Contexts, or is an explicit local resolution needed?")
+                print(f"  3. Are the changes in {candidate.metadata.name} themselves correct, complete, and well-scoped? If not, fix the Source upstream.")
+
+                print("")
+                print("Technical details:")
+                print(f"  Source Node ID: {source_id}")
+                print(f"  Source normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
+                print(f"  Source package digest: {result.before_package_digest} -> {result.after_package_digest}")
+                print("  Exact changed identities:")
+                symbols = {"added": "+", "removed": "-", "modified": "~"}
+                for entry in result.entries:
+                    if entry.category == "node":
+                        continue
+                    print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+                print("  Candidate discovery:")
+                if provenance is not None and provenance.get("candidate_ref"):
+                    print(f"    Git commit: {provenance['candidate_ref']}")
+                elif provenance is not None and provenance.get("kind") == "local":
+                    print(f"    Local repository: {provenance['location']}")
+                print(f"    Cached package: {cache_label}")
+
+                if not args.yes and not _confirm(f'Apply this Source update to Node "{parsed.metadata.name}"?'):
+                    print("No local Source update applied.")
+                    print(f"Technical review receipt kept at: {receipt}")
+                    return 0
+
+                accepted = accept_source_candidate(node_root, source_id, location)
+                print(f'Node "{parsed.metadata.name}" now uses {accepted.metadata.name} {accepted.metadata.version} (was {current.name} {current.version}).')
+                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                if downstream:
+                    start_label = node_root.relative_to(repo_root).as_posix() or "."
+                    propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
+                    print("The generated CONTEXT.md still shows the previous Context; rebuild after the downstream reviews.")
+                    print("Next: review the downstream Parent/Child updates in one guided run:")
+                    print(f"  {propagate_command}")
+                    print("  There you will be asked separately before each changed Child starts using its newer Parent Context.")
+                    print("After those reviews, rebuild and verify from the repository root:")
+                    print("  contextcanon build --all .")
+                    print("  contextcanon check --all .")
+                else:
+                    print("The generated CONTEXT.md still shows the previous Context.")
+                    print("Rebuild and verify from the repository root:")
+                    print("  contextcanon build --all .")
+                    print("  contextcanon check --all .")
                 return 0
 
             candidate = Path(args.candidate).resolve()
             if args.source_command == "review":
-                result, receipt = review_source_candidate(node_root, args.source_id, candidate)
+                result, receipt = review_source_candidate(node_root, source_id, candidate)
                 print(render_diff(result), end="")
                 try:
                     label = receipt.relative_to(node_root).as_posix()
@@ -936,8 +1541,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Review receipt: {label}")
                 return 0
 
-            accepted = accept_source_candidate(node_root, args.source_id, candidate)
+            accepted = accept_source_candidate(node_root, source_id, candidate)
             print(f"accepted {accepted.metadata.name} {accepted.metadata.version} ({accepted.package_digest})")
+            _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
             return 0
 
         repo_root, node_roots = _targets(Path(args.path), args.all)
@@ -946,14 +1552,19 @@ def main(argv: list[str] | None = None) -> int:
         compiler = Compiler(repo_root)
         failed = False
         for node_root in node_roots:
-            compiled = compiler.compile(node_root)
             label = node_root.relative_to(repo_root).as_posix() or "."
             if args.command == "build":
+                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                compiled = Compiler(repo_root).compile(node_root)
                 changed = write_outputs(compiled)
                 suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
                 print(f"built {label}{suffix}")
             else:
+                compiled = compiler.compile(node_root)
                 drift = check_outputs(compiled)
+                version_problem = version_reuse_problem(compiled)
+                if version_problem is not None:
+                    drift = [version_problem, *drift]
                 if drift:
                     failed = True
                     print(f"drift {label}:")

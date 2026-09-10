@@ -40,7 +40,7 @@ class ReusableContextsTests(unittest.TestCase):
         (root / "catalog" / ".git").mkdir()
         (node / "CONTEXT.src.md").write_text(
             "# Development Workflow — Local Context Source\n"
-            '<!-- ctx:node id="workflow-node" version="0.2.0-draft" -->\n\n'
+            '<!-- ctx:node id="workflow-node" name="Development Workflow" version="0.2.0-draft" -->\n\n'
             "## Local Rules\n\n"
             "### Development\n\n"
             "- **Review before merge:** Keep changes reviewable.\n"
@@ -178,12 +178,12 @@ class ReusableContextsTests(unittest.TestCase):
             consumer.mkdir()
             (source / "CONTEXT.src.md").write_text(
                 "# Shared — Local Context Source\n"
-                '<!-- ctx:node id="shared" version="1.0.0" -->\n',
+                '<!-- ctx:node id="shared" name="Shared" version="1.0.0" -->\n',
                 encoding="utf-8",
             )
             (consumer / "CONTEXT.src.md").write_text(
                 "# Consumer — Local Context Source\n"
-                '<!-- ctx:node id="consumer" version="1.0.0" -->\n\n'
+                '<!-- ctx:node id="consumer" name="Consumer" version="1.0.0" -->\n\n'
                 "## Sources\n\n"
                 "- [Shared](../shared) — `1.0.0`\n"
                 "  Why: Shared policy applies to every consumer here.\n"

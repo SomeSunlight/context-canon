@@ -4,10 +4,12 @@ This directory contains documentation owned by the repository-root **ContextCano
 
 It is deliberately small:
 
-- [`onboarding.md`](onboarding.md) — the user-facing first-contact guide for bringing an existing project into ContextCanon.
+- [`onboarding.md`](onboarding.md) — bring an existing project into ContextCanon.
+- [`maintenance.md`](maintenance.md) — normal operation after onboarding: Source updates, propagation review, build, and check.
+- [`cli.md`](cli.md) — compact command map for everyday ContextCanon use.
 - [`onboarding-reference.md`](onboarding-reference.md) — a compatibility pointer for older links; the technical reference itself is owned and authored by Framework Development.
 
-Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory.
+Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory. User-facing entry documentation stays here so a normal operator does not need to search implementation Nodes merely to learn what to do next.
 
 Short `README.md` files are used at important directory boundaries throughout this repository because GitHub renders them automatically when a directory is opened. They are orientation signs, not second copies of the deeper documentation.
 

@@ -39,7 +39,7 @@ class ParentChainTests(unittest.TestCase):
         (workflow / "docs" / "workflow.md").write_text("# Workflow\n\nReview before merge.\n", encoding="utf-8")
         (workflow / "CONTEXT.src.md").write_text(
             """# Development Workflow — Local Context Source
-<!-- ctx:node id="node-workflow" version="1.0.0" -->
+<!-- ctx:node id="node-workflow" name="Development Workflow" version="1.0.0" -->
 
 ## Rules
 
@@ -70,7 +70,7 @@ Required:
         install(project, workflow_compiled)
         (project / "CONTEXT.src.md").write_text(
             f"""# AI Workstation — Local Context Source
-<!-- ctx:node id="node-project" version="1.0.0" -->
+<!-- ctx:node id="node-project" name="AI Workstation" version="1.0.0" -->
 
 ## Sources
 
@@ -106,7 +106,7 @@ Required:
         install(subsystem, project_compiled)
         (subsystem / "CONTEXT.src.md").write_text(
             "# Llama Stack — Local Context Source\n"
-            '<!-- ctx:node id="node-subsystem" version="1.0.0" -->\n\n'
+            '<!-- ctx:node id="node-subsystem" name="Llama Stack" version="1.0.0" -->\n\n'
             + parent_block("AI Workstation", "..", project_compiled)
             + """## Rules
 
@@ -135,7 +135,7 @@ Required:
         install(sibling, project_compiled)
         (sibling / "CONTEXT.src.md").write_text(
             "# Unrelated Sibling — Local Context Source\n"
-            '<!-- ctx:node id="node-sibling" version="1.0.0" -->\n\n'
+            '<!-- ctx:node id="node-sibling" name="Unrelated Sibling" version="1.0.0" -->\n\n'
             + parent_block("AI Workstation", "..", project_compiled)
             + """## Rules
 
@@ -154,7 +154,7 @@ Required:
         install(leaf, subsystem_compiled)
         (leaf / "CONTEXT.src.md").write_text(
             "# Llama Dispatcher — Local Context Source\n"
-            '<!-- ctx:node id="node-tool" version="1.0.0" -->\n\n'
+            '<!-- ctx:node id="node-tool" name="Llama Dispatcher" version="1.0.0" -->\n\n'
             + parent_block("Llama Stack", "..", subsystem_compiled)
             + """## Rules
 

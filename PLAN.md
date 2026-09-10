@@ -2,9 +2,11 @@
 
 ## Accepted baseline
 
-The current accepted `main` baseline is PR #12, squash-merged as `bac1f52048b3d82cedb00b04fccd114607c4c915`.
+The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
 
-The structure-first onboarding architecture, reusable Development Workflow Source, two-pass placement semantics and real `ai-workstation` structure materialization are accepted. PR #13 is the active review branch for finishing reviewed placement publication.
+The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#27 and remains unmerged pending explicit project-owner approval.
+
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
 
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
@@ -391,3 +393,121 @@ Purpose: remove the remaining grammar reconstruction from STEP 05. The generated
 - [x] Make clear that these generated pairings are syntax helpers rather than recommendations; the editable Assignment list remains sparse and human-selected.
 - [x] Point incomplete-Assignment errors directly at the copy-ready section instead of restating grammar the operator must reconstruct.
 - [x] Run focused regressions, complete deterministic suite, self-build/check, diff hygiene and cleanup; then hand the exact clean PR head back to the owner for the continued real `ai-workstation` STEP-05 test. PR remains draft/unmerged.
+
+## Active development block: issue traceability, layout transparency, and multi-Parent semantics
+
+Purpose: resolve Issues #14, #15, #16 and #17 with small explicit rules, then restore the intended multi-Parent model without adding speculative semantic automation.
+
+- [x] Add the Development Workflow rule that implementation, framework-context, and substantial documentation changes must be backed by an Issue; the Issue may be brief.
+- [x] Resolve #14 with a short Foundation layout rule and a small onboarding-structure bias: existing directories are the default when they fit; Node roots and primarily governed files should normally be colocated; unusual separation is a human-review flag, never implicit inheritance.
+- [x] Resolve #15 with a short Development Workflow rule: inherited/applicable Context constrains a task but does not silently expand its writable change scope.
+- [x] Restore #17 consistently: a Node may have several semantic Parents; Parent order has no precedence; exact package pinning/review remains per Parent; deterministic same-identity conflicts remain errors.
+- [x] Add the multi-Parent invariant to Foundation, including the warning that non-orthogonal Parent context can create semantic contradictions that users must currently resolve explicitly.
+- [x] Record future LLM-assisted contradiction detection as later work only; it may flag likely semantic conflicts but must not choose precedence automatically.
+- [x] Add focused multi-Parent/layout/workflow regressions, regenerate affected self-hosted Context packages, run the complete suite plus build/check/diff hygiene, and prepare a review PR. Do not merge without explicit project-owner approval.
+
+Checkpoint: Issues #14–#17 are implemented in draft PR #18. Multi-Parent composition is order-independent, onboarding intentionally remains a single primary navigation hierarchy, legacy `package/v0` remains readable beside plural `package/v1`, and the exact product candidate passed 226 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene. PR #18 remains unmerged pending explicit project-owner approval.
+
+## Documentation reconciliation: Issue #19
+
+Purpose: make durable current-state pointers match the accepted `main` history after PR #13 merged.
+
+- [x] Update the accepted baseline in `STATE.md` and `PLAN.md`.
+- [x] Distinguish historical PR #13 checkpoint wording from current repository status.
+- [x] Point current work at draft PR #18 without changing product semantics or re-running onboarding.
+
+Checkpoint: Issue #19 reconciles documentation only; the same full suite/build/check/diff gate is required before the PR review head is updated.
+
+### Later semantic contradiction audit
+
+- [ ] When optional LLM semantic analysis is introduced, flag likely contradictions between inherited Contexts/Parents for human review; never infer precedence automatically.
+
+
+## Active owner-test UX block: Issues #21–#24
+
+Purpose: turn the first real post-onboarding update into a human-scale workflow while preserving immutable acceptance and offline operation.
+
+- [x] #21 expose the installed ContextCanon version through `contextcanon --version`.
+- [x] #22 let humans discover Sources by name and propagate accepted Parent changes top-down without per-edge command archaeology or per-Node skip configuration.
+- [x] #23 allow one-off Source candidate discovery from an explicit Git ref/branch/commit without rewriting accepted state.
+- [x] #24 centralize operational repository/Source discovery in an extensible repository-root YAML configuration, including pure local/offline repositories, while keeping accepted immutable pins in each consumer Node.
+- [x] Preserve compatibility with existing inline Git transport metadata and run focused regressions, the complete deterministic suite, self-build/check and diff hygiene before returning to owner testing.
+
+Owner-test consistency follow-up under #22: accepted Source and Parent visible labels must match the canonical Node name of the accepted package. Stable ID/version/digests remain technical identity; `source list` stays diagnostic/repairable, while `contextcanon check` must report a label mismatch until acceptance or a direct source edit normalizes it.
+
+Owner-test correction under #22: `source list` and human Source selectors must use the accepted package's canonical Node name; a stale/damaged consumer display label may be shown as a warning/legacy alias but must not force UUID archaeology. Successful Source acceptance should normalize the visible consumer label back to the accepted package name.
+
+Checkpoint: Issues #21–#24 are implemented on draft PR #18. The human-scale update path supports version display, Source discovery by name, one-off Git refs, central Git/local repository configuration, guided legacy-to-central discovery migration, and top-down Parent propagation without per-Node exclusions. Parent propagation updates every applicable edge; project-specific differences belong in normal local Override/Remove semantics. The exact candidate passes 231 deterministic tests, self-build, zero-drift `check --all`, and diff hygiene before owner testing resumes.
+
+## Owner-test format correction: Issue #25
+
+Purpose: remove hidden machine semantics from the Markdown H1. Canonical Context Node name becomes explicit `ctx:node` metadata; ordinary Markdown presentation no longer defines Node identity/name.
+
+- [x] Require explicit `name="..."` in `ctx:node` and make parser/compiler use that field only.
+- [x] Keep the H1 as ordinary human presentation; changing it alone must not change canonical Node semantics.
+- [x] Update structure/onboarding materialization and all authored ContextCanon Nodes to emit/use explicit machine name metadata.
+- [x] Migrate tests/documentation and add regressions proving H1 independence and explicit-name authority.
+- [x] Regenerate self-hosted outputs and pass full tests/build/check/diff hygiene before returning to the `ai-workstation` owner test.
+
+Checkpoint: Issue #25 is an explicit scope expansion of draft PR #18, discovered during the real `ai-workstation` Source-name UX test. The project owner selected the explicit-machine-metadata design; no PR merge is authorized.
+
+Issue #25 implementation checkpoint: canonical Node names now come only from explicit `ctx:node name` metadata. H1 presentation is non-semantic, all ContextCanon authored Nodes and fixtures are migrated, structure materialization emits the explicit field, and regression coverage protects the boundary.
+
+Owner-test review-readability follow-up under #22: keep immutable digests visible, but make the human meaning of Source/Parent review primary. Review output should summarize semantic/content changes before technical fingerprints, and legacy-to-central discovery migration must state explicitly that migration alone does not change the accepted Source.
+
+Owner-test version-discipline follow-up under #26: a changed Context package must not silently reuse the previous human version. If a prior generated package exists and the authored SemVer-shaped version is unchanged, ContextCanon applies the minimum patch bump automatically and explicitly tells the owner to consider a higher minor/major bump when warranted. A human-selected higher version wins. External Source candidates that changed package identity while reusing the accepted version are rejected rather than repaired by the consumer.
+
+Issues #22/#26 owner-test implementation checkpoint: review output now leads with version and a compact semantic/content summary, followed by category details and a separate Technical details fingerprint section. Legacy discovery migration explicitly says acceptance is unchanged. Context Node package reuse under the same version is prevented: SemVer-shaped unchanged versions receive only a minimum patch bump with a visible minor/major reminder, human-selected higher versions are preserved, unsafe version formats require manual advancement, and external same-version/different-package Source candidates are rejected. Development Workflow first received the automatic minimum `0.2.1-draft` bump; owner review then correctly classified the accumulated workflow change as feature-level and advances it deliberately to `0.3.0-draft`. Affected self-hosted Context Nodes are versioned consistently. Full deterministic tests, self-build/check, and diff hygiene must remain green on the final product head.
+
+## Owner-test everyday maintenance UX: Issue #27
+
+Purpose: make normal ContextCanon use after onboarding discoverable from the repository entrance, explain composition from the user's benefit first, and give accepted Context changes one short, consistent propagation vocabulary.
+
+- [x] Add user-level `contextcanon propagate` scoped to semantic descendants of the selected Node; `--all` broadens only the review scope to every Parent graph, while `contextcanon parent propagate` remains the explicit compatibility form.
+- [x] Make Source-update review explain the external Source change first, then the local effect if accepted, what remains unchanged until propagation/build, the downstream Nodes expected to need review, and the normal next command before technical fingerprints.
+- [x] Add a concise root-owned existing-project maintenance guide and compact CLI overview covering inspect/update/propagate/build/check plus links to deeper concepts; make both discoverable from README and a new Gateway Topic.
+- [x] Rewrite the opening of Foundation `composition.md` from the user mental model: a Child can combine several independent contexts; non-orthogonal imports can conflict and require explicit human resolution; link to the existing deeper conflict sections rather than duplicating them.
+- [x] Keep Parent review/accept explanations short and intuitive: Parent and Child may evolve independently; the Child keeps its last accepted Parent snapshot until a newer one is reviewed and accepted. Propagation presents a short applicability / cross-context compatibility / upstream-quality checklist before detailed diffs.
+- [x] Choose intentional human-facing version bumps for materially changed Context Nodes instead of relying only on automatic minimum patch bumps, regenerate self-hosted packages, add focused regressions, and pass the complete suite/build/check/diff gate before returning to the real `ai-workstation` owner test.
+
+Issue #27 is an explicit owner-approved expansion of draft PR #18 discovered during the real post-onboarding `ai-workstation` walkthrough. PR #18 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner-test Source-update narrative follow-up: Issue #27
+
+Purpose: make `contextcanon source update` understandable without prior ContextCanon vocabulary. The owner test showed that the first human-scale rewrite still describes internal state (`accepted`, `dependent Nodes`, generic `Nodes:` diff categories) before it tells the simple story of what is currently used here, what newer Source version was found, what changed there, what would change locally, what the human should check, and what should be reviewed downstream afterwards.
+
+- [x] Lead with a tiny orientation: current Source version used by this local Node, newly found candidate version/location, and a one-line statement that the command is offering a local update but has changed nothing yet.
+- [x] Present the external Source change as a human Source change, without the generic `Nodes:` metadata category; keep exact identities/fingerprints available only in deeper detail.
+- [x] Compute and show the effective local impact of the candidate after this Node's existing Overrides/Removes and other imported Context have been applied, rather than merely restating the upstream diff.
+- [x] Put a three-question minimum review checklist immediately before the acceptance prompt: applicability here, compatibility with other imported Context, and upstream correctness/completeness.
+- [x] Explain downstream work in plain Parent/Child terms: after this Node changes, its Child Nodes still use their previously reviewed Parent snapshot and therefore need the same kind of review; list them and point directly to `contextcanon propagate` as the one-command guided review entry.
+- [x] Keep technical digests, exact Git provenance, cache paths, and stable identities under an unmistakable `Technical details` layer.
+- [x] Add focused narrative/local-impact regressions, deliberately patch-bump the public CLI if appropriate, regenerate self-hosted outputs when documentation changes, and pass the complete suite/build/check/diff gate plus ordinary exact-head PR CI before returning another owner-test SHA.
+
+This is a wording/impact-transparency refinement of Issue #27, not a change to acceptance authority: no Source or Parent update becomes effective without the existing explicit human gate, and PR #18 remains draft/unmerged pending project-owner approval.
+
+## Owner-test propagation narrative follow-up: Issue #27
+
+Purpose: apply the proven Source-update narrative to `contextcanon propagate` so each Parent-to-Child decision is understandable without package-internal vocabulary.
+
+- [x] Make the Child the subject of each propagation step: show the Parent version currently used by that Child and the newer Parent version available.
+- [x] Show human-readable Parent changes first, including Rule titles/statements; keep Node IDs, stable identities and digests under `Technical details`.
+- [x] Preview the effective Child Context with the candidate Parent after existing Overrides/Removes and other imports, without changing the Child.
+- [x] Put the short applicability / compatibility / upstream-quality checklist immediately before the Y/N decision and phrase the prompt as applying the Parent update to the named Child.
+- [x] Preserve top-down, separately gated propagation semantics; `--all` remains scope only.
+- [x] Polish the post-Source-accept rebuild wording, add focused regressions, bump the public CLI patch version, and pass full build/check/test/diff plus exact-head PR CI before returning to the owner test.
+
+This is a wording/impact-transparency refinement under Issue #27; no Parent or Source update becomes effective without the existing explicit human gate.
+
+## Owner-test Windows propagation resume follow-up: Issue #27
+
+Purpose: close the Windows package-publication failure found during the real ai-workstation propagation run, preserve already accepted steps, and finish the remaining Source/propagation wording polish before the owner continues.
+
+- [x] Harden immutable package publication against transient Windows directory rename/replace access failures without weakening exact package verification or overwriting different content.
+- [x] Prove rerun/resume behavior: already-current Parent/Child edges are skipped compactly and the first still-stale Child remains separately reviewable.
+- [x] Add a visible delimiter between propagation review rounds.
+- [x] Finish the collected Source-update wording polish: clear current Source, candidate, what Y changes locally, what is reviewed after Y, and rebuild/check guidance.
+- [x] Patch-bump the public CLI/package version consistently, add focused regressions, and pass full syntax/build/test/check/diff plus exact-head PR CI before returning to the owner test.
+
+The first five accepted ai-workstation propagation steps are valid project state and must not be rolled back or repeated as new decisions. PR #18 remains draft and unmerged pending explicit project-owner approval.
+

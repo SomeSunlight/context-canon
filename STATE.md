@@ -1,10 +1,12 @@
 # Current State
 
-The accepted `main` baseline remains PR #12, squash-merged as:
+The accepted `main` baseline is PR #13, squash-merged as:
 
-`bac1f52048b3d82cedb00b04fccd114607c4c915`
+`df847ba031bfa3965ca53626249e18a1074cb8af`
 
-PR #13 on `agent/onboarding-placement-publication` remains the active **draft, unmerged** review branch. The project owner is now exercising the workflow directly on the real `ai-workstation` onboarding and has explicitly allowed corrections discovered during that review. This is not merge approval.
+PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#27. It remains subject to explicit project-owner approval.
+
+Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
 
 ## What is implemented in PR #13
 
@@ -17,7 +19,7 @@ Reusable Sources have two visibly different origins:
 - `evidence-derived` — the semantic pass found reuse from the supplied exact Source catalog;
 - `owner-selected` — the project owner deliberately adds a supplied exact Source independently of what frozen project Evidence claimed.
 
-Both remain bound to exact Node/version/normalized/package identity. Publication resolves durable Git locator, exact commit and Node path instead of writing a transient local checkout path. The final publication preview keeps the Source name, origin, version, package digest and Git provenance visible before mutation.
+Both remain bound to exact Node/version/normalized/package identity. Publication resolves durable Git locator, exact commit and Node path instead of writing a transient local developer checkout path. The final publication preview keeps the Source name, origin, version, package digest and Git provenance visible before mutation.
 
 `contextcanon onboard placement-preview` renders exact per-Node `CONTEXT.src.md` deltas, Source changes, durable follow-ups and deferred mutable-Markdown cleanup candidates without mutating the project. `contextcanon onboard placement-publish` revalidates frozen Evidence and review identity, refuses stale Node source after preview, installs exact Source packages, compiles touched Nodes before writing generated output, writes an exact acceptance record, and rolls back its own changes on failure.
 
@@ -124,7 +126,7 @@ Normal ContextCanon-native project evolution is distinct from one-time migration
 
 ## Immediate next step
 
-Obtain the ordinary GitHub PR workflow on the exact clean product head. If green, keep PR #13 draft/unmerged and let the project owner reinstall that exact SHA and restart the real `ai-workstation` onboarding. The intended test UX is now deliberately simple: after reset/restart, open `contextcanon-onboarding/PLAN.md` and follow/copy it from top to bottom. Do not merge or begin destructive duplicate cleanup without explicit owner approval.
+Resume the real `ai-workstation` owner test on the exact clean head of draft PR #18 using the Issues #21–#24 human-scale Source-update and Parent-propagation UX. Do not merge without explicit project-owner approval.
 
 ## Latest live Step-4 owner-test verification
 
@@ -280,9 +282,9 @@ The remaining owner gate is a final readability inspection on the real `ai-works
 
 The final owner-UX correction turns reusable Context setup into its own human gate between accepted project structure and placement reasoning. `STEP-05-reusable-contexts.md` owns Catalog locations, sparse project-Node ← reusable-Context assignments, and the durable Why for each relationship. Human operators no longer have to reconstruct Source UUIDs, package digests, target Node keys, or one-time Catalog/owner-selection CLI options during normal onboarding. Exact immutable identities remain machine state.
 
-The generated onboarding PLAN is now a ten-step operator console. Each STEP keeps the same number/title vocabulary as its artifact, a novice-oriented explanation, completion checkbox, exact command, and artifact guidance together instead of splitting a top checklist from lower instructions. STEP 05 precedes the placement LLM, and accepted assignments plus their Why are explicit placement-reasoning input so inherited reusable guidance is not proposed again as duplicate local meaning.
+The generated onboarding PLAN is now a ten-step operator console. Each STEP keeps the same number/title vocabulary as the artifact names, a novice-oriented explanation, completion checkbox, exact command, and artifact guidance together instead of splitting a top checklist from lower instructions. STEP 05 precedes the placement LLM, and accepted assignments plus their Why are explicit placement-reasoning input so inherited reusable guidance is not proposed again as duplicate local meaning.
 
-Source relationship rationale is durable provenance rather than a Rule: direct Source authoring records the Why, immutable imported context carries it through accepted Parent packages, and descendants can therefore explain both where inherited reusable Context came from and why it was attached. Ordinary builds remain offline and Parent/Source package pins remain immutable.
+Source relationship rationale is durable provenance rather than a Rule: direct Source authoring records the Why, immutable imported context carries it through accepted Parent packages, and descendants can therefore explain both where inherited Context came from and why the reusable Context was attached. Ordinary builds remain offline and Parent/Source package pins remain immutable.
 
 The final product commit is created only after the focused onboarding/Parent/package regressions, the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, diff hygiene, temporary-helper cleanup, and a second post-cleanup check all succeed. PR #13 remains draft and unmerged; the next action is the project owner's real `ai-workstation` test starting again at STEP 05.
 
@@ -297,3 +299,35 @@ The correction makes Catalog path input forgiving and canonicalizing: plain path
 The next real owner interaction exposed a presentation/grammar mismatch: the generated project Context Node list looked like material intended to be copied upward, but its lines contained only the Assignment target. Pasting such a line into the editable Assignment section necessarily failed because the reusable Context name/version were absent.
 
 STEP 05 now renders complete copy-ready Assignment first lines after Catalog discovery. They are grouped by reusable Context and pair each visible project Node with that Source using exactly the syntax the parser accepts. The list is explicitly a syntactic copy aid, not a semantic recommendation or preselection. ContextCanon deliberately does not infer a Source from an incomplete line; instead the error points directly to the generated copy-ready section. The operator copies one complete line, adds the durable `Why:`, and keeps only the relationships that should actually exist.
+
+## Latest owner-test update UX checkpoint
+
+Issues #21–#24 now turn the first normal post-onboarding reusable-Context update into an operator-scale workflow. `contextcanon --version` exposes the installed tool version; Sources can be selected by human name; central `contextcanon.yaml` holds concise operational Git/local discovery configuration while accepted immutable pins remain inside each consumer Node; `source update` supports one-off refs without persisting them; and `parent propagate --all` reviews/accepts every applicable semantic Parent edge top-down without per-Node skip policy. Local exceptions remain ordinary ContextCanon Override/Remove semantics.
+
+For existing projects such as the owner-tested `ai-workstation`, the first guided `source update` can start from legacy inline Git metadata and, after candidate discovery succeeds, record equivalent central discovery configuration without changing the accepted package pin. Exact legacy commit refs migrate to default-branch discovery so the old update semantics are preserved, while an explicit one-off `--ref` remains ephemeral. The implementation is guarded by 231 deterministic tests plus self-build, zero-drift `check --all`, and diff hygiene.
+
+## Explicit Node-name metadata correction
+
+Issue #25 removes the implicit Node-name syntax from the Markdown H1. Canonical Node names are explicit `ctx:node name="..."` machine metadata; H1 wording is ordinary presentation and may change without changing normalized Context semantics. Structure materialization and all self-hosted ContextCanon Nodes use the explicit form.
+
+## Latest Source-update review readability and version discipline
+
+The real `ai-workstation` owner test confirmed that guided Source update, one-off `--ref`, and automatic `contextcanon.yaml` migration work correctly. The same run exposed two UX/integrity issues: immutable digests appeared before semantic meaning, and the changed Development Workflow still reused `0.2.0-draft`. PR #18 now presents a compact human summary before technical fingerprints and enforces human-meaningful package versions. SemVer-shaped unchanged versions receive only the minimum automatic patch bump, with an explicit reminder to consider a higher minor/major version; deliberately higher human versions are preserved. External candidates that changed package identity while reusing the accepted version are rejected.
+
+## Latest Issue #27 maintenance UX and Windows propagation finalization
+
+The real post-onboarding `ai-workstation` owner test now has a complete human-scale maintenance path. `contextcanon source update` explains the currently used reusable Context, the candidate found, the external change, the effective local impact, the explicit Y/N decision, and the downstream Parent/Child reviews in that order. `contextcanon propagate` is the normal top-level guided entry for carrying an already accepted Context change through semantic descendants; each changed Child remains separately gated, while already-current relationships are skipped compactly on rerun.
+
+The same owner run exposed a real Windows failure while accepting the Parent update for `Windows and WSL bootstrap`: the reviewed immutable package was staged successfully, but the final directory publication failed with `WinError 5` during `os.replace`. Immutable package publication now retries only that final atomic rename on transient `PermissionError`/`FileExistsError`, continues to verify any destination that appears concurrently by exact package identity, and still refuses different content. Earlier successfully accepted propagation steps remain valid; rerunning propagation resumes by reporting those edges as `Already current` and continues at the first stale Child.
+
+The public CLI/package version is `0.7.3`. The final Issue #27 product gate passes Python compilation, the complete deterministic suite of 247 tests, `contextcanon build --all .`, `contextcanon check --all .`, and `git diff --check`. A dedicated Windows Server 2025 runner additionally proves both the forced transient-package-publication retry and propagation resume behavior. The ordinary pull-request workflow is green on the repository-authored exact-tree checkpoint after temporary verification markers are removed.
+
+PR #18 remains Draft and unmerged. The next project-owner action is to reinstall the exact final PR head in `ai-workstation`, rerun `contextcanon propagate`, confirm the already-current edges are skipped, finish the remaining Child reviews, then rebuild/check that consumer repository. No merge is authorized implicitly by this verification.
+
+## Final Issue #27 owner acceptance
+
+The project owner completed the real `ai-workstation` maintenance run with ContextCanon 0.7.3 after the Windows resume fix. All remaining Parent/Child updates were reviewed and accepted individually, `contextcanon build --all .` completed, and `contextcanon check --all .` reported `ok` for the root plus all eight Child Nodes. Repeating the maintenance flow on that resulting state is idempotent. The owner explicitly accepted the final Source-update and propagation wording as clear and understandable.
+
+The UX lesson from this run is recorded under Issue #27 rather than hardened into another Framework Development Rule yet. Human-facing flows were most successful when they presented current state, newly found change, effect of the offered action, the operator's checks/decision, and the next step before technical identities/mechanics. Representative end-to-end consumer use remains the preferred validation method; when the development harness cannot execute that consumer workflow directly, an explicit owner walkthrough is the UX gate. No specific IDE or agent tool is part of the product contract. This remains covered by the existing vertical-validation rule plus Issue #27 until the pattern proves independently reusable enough to justify another Rule.
+
+PR #18 is therefore ready for project-owner merge review. Its exact merge head must remain green, and the merge itself still requires the project owner's explicit action. After merge, perform the normal accepted-baseline reconciliation before starting new framework development.

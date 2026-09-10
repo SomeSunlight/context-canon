@@ -28,23 +28,37 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
         f"**Context version:** `{compiled.metadata.version}`",
         "",
     ])
-    if compiled.parent_package is not None:
-        parent_link = _accepted_package_link(compiled.parent_package)
+    if len(compiled.parent_packages) == 1:
+        parent = compiled.parent_packages[0]
+        parent_link = _accepted_package_link(parent)
         lines.extend([
-            f"**Parent Context Node:** [{compiled.parent_package.metadata.name}]({parent_link}) — `{compiled.parent_package.metadata.version}`  ",
-            f"**Accepted Parent package:** `{compiled.parent_package.package_digest}`",
+            f"**Parent Context Node:** [{parent.metadata.name}]({parent_link}) — `{parent.metadata.version}`  ",
+            f"**Accepted Parent package:** `{parent.package_digest}`",
             "",
         ])
+    elif compiled.parent_packages:
+        lines.extend(["**Parent Context Nodes:**", ""])
+        for parent in compiled.parent_packages:
+            parent_link = _accepted_package_link(parent)
+            lines.append(
+                f"- [{parent.metadata.name}]({parent_link}) — `{parent.metadata.version}` — package `{parent.package_digest}`"
+            )
+        lines.append("")
 
     if compiled.imported_contexts:
         lines.extend(["**Resulting imported Contexts:**", ""])
         for dependency in compiled.imported_contexts:
-            relation, link = _import_carrier(compiled, dependency)
+            carriers = _import_carriers(compiled, dependency)
             why = f" — Why: {dependency.why}" if dependency.why else ""
-            lines.append(
-                f"- **{dependency.name}** — `{dependency.version}` — {relation}{why} — "
-                f"[inspect accepted carrier]({link})"
-            )
+            if len(carriers) == 1:
+                relation, link = carriers[0]
+                lines.append(
+                    f"- **{dependency.name}** — `{dependency.version}` — {relation}{why} — "
+                    f"[inspect accepted carrier]({link})"
+                )
+            else:
+                rendered = "; ".join(f"{relation} [inspect]({link})" for relation, link in carriers)
+                lines.append(f"- **{dependency.name}** — `{dependency.version}` — {rendered}{why}")
         lines.append("")
 
     if compiled.parsed.overview:
@@ -115,25 +129,26 @@ def _source_carrier_link(compiled: CompiledNode, ref: SourceRef, package: Compil
     return os.path.relpath(target, compiled.parsed.root).replace(os.sep, "/")
 
 
-def _import_carrier(compiled: CompiledNode, dependency: PackageDependency) -> tuple[str, str]:
-    parent = compiled.parent_package
-    if parent is not None:
+def _import_carriers(compiled: CompiledNode, dependency: PackageDependency) -> list[tuple[str, str]]:
+    result: list[tuple[str, str]] = []
+    for parent in compiled.parent_packages:
         link = _accepted_package_link(parent)
         if dependency.id == parent.metadata.id:
-            return "direct Parent Context Node", link
-        if any(item.id == dependency.id for item in parent.imports):
-            return f"via Parent Context Node **{parent.metadata.name}**", link
+            result.append(("direct Parent Context Node", link))
+        elif any(item.id == dependency.id for item in parent.imports):
+            result.append((f"via Parent Context Node **{parent.metadata.name}**", link))
 
     for ref, package in zip(compiled.parsed.sources, compiled.source_packages):
         link = _source_carrier_link(compiled, ref, package)
         if dependency.id == package.metadata.id:
-            return "direct Source", link
-        if any(item.id == dependency.id for item in package.imports):
-            return f"via Source **{package.metadata.name}**", link
-    raise ContextCanonError(
-        f"{compiled.metadata.name}: no direct accepted carrier found for imported Context {dependency.name}"
-    )
-
+            result.append(("direct Source", link))
+        elif any(item.id == dependency.id for item in package.imports):
+            result.append((f"via Source **{package.metadata.name}**", link))
+    if not result:
+        raise ContextCanonError(
+            f"{compiled.metadata.name}: no direct accepted carrier found for imported Context {dependency.name}"
+        )
+    return result
 
 def render_node_readme(compiled: CompiledNode) -> str:
     return (
@@ -236,20 +251,21 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
         f"  name: {q(compiled.metadata.name)}",
         f"  version: {q(compiled.metadata.version)}",
         "",
-        "# Accepted semantic Parent package. The locator is discovery metadata; build uses only the exact pin.",
+        "# Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.",
     ]
-    if compiled.parent_package is not None and compiled.parsed.parent is not None:
-        lines.extend([
-            "parent:",
-            f"  id: {q(compiled.parent_package.metadata.id)}",
-            f"  name: {q(compiled.parent_package.metadata.name)}",
-            f"  version: {q(compiled.parent_package.metadata.version)}",
-            f"  locator: {q(compiled.parsed.parent.locator)}",
-            f"  normalized_digest: {q(compiled.parent_package.normalized_digest)}",
-            f"  package_digest: {q(compiled.parent_package.package_digest)}",
-        ])
+    if compiled.parent_packages:
+        lines.append("parents:")
+        for parent_ref, parent_package in zip(compiled.parsed.parents, compiled.parent_packages):
+            lines.extend([
+                f"  - id: {q(parent_package.metadata.id)}",
+                f"    name: {q(parent_package.metadata.name)}",
+                f"    version: {q(parent_package.metadata.version)}",
+                f"    locator: {q(parent_ref.locator)}",
+                f"    normalized_digest: {q(parent_package.normalized_digest)}",
+                f"    package_digest: {q(parent_package.package_digest)}",
+            ])
     else:
-        lines.append("parent: null")
+        lines.append("parents: []")
 
     lines.extend(["", "# Accepted reusable Source packages used by this build. Both digests are exact pins."])
     if compiled.source_packages:
