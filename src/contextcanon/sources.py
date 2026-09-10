@@ -383,6 +383,48 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
     return result, path
 
 
+def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = None) -> ContextDiff:
+    """Preview the Child's effective Context with the current live Parent candidate.
+
+    The Child's accepted Parent pin and authored source remain unchanged. Local
+    Overrides/Removes, local Rules, other Parents and Sources are applied by
+    the normal compiler so the returned diff describes the effective result of
+    accepting this Parent update for this Child.
+    """
+
+    node_root = node_root.resolve()
+    repo_root = find_repo_root(node_root)
+    compiler = Compiler(repo_root)
+    current_compiled = compiler.compile(node_root)
+    parent_index, parent_ref = _parent_index(current_compiled, parent_id)
+    current = current_compiled.parent_packages[parent_index]
+
+    parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
+    ensure_node_version_advanced(parent_root, repo_root)
+    live_parent = Compiler(repo_root).compile(parent_root)
+    candidate = compiled_package(live_parent)
+    if candidate.metadata.id != parent_ref.id:
+        raise ContextCanonError(
+            f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
+        )
+    _require_candidate_version_advance(current, candidate, "Parent")
+    _validate_parent_candidate_composition(compiler, current_compiled, parent_index, candidate)
+
+    candidate_root = _store_parent_candidate(node_root, live_parent)
+    candidate_resources = {
+        file.path: (candidate_root / file.path).read_bytes()
+        for file in candidate.files
+        if file.path.startswith("CONTEXT/references/")
+    }
+    preview_source = _render_parent_pin_text(node_root, parent_ref.id, candidate)
+    preview_compiled = Compiler(
+        repo_root,
+        source_overrides={node_root: preview_source},
+        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+    ).compile(node_root)
+    return diff_compiled(current_compiled, preview_compiled)
+
+
 def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> CompiledPackage:
     """Accept exactly the reviewed candidate for one semantic Parent."""
 
@@ -522,7 +564,7 @@ def _parent_review_path(node_root: Path, parent_id: str) -> Path:
         token = "sha256-" + hashlib.sha256(parent_id.encode("utf-8")).hexdigest()
     return node_root / ".context" / "parent-reviews" / f"{token}.json"
 
-def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackage) -> None:
+def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: CompiledPackage) -> str:
     path = node_root / "CONTEXT.src.md"
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     found = 0
@@ -559,7 +601,13 @@ def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackag
             break
     if found != 1:
         raise ContextCanonError(f"Could not find exactly one semantic Parent Node ID {parent_id} in {path}")
-    _atomic_write_text(path, "".join(lines))
+    return "".join(lines)
+
+
+def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackage) -> None:
+    path = node_root / "CONTEXT.src.md"
+    _atomic_write_text(path, _render_parent_pin_text(node_root, parent_id, candidate))
+
 
 def install_source_package(node_root: Path, package_root: Path) -> CompiledPackage:
     """Verify and install one immutable Source package without changing pins.

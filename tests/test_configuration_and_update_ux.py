@@ -52,7 +52,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.1")
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.2")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())
@@ -307,7 +307,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertEqual(rc, 0, out.getvalue())
             grand = Compiler(repo).compile(grand_root)
             self.assertEqual([rule.statement for rule in grand.inherited_rules], ["Updated meaning."])
-            self.assertIn("Propagation review complete: accepted 2 changed Parent edge(s).", out.getvalue())
+            self.assertIn("Propagation review complete: applied 2 changed Parent/Child update(s).", out.getvalue())
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 

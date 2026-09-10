@@ -5,6 +5,7 @@ import io
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from contextcanon.cli import main as cli_main
@@ -45,6 +46,36 @@ def write_child(repo: Path, root: Path, node_id: str, name: str, parent_path: st
 
 
 class PropagationReviewUXTests(unittest.TestCase):
+    def test_propagation_review_tells_parent_change_and_effective_child_story_before_ids(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_node(repo, repo, "root-id", "Root", "1.0.0", "Root old.")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_node(repo, repo, "root-id", "Root", "1.1.0", "Root new.")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertIn("Review 1/1 — Child: Child (child)", text)
+            self.assertIn("This Child currently uses: Root 1.0.0", text)
+            self.assertIn("New Parent version available: Root 1.1.0", text)
+            self.assertIn('What changed in Parent "Root" since the version used by this Child:', text)
+            self.assertIn("RULE-1 — Policy", text)
+            self.assertIn("before: Root old.", text)
+            self.assertIn("after:  Root new.", text)
+            self.assertIn('What would change in Child "Child" if you choose Y:', text)
+            self.assertIn("Effective Context: 1 rule changed", text)
+            self.assertIn('Before choosing Y for Child "Child", check:', text)
+            self.assertLess(text.index('What changed in Parent "Root"'), text.index("Technical details:"))
+            self.assertLess(text.index('What would change in Child "Child"'), text.index("Technical details:"))
+            self.assertIn("Parent Node ID: root-id", text)
+            self.assertIn('No Parent update applied to Child "Child".', text)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
     def test_top_level_propagate_scopes_from_current_node_and_all_broadens_scope(self):
         repo = Path(tempfile.mkdtemp())
         try:
@@ -62,7 +93,7 @@ class PropagationReviewUXTests(unittest.TestCase):
                 rc = cli_main(["propagate", str(repo), "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
             self.assertIn("Propagation review", out.getvalue())
-            self.assertIn("Applies here?", out.getvalue())
+            self.assertIn("Should these Parent changes apply to Child?", out.getvalue())
             self.assertIn("Import order is never precedence", out.getvalue())
             grand = Compiler(repo).compile(repo / "child" / "grand")
             self.assertIn("Root new.", [rule.statement for rule in grand.inherited_rules])

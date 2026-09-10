@@ -490,11 +490,11 @@ This is a wording/impact-transparency refinement of Issue #27, not a change to a
 
 Purpose: apply the proven Source-update narrative to `contextcanon propagate` so each Parent-to-Child decision is understandable without package-internal vocabulary.
 
-- [ ] Make the Child the subject of each propagation step: show the Parent version currently used by that Child and the newer Parent version available.
-- [ ] Show human-readable Parent changes first, including Rule titles/statements; keep Node IDs, stable identities and digests under `Technical details`.
-- [ ] Preview the effective Child Context with the candidate Parent after existing Overrides/Removes and other imports, without changing the Child.
-- [ ] Put the short applicability / compatibility / upstream-quality checklist immediately before the Y/N decision and phrase the prompt as applying the Parent update to the named Child.
-- [ ] Preserve top-down, separately gated propagation semantics; `--all` remains scope only.
-- [ ] Polish the post-Source-accept rebuild wording, add focused regressions, bump the public CLI patch version, and pass full build/check/test/diff plus exact-head PR CI before returning to the owner test.
+- [x] Make the Child the subject of each propagation step: show the Parent version currently used by that Child and the newer Parent version available.
+- [x] Show human-readable Parent changes first, including Rule titles/statements; keep Node IDs, stable identities and digests under `Technical details`.
+- [x] Preview the effective Child Context with the candidate Parent after existing Overrides/Removes and other imports, without changing the Child.
+- [x] Put the short applicability / compatibility / upstream-quality checklist immediately before the Y/N decision and phrase the prompt as applying the Parent update to the named Child.
+- [x] Preserve top-down, separately gated propagation semantics; `--all` remains scope only.
+- [x] Polish the post-Source-accept rebuild wording, add focused regressions, bump the public CLI patch version, and pass full build/check/test/diff plus exact-head PR CI before returning to the owner test.
 
 This is a wording/impact-transparency refinement under Issue #27; no Parent or Source update becomes effective without the existing explicit human gate.
