@@ -1,12 +1,12 @@
 # Current State
 
-The accepted `main` baseline is PR #13, squash-merged as:
+The accepted `main` baseline is PR #18, squash-merged as:
 
-`df847ba031bfa3965ca53626249e18a1074cb8af`
+`2fb8368b15a7ef93a46012e0a0583bb795e174fe`
 
-PR #18 on `agent/issues-14-15-multi-parent` is the active **draft, unmerged** review branch for Issues #14–#27. It remains subject to explicit project-owner approval.
+PR #18 completed Issues #14–#27, including ContextCanon 0.7.3, multi-Parent semantics, human-scale Source/propagation UX, and the Windows propagation-resume fix validated against the real `ai-workstation` consumer. No framework review PR is currently active.
 
-Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 as draft/unmerged are historical, not the current repository state.
+Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 or PR #18 as draft/unmerged are historical, not the current repository state.
 
 ## What is implemented in PR #13
 
@@ -331,3 +331,10 @@ The project owner completed the real `ai-workstation` maintenance run with Conte
 The UX lesson from this run is recorded under Issue #27 rather than hardened into another Framework Development Rule yet. Human-facing flows were most successful when they presented current state, newly found change, effect of the offered action, the operator's checks/decision, and the next step before technical identities/mechanics. Representative end-to-end consumer use remains the preferred validation method; when the development harness cannot execute that consumer workflow directly, an explicit owner walkthrough is the UX gate. No specific IDE or agent tool is part of the product contract. This remains covered by the existing vertical-validation rule plus Issue #27 until the pattern proves independently reusable enough to justify another Rule.
 
 PR #18 is therefore ready for project-owner merge review. Its exact merge head must remain green, and the merge itself still requires the project owner's explicit action. After merge, perform the normal accepted-baseline reconciliation before starting new framework development.
+
+
+## Post-merge baseline reconciliation — PR #18
+
+PR #18 was squash-merged to `main` as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`. Issues #14–#27 closed with that merge. The accepted product baseline is ContextCanon CLI/package 0.7.3 with compiler 0.6.0. The real `ai-workstation` maintenance run completed Source update, all eight individually reviewed Parent/Child propagation steps, rebuild/check across all nine Nodes, Windows interruption/resume, and an idempotent rerun.
+
+Issue #28 is documentation-only reconciliation of this accepted fact; it introduces no product semantics.

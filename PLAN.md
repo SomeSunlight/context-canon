@@ -2,11 +2,11 @@
 
 ## Accepted baseline
 
-The current accepted `main` baseline is PR #13, squash-merged as `df847ba031bfa3965ca53626249e18a1074cb8af`.
+The current accepted `main` baseline is PR #18, squash-merged as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`.
 
-The reviewed onboarding placement publication and owner-tested ContextCanon workflow are accepted on `main`. PR #18 is the active draft review branch for Issues #14–#27 and remains unmerged pending explicit project-owner approval.
+PR #18 completed Issues #14–#27 and the real `ai-workstation` owner-tested ContextCanon 0.7.3 maintenance workflow. Those issues are closed; no framework review PR is currently active.
 
-Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 as draft are historical.
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 or PR #18 as draft/unmerged are historical.
 
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
