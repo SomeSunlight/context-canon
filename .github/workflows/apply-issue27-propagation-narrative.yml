@@ -20,6 +20,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e .
+      - run: python .github/scripts/patch_issue27_propagation_applicator.py
       - run: python .github/scripts/apply_issue27_propagation_narrative.py
       - run: python -m pip install -e .
       - run: python -m compileall -q src tests
@@ -29,6 +30,7 @@ jobs:
       - run: git diff --check
       - name: Commit clean gated product
         run: |
+          rm .github/scripts/patch_issue27_propagation_applicator.py
           rm .github/scripts/apply_issue27_propagation_narrative.py
           rm .github/workflows/apply-issue27-propagation-narrative.yml
           git config user.name "ContextCanon automation"
