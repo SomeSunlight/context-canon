@@ -503,11 +503,11 @@ This is a wording/impact-transparency refinement under Issue #27; no Parent or S
 
 Purpose: close the Windows package-publication failure found during the real ai-workstation propagation run, preserve already accepted steps, and finish the remaining Source/propagation wording polish before the owner continues.
 
-- [ ] Harden immutable package publication against transient Windows directory rename/replace access failures without weakening exact package verification or overwriting different content.
-- [ ] Prove rerun/resume behavior: already-current Parent/Child edges are skipped compactly and the first still-stale Child remains separately reviewable.
-- [ ] Add a visible delimiter between propagation review rounds.
-- [ ] Finish the collected Source-update wording polish: clear current Source, candidate, what Y changes locally, what is reviewed after Y, and rebuild/check guidance.
-- [ ] Patch-bump the public CLI/package version consistently, add focused regressions, and pass full syntax/build/test/check/diff plus exact-head PR CI before returning to the owner test.
+- [x] Harden immutable package publication against transient Windows directory rename/replace access failures without weakening exact package verification or overwriting different content.
+- [x] Prove rerun/resume behavior: already-current Parent/Child edges are skipped compactly and the first still-stale Child remains separately reviewable.
+- [x] Add a visible delimiter between propagation review rounds.
+- [x] Finish the collected Source-update wording polish: clear current Source, candidate, what Y changes locally, what is reviewed after Y, and rebuild/check guidance.
+- [x] Patch-bump the public CLI/package version consistently, add focused regressions, and pass full syntax/build/test/check/diff plus exact-head PR CI before returning to the owner test.
 
 The first five accepted ai-workstation propagation steps are valid project state and must not be rolled back or repeated as new decisions. PR #18 remains draft and unmerged pending explicit project-owner approval.
 

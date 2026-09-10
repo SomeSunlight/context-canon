@@ -52,7 +52,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.2")
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.3")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())
@@ -139,13 +139,13 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertEqual(rc, 0, out.getvalue())
             self.assertIn("Discovery setup note:", out.getvalue())
             self.assertIn("Legacy Source lookup settings were moved to", out.getvalue())
-            self.assertIn("This command is offering an update to Consumer; its Context has not changed yet.", out.getvalue())
+            self.assertIn("Review the changes below, then choose whether Consumer should use this newer Source version.", out.getvalue())
             self.assertIn("That only changes where future candidates are found; it does not apply this Source update.", out.getvalue())
-            self.assertIn("Current local Source:", out.getvalue())
-            self.assertIn("New candidate found:", out.getvalue())
+            self.assertIn("Current Source:", out.getvalue())
+            self.assertIn("Candidate found:", out.getvalue())
             self.assertIn("What changed in Source \"Shared\" since the version used here:", out.getvalue())
-            self.assertIn("Local update offered for Node \"Consumer\":", out.getvalue())
-            self.assertIn("Effective Context after existing local Overrides/Removes and other imports: 1 rule changed", out.getvalue())
+            self.assertIn("What Y would change in Node \"Consumer\":", out.getvalue())
+            self.assertIn("Effective Context: 1 rule changed", out.getvalue())
             self.assertIn("Before choosing Y, check:", out.getvalue())
             self.assertNotIn("\nNodes:\n", out.getvalue())
 
@@ -199,11 +199,11 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             with contextlib.redirect_stdout(out):
                 rc = cli_main(["source", "update", "Shared", "--node", str(project), "--ref", "feature", "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
-            self.assertIn("What comes after this local update:", out.getvalue())
+            self.assertIn("If you choose Y, review these Child Nodes next:", out.getvalue())
             self.assertIn("Consumer -> Child (child)", out.getvalue())
-            self.assertIn("review that chain top-down in one guided run:", out.getvalue())
+            self.assertIn("Review that path top-down in one guided run:", out.getvalue())
             self.assertIn("contextcanon propagate", out.getvalue())
-            self.assertIn("asks separately before applying each changed Parent -> Child step", out.getvalue())
+            self.assertIn("asked separately before each changed Child starts using its newer Parent Context", out.getvalue())
         finally:
             shutil.rmtree(project, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)

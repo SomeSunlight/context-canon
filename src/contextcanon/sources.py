@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 from .compiler import Compiler
@@ -698,20 +699,47 @@ def _source_hash(node_root: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _installed_package_matches(destination: Path, candidate: CompiledPackage) -> bool:
+    if not destination.exists():
+        return False
+    existing = load_package(destination)
+    if (
+        existing.metadata.id == candidate.metadata.id
+        and existing.normalized_digest == candidate.normalized_digest
+        and existing.package_digest == candidate.package_digest
+    ):
+        return True
+    raise ContextCanonError(f"Accepted Source store path exists with different content: {destination}")
+
+
+def _publish_package_directory(temporary: Path, destination: Path, candidate: CompiledPackage) -> None:
+    # Windows can transiently deny a directory rename while a scanner/indexer
+    # has just-opened package files. Keep the publication atomic: retry only
+    # the final rename, and accept an appearing destination only after exact
+    # package verification proves that another writer published the same bytes.
+    retry_delays = (0.05, 0.10, 0.20, 0.40, 0.80)
+    for attempt in range(len(retry_delays) + 1):
+        try:
+            os.replace(temporary, destination)
+            return
+        except (PermissionError, FileExistsError) as exc:
+            if _installed_package_matches(destination, candidate):
+                return
+            if attempt == len(retry_delays):
+                raise ContextCanonError(
+                    f"Could not publish immutable package {candidate.metadata.name} {candidate.metadata.version} "
+                    f"to {destination} after retrying a temporary filesystem lock: {exc}"
+                ) from exc
+            time.sleep(retry_delays[attempt])
+
+
 def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledPackage) -> None:
     store = node_root / ".context" / "sources"
     store.mkdir(parents=True, exist_ok=True)
     destination = store / candidate.package_digest
 
-    if destination.exists():
-        existing = load_package(destination)
-        if (
-            existing.metadata.id == candidate.metadata.id
-            and existing.normalized_digest == candidate.normalized_digest
-            and existing.package_digest == candidate.package_digest
-        ):
-            return
-        raise ContextCanonError(f"Accepted Source store path exists with different content: {destination}")
+    if _installed_package_matches(destination, candidate):
+        return
 
     temporary = Path(tempfile.mkdtemp(prefix=f".{candidate.package_digest[:12]}-", dir=store))
     try:
@@ -728,7 +756,7 @@ def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledP
         staged = load_package(temporary)
         if staged.normalized_digest != candidate.normalized_digest or staged.package_digest != candidate.package_digest:
             raise ContextCanonError("Staged Source package identity changed during acceptance")
-        os.replace(temporary, destination)
+        _publish_package_directory(temporary, destination, candidate)
     finally:
         if temporary.exists():
             shutil.rmtree(temporary)

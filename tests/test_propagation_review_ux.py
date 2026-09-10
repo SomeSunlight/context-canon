@@ -76,6 +76,36 @@ class PropagationReviewUXTests(unittest.TestCase):
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 
+    def test_propagation_rerun_skips_already_current_steps_and_resumes_at_stale_child(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_node(repo, repo, "root", "Root", "1.0.0", "Root old.")
+            child = write_child(repo, repo / "child", "child", "Child", "..", root)
+            write_child(repo, repo / "child" / "grand", "grand", "Grand", "..", child)
+            write_node(repo, repo, "root", "Root", "1.1.0", "Root new.")
+
+            first = io.StringIO()
+            with contextlib.redirect_stdout(first), mock.patch("builtins.input", side_effect=["y", "n"]):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, first.getvalue())
+            self.assertIn('Applied Parent update to Child "Child"', first.getvalue())
+            self.assertIn('No Parent update applied to Child "Grand".', first.getvalue())
+
+            second = io.StringIO()
+            with contextlib.redirect_stdout(second), mock.patch("builtins.input", return_value="n") as prompt:
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, second.getvalue())
+            text = second.getvalue()
+            self.assertIn("------------------------------------------------------------------------", text)
+            self.assertIn("Review 1/2 — Child: Child (child)", text)
+            self.assertIn("Already current: Child uses Root 1.1.0. No action needed.", text)
+            self.assertIn("Review 2/2 — Child: Grand (child/grand)", text)
+            self.assertEqual(prompt.call_count, 1)
+            self.assertIn('Apply this Parent update to Child "Grand"?', prompt.call_args.args[0])
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
     def test_top_level_propagate_scopes_from_current_node_and_all_broadens_scope(self):
         repo = Path(tempfile.mkdtemp())
         try:

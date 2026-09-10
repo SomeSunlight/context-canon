@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.compiler import Compiler
 from contextcanon.package import artifact_files
 from contextcanon.parser import ContextCanonError
+import contextcanon.sources as sources_module
 from contextcanon.sources import accept_source_candidate, review_source_candidate
 
 
@@ -150,6 +151,32 @@ class SourceAcceptanceTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ContextCanonError, "targets missing inherited Rule"):
             review_source_candidate(consumer, "node-python", candidate)
+
+    def test_package_publish_retries_transient_permission_error(self):
+        _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")
+        _, v2, candidate = self.make_provider("2.0.0", "Prefer explicit Python v2.")
+        consumer = self.make_consumer(v1)
+        review_source_candidate(consumer, "node-python", candidate)
+
+        package_destination = consumer / ".context" / "sources" / v2.package_digest
+        real_replace = sources_module.os.replace
+        attempts = {"package": 0}
+
+        def flaky_replace(src, dst):
+            if Path(dst) == package_destination and attempts["package"] == 0:
+                attempts["package"] += 1
+                raise PermissionError(13, "simulated transient Windows access denied")
+            return real_replace(src, dst)
+
+        with patch("contextcanon.sources.os.replace", side_effect=flaky_replace), patch(
+            "contextcanon.sources.time.sleep", return_value=None
+        ):
+            accepted = accept_source_candidate(consumer, "node-python", candidate)
+
+        self.assertEqual(attempts["package"], 1)
+        self.assertEqual(accepted.package_digest, v2.package_digest)
+        self.assertTrue((package_destination / ".context/package.json").is_file())
+        self.assertEqual(Compiler(consumer).compile(consumer).source_packages[0].package_digest, v2.package_digest)
 
     def test_failed_atomic_pin_replace_preserves_old_source_and_old_build(self):
         _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")

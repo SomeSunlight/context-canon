@@ -252,7 +252,7 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
         print(f"{headings[category]}:")
         for entry in entries:
             detail = ""
-            if entry.change == "modified" and entry.changed_fields and entry.category != "resource":
+            if entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
                 detail = " [" + ", ".join(entry.changed_fields) + "]"
             print(f"  {symbols[entry.change]} {_human_entry_label(entry)}{detail}")
             if entry.category in {"source", "parent"} and entry.change == "modified":
@@ -393,7 +393,9 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
     else:
         start = parse_node(start_root, repo_root)
         scope = f"below {start.metadata.name}"
-    _print_propagation_review_guide(scope, len(edges))
+    print("Propagation review")
+    print(f"{len(edges)} Parent/Child relationship(s) will be checked {scope}, top-down.")
+    print("Each Child keeps its current Parent Context until you choose Y for that Child.")
 
     applied_count = 0
     for index, (child_root, parent, parent_root) in enumerate(edges, start=1):
@@ -405,11 +407,21 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         current_parent = child_compiled.parent_packages[parent_index]
         live_parent = Compiler(repo_root).compile(parent_root)
 
+        print("")
+        print("------------------------------------------------------------------------")
+        print(f"Review {index}/{len(edges)} — Child: {child.metadata.name} ({child_label})")
+        print("------------------------------------------------------------------------")
+
+        if current_parent.package_digest == live_parent.package_digest:
+            print(
+                f"Already current: {child.metadata.name} uses "
+                f"{live_parent.metadata.name} {live_parent.metadata.version}. No action needed."
+            )
+            continue
+
         result, receipt = review_parent_candidate(child_root, parent.id)
         local_effect = preview_parent_candidate_effect(child_root, parent.id)
 
-        print("")
-        print(f"Review {index}/{len(edges)} — Child: {child.metadata.name} ({child_label})")
         print("Parent Context:")
         print(f"  This Child currently uses: {current_parent.metadata.name} {current_parent.metadata.version}")
         print(f"  New Parent version available: {live_parent.metadata.name} {live_parent.metadata.version}")
@@ -426,12 +438,8 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
             print(f"Result: {child.metadata.name} already uses this exact Parent package; no update is needed.")
             continue
 
-        parent_effect_summary = _human_change_summary(
-            result, include_categories={"rule", "topic", "resource"}
-        )
-        child_effect_summary = _human_change_summary(
-            local_effect, include_categories={"rule", "topic", "resource"}
-        )
+        parent_effect_summary = _human_change_summary(result, include_categories={"rule", "topic", "resource"})
+        child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
         print("")
         print(f'What would change in Child "{child.metadata.name}" if you choose Y:')
         print(f"  Effective Context: {child_effect_summary}")
@@ -446,7 +454,10 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print(f'Before choosing Y for Child "{child.metadata.name}", check:')
         print(f"  1. Should these Parent changes apply to {child.metadata.name}? If not, use a justified Override/Remove.")
         print("  2. Do they fit with this Child's other imported Contexts and local Rules? Import order is never precedence.")
-        print(f"  3. Does {child.metadata.name} expose a problem in the Parent change itself? If so, fix {live_parent.metadata.name} upstream rather than patching every Child.")
+        print(
+            f"  3. Does {child.metadata.name} expose a problem in the Parent change itself? "
+            f"If so, fix {live_parent.metadata.name} upstream rather than patching every Child."
+        )
 
         print("")
         print("Technical details:")
@@ -468,7 +479,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
 
         if not yes and not _confirm(f'Apply this Parent update to Child "{child.metadata.name}"?'):
             print(f'No Parent update applied to Child "{child.metadata.name}".')
-            print("Propagation stopped here; earlier accepted steps remain accepted, later Children were not reviewed yet.")
+            print("Propagation stopped here; earlier applied steps remain in place, and later Children were not reviewed yet.")
             return 0
 
         accepted = accept_parent_candidate(child_root, parent.id)
@@ -479,6 +490,8 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         )
         _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
 
+    print("")
+    print("------------------------------------------------------------------------")
     print(f"Propagation review complete: applied {applied_count} changed Parent/Child update(s).")
     print("The generated CONTEXT.md files still show their previous generated Context until rebuild.")
     print("Next from the repository root:")
@@ -1383,7 +1396,7 @@ def main(argv: list[str] | None = None) -> int:
 
                 if current.package_digest == candidate.package_digest:
                     if args.source_command == "update":
-                        print(f"Source update for local Node: {parsed.metadata.name}")
+                        print(f"Source update for Node: {parsed.metadata.name}")
                         print(f"Current local Source: {candidate.metadata.name} {candidate.metadata.version}")
                         print(f"Looked up from: {lookup}")
                         print("Result: this local Node already uses this exact Source package; no update is needed.")
@@ -1406,15 +1419,17 @@ def main(argv: list[str] | None = None) -> int:
                 result, receipt = review_source_candidate(node_root, source_id, location)
                 local_effect = preview_source_candidate_effect(node_root, source_id, location)
 
-                print(f"Source update for local Node: {parsed.metadata.name}")
+                print(f"Source update for Node: {parsed.metadata.name}")
                 print("")
-                print("Current local Source:")
-                print(f"  {current.name} {current.version}")
-                print(f"  This is the last Source version put into use for {parsed.metadata.name}.")
-                print("New candidate found:")
+                print("Current Source:")
+                print(f"  {parsed.metadata.name} uses {current.name} {current.version}.")
+                print("Candidate found:")
                 print(f"  {candidate.metadata.name} {candidate.metadata.version}")
-                print(f"  Looked up from: {lookup}")
-                print(f"This command is offering an update to {parsed.metadata.name}; its Context has not changed yet.")
+                print(f"  Found at: {lookup}")
+                print(
+                    f"Review the changes below, then choose whether {parsed.metadata.name} "
+                    "should use this newer Source version."
+                )
 
                 if migrated is not None:
                     print("")
@@ -1429,25 +1444,28 @@ def main(argv: list[str] | None = None) -> int:
                 _print_human_change_details(result, exclude_categories={"node"})
 
                 print("")
-                print(f'Local update offered for Node "{parsed.metadata.name}":')
-                print(f"  Source: {current.name} {current.version} -> {candidate.metadata.name} {candidate.metadata.version}")
+                print(f'What Y would change in Node "{parsed.metadata.name}":')
                 print(
-                    "  Effective Context after existing local Overrides/Removes and other imports: "
+                    f"  Source used by {parsed.metadata.name}: {current.name} {current.version} -> "
+                    f"{candidate.metadata.name} {candidate.metadata.version}"
+                )
+                print(
+                    "  Effective Context: "
                     + _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
                 )
-                print("  Existing local Overrides/Removes and other imported Context are already reflected in this preview.")
+                print("  This preview already includes local Overrides/Removes and other imported Contexts.")
                 print("  This Node's own version will be checked and may receive the automatic minimum patch bump.")
-                print("  Generated CONTEXT.md is rebuilt later; choosing Y here does not rebuild it.")
+                print("  Its generated CONTEXT.md will keep showing the previous Context until you rebuild later.")
 
                 downstream = _parent_edges(repo_root, node_root)
                 if downstream:
                     print("")
-                    print("What comes after this local update:")
+                    print("If you choose Y, review these Child Nodes next:")
+                    print("  The Y below changes this Node only; its Children keep their current Parent Context until reviewed.")
                     print(
-                        f"  {len({child_root for child_root, _, _ in downstream})} downstream Node(s) are connected through this Parent/Child chain."
+                        f"  {len({child_root for child_root, _, _ in downstream})} Child Node(s) are reachable through the Parent/Child chain."
                     )
-                    print("  They keep their current Parent snapshots until their own review.")
-                    print("  Relationships that may need review:")
+                    print("  Parent/Child path to review:")
                     for child_root, parent, parent_root in downstream:
                         child = parse_node(child_root, repo_root)
                         parent_node = parse_node(parent_root, repo_root)
@@ -1455,13 +1473,13 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"    - {parent_node.metadata.name} -> {child.metadata.name} ({child_label})")
                     start_label = node_root.relative_to(repo_root).as_posix() or "."
                     propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
-                    print("  After applying this update, review that chain top-down in one guided run:")
+                    print("  Review that path top-down in one guided run:")
                     print(f"    {propagate_command}")
-                    print("  It still asks separately before applying each changed Parent -> Child step.")
+                    print("    There you will be asked separately before each changed Child starts using its newer Parent Context.")
                 else:
                     print("")
-                    print("What comes after this local update:")
-                    print("  No Child Nodes depend on this Node through a semantic Parent relationship.")
+                    print("If you choose Y:")
+                    print("  No Child Nodes use this Node as a semantic Parent, so no propagation review follows.")
 
                 print("")
                 print("Before choosing Y, check:")
@@ -1487,13 +1505,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"    Local repository: {provenance['location']}")
                 print(f"    Cached package: {cache_label}")
 
-                if not args.yes and not _confirm(f"Apply this Source update to local Node {parsed.metadata.name}?"):
+                if not args.yes and not _confirm(f'Apply this Source update to Node "{parsed.metadata.name}"?'):
                     print("No local Source update applied.")
                     print(f"Technical review receipt kept at: {receipt}")
                     return 0
 
                 accepted = accept_source_candidate(node_root, source_id, location)
-                print(f"Updated local Source for {parsed.metadata.name}: {current.version} -> {accepted.metadata.version}")
+                print(f'Node "{parsed.metadata.name}" now uses {accepted.metadata.name} {accepted.metadata.version} (was {current.name} {current.version}).')
                 _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
                 if downstream:
                     start_label = node_root.relative_to(repo_root).as_posix() or "."
