@@ -20,6 +20,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e .
+      - run: python .github/scripts/patch_issue27_windows_resume_applicator.py
       - run: python .github/scripts/apply_issue27_windows_resume_fix.py
       - run: python -m pip install -e .
       - run: python -m compileall -q src tests
@@ -31,6 +32,7 @@ jobs:
         run: |
           rm .github/scripts/checkpoint_issue27_windows_resume.py
           rm .github/workflows/checkpoint-issue27-windows-resume.yml
+          rm .github/scripts/patch_issue27_windows_resume_applicator.py
           rm .github/scripts/apply_issue27_windows_resume_fix.py
           rm .github/workflows/apply-issue27-windows-resume-fix.yml
           git config user.name "ContextCanon automation"
