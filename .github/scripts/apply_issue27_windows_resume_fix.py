@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
 
+# Temporary gated applicator for the Issue #27 Windows/resume owner-test follow-up.
+
 
 def replace_once(path: str, old: str, new: str) -> None:
     p = Path(path)
