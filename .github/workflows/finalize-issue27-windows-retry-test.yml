@@ -30,6 +30,7 @@ jobs:
         run: |
           rm -f .github/scripts/patch_issue27_windows_resume_applicator.py
           rm -f .github/scripts/fix_issue27_windows_retry_test.py
+          rm -f .github/scripts/trigger_issue27_final.py
           rm -f .github/workflows/finalize-issue27-windows-retry-test.yml
           git config user.name "ContextCanon automation"
           git config user.email "actions@users.noreply.github.com"
