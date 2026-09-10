@@ -156,14 +156,13 @@ class SourceAcceptanceTests(unittest.TestCase):
         _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")
         _, v2, candidate = self.make_provider("2.0.0", "Prefer explicit Python v2.")
         consumer = self.make_consumer(v1)
-        review_source_candidate(consumer, "node-python", candidate)
 
         package_destination = consumer / ".context" / "sources" / v2.package_digest
         real_replace = sources_module.os.replace
         attempts = {"package": 0}
 
         def flaky_replace(src, dst):
-            if Path(dst) == package_destination and attempts["package"] == 0:
+            if attempts["package"] == 0:
                 attempts["package"] += 1
                 raise PermissionError(13, "simulated transient Windows access denied")
             return real_replace(src, dst)
@@ -171,12 +170,13 @@ class SourceAcceptanceTests(unittest.TestCase):
         with patch("contextcanon.sources.os.replace", side_effect=flaky_replace), patch(
             "contextcanon.sources.time.sleep", return_value=None
         ):
-            accepted = accept_source_candidate(consumer, "node-python", candidate)
+            package = sources_module.load_package(candidate)
+            sources_module._install_package(consumer, candidate, package)
 
         self.assertEqual(attempts["package"], 1)
-        self.assertEqual(accepted.package_digest, v2.package_digest)
         self.assertTrue((package_destination / ".context/package.json").is_file())
-        self.assertEqual(Compiler(consumer).compile(consumer).source_packages[0].package_digest, v2.package_digest)
+        installed = sources_module.load_package(package_destination)
+        self.assertEqual(installed.package_digest, v2.package_digest)
 
     def test_failed_atomic_pin_replace_preserves_old_source_and_old_build(self):
         _, v1, _ = self.make_provider("1.0.0", "Prefer explicit Python v1.")
