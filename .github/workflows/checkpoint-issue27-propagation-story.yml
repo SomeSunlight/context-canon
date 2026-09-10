@@ -1,0 +1,22 @@
+name: Checkpoint issue 27 propagation story
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  checkpoint:
+    if: github.event.pull_request.head.ref == 'agent/issues-14-15-multi-parent'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/issues-14-15-multi-parent
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python .github/scripts/checkpoint_issue27_propagation_story.py
