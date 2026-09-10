@@ -318,7 +318,7 @@ These category names are conventions of this repository. ContextCanon does not r
 
 Reusable Sources are not live includes from another Git repository. A consumer accepts an exact immutable Source package and can build offline from its own accepted state.
 
-Compiler 0.4 separates candidate discovery from accepted inheritance:
+Compiler 0.6 separates candidate discovery from accepted inheritance:
 
 ```text
 source fetch  → candidate only
@@ -376,10 +376,8 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-The current project-owner accepted `main` baseline is PR #9, squash-merged as `f7afe5c82942ecb9e3a04696455f8c960cc9b144`. Compiler 0.4 remains the deterministic foundation for immutable external Sources, exact accepted pins, offline composition, deterministic candidate review, explicit acceptance, generic Git candidate transport, and atomic publication/recovery.
+The current project-owner accepted `main` baseline is PR #18, squash-merged as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`. The public CLI/package version is **0.7.3** and the deterministic compiler version is **0.6.0**.
 
-The first-adoption onboarding trust boundary is accepted on `main`; PR #12 is now using the materially larger `ai-workstation` run to test the next product layer: **structure first, content placement second**. The real structure review has already demonstrated useful human correction of a plausible LLM-reconstructed project model, and it exposed the Development Workflow as genuinely reusable cross-project context.
+This baseline includes explicit zero/one/many semantic Parents, immutable reviewed Parent/Source snapshots, central Source discovery configuration, explicit machine Node names, package-version discipline, and the human-scale `source update` / `propagate` maintenance flow. The final workflow was validated end-to-end on the real `ai-workstation` consumer, including all eight Parent/Child reviews, rebuild/check across nine Nodes, Windows interruption/resume, and idempotent rerun.
 
-PR #12 therefore also promotes that workflow from internal experimental context to the reusable Node Library with the same stable identity, while keeping Foundation as an independent optional Source rather than a forced transitive dependency.
-
-The current review boundary stops after an evidence-rich placement proposal. Publication and cleanup of relocated knowledge will be designed only after the project owner has inspected the real `ai-workstation` placement result.
+All Issues #14–#27 completed by PR #18 are closed. See [STATE.md](STATE.md) for the accepted current situation and [PLAN.md](PLAN.md) for intentionally deferred or future work.
