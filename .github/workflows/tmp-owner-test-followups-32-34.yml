@@ -21,7 +21,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Apply Issues 32-34
-        run: python .github/tmp_apply_issues_32_34.py
+        shell: bash
+        run: |
+          sed -i 's/pattern.subn(replacement, text, count=1)/pattern.subn(lambda _: replacement, text, count=1)/' .github/tmp_apply_issues_32_34.py
+          python .github/tmp_apply_issues_32_34.py
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused owner-test regressions
