@@ -5,6 +5,7 @@ import os
 import re
 import shlex
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -199,6 +200,24 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.
 """
 
+_ATOMIC_REPLACE_RETRY_DELAYS = (0.05, 0.10, 0.20, 0.40, 0.80)
+
+
+def _replace_file_with_retry(temporary: Path, path: Path) -> None:
+    """Publish one prepared sibling file atomically despite brief Windows locks."""
+
+    for attempt in range(len(_ATOMIC_REPLACE_RETRY_DELAYS) + 1):
+        try:
+            os.replace(temporary, path)
+            return
+        except (PermissionError, FileExistsError) as exc:
+            if attempt == len(_ATOMIC_REPLACE_RETRY_DELAYS):
+                raise ContextCanonError(
+                    f"Could not atomically write {path} after retrying a temporary filesystem lock: {exc}"
+                ) from exc
+            time.sleep(_ATOMIC_REPLACE_RETRY_DELAYS[attempt])
+
+
 def write_utf8(path: Path, text: str) -> None:
     """Atomically write UTF-8 without depending on shell redirection/codepages."""
 
@@ -211,7 +230,7 @@ def write_utf8(path: Path, text: str) -> None:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        _replace_file_with_retry(temporary, path)
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise

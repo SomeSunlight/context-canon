@@ -19,6 +19,18 @@ Purpose: restore genuine from-scratch structure-first onboarding without weakeni
 
 Checkpoint: draft PR #31 fixes Issue #30 with a narrow first-adoption exception, while existing/recoverable roots and foreign output collisions retain their prior protection. The exact implementation head passed all 250 deterministic tests and `contextcanon check --all .` with zero generated drift. PR #31 remains draft and unmerged pending project-owner validation.
 
+
+## Owner-test follow-up: resilient and compact STEP 05 — Issues #32–#34
+
+Purpose: incorporate the next real `Llama_Dispatcher` onboarding findings without weakening atomic writes or turning human guidance into generated combinatorial noise.
+
+- [x] #32 make onboarding UTF-8 atomic file replacement tolerate the same bounded transient Windows locks already handled by immutable package publication, while preserving sibling-temp/fsync/atomic-replace semantics and clear final failure.
+- [x] #33 replace the STEP-05 project×Catalog copy-helper product with one Assignment grammar plus separate generated project-side and reusable-side choice lists; make the syntax example use the current project root rather than hard-coded `AI Workstation`.
+- [x] #34 introduce the Evidence `SNAPSHOT` variable immediately in the root README with PowerShell/POSIX/cmd syntax and use the short variable in the following onboarding commands.
+- [x] Add focused regressions, run the complete deterministic suite and zero-drift check, and keep PR #31 draft/unmerged for continued real-project validation.
+
+Checkpoint: the live owner-test follow-up is implemented on PR #31. STEP 05 remains semantically strict and sparse, but its generated help now scales linearly with project plus reusable Node count. Atomic onboarding writes retry only the final replace on transient Windows access failures. The root README teaches the snapshot variable before the first long-path reuse. Full deterministic verification and `contextcanon check --all .` are required on the exact product tree before this checkpoint is committed.
+
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
 Purpose: validate the shelves-before-books onboarding model vertically against the original frozen `ai-workstation` Evidence, while keeping the LLM semantic rather than authoritative.

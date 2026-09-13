@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +18,7 @@ from contextcanon.onboarding_workspace import (
     PLAN_MARKER,
     open_onboarding_workspace,
     update_workspace_checkpoint,
+    write_utf8,
 )
 
 
@@ -92,6 +95,47 @@ class WorkspaceCheckpointTests(unittest.TestCase):
         self.assertTrue(reopened.plan_path.is_file())
         self.assertIn(PLAN_MARKER, reopened.plan_path.read_text(encoding="utf-8"))
         self.assertEqual(reopened.placement_path.read_text(encoding="utf-8"), "human review stays\n")
+
+
+    def test_write_utf8_retries_transient_windows_style_replace_lock(self):
+        root = Path(tempfile.mkdtemp())
+        path = root / "run-inputs.json"
+        path.write_text("before\n", encoding="utf-8")
+        real_replace = os.replace
+        attempts = 0
+
+        def flaky_replace(source, destination):
+            nonlocal attempts
+            attempts += 1
+            if attempts < 3:
+                raise PermissionError(5, "simulated transient Windows lock")
+            return real_replace(source, destination)
+
+        with mock.patch("contextcanon.onboarding_workspace.os.replace", side_effect=flaky_replace), mock.patch(
+            "contextcanon.onboarding_workspace.time.sleep"
+        ):
+            write_utf8(path, "after\n")
+
+        self.assertEqual(attempts, 3)
+        self.assertEqual(path.read_text(encoding="utf-8"), "after\n")
+        self.assertEqual([item for item in root.iterdir() if item.name.startswith(".run-inputs.json.")], [])
+
+    def test_write_utf8_reports_exhausted_replace_lock_and_cleans_temp(self):
+        from contextcanon.parser import ContextCanonError
+
+        root = Path(tempfile.mkdtemp())
+        path = root / "run-inputs.json"
+        path.write_text("before\n", encoding="utf-8")
+
+        with mock.patch(
+            "contextcanon.onboarding_workspace.os.replace",
+            side_effect=PermissionError(5, "simulated persistent Windows lock"),
+        ), mock.patch("contextcanon.onboarding_workspace.time.sleep"):
+            with self.assertRaisesRegex(ContextCanonError, "after retrying a temporary filesystem lock"):
+                write_utf8(path, "after\n")
+
+        self.assertEqual(path.read_text(encoding="utf-8"), "before\n")
+        self.assertEqual([item for item in root.iterdir() if item.name.startswith(".run-inputs.json.")], [])
 
 
 if __name__ == "__main__":
