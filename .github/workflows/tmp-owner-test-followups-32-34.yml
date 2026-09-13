@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name 'ContextCanon automation'
           git config user.email 'actions@users.noreply.github.com'
-          git rm .github/workflows/tmp-owner-test-followups-32-34.yml .github/tmp_apply_issues_32_34.py
+          git rm -f .github/workflows/tmp-owner-test-followups-32-34.yml .github/tmp_apply_issues_32_34.py
           git add -A
           git commit -m 'Harden live onboarding owner-test follow-ups (#32 #33 #34)'
           git push origin HEAD:fix/issue-30-fresh-onboarding-root
