@@ -8,6 +8,15 @@ PR #18 completed Issues #14–#27 and the real `ai-workstation` owner-tested Con
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 or PR #18 as draft/unmerged are historical.
 
+## Active development block: fresh first-adoption root materialization — Issue #30
+
+Purpose: restore genuine from-scratch structure-first onboarding without weakening the collision and identity protections added for repeated onboarding.
+
+- [ ] Allow Step 04 to classify the reviewed project root as a new Node when no prior ContextCanon root identity exists.
+- [ ] Treat only the framework-owned fresh root `.context/onboarding/` namespace as compatible with first materialization; keep foreign or ambiguous `.context`, `CONTEXT.md`, and `CONTEXT/` paths blocked.
+- [ ] Add regressions for a true first-onboarding root plus collision safety and verify focused/full deterministic checks.
+- [ ] Prepare a review PR for project-owner validation; do not merge without explicit approval.
+
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
 Purpose: validate the shelves-before-books onboarding model vertically against the original frozen `ai-workstation` Evidence, while keeping the LLM semantic rather than authoritative.
@@ -508,6 +517,3 @@ Purpose: close the Windows package-publication failure found during the real ai-
 - [x] Add a visible delimiter between propagation review rounds.
 - [x] Finish the collected Source-update wording polish: clear current Source, candidate, what Y changes locally, what is reviewed after Y, and rebuild/check guidance.
 - [x] Patch-bump the public CLI/package version consistently, add focused regressions, and pass full syntax/build/test/check/diff plus exact-head PR CI before returning to the owner test.
-
-The first five accepted ai-workstation propagation steps are valid project state and must not be rolled back or repeated as new decisions. PR #18 remains draft and unmerged pending explicit project-owner approval.
-
