@@ -31,6 +31,18 @@ Purpose: incorporate the next real `Llama_Dispatcher` onboarding findings withou
 
 Checkpoint: the live owner-test follow-up is implemented on PR #31. STEP 05 remains semantically strict and sparse, but its generated help now scales linearly with project plus reusable Node count. Atomic onboarding writes retry only the final replace on transient Windows access failures. The root README teaches the snapshot variable before the first long-path reuse. Full deterministic verification and `contextcanon check --all .` are required on the exact product tree before this checkpoint is committed.
 
+## Owner-test follow-up: split STEP 08 review — Issue #35
+
+Purpose: keep the strong placement semantics from the real `Llama_Dispatcher` onboarding while replacing the monolithic STEP-08 review surface that becomes unreadable as findings and Source edits grow.
+
+- [ ] Keep `STEP-08-placement.md` as the human entry/index and move each placement finding into a stable dedicated Markdown file below `STEP-08-placement/`.
+- [ ] Render frozen Source-before and editable Source-after regions in the same readable Markdown shape so paragraphs wrap, tables render, and embedded headings do not compete with the review document hierarchy.
+- [ ] Keep shared Source edits single-owned and linked from every affected finding; preserve exact Evidence/proposal binding, stable authoring identity, and reusable-Source review controls.
+- [ ] Migrate an existing monolithic v1 review in place without losing human edits or decisions, then keep reruns idempotent and reject missing/duplicate/foreign split artifacts.
+- [ ] Add focused split-layout/migration/round-trip regressions plus a many-finding scaling case, run the complete deterministic suite and zero-drift check, and keep PR #31 draft/unmerged for continued `Llama_Dispatcher` owner validation.
+
+Checkpoint: Issue #35 is the next live owner-test correction. Markdown remains the editable contract; HTML is intentionally not introduced as a second authoring/parser surface merely to compensate for an oversized review artifact. The review boundary is changed instead: compact index plus one focused Markdown file per finding.
+
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
 Purpose: validate the shelves-before-books onboarding model vertically against the original frozen `ai-workstation` Evidence, while keeping the LLM semantic rather than authoritative.
