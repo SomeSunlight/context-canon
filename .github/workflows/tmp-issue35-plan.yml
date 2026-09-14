@@ -29,22 +29,24 @@ jobs:
           marker = '## Project-owner accepted block: structure-first onboarding on ai-workstation'
           heading = '## Owner-test follow-up: split STEP 08 review — Issue #35'
           if heading not in text:
-              block = '''## Owner-test follow-up: split STEP 08 review — Issue #35
-
-Purpose: keep the strong placement semantics from the real `Llama_Dispatcher` onboarding while replacing the monolithic STEP-08 review surface that becomes unreadable as findings and Source edits grow.
-
-- [ ] Keep `STEP-08-placement.md` as the human entry/index and move each placement finding into a stable dedicated Markdown file below `STEP-08-placement/`.
-- [ ] Render frozen Source-before and editable Source-after regions in the same readable Markdown shape so paragraphs wrap, tables render, and embedded headings do not compete with the review document hierarchy.
-- [ ] Keep shared Source edits single-owned and linked from every affected finding; preserve exact Evidence/proposal binding, stable authoring identity, and reusable-Source review controls.
-- [ ] Migrate an existing monolithic v1 review in place without losing human edits or decisions, then keep reruns idempotent and reject missing/duplicate/foreign split artifacts.
-- [ ] Add focused split-layout/migration/round-trip regressions plus a many-finding scaling case, run the complete deterministic suite and zero-drift check, and keep PR #31 draft/unmerged for continued `Llama_Dispatcher` owner validation.
-
-Checkpoint: Issue #35 is the next live owner-test correction. Markdown remains the editable contract; HTML is intentionally not introduced as a second authoring/parser surface merely to compensate for an oversized review artifact. The review boundary is changed instead: compact index plus one focused Markdown file per finding.
-
-'''
+              lines = [
+                  heading,
+                  '',
+                  'Purpose: keep the strong placement semantics from the real `Llama_Dispatcher` onboarding while replacing the monolithic STEP-08 review surface that becomes unreadable as findings and Source edits grow.',
+                  '',
+                  '- [ ] Keep `STEP-08-placement.md` as the human entry/index and move each placement finding into a stable dedicated Markdown file below `STEP-08-placement/`.',
+                  '- [ ] Render frozen Source-before and editable Source-after regions in the same readable Markdown shape so paragraphs wrap, tables render, and embedded headings do not compete with the review document hierarchy.',
+                  '- [ ] Keep shared Source edits single-owned and linked from every affected finding; preserve exact Evidence/proposal binding, stable authoring identity, and reusable-Source review controls.',
+                  '- [ ] Migrate an existing monolithic v1 review in place without losing human edits or decisions, then keep reruns idempotent and reject missing/duplicate/foreign split artifacts.',
+                  '- [ ] Add focused split-layout/migration/round-trip regressions plus a many-finding scaling case, run the complete deterministic suite and zero-drift check, and keep PR #31 draft/unmerged for continued `Llama_Dispatcher` owner validation.',
+                  '',
+                  'Checkpoint: Issue #35 is the next live owner-test correction. Markdown remains the editable contract; HTML is intentionally not introduced as a second authoring/parser surface merely to compensate for an oversized review artifact. The review boundary is changed instead: compact index plus one focused Markdown file per finding.',
+                  '',
+                  '',
+              ]
               if marker not in text:
                   raise SystemExit('PLAN insertion marker not found')
-              path.write_text(text.replace(marker, block + marker, 1), encoding='utf-8', newline='\n')
+              path.write_text(text.replace(marker, '\n'.join(lines) + marker, 1), encoding='utf-8', newline='\n')
           PY
       - name: Commit PLAN checkpoint
         shell: bash
