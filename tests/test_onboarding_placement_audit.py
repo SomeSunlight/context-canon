@@ -14,6 +14,7 @@ from contextcanon.cli import main
 from contextcanon.onboarding_placement import load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_audit import render_placement_source_audit
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from contextcanon.onboarding_placement_split_review import placement_finding_path
 import tests.test_onboarding_placement as placement_fixture
 
 
@@ -39,10 +40,11 @@ class PlacementSourceAuditTests(unittest.TestCase):
 
     def test_source_first_audit_groups_exact_range_and_destination_content(self):
         prepared, workspace, _, proposal, review = self.make_review()
-        text = workspace.placement_path.read_text(encoding="utf-8")
+        finding_path = placement_finding_path(workspace.placement_path, proposal.items[0])
+        text = finding_path.read_text(encoding="utf-8")
         text = text.replace("Decision: `pending`", "Decision: `accept`", 1)
         text = text.replace("Source edit decision: `pending`", "Source edit decision: `accept`", 1)
-        workspace.placement_path.write_text(text, encoding="utf-8")
+        finding_path.write_text(text, encoding="utf-8")
         review = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
         audit = render_placement_source_audit(proposal, review, prepared.snapshot_root)
@@ -56,12 +58,14 @@ class PlacementSourceAuditTests(unittest.TestCase):
         self.assertIn("Destination: `N-001` — **AI Workstation** (`.`)", audit)
         self.assertIn("Statement: The repository is the installation specification.", audit)
         self.assertIn("Why: Running state must not become undocumented authority.", audit)
+        self.assertIn("STEP-08-placement/P-001-repository-is-the-installation-specification.md#source-edit-e-001", audit)
 
     def test_rejected_source_edit_shows_unchanged_effective_after_and_candidate(self):
         prepared, workspace, _, proposal, _ = self.make_review()
-        text = workspace.placement_path.read_text(encoding="utf-8")
+        finding_path = placement_finding_path(workspace.placement_path, proposal.items[0])
+        text = finding_path.read_text(encoding="utf-8")
         text = text.replace("Source edit decision: `pending`", "Source edit decision: `reject`", 1)
-        workspace.placement_path.write_text(text, encoding="utf-8")
+        finding_path.write_text(text, encoding="utf-8")
         review = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
         audit = render_placement_source_audit(proposal, review, prepared.snapshot_root)
@@ -89,10 +93,18 @@ class PlacementSourceAuditTests(unittest.TestCase):
         self.assertIn("Source edit decision: `pending`", first)
         self.assertIn("Source audit:", stdout.getvalue())
 
-        review_text = workspace.placement_path.read_text(encoding="utf-8")
+        proposal = load_onboarding_placement_proposal(
+            workspace.placement_proposal_path,
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+            catalog_package_roots=[source_root],
+        )
+        finding_path = placement_finding_path(workspace.placement_path, proposal.items[0])
+        review_text = finding_path.read_text(encoding="utf-8")
         review_text = review_text.replace("Decision: `pending`", "Decision: `accept`", 1)
         review_text = review_text.replace("Source edit decision: `pending`", "Source edit decision: `accept`", 1)
-        workspace.placement_path.write_text(review_text, encoding="utf-8")
+        finding_path.write_text(review_text, encoding="utf-8")
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             result = main([

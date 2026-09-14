@@ -87,6 +87,20 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertEqual(PLACEMENT_AUDIT_NAME, "STEP-08a-source-audit.md")
         self.assertIn(PLACEMENT_AUDIT_NAME, plan)
 
+    def test_reset_from_step8_removes_split_review_directory(self):
+        _, prepared = self.make_repo()
+        workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
+        split_dir = workspace.placement_dir_path
+        split_dir.mkdir()
+        (split_dir / "P-001-example.md").write_text("human reviewed finding", encoding="utf-8")
+        workspace.placement_path.write_text("owned STEP-08 index", encoding="utf-8")
+
+        result = reset_onboarding(prepared.snapshot_root, from_step=8)
+
+        self.assertFalse(workspace.placement_path.exists())
+        self.assertFalse(split_dir.exists())
+        self.assertIn("STEP-08-placement/", result["workspace_files_removed"])
+
     def test_reset_from_step8_removes_generated_source_audit(self):
         _, prepared = self.make_repo()
         workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)

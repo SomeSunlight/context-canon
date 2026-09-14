@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -22,6 +23,7 @@ from .onboarding_workspace import (
     PLACEMENT_PREVIEW_NAME,
     PLACEMENT_PROPOSAL_NAME,
     PLACEMENT_REVIEW_NAME,
+    PLACEMENT_REVIEW_DIR_NAME,
     PLAN_MARKER,
     STRUCTURE_INSTRUCTION_NAME,
     STRUCTURE_PREVIEW_NAME,
@@ -49,6 +51,7 @@ _ARTIFACT_STEPS = {
     PLACEMENT_INSTRUCTION_NAME: 6,
     PLACEMENT_PROPOSAL_NAME: 6,
     PLACEMENT_REVIEW_NAME: 8,
+    PLACEMENT_REVIEW_DIR_NAME: 8,
     PLACEMENT_AUDIT_NAME: 8,
     PLACEMENT_PREVIEW_NAME: 9,
     PLACEMENT_FOLLOWUP_NAME: 10,
@@ -316,7 +319,10 @@ def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
         if step < from_step:
             continue
         path = workspace_root / name
-        if path.is_file() or path.is_symlink():
+        if name == PLACEMENT_REVIEW_DIR_NAME and path.is_dir() and not path.is_symlink():
+            shutil.rmtree(path)
+            removed.append(path.name + "/")
+        elif path.is_file() or path.is_symlink():
             path.unlink()
             removed.append(path.name)
     return sorted(set(removed))
