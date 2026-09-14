@@ -20,11 +20,14 @@ jobs:
         with:
           python-version: '3.12'
       - name: Apply Issue 35
-        run: python .github/tmp_issue35_apply.py
+        shell: bash
+        run: |
+          python .github/tmp_issue35_apply.py
+          python .github/tmp_issue35_followup.py
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused split-review regressions
-        run: python -m unittest tests.test_onboarding_placement_review tests.test_onboarding_placement_publish tests.test_onboarding_reset -v
+        run: python -m unittest tests.test_onboarding_placement_review tests.test_onboarding_placement tests.test_onboarding_placement_publish tests.test_onboarding_reset -v
       - name: Complete deterministic suite
         run: python -m unittest discover -s tests -v
       - name: Verify generated output and diff hygiene
@@ -37,7 +40,7 @@ jobs:
         run: |
           git config user.name 'ContextCanon automation'
           git config user.email 'actions@users.noreply.github.com'
-          git rm -f .github/tmp_issue35_apply.py .github/workflows/tmp-issue35-apply.yml
+          git rm -f .github/tmp_issue35_apply.py .github/tmp_issue35_followup.py .github/workflows/tmp-issue35-apply.yml
           git add -A
           git diff --cached --check
           git commit -m 'Split STEP-08 placement review into finding files (#35)'
