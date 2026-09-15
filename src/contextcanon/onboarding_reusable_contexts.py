@@ -210,8 +210,9 @@ def _parse_assignments(
         match = _ASSIGN_RE.fullmatch(line)
         if match is None:
             raise _error(
-                "Assignment first line is incomplete. Copy one complete line from "
-                "'Copy-ready Assignment lines — generated' below, paste it into Assignments, "
+                "Assignment first line is incomplete. Build it from one entry under "
+                "'Available project Context Nodes — generated' and one entry under "
+                "'Available reusable Context Nodes — generated' using the shown Assignment syntax, "
                 "then add an indented 'Why:' line"
             )
         target = target_by_label.get((match.group("target"), match.group("path")))
@@ -305,6 +306,8 @@ def render_reusable_contexts(
     packages: tuple[CompiledPackage, ...],
     assignments: tuple[ReusableContextAssignment, ...],
 ) -> str:
+    root_node = next((node for node in structure.nodes if node.path == "."), structure.nodes[0] if structure.nodes else None)
+    example_package = packages[0] if packages else None
     lines = [
         "# STEP 05 — Reusable Contexts",
         f'<!-- contextcanon-reusable-contexts schema="{REUSABLE_CONTEXTS_SCHEMA}" evidence="{evidence_digest}" structure="{structure.structure_digest}" -->',
@@ -334,14 +337,29 @@ def render_reusable_contexts(
             "",
             "## Assignments",
             "",
-            "Only keep relationships that should actually exist. Copy one complete first line from `Copy-ready Assignment lines — generated` below, paste it here, then add an indented `Why:` line. The generated copy helpers are syntax options, not recommendations; the editable list remains sparse. Every relationship needs a durable `Why`.",
+            "Keep only relationships that should actually exist. Build each first line from one project Context Node and one reusable Context Node from the two generated choice lists below, put them around the `←` exactly as shown, then add an indented `Why:` line. Replace the `-` placeholder with a real durable rationale. The list stays sparse; the helper never generates every possible pairing.",
             "",
-            "Example syntax:",
+            "Assignment syntax:",
             "",
             "```text",
-            "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
-            "  Why: Shared development workflow applies to the whole project.",
+            "- **<project Context Node>** (`<project path>`) ← **<reusable Context Node>** (`<version>`)",
+            "  Why: -",
             "```",
+        ]
+    )
+    if root_node is not None and example_package is not None:
+        lines.extend(
+            [
+                "",
+                "Example first line using entries from this project (syntax only, not a recommendation):",
+                "",
+                "```text",
+                f"- **{root_node.name}** (`{root_node.path}`) ← **{example_package.metadata.name}** (`{example_package.metadata.version}`)",
+                "```",
+            ]
+        )
+    lines.extend(
+        [
             "",
             "> ✏️ Editable reusable-Context assignment controls start below.",
             "",
@@ -367,12 +385,24 @@ def render_reusable_contexts(
             "",
             "## Available project Context Nodes — generated",
             "",
+            "Use one desired entry as the left-hand side of `←`.",
+            "",
             GENERATED_PROJECT_START,
         ]
     )
     for node in structure.nodes:
         lines.append(f"- **{node.name}** (`{node.path}`)")
-    lines.extend([GENERATED_PROJECT_END, "", "## Available reusable Context Nodes — generated", "", GENERATED_CATALOG_START])
+    lines.extend(
+        [
+            GENERATED_PROJECT_END,
+            "",
+            "## Available reusable Context Nodes — generated",
+            "",
+            "Use one desired name/version entry as the right-hand side of `←`.",
+            "",
+            GENERATED_CATALOG_START,
+        ]
+    )
     if packages:
         for package in packages:
             lines.append(
@@ -388,25 +418,8 @@ def render_reusable_contexts(
             "",
             "The generated package identities are review information. Do not copy their IDs or digests into Assignments; ContextCanon resolves and remembers them for subsequent steps.",
             "",
-            "## Copy-ready Assignment lines — generated",
-            "",
-            "These are syntactic copy helpers, not recommendations. Copy one desired complete line into the editable Assignments section above and add an indented `Why:` line below it.",
-            "",
         ]
     )
-    if packages:
-        for package in packages:
-            lines.append(f"### {package.metadata.name} (`{package.metadata.version}`)")
-            lines.append("")
-            for node in structure.nodes:
-                lines.append(
-                    f"- **{node.name}** (`{node.path}`) ← **{package.metadata.name}** (`{package.metadata.version}`)"
-                )
-            lines.append("")
-    elif locations:
-        lines.extend(["No verified reusable Context Nodes are available for copy-ready assignments.", ""])
-    else:
-        lines.extend(["Add a Catalog location above and rerun STEP 05 to generate copy-ready assignment lines.", ""])
     return "\n".join(lines)
 
 

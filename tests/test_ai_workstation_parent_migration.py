@@ -16,6 +16,7 @@ from contextcanon.compiler import Compiler
 from contextcanon.onboarding_placement import PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_publish import build_placement_publication_preview, publish_placement_review
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from contextcanon.onboarding_placement_split_review import placement_finding_path
 from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_or_load_structure_markdown, load_structure_markdown, load_onboarding_structure_proposal
 from contextcanon.outputs import write_outputs
 from contextcanon.sources import adopt_source_package, accept_parent_candidate, review_parent_candidate
@@ -196,12 +197,14 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
             workspace.placement_path, proposal, prepared.snapshot_root
         )
         self.assertTrue(created)
-        workspace.placement_path.write_text(
-            workspace.placement_path.read_text(encoding="utf-8").replace(
-                "Decision: `pending`", "Decision: `accept`"
-            ),
-            encoding="utf-8",
-        )
+        for item in proposal.items:
+            finding_path = placement_finding_path(workspace.placement_path, item)
+            finding_path.write_text(
+                finding_path.read_text(encoding="utf-8").replace(
+                    "Decision: `pending`", "Decision: `accept`"
+                ),
+                encoding="utf-8",
+            )
         review = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
         self.assertTrue(review.is_complete)
         return repo, prepared, workspace, proposal, review

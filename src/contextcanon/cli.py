@@ -1154,8 +1154,8 @@ def main(argv: list[str] | None = None) -> int:
                     next_action = (
                         f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
-                        f"Inspect `{workspace.placement_audit_path.name}` source-by-source, edit `{workspace.placement_path.name}` where needed, and set every item/Source-edit/Source Decision to `accept` or `reject`. "
-                        f"Then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`; it validates the edited human gate and regenerates the audit."
+                        f"Inspect `{workspace.placement_audit_path.name}` source-by-source, then use `{workspace.placement_path.name}` as the index and edit its linked finding files under `{workspace.placement_dir_path.name}/`. "
+                        f"Set every item/Source-edit/Source Decision to `accept` or `reject`, then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`; it validates the split human gate, refreshes the index, and regenerates the audit."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="human placement review",
@@ -1187,7 +1187,7 @@ def main(argv: list[str] | None = None) -> int:
                     next_action = (
                         f"Review `STEP-09-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}`."
                         if preview.review_complete else
-                        "Return to `STEP-08-placement.md`, resolve all pending decisions, and preview again."
+                        "Return to the `STEP-08-placement.md` index and its linked finding files, resolve all pending decisions, and preview again."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement publication previewed",

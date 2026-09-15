@@ -27,5 +27,17 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertNotIn("STEP-05a-placement-instruction.md", current)
 
 
+    def test_root_readme_teaches_snapshot_variable_before_reuse(self) -> None:
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+        onboarding = text.split("### Structure-first experimental run", 1)[1].split("## Maintain an onboarded project", 1)[0]
+
+        self.assertIn("$SNAPSHOT = '.context/onboarding/<evidence-digest>'", onboarding)
+        self.assertIn("SNAPSHOT='.context/onboarding/<evidence-digest>'", onboarding)
+        self.assertIn(r"set SNAPSHOT=.context\onboarding\<evidence-digest>", onboarding)
+        self.assertIn("contextcanon onboard structure-instruction $SNAPSHOT", onboarding)
+        self.assertIn("contextcanon-onboarding/PLAN.md", onboarding)
+        self.assertNotIn("contextcanon onboard structure-preview .context/onboarding/<evidence-digest>", onboarding)
+
+
 if __name__ == "__main__":
     unittest.main()

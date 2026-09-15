@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from urllib.parse import unquote
@@ -10,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.links import local_markdown_targets
+from contextcanon.version import __version__
 
 
 def _is_compiler_owned_markdown(relative: Path) -> bool:
@@ -72,6 +74,10 @@ class RepositoryConsistencyTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         broken = broken_local_markdown_links(root)
         self.assertEqual(broken, [], "\n".join(broken))
+
+    def test_public_package_and_cli_versions_match(self):
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        self.assertEqual(project["project"]["version"], __version__)
 
 
 if __name__ == "__main__":

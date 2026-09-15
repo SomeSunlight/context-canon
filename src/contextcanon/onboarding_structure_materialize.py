@@ -200,6 +200,19 @@ def _framework_machine_namespace(root: Path, *, allow_onboarding: bool) -> bool:
     return True
 
 
+def _fresh_root_machine_namespace(root: Path) -> bool:
+    machine = root / ".context"
+    if not machine.exists() and not machine.is_symlink():
+        return True
+    if machine.is_symlink() or not machine.is_dir():
+        return False
+    children = list(machine.iterdir())
+    if len(children) != 1:
+        return False
+    onboarding = children[0]
+    return onboarding.name == "onboarding" and onboarding.is_dir() and not onboarding.is_symlink()
+
+
 def _preflight_new_node(
     root: Path,
     *,
@@ -218,9 +231,11 @@ def _preflight_new_node(
                 )
         machine = root / ".context"
         if machine.exists() or machine.is_symlink():
-            raise ContextCanonError(
-                f"Refusing to materialize Context Node at {root}: pre-existing .context path would be ambiguous"
-            )
+            is_fresh_root = root.resolve() == project_root.resolve() and _fresh_root_machine_namespace(root)
+            if not is_fresh_root:
+                raise ContextCanonError(
+                    f"Refusing to materialize Context Node at {root}: pre-existing .context path would be ambiguous"
+                )
         return
     if not _matches_generated_manifest(root, "CONTEXT.md"):
         raise ContextCanonError(
@@ -289,10 +304,6 @@ def preview_structure_materialization(
                 )
             )
             continue
-        if node.path == ".":
-            raise ContextCanonError(
-                "Structure-first continuation found no CONTEXT.src.md at the project root and no unambiguous prior ContextCanon root identity to recover"
-            )
         _preflight_new_node(root, project_root=project)
         items.append(
             StructureMaterializationItem(
@@ -309,9 +320,9 @@ def preview_structure_materialization(
         )
 
     roots = [item for item in items if item.path == "."]
-    if len(roots) != 1 or roots[0].status not in {"existing", "recover"}:
+    if len(roots) != 1 or roots[0].status not in {"existing", "recover", "create"}:
         raise ContextCanonError(
-            "Structure-first continuation requires the project root to remain an existing or provably recoverable Context Node"
+            "Structure materialization requires exactly one reviewed project root Context Node"
         )
 
     return StructureMaterializationPreview(project, plan.structure_digest, tuple(items))

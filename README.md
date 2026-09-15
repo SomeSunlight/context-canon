@@ -78,11 +78,26 @@ The command prints the path of a frozen evidence snapshot under:
 
 The snapshot is an immutable review anchor, not a lock on the live repository. It lets different semantic instructions or human review iterations operate on **the same exact project bytes** until you deliberately choose a new evidence basis.
 
+Store the printed snapshot path once instead of repeatedly typing the long digest. Use the assignment form for your shell:
+
+```powershell
+$SNAPSHOT = '.context/onboarding/<evidence-digest>'
+```
+
+```sh
+SNAPSHOT='.context/onboarding/<evidence-digest>'
+```
+
+```bat
+set SNAPSHOT=.context\onboarding\<evidence-digest>
+```
+
+The commands below use `$SNAPSHOT` in PowerShell, bash and zsh; in `cmd.exe`, use `%SNAPSHOT%` instead. As soon as ContextCanon creates `contextcanon-onboarding/PLAN.md`, that file becomes the run-specific copy/paste console and shows the shell-native variable and exact commands again.
+
 Generate the first semantic assignment:
 
 ```text
-contextcanon onboard structure-instruction \
-  .context/onboarding/<evidence-digest>
+contextcanon onboard structure-instruction $SNAPSHOT
 ```
 
 ContextCanon writes important working files itself as UTF-8 into the visible:
@@ -102,8 +117,8 @@ contextcanon-onboarding/structure-proposal.json
 Validate and render the editable hierarchy:
 
 ```text
-contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
-contextcanon onboard structure-review   .context/onboarding/<evidence-digest>
+contextcanon onboard structure-validate $SNAPSHOT
+contextcanon onboard structure-review   $SNAPSHOT
 ```
 
 Now review and edit `contextcanon-onboarding/structure.md`. Indentation defines the primary human hierarchy. Existing proposal Nodes retain review-local keys; future/reserved Nodes can be added explicitly when the evidence and project owner justify them.
@@ -111,13 +126,13 @@ Now review and edit `contextcanon-onboarding/structure.md`. Indentation defines 
 Before creating any missing Nodes:
 
 ```text
-contextcanon onboard structure-preview .context/onboarding/<evidence-digest>
+contextcanon onboard structure-preview $SNAPSHOT
 ```
 
 The preview protects existing Context Nodes by stable identity and shows exactly which missing skeletons would be created. When the coarse structure is satisfactory, explicit materialization creates only those missing skeletons:
 
 ```text
-contextcanon onboard structure-materialize .context/onboarding/<evidence-digest>
+contextcanon onboard structure-materialize $SNAPSHOT
 ```
 
 Existing Nodes and ordinary project files are not rewritten by this step.
@@ -125,8 +140,7 @@ Existing Nodes and ordinary project files are not rewritten by this step.
 The second semantic pass is then generated from the **same frozen Evidence plus the exact edited structure digest**:
 
 ```text
-contextcanon onboard placement-instruction \
-  .context/onboarding/<evidence-digest>
+contextcanon onboard placement-instruction $SNAPSHOT
 ```
 
 Reusable immutable Source packages may be supplied explicitly with repeated `--catalog-package` arguments. The model compares generic-looking local guidance with those exact packages rather than inventing duplicate reusable rules.
@@ -134,8 +148,8 @@ Reusable immutable Source packages may be supplied explicitly with repeated `--c
 Save the returned JSON as `contextcanon-onboarding/placement-proposal.json`, then:
 
 ```text
-contextcanon onboard placement-validate .context/onboarding/<evidence-digest>
-contextcanon onboard placement-review   .context/onboarding/<evidence-digest>
+contextcanon onboard placement-validate $SNAPSHOT
+contextcanon onboard placement-review   $SNAPSHOT
 ```
 
 `placement.md` shows each source excerpt beside its proposed destination, operation and canonical wording. The current experiment deliberately stops there: destructive cleanup or publication of relocated knowledge is designed only after the real placement result has been reviewed.
