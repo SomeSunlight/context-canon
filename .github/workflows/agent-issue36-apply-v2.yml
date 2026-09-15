@@ -24,6 +24,7 @@ jobs:
         run: |
           python .github/issue36_support_patch.py
           python .github/issue36_test_support_patch.py
+          python .github/issue36_stale_tests_patch.py
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Focused regressions
@@ -56,6 +57,7 @@ jobs:
         run: |
           rm -f .github/issue36_support_patch.py
           rm -f .github/issue36_test_support_patch.py
+          rm -f .github/issue36_stale_tests_patch.py
           rm -f .github/issue36-helper.gz
           rm -f .github/workflows/agent-issue36-apply-v2.yml
           git config user.name 'github-actions[bot]'
