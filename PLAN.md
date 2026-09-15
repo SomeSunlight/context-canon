@@ -43,6 +43,18 @@ Purpose: keep the strong placement semantics from the real `Llama_Dispatcher` on
 
 Checkpoint: Issue #35 is implemented for owner validation. `STEP-08-placement.md` is now a compact status/index surface and each finding lives in one stable Markdown review sheet below `STEP-08-placement/`. Frozen Before and editable After content use the same rendered quote frame; shared Source edits remain single-owned and the generated source audit links directly to that owning finding. Existing monolithic v1 reviews migrate in place while preserving human decisions and authoring identity. The implementation head `dc6821ac4c8a0c93d4efb3214b41360039da47c5` passed all 259 deterministic tests, `contextcanon check --all .` with zero generated drift, and `git diff --check`; coverage includes 40 findings without rebuilding a monolithic review body. Markdown remains the editable contract; HTML stays available as a future generated/read-only presentation option rather than a second authoring/parser surface. PR #31 remains draft and unmerged pending continued `Llama_Dispatcher` owner validation.
 
+## Owner-test follow-up: separate STEP 08 P/E review sheets — Issue #36
+
+Purpose: keep the successful per-finding STEP-08 review while separating semantic placement decisions from concrete source transformations and making both review surfaces self-explanatory.
+
+- [x] Keep P findings as focused semantic placement/handling sheets under `STEP-08-placement/`, with Destination and Kind in the title, a first-contact explanation, proper Markdown bullet controls, explicit `Into Node N-xxx — Name` headings, and numbered Evidence sections.
+- [x] Move every E Source edit into its own Markdown sheet under `STEP-08-source-edits/`, link P↔E in both directions, and show the linked P acceptance dependency before the E decision.
+- [x] Add separate P/E tables to `STEP-08-placement.md` and state next to them that they are generated snapshots refreshed by rerunning `contextcanon onboard placement-review $SNAPSHOT`.
+- [x] Keep split-v1 owner-test state deliberately non-migrating: reset from STEP 08 and recreate instead of carrying transitional compatibility code.
+- [x] Run focused/full deterministic regressions, zero-drift check and clean-diff verification; keep PR #31 draft/unmerged for continued owner validation.
+
+Checkpoint: Issue #36 is implemented for a fresh STEP-08 owner test. P owns semantic interpretation/placement; E owns concrete source-file transformation. The final Issue #36 product tree passed the focused regressions, complete deterministic suite, `contextcanon check --all .`, and `git diff --check`. PR #31 remains draft and unmerged pending continued `Llama_Dispatcher` owner validation.
+
 ## Project-owner accepted block: structure-first onboarding on ai-workstation
 
 Purpose: validate the shelves-before-books onboarding model vertically against the original frozen `ai-workstation` Evidence, while keeping the LLM semantic rather than authoritative.

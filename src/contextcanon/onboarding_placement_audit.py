@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSourceEdit
-from .onboarding_placement_split_review import placement_finding_filename
+from .onboarding_placement_split_review import placement_source_edit_filename
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
 from .parser import ContextCanonError
 
@@ -98,7 +98,7 @@ def render_placement_source_audit(
     lines = [
         "# ContextCanon source transformation audit",
         "",
-        f"> **Generated, read-only view.** Use `{review_filename}` as the STEP-08 index and edit its linked finding files, not this audit. Rerunning `contextcanon onboard placement-review ...` validates the human gate and regenerates this audit from that exact parsed review.",
+        f"> **Generated, read-only view.** Use `{review_filename}` as the STEP-08 index and edit its linked P/E review files, not this audit. Rerunning `contextcanon onboard placement-review ...` validates the human gate and regenerates this audit from that exact parsed review.",
         "",
         "This view answers one question per source range: **if this text is shortened or replaced, where does every linked piece of maintained meaning land?** It is grouped by original source file rather than destination Node so semantic-loss review does not require chasing scattered findings.",
         "",
@@ -128,8 +128,7 @@ def render_placement_source_audit(
             proposal_item = next((item for item in proposal.items if item.id == owner_item_id), None)
             if proposal_item is None:
                 raise ContextCanonError(f"Source audit edit {edit.proposal_id} references missing proposal item {owner_item_id}")
-            finding_dir = Path(review_filename).with_suffix("").name
-            control_target = f"{finding_dir}/{placement_finding_filename(proposal_item)}#source-edit-{edit.proposal_id.lower()}"
+            control_target = f"STEP-08-source-edits/{placement_source_edit_filename(edit)}"
             lines.extend([
                 f"### {edit.proposal_id} — lines {edit.start_line}-{edit.end_line}",
                 "",
