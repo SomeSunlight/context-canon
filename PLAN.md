@@ -2,11 +2,13 @@
 
 ## Accepted baseline
 
-The current accepted `main` baseline is PR #18, squash-merged as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`.
+The current accepted `main` product baseline is ContextCanon **0.8.0** from PR #31, squash-merged as `d285ae09795994239a802ce50342404fadd482b7`.
 
-PR #18 completed Issues #14–#27 and the real `ai-workstation` owner-tested ContextCanon 0.7.3 maintenance workflow. Those issues are closed; no framework review PR is currently active.
+PR #31 completed Issues #30 and #32–#38 after the full real `Llama_Dispatcher` owner onboarding reached reviewed publication. No framework review PR is currently active.
 
-Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13 or PR #18 as draft/unmerged are historical.
+Follow-up Issues #39–#43 record the next owner-test findings but are not an active development block.
+
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
 
 ## Active development block: fresh first-adoption root materialization — Issue #30
 
@@ -186,7 +188,7 @@ Purpose: remove the next owner-test blockers without weakening collision safety:
 - [x] Preserve/recover the established root Node identity when the authoring source is missing but prior ContextCanon acceptance state proves that identity; do not silently allocate a replacement root UUID.
 - [x] Add focused regressions for the exact `ai-workstation` Step-4 shape and PLAN rendering, then run full suite/build/check and exact-head PR CI before handing back a new test SHA.
 
-Live Step-4 owner-test checkpoint: the runbook now points visibly from the checklist to the detailed commands and defines one shell-native `SNAPSHOT` variable instead of repeating the full content-addressed snapshot path. Structure preview/materialization distinguishes a provably generated root `CONTEXT/`/`.context` namespace from a foreign collision; if the root authoring source is missing, ContextCanon recovers only when generated machine state or prior acceptance proves one stable root identity, and preserves that ID/name/version. Two focused regressions cover the recovered `ai-workstation` shape and continued refusal of a foreign `CONTEXT/`. The complete deterministic suite is now 144 tests; full build/check and zero-drift verification passed in the self-deleting quality run.
+Live Step-4 owner-test checkpoint: the runbook now points visibly from the checklist to the detailed commands and defines one shell-native `SNAPSHOT` variable instead of repeating the full content-addressed Evidence path. Structure preview/materialization distinguishes a provably ContextCanon-generated root `CONTEXT/`/`.context` namespace from a foreign collision; if the root authoring source is missing, ContextCanon recovers only when generated machine state or prior acceptance proves one stable root identity, and preserves that ID/name/version. Two focused regressions cover the recovered `ai-workstation` shape and continued refusal of a foreign `CONTEXT/`. The complete deterministic suite is now 144 tests; full build/check and zero-drift verification passed in the self-deleting quality run.
 
 #### Block I — recover generated child Nodes during repeated onboarding
 
@@ -504,7 +506,7 @@ Owner-test review-readability follow-up under #22: keep immutable digests visibl
 
 Owner-test version-discipline follow-up under #26: a changed Context package must not silently reuse the previous human version. If a prior generated package exists and the authored SemVer-shaped version is unchanged, ContextCanon applies the minimum patch bump automatically and explicitly tells the owner to consider a higher minor/major bump when warranted. A human-selected higher version wins. External Source candidates that changed package identity while reusing the accepted version are rejected rather than repaired by the consumer.
 
-Issues #22/#26 owner-test implementation checkpoint: review output now leads with version and a compact semantic/content summary, followed by category details and a separate Technical details fingerprint section. Legacy discovery migration explicitly says acceptance is unchanged. Context Node package reuse under the same version is prevented: SemVer-shaped unchanged versions receive only a minimum patch bump with a visible minor/major reminder, human-selected higher versions are preserved, unsafe version formats require manual advancement, and external same-version/different-package Source candidates are rejected. Development Workflow first received the automatic minimum `0.2.1-draft` bump; owner review then correctly classified the accumulated workflow change as feature-level and advances it deliberately to `0.3.0-draft`. Affected self-hosted Context Nodes are versioned consistently. Full deterministic tests, self-build/check, and diff hygiene must remain green on the final product head.
+Issues #22/#26 owner-test implementation checkpoint: review output now leads with version and a compact semantic/content summary, followed by category details and a separate Technical details fingerprint section. Legacy discovery migration explicitly says acceptance is unchanged. Context Node package reuse under the same version is prevented: SemVer-shaped unchanged versions receive only a minimum automatic patch bump with a visible minor/major reminder, human-selected higher versions are preserved, unsafe version formats require manual advancement, and external same-version/different-package Source candidates are rejected. Development Workflow first received the automatic minimum `0.2.1-draft` bump; owner review then correctly classified the accumulated workflow change as feature-level and advances it deliberately to `0.3.0-draft`. Affected self-hosted Context Nodes are versioned consistently. Full deterministic tests, self-build/check, and diff hygiene must remain green on the final product head.
 
 ## Owner-test everyday maintenance UX: Issue #27
 
@@ -557,3 +559,11 @@ Purpose: close the Windows package-publication failure found during the real ai-
 - [x] Patch-bump the public CLI/package version consistently, add focused regressions, and pass full syntax/build/test/check/diff plus exact-head PR CI before returning to the owner test.
 
 The first five accepted ai-workstation propagation steps are valid project state and must not be rolled back or repeated as new decisions. PR #18 remains draft and unmerged pending explicit project-owner approval.
+
+## Post-merge baseline reconciliation — PR #31
+
+PR #31 was squash-merged to `main` as `d285ae09795994239a802ce50342404fadd482b7`. Issues #30 and #32–#38 closed with that merge. The accepted product baseline is ContextCanon CLI/package 0.8.0.
+
+The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR workflow #901 / run `35127260963`: 262 deterministic tests, generated-output verification with zero drift, and installation of `contextcanon==0.8.0`. The real `Llama_Dispatcher` onboarding completed publication with review digest `7c1712d0327fdd44759784e6c0511ed63386795ec73790e510ff895fe85de0a4` and acceptance digest `c72b6bb4b0df3d1df657407f72feaa7ea899ba7189284fd9dd7269dae4089255`.
+
+Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
