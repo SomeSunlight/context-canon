@@ -16,7 +16,8 @@ from contextcanon.parser import ContextCanonError
 
 class EntryWindowsLockTests(unittest.TestCase):
     def test_raw_windows_permission_error_becomes_actionable_cli_error(self):
-        error = PermissionError(13, "Access is denied", r"C:\\project\\.context\\sources\\package")
+        path = r"C:\project\.context\sources\package"
+        error = PermissionError(13, "Access is denied", path)
         error.winerror = 5
         stderr = io.StringIO()
 
@@ -31,14 +32,14 @@ class EntryWindowsLockTests(unittest.TestCase):
         self.assertIn("exclude the project directory from real-time scanning", text)
         self.assertIn("Exclude Folders", text)
         self.assertIn("rerun the same ContextCanon command", text)
-        self.assertIn(r"C:\\project\\.context\\sources\\package", text)
+        self.assertIn(path, text)
         self.assertNotIn("Traceback", text)
 
     def test_wrapped_windows_lock_error_keeps_original_context_and_adds_guidance(self):
+        path = r"C:\project\.context\sources\package"
         error = ContextCanonError(
-            "Could not publish immutable package Demo 1.0.0 to "
-            r"C:\\project\\.context\\sources\\package after retrying a temporary filesystem lock: "
-            "[WinError 5] Access is denied"
+            f"Could not publish immutable package Demo 1.0.0 to {path} "
+            "after retrying a temporary filesystem lock: [WinError 5] Access is denied"
         )
         stderr = io.StringIO()
 
@@ -48,7 +49,7 @@ class EntryWindowsLockTests(unittest.TestCase):
         text = stderr.getvalue()
         self.assertEqual(result, 2)
         self.assertIn("Could not publish immutable package Demo 1.0.0", text)
-        self.assertIn(r"C:\\project\\.context\\sources\\package", text)
+        self.assertIn(path, text)
         self.assertIn("antivirus and other background scanners", text)
         self.assertIn("See docs/windows.md", text)
         self.assertNotIn("Traceback", text)
