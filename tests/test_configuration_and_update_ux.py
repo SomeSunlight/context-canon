@@ -173,7 +173,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
             subprocess.run(["git", "-C", str(provider), "commit", "-qm", "old"], check=True)
             subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
-            write_node(provider, "source-id", "Shared", "1.1.0", "Updated meaning.")
+            write_node(provider, "source-id", "Shared", "1.1.0", "New meaning.")
             subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
             subprocess.run(["git", "-C", str(provider), "commit", "-qm", "new"], check=True)
 
@@ -193,8 +193,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
                 encoding="utf-8",
             )
             install_package(child_root, current_consumer)
-            child = Compiler(project).compile(child_root)
-            write_outputs(child)
+            write_outputs(Compiler(project).compile(child_root))
 
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
@@ -207,110 +206,6 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertIn("asked separately before each changed Child starts using its newer Parent Context", out.getvalue())
         finally:
             shutil.rmtree(project, ignore_errors=True)
-            shutil.rmtree(provider, ignore_errors=True)
-
-    def test_source_list_and_update_use_accepted_package_name_when_consumer_label_is_stale(self):
-        project = Path(tempfile.mkdtemp())
-        provider = Path(tempfile.mkdtemp())
-        try:
-            (project / ".git").mkdir()
-            subprocess.run(["git", "init", "-q", "-b", "main", str(provider)], check=True)
-            subprocess.run(["git", "-C", str(provider), "config", "user.email", "test@example.com"], check=True)
-            subprocess.run(["git", "-C", str(provider), "config", "user.name", "Test"], check=True)
-            main_package = write_node(provider, "source-id", "Shared Canonical", "1.0.0", "Main meaning.")
-            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
-            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "main"], check=True)
-            main_head = subprocess.run(
-                ["git", "-C", str(provider), "rev-parse", "HEAD"], check=True, text=True, capture_output=True
-            ).stdout.strip()
-            subprocess.run(["git", "-C", str(provider), "checkout", "-qb", "feature"], check=True)
-            feature_package = write_node(provider, "source-id", "Shared Canonical", "1.1.0", "Feature meaning.")
-            subprocess.run(["git", "-C", str(provider), "add", "."], check=True)
-            subprocess.run(["git", "-C", str(provider), "commit", "-qm", "feature"], check=True)
-
-            consumer = project
-            source_text = (
-                '# Consumer — Local Context Source\n'
-                '<!-- ctx:node id="consumer" name="Consumer" version="0.1.0" -->\n\n'
-                '## Sources\n\n'
-                f'- [stale accidental label]({provider.as_posix()}) — `1.0.0`\n'
-                f'  <!-- ctx:source id="source-id" version="1.0.0" normalized-digest="{main_package.normalized_digest}" package-digest="{main_package.package_digest}" transport="git" ref="{main_head}" node-path="." -->\n'
-            )
-            (consumer / "CONTEXT.src.md").write_text(source_text, encoding="utf-8")
-            install_package(consumer, main_package)
-            write_outputs(Compiler(project).compile(project))
-            self.assertIn(
-                "Source label mismatch for source-id: 'stale accidental label' != accepted package name 'Shared Canonical'",
-                check_outputs(Compiler(project).compile(project)),
-            )
-
-            listed = io.StringIO()
-            with contextlib.redirect_stdout(listed):
-                rc = cli_main(["source", "list", "--node", str(consumer)])
-            self.assertEqual(rc, 0, listed.getvalue())
-            self.assertIn("Shared Canonical | source-id | using 1.0.0", listed.getvalue())
-            self.assertIn("consumer display label is 'stale accidental label'", listed.getvalue())
-
-            updated = io.StringIO()
-            with contextlib.redirect_stdout(updated):
-                rc = cli_main(["source", "update", "Shared Canonical", "--node", str(consumer), "--ref", "feature", "--yes"])
-            self.assertEqual(rc, 0, updated.getvalue())
-            self.assertEqual(Compiler(project).compile(project).source_packages[0].package_digest, feature_package.package_digest)
-            self.assertIn("- [Shared Canonical]", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
-            self.assertNotIn("stale accidental label", (consumer / "CONTEXT.src.md").read_text(encoding="utf-8"))
-            write_outputs(Compiler(project).compile(project))
-            self.assertEqual(check_outputs(Compiler(project).compile(project)), [])
-        finally:
-            shutil.rmtree(project, ignore_errors=True)
-            shutil.rmtree(provider, ignore_errors=True)
-
-    def test_check_reports_stale_parent_display_name(self):
-        repo = Path(tempfile.mkdtemp())
-        try:
-            (repo / ".git").mkdir()
-            parent = write_node(repo, "root", "Canonical Parent", "1.0.0", "Meaning.")
-            child_root = repo / "child"
-            child_root.mkdir()
-            source = parent_source("child", "Child", "..", parent).replace("[Canonical Parent]", "[stale parent label]")
-            (child_root / "CONTEXT.src.md").write_text(source, encoding="utf-8")
-            install_package(child_root, parent)
-            compiled = Compiler(repo).compile(child_root)
-            write_outputs(compiled)
-            self.assertIn(
-                "Parent label mismatch for root: 'stale parent label' != accepted package name 'Canonical Parent'",
-                check_outputs(Compiler(repo).compile(child_root)),
-            )
-        finally:
-            shutil.rmtree(repo, ignore_errors=True)
-
-    def test_parent_propagate_updates_chain_top_down_in_one_command(self):
-        repo = Path(tempfile.mkdtemp())
-        try:
-            (repo / ".git").mkdir()
-            parent = write_node(repo, "root", "Root", "1.0.0", "Initial meaning.")
-            child_root = repo / "child"
-            child_root.mkdir()
-            (child_root / "CONTEXT.src.md").write_text(parent_source("child", "Child", "..", parent), encoding="utf-8")
-            install_package(child_root, parent)
-            child = Compiler(repo).compile(child_root)
-            write_outputs(child)
-
-            grand_root = child_root / "grand"
-            grand_root.mkdir()
-            (grand_root / "CONTEXT.src.md").write_text(parent_source("grand", "Grand", "..", child), encoding="utf-8")
-            install_package(grand_root, child)
-            write_outputs(Compiler(repo).compile(grand_root))
-
-            write_node(repo, "root", "Root", "1.1.0", "Updated meaning.")
-            out = io.StringIO()
-            with contextlib.redirect_stdout(out):
-                rc = cli_main(["parent", "propagate", str(repo), "--yes"])
-            self.assertEqual(rc, 0, out.getvalue())
-            grand = Compiler(repo).compile(grand_root)
-            self.assertEqual([rule.statement for rule in grand.inherited_rules], ["Updated meaning."])
-            self.assertIn("Propagation review complete: applied 2 changed Parent/Child update(s).", out.getvalue())
-        finally:
-            shutil.rmtree(repo, ignore_errors=True)
             shutil.rmtree(provider, ignore_errors=True)
 
     def test_source_list_and_update_use_accepted_package_name_when_consumer_label_is_stale(self):
