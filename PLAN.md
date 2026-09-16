@@ -10,6 +10,15 @@ Follow-up Issues #39–#43 record the next owner-test findings but are not an ac
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
 
+## Active development block: actionable Windows filesystem-lock failures — Issue #46
+
+Purpose: stop recurring Windows `WinError 5` file/directory locks from surfacing as raw tracebacks and make the proven operational mitigation obvious to Windows users.
+
+- [ ] Reuse one bounded atomic package-directory publication path for normal Source/Parent acceptance and onboarding publication, preserving exact package verification and retry semantics.
+- [ ] When a Windows access-denied lock still survives the retries, raise a ContextCanon error that keeps the failing operation/path/original error and explicitly points to antivirus/background scanners, project-folder real-time-scan exclusion where policy permits, and rerunning the unchanged command.
+- [ ] Add prominent Windows troubleshooting guidance based on repeated owner experience, including the JetBrains Microsoft Defender exclusion route without pretending ContextCanon can detect which scanner owns the lock.
+- [ ] Add regressions for the real onboarding Parent-package failure path and final Windows diagnostic, bump the installable package/CLI to 0.8.1, and pass focused/full tests plus zero generated drift before owner review.
+
 ## Active development block: fresh first-adoption root materialization — Issue #30
 
 Purpose: restore genuine from-scratch structure-first onboarding without weakening the collision and identity protections added for repeated onboarding.
@@ -144,7 +153,7 @@ Review-candidate checkpoint: the cleaned product tree passed the complete determ
 
 Purpose: incorporate findings from the project owner's live `ai-workstation` onboarding before PR #13 is accepted. The workflow must remain usable when tired or returning after a pause, must allow conceptual Nodes that require new directories, and must make clear that duplicate prose created by `promote` is transitional rather than an acceptable steady state.
 
-- [x] Make structure discovery explicitly independent from the repository's existing directory taxonomy: a semantic Node may use a new repository-relative directory when that creates the clearest durable landing point, including document-heavy repositories whose current files sit together in one directory.
+- [x] Make structure discovery explicitly independent from the repository's existing directory taxonomy: a semantic Node may use a new repository-relative directory when that creates the clearest durable semantic landing point, including document-heavy repositories whose current files sit together in one directory.
 - [x] Verify and document that structure materialization creates missing accepted Node directories/skeletons safely rather than restricting Nodes to pre-existing directories.
 - [x] Turn `contextcanon-onboarding/README.md` into a numbered, end-to-end operator map with the exact artifact/command sequence, clearly marking the two external-LLM handoffs and the human gates.
 - [x] Make checkpoint next commands preserve the important invocation context instead of forcing the operator to remember parameters such as repeated `--catalog-package` values or the one-time `--owner-source` decision from prose/chat history.
