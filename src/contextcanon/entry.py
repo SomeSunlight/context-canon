@@ -29,7 +29,7 @@ def _looks_like_windows_lock(message: str) -> bool:
 
 def _windows_permission_error(exc: PermissionError) -> str:
     code = "WinError 5 / access denied" if getattr(exc, "winerror", None) == 5 else "Windows access denied"
-    return f"{code} during a ContextCanon filesystem operation. Original error: {exc}\n{_WINDOWS_LOCK_GUIDANCE}"
+    return f"Windows filesystem operation failed with {code}. Original error: {exc}\n{_WINDOWS_LOCK_GUIDANCE}"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_journaled(args, cli_main)
     except ContextCanonError as exc:
         message = str(exc)
-        if (sys.platform == "win32" or _looks_like_windows_lock(message)) and _looks_like_windows_lock(message):
+        if _looks_like_windows_lock(message):
             message = f"{message}\n{_WINDOWS_LOCK_GUIDANCE}"
         print(f"contextcanon: error: {message}", file=sys.stderr)
         return 2
