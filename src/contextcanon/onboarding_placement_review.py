@@ -810,8 +810,12 @@ def _validate_item_edit(
             raise _error(f"item {item_id} has invalid mapping wording origin")
         fixed = set(proposal.structure.fixed_markdown)
         for path in payload.get("authority_paths", []):
-            if path not in fixed:
-                raise _error(f"item {item_id} authority is not fixed Markdown in the accepted structure: {path}")
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} authority path is not frozen Evidence: {path}")
+            if path.lower().endswith(".md") and path not in fixed:
+                raise _error(
+                    f"item {item_id} authority Markdown path {path!r} is not marked fixed in the accepted structure"
+                )
     elif kind == "unresolved" and not str(payload.get("question", "")).strip():
         raise _error(f"item {item_id} unresolved finding requires Question")
 
