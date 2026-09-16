@@ -29,7 +29,11 @@ def _looks_like_windows_lock(message: str) -> bool:
 
 def _windows_permission_error(exc: PermissionError) -> str:
     code = "WinError 5 / access denied" if getattr(exc, "winerror", None) == 5 else "Windows access denied"
-    return f"Windows filesystem operation failed with {code}. Original error: {exc}\n{_WINDOWS_LOCK_GUIDANCE}"
+    path = f" Path: {exc.filename}." if getattr(exc, "filename", None) else ""
+    return (
+        f"Windows filesystem operation failed with {code}.{path} Original error: {exc}\n"
+        f"{_WINDOWS_LOCK_GUIDANCE}"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
