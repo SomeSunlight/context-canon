@@ -1,12 +1,14 @@
 # Current State
 
-The accepted `main` baseline is PR #18, squash-merged as:
+The accepted `main` product baseline is ContextCanon **0.8.0** from PR #31, squash-merged as:
 
-`2fb8368b15a7ef93a46012e0a0583bb795e174fe`
+`d285ae09795994239a802ce50342404fadd482b7`
 
-PR #18 completed Issues #14–#27, including ContextCanon 0.7.3, multi-Parent semantics, human-scale Source/propagation UX, and the Windows propagation-resume fix validated against the real `ai-workstation` consumer. No framework review PR is currently active.
+PR #31 completed Issues #30 and #32–#38, hardening genuine first adoption, reusable-Context setup, split P/E placement review, structure-preserving source cleanup, technical authority mappings and placement diagnostics. The renewed real `Llama_Dispatcher` onboarding completed end to end through reviewed publication on this release line. No framework review PR is currently active.
 
-Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13 or PR #18 as draft/unmerged are historical, not the current repository state.
+Follow-up Issues #39–#43 capture the next owner-test findings (IDE-friendly STEP 09 diff, clearer STEP 10 purpose, explanatory/documentation-gap views, optional reusable repository-documentation philosophy, and excluding unresolved findings from review-only Source-edit fallbacks). They are recorded future work, not an active development block.
+
+Historical checkpoint sections below preserve the status that was true when each checkpoint was written. References there to PR #13, PR #18 or PR #31 as draft/unmerged are historical, not the current repository state.
 
 ## What is implemented in PR #13
 
@@ -338,3 +340,11 @@ PR #18 is therefore ready for project-owner merge review. Its exact merge head m
 PR #18 was squash-merged to `main` as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`. Issues #14–#27 closed with that merge. The accepted product baseline is ContextCanon CLI/package 0.7.3 with compiler 0.6.0. The real `ai-workstation` maintenance run completed Source update, all eight individually reviewed Parent/Child propagation steps, rebuild/check across all nine Nodes, Windows interruption/resume, and an idempotent rerun.
 
 Issue #28 is documentation-only reconciliation of this accepted fact; it introduces no product semantics.
+
+## Post-merge baseline reconciliation — PR #31
+
+PR #31 was squash-merged to `main` as `d285ae09795994239a802ce50342404fadd482b7`. Issues #30 and #32–#38 closed with that merge. The accepted product baseline is ContextCanon CLI/package 0.8.0.
+
+The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR workflow #901 / run `35127260963`: 262 deterministic tests, generated-output verification with zero drift, and installation of `contextcanon==0.8.0`. The real `Llama_Dispatcher` onboarding completed publication with review digest `7c1712d0327fdd44759784e6c0511ed63386795ec73790e510ff895fe85de0a4` and acceptance digest `c72b6bb4b0df3d1df657407f72feaa7ea899ba7189284fd9dd7269dae4089255`.
+
+Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
