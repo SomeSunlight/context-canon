@@ -28,7 +28,8 @@ def _looks_like_windows_lock(message: str) -> bool:
 
 
 def _windows_permission_error(exc: PermissionError) -> str:
-    return f"Windows denied a ContextCanon filesystem operation. Original error: {exc}\n{_WINDOWS_LOCK_GUIDANCE}"
+    code = "WinError 5 / access denied" if getattr(exc, "winerror", None) == 5 else "Windows access denied"
+    return f"{code} during a ContextCanon filesystem operation. Original error: {exc}\n{_WINDOWS_LOCK_GUIDANCE}"
 
 
 def main(argv: list[str] | None = None) -> int:
