@@ -7,6 +7,7 @@ It is deliberately small:
 - [`onboarding.md`](onboarding.md) — bring an existing project into ContextCanon.
 - [`maintenance.md`](maintenance.md) — normal operation after onboarding: Source updates, propagation review, build, and check.
 - [`cli.md`](cli.md) — compact command map for everyday ContextCanon use.
+- [`windows.md`](windows.md) — important Windows filesystem-lock guidance, including recurring `WinError 5` failures and real-time scanner exclusions.
 - [`onboarding-reference.md`](onboarding-reference.md) — a compatibility pointer for older links; the technical reference itself is owned and authored by Framework Development.
 
 Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory. User-facing entry documentation stays here so a normal operator does not need to search implementation Nodes merely to learn what to do next.
