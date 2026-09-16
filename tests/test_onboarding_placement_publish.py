@@ -19,6 +19,7 @@ from contextcanon.onboarding_placement_publish import (
     render_placement_publication_preview,
 )
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from contextcanon.onboarding_placement_split_review import placement_finding_path, placement_source_edit_path
 from contextcanon.onboarding_structure import create_or_load_structure_markdown
 from contextcanon.outputs import write_outputs
 from contextcanon.package import load_package
@@ -175,10 +176,22 @@ class PlacementPublicationTests(unittest.TestCase):
             workspace.placement_path, proposal, prepared.snapshot_root
         )
         self.assertTrue(created)
-        review_text = workspace.placement_path.read_text(encoding="utf-8").replace(
+        for item in proposal.items:
+            finding_path = placement_finding_path(workspace.placement_path, item)
+            review_text = finding_path.read_text(encoding="utf-8").replace(
+                "Decision: `pending`", "Decision: `accept`"
+            )
+            finding_path.write_text(review_text, encoding="utf-8")
+        for source_edit in review.source_edits:
+            edit_path = placement_source_edit_path(workspace.placement_path, source_edit)
+            edit_text = edit_path.read_text(encoding="utf-8").replace(
+                "Source edit decision: `pending`", "Source edit decision: `accept`"
+            )
+            edit_path.write_text(edit_text, encoding="utf-8")
+        index_text = workspace.placement_path.read_text(encoding="utf-8").replace(
             "Decision: `pending`", "Decision: `accept`"
-        ).replace("Source edit decision: `pending`", "Source edit decision: `accept`")
-        workspace.placement_path.write_text(review_text, encoding="utf-8")
+        )
+        workspace.placement_path.write_text(index_text, encoding="utf-8")
         review = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
         self.assertTrue(review.is_complete)
 

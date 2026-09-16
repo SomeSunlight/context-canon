@@ -119,7 +119,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         self.assertIn("one canonical maintenance surface", instruction.text)
         self.assertIn("single canonical maintenance surface for that meaning", instruction.text)
         self.assertIn("temporary duplicate may exist during migration", instruction.text)
-        self.assertIn("real plain-language summary", instruction.text)
+        self.assertIn("real plain-language gist", instruction.text)
         self.assertIn("A reader should learn the gist without following the link", instruction.text)
         self.assertIn("without recreating a second canonical copy", instruction.text)
 

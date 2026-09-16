@@ -810,8 +810,12 @@ def _validate_item_edit(
             raise _error(f"item {item_id} has invalid mapping wording origin")
         fixed = set(proposal.structure.fixed_markdown)
         for path in payload.get("authority_paths", []):
-            if path not in fixed:
-                raise _error(f"item {item_id} authority is not fixed Markdown in the accepted structure: {path}")
+            if path not in evidence_paths:
+                raise _error(f"item {item_id} authority path is not frozen Evidence: {path}")
+            if path.lower().endswith(".md") and path not in fixed:
+                raise _error(
+                    f"item {item_id} authority Markdown path {path!r} is not marked fixed in the accepted structure"
+                )
     elif kind == "unresolved" and not str(payload.get("question", "")).strip():
         raise _error(f"item {item_id} unresolved finding requires Question")
 
@@ -842,7 +846,7 @@ def _normalize_review(
     )
 
 
-def load_placement_review(
+def _load_monolithic_placement_review(
     path: Path, proposal: OnboardingPlacementProposal, snapshot_root: Path
 ) -> OnboardingPlacementReview:
     try:
@@ -969,7 +973,10 @@ def load_placement_review(
             raise _error(f"Source edit {edit_id} must contain one editable source-after marker pair")
         source_start = block.index(start_marker)
         source_end = block.index(end_marker, source_start + 1)
-        replacement = "\n".join(block[source_start + 1 : source_end]).strip("\n")
+        replacement_lines = block[source_start + 1 : source_end]
+        if replacement_lines and all(line == ">" or line.startswith("> ") for line in replacement_lines):
+            replacement_lines = ["" if line == ">" else line[2:] for line in replacement_lines]
+        replacement = "\n".join(replacement_lines).strip("\n")
         parsed_source_edits.append(
             PlacementReviewSourceEdit(
                 proposal_id=edit_id,
@@ -1074,7 +1081,7 @@ def load_placement_review(
     return _normalize_review(proposal, tuple(parsed_items), tuple(parsed_source_edits), tuple(parsed_sources))
 
 
-def create_or_load_placement_review(
+def _create_or_load_monolithic_placement_review(
     path: Path,
     proposal: OnboardingPlacementProposal,
     snapshot_root: Path,
@@ -1089,7 +1096,7 @@ def create_or_load_placement_review(
             raise _error(
                 "--owner-source is only used when placement.md is first created; edit the existing human review instead of silently changing it"
             )
-        return load_placement_review(path, proposal, snapshot_root), False
+        return _load_monolithic_placement_review(path, proposal, snapshot_root), False
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         render_placement_review(
@@ -1102,4 +1109,34 @@ def create_or_load_placement_review(
         encoding="utf-8",
         newline="\n",
     )
-    return load_placement_review(path, proposal, snapshot_root), True
+    return _load_monolithic_placement_review(path, proposal, snapshot_root), True
+
+
+
+def load_placement_review(
+    path: Path, proposal: OnboardingPlacementProposal, snapshot_root: Path
+) -> OnboardingPlacementReview:
+    from .onboarding_placement_split_review import load_split_placement_review
+
+    return load_split_placement_review(path, proposal, snapshot_root)
+
+
+def create_or_load_placement_review(
+    path: Path,
+    proposal: OnboardingPlacementProposal,
+    snapshot_root: Path,
+    *,
+    owner_source_specs: Iterable[str] = (),
+    owner_source_whys: Mapping[str, str] | None = None,
+    preaccepted_owner_sources: bool = False,
+) -> tuple[OnboardingPlacementReview, bool]:
+    from .onboarding_placement_split_review import create_or_load_split_placement_review
+
+    return create_or_load_split_placement_review(
+        path,
+        proposal,
+        snapshot_root,
+        owner_source_specs=owner_source_specs,
+        owner_source_whys=owner_source_whys,
+        preaccepted_owner_sources=preaccepted_owner_sources,
+    )

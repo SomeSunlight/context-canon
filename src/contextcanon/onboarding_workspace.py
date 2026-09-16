@@ -5,6 +5,7 @@ import os
 import re
 import shlex
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -34,6 +35,8 @@ REUSABLE_CONTEXTS_NAME = "STEP-05-reusable-contexts.md"
 PLACEMENT_INSTRUCTION_NAME = "STEP-06a-placement-instruction.md"
 PLACEMENT_PROPOSAL_NAME = "STEP-06b-placement-proposal.json"
 PLACEMENT_REVIEW_NAME = "STEP-08-placement.md"
+PLACEMENT_REVIEW_DIR_NAME = "STEP-08-placement"
+PLACEMENT_SOURCE_EDIT_DIR_NAME = "STEP-08-source-edits"
 PLACEMENT_AUDIT_NAME = "STEP-08a-source-audit.md"
 PLACEMENT_PREVIEW_NAME = "STEP-09-placement-preview.md"
 PLACEMENT_FOLLOWUP_NAME = "STEP-10-placement-followup.md"
@@ -102,6 +105,14 @@ class OnboardingWorkspace:
         return self.root / PLACEMENT_REVIEW_NAME
 
     @property
+    def placement_dir_path(self) -> Path:
+        return self.root / PLACEMENT_REVIEW_DIR_NAME
+
+    @property
+    def placement_source_edit_dir_path(self) -> Path:
+        return self.root / PLACEMENT_SOURCE_EDIT_DIR_NAME
+
+    @property
     def placement_audit_path(self) -> Path:
         return self.root / PLACEMENT_AUDIT_NAME
 
@@ -143,7 +154,7 @@ The repository's old directory tree is evidence about the project, not a taxonom
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
 - Step 07 is validation-only and therefore intentionally has no separate artifact.
-- `{PLACEMENT_REVIEW_NAME}` — human-owned placement decisions.
+- `{PLACEMENT_REVIEW_NAME}` — compact STEP-08 index/status; `{PLACEMENT_REVIEW_DIR_NAME}/` contains per-finding semantic placement decisions (P), while `{PLACEMENT_SOURCE_EDIT_DIR_NAME}/` contains concrete source transformations (E).
 - `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
@@ -194,10 +205,28 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 - **Human gate 1:** review/edit `STEP-03-structure.md`.
 - **Reusable Context gate:** review/edit `STEP-05-reusable-contexts.md`; this owns Catalog locations, Source assignments and their Why rationale.
 - **LLM handoff 2:** `STEP-06a-placement-instruction.md` + only the same frozen `evidence/` tree → `STEP-06b-placement-proposal.json`.
-- **Human gate 2:** review/edit `STEP-08-placement.md`.
+- **Human gate 2:** use `STEP-08-placement.md` as the index; review semantic P findings under `STEP-08-placement/` and concrete E source transformations under `STEP-08-source-edits/`.
 
 Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.
 """
+
+_ATOMIC_REPLACE_RETRY_DELAYS = (0.05, 0.10, 0.20, 0.40, 0.80)
+
+
+def _replace_file_with_retry(temporary: Path, path: Path) -> None:
+    """Publish one prepared sibling file atomically despite brief Windows locks."""
+
+    for attempt in range(len(_ATOMIC_REPLACE_RETRY_DELAYS) + 1):
+        try:
+            os.replace(temporary, path)
+            return
+        except (PermissionError, FileExistsError) as exc:
+            if attempt == len(_ATOMIC_REPLACE_RETRY_DELAYS):
+                raise ContextCanonError(
+                    f"Could not atomically write {path} after retrying a temporary filesystem lock: {exc}"
+                ) from exc
+            time.sleep(_ATOMIC_REPLACE_RETRY_DELAYS[attempt])
+
 
 def write_utf8(path: Path, text: str) -> None:
     """Atomically write UTF-8 without depending on shell redirection/codepages."""
@@ -211,7 +240,7 @@ def write_utf8(path: Path, text: str) -> None:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        _replace_file_with_retry(temporary, path)
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
@@ -396,7 +425,7 @@ def _exact_commands(
         cmd("placement-review"),
         "```",
         "",
-        "Edit `STEP-08-placement.md` as needed and rerun the same command to validate it. Every successful run regenerates read-only `STEP-08a-source-audit.md` for source-file-first semantic-loss checking.",
+        "Review/edit the linked P sheets in `STEP-08-placement/` and E sheets in `STEP-08-source-edits/`. The tables in `STEP-08-placement.md` are generated snapshots, not live views; rerun this same `placement-review` command after edits to validate dependencies and refresh the index. Every successful run also regenerates read-only `STEP-08a-source-audit.md`.",
         "",
         "### STEP 09 — Publication preview",
         f"- [{mark(9)}] **Done**",

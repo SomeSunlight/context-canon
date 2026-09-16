@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from types import SimpleNamespace
 from pathlib import Path
 
 from contextcanon.compiler import Compiler
@@ -14,6 +15,7 @@ from contextcanon.onboarding_reusable_contexts import (
     _catalog_locations,
     load_accepted_reusable_contexts,
     refresh_reusable_contexts,
+    render_reusable_contexts,
 )
 from contextcanon.onboarding_structure import HumanStructureNode, HumanStructurePlan
 from contextcanon.outputs import write_outputs
@@ -136,15 +138,53 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(plan.catalog_locations, (str(catalog),))
             canonical = workspace_file.read_text(encoding="utf-8")
             self.assertIn(f"- `{catalog}`", canonical)
-            self.assertIn("## Copy-ready Assignment lines — generated", canonical)
+            self.assertIn("Assignment syntax:", canonical)
+            self.assertNotIn("## Copy-ready Assignment lines — generated", canonical)
+            self.assertIn("Example first line using entries from this project", canonical)
             self.assertIn(
                 "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
                 canonical,
             )
-            self.assertIn(
-                "- **Bootstrap** (`bootstrap`) ← **Development Workflow** (`0.2.0-draft`)",
-                canonical,
+            self.assertIn("Use one desired entry as the left-hand side of `←`.", canonical)
+            self.assertIn("Use one desired name/version entry as the right-hand side of `←`.", canonical)
+
+
+    def test_assignment_help_scales_linearly_without_cartesian_product(self) -> None:
+        nodes = tuple(
+            HumanStructureNode(
+                f"N-{index:03d}",
+                f"Project Node {index}",
+                "." if index == 0 else f"area-{index}",
+                "current",
+                None if index == 0 else "N-000",
+                f"N-{index:03d}",
             )
+            for index in range(20)
+        )
+        structure = HumanStructurePlan(
+            evidence_digest="a" * 64,
+            proposal_digest="b" * 64,
+            nodes=nodes,
+            fixed_markdown=(),
+            structure_digest="c" * 64,
+        )
+        packages = tuple(
+            SimpleNamespace(
+                metadata=SimpleNamespace(name=f"Reusable Node {index}", version=f"1.0.{index}"),
+                package_digest=f"{index + 1:064x}",
+            )
+            for index in range(40)
+        )
+
+        rendered = render_reusable_contexts("a" * 64, structure, "pending", ("catalog",), packages, ())
+        assignment_like = [line for line in rendered.splitlines() if line.startswith("- **") and " ← " in line]
+
+        self.assertEqual(len(assignment_like), 2)  # one grammar line + one current-project syntax example
+        self.assertIn("Project Node 19", rendered)
+        self.assertIn("Reusable Node 39", rendered)
+        self.assertNotIn("Copy-ready Assignment lines", rendered)
+        self.assertLess(len(rendered.splitlines()), 140)
+
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:
         from contextcanon.onboarding_reusable_contexts import ReusableContextAssignment

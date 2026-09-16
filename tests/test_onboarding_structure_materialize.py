@@ -30,19 +30,20 @@ ROOT_ID = "aea56adf-2a26-43f0-b712-3bbeab7a3097"
 
 
 class StructureMaterializationTests(unittest.TestCase):
-    def make_project(self):
+    def make_project(self, *, existing_root: bool = True):
         repo = Path(tempfile.mkdtemp())
         subprocess.run(["git", "init", "-q", str(repo)], check=True)
         (repo / "README.md").write_text(
             "# AI Workstation\nBootstrap Windows and Linux.\nGoose and Open WebUI are containerized applications.\n",
             encoding="utf-8",
         )
-        (repo / "CONTEXT.src.md").write_text(
-            "# ai-workstation — Local Context Source\n"
-            f'<!-- ctx:node id="{ROOT_ID}" name="ai-workstation" version="0.1.0" -->\n\n'
-            "## Overview\n\nExisting accepted root.\n",
-            encoding="utf-8",
-        )
+        if existing_root:
+            (repo / "CONTEXT.src.md").write_text(
+                "# ai-workstation — Local Context Source\n"
+                f'<!-- ctx:node id="{ROOT_ID}" name="ai-workstation" version="0.1.0" -->\n\n'
+                "## Overview\n\nExisting accepted root.\n",
+                encoding="utf-8",
+            )
         for path in ("bootstrap/windows", "bootstrap/linux", "bin", "compose/goose", "compose/open-webui"):
             (repo / path).mkdir(parents=True, exist_ok=True)
         prepared = prepare_onboarding_evidence(repo)
@@ -111,6 +112,48 @@ class StructureMaterializationTests(unittest.TestCase):
         self.assertTrue(next(item for item in preview.items if item.path == "compose/goose").directory_exists)
         self.assertIn("No project files were changed", render_structure_materialization_preview(preview))
         self.assertEqual((repo / "CONTEXT.src.md").read_bytes(), root_before)
+
+    def test_fresh_first_adoption_creates_root_and_children(self):
+        repo, prepared, workspace = self.make_project(existing_root=False)
+
+        preview = preview_structure_materialization(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+        root = next(item for item in preview.items if item.path == ".")
+        self.assertEqual(root.status, "create")
+        self.assertIsNone(root.existing_node_id)
+        self.assertTrue(root.directory_exists)
+        self.assertEqual(sum(item.status == "create" for item in preview.items), 8)
+        self.assertIn("fresh stable UUID allocated once", render_structure_materialization_preview(preview))
+
+        created = materialize_structure_skeletons(preview)
+        self.assertEqual(len(created), 8)
+        parsed_root = parse_node(repo, repo)
+        self.assertEqual(parsed_root.metadata.name, "AI Workstation")
+        self.assertNotEqual(parsed_root.metadata.id, ROOT_ID)
+        self.assertTrue((repo / ".context" / "onboarding").is_dir())
+
+        second = preview_structure_materialization(
+            prepared.snapshot_root,
+            workspace.structure_proposal_path,
+            workspace.structure_path,
+        )
+        self.assertTrue(all(item.status == "existing" for item in second.items))
+        self.assertEqual(materialize_structure_skeletons(second), ())
+
+    def test_fresh_root_refuses_ambiguous_context_machine_namespace(self):
+        repo, prepared, workspace = self.make_project(existing_root=False)
+        (repo / ".context" / "foreign").mkdir()
+
+        with self.assertRaisesRegex(ContextCanonError, "pre-existing .context path would be ambiguous"):
+            preview_structure_materialization(
+                prepared.snapshot_root,
+                workspace.structure_proposal_path,
+                workspace.structure_path,
+            )
+        self.assertFalse((repo / "CONTEXT.src.md").exists())
 
     def test_materialize_creates_only_missing_skeletons_and_is_idempotent(self):
         repo, prepared, workspace = self.make_project()
@@ -255,6 +298,25 @@ class StructureMaterializationTests(unittest.TestCase):
             result = main(["onboard", "structure-materialize", str(prepared.snapshot_root)])
         self.assertEqual(result, 0)
         self.assertIn("Materialized Node skeletons: 7", stdout.getvalue())
+        self.assertTrue((repo / "compose" / "goose" / "CONTEXT.src.md").is_file())
+
+    def test_cli_preview_then_materialize_supports_fresh_first_adoption(self):
+        repo, prepared, workspace = self.make_project(existing_root=False)
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = main(["onboard", "structure-preview", str(prepared.snapshot_root)])
+        self.assertEqual(result, 0)
+        self.assertTrue(workspace.structure_preview_path.is_file())
+        self.assertIn("Existing protected Nodes: 0", stdout.getvalue())
+        self.assertIn("Missing Node skeletons: 8", stdout.getvalue())
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = main(["onboard", "structure-materialize", str(prepared.snapshot_root)])
+        self.assertEqual(result, 0)
+        self.assertIn("Materialized Node skeletons: 8", stdout.getvalue())
+        self.assertTrue((repo / "CONTEXT.src.md").is_file())
         self.assertTrue((repo / "compose" / "goose" / "CONTEXT.src.md").is_file())
 
 

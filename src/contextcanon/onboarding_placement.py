@@ -130,6 +130,16 @@ def _canonical_digest(value: dict[str, object]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _json_decode_detail(text: str, exc: json.JSONDecodeError) -> str:
+    lines = text.splitlines()
+    source_line = lines[exc.lineno - 1] if 1 <= exc.lineno <= len(lines) else ""
+    detail = f"{exc.msg} at line {exc.lineno}, column {exc.colno} (char {exc.pos})"
+    if not source_line:
+        return detail
+    caret = " " * max(exc.colno - 1, 0) + "^"
+    return f"{detail}\n{source_line}\n{caret}"
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     try:
         text = path.resolve().read_text(encoding="utf-8")
@@ -140,7 +150,8 @@ def _read_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise ContextCanonError(f"Invalid JSON in onboarding placement proposal {path}: {exc.msg}") from exc
+        detail = _json_decode_detail(text, exc)
+        raise ContextCanonError(f"Invalid JSON in onboarding placement proposal {path}: {detail}") from exc
     if not isinstance(value, dict):
         raise _error("proposal must be a JSON object")
     return value
@@ -281,6 +292,11 @@ def _parse_payload(kind: str, raw: object, label: str, snapshot: EvidenceSnapsho
     raise _error(f"unsupported placement kind {kind!r}")
 
 
+def _validate_authority_path(path: str, fixed_markdown: set[str], label: str) -> None:
+    if path.lower().endswith(".md") and path not in fixed_markdown:
+        raise _error(f"{label} authority Markdown path {path!r} is not marked fixed in the accepted structure")
+
+
 def load_onboarding_placement_proposal(
     proposal_path: Path,
     snapshot_root: Path,
@@ -360,10 +376,7 @@ def load_onboarding_placement_proposal(
         if kind == "authority-mapping":
             fixed = set(structure.fixed_markdown)
             for path in payload["authority_paths"]:
-                if path not in fixed:
-                    raise _error(
-                        f"items[{index}] authority path {path!r} is not marked fixed in the accepted structure"
-                    )
+                _validate_authority_path(path, fixed, f"items[{index}]")
         items.append(
             PlacementItem(
                 id=item_id,
