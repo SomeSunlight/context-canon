@@ -310,7 +310,6 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertIn("Propagation review complete: applied 2 changed Parent/Child update(s).", out.getvalue())
         finally:
             shutil.rmtree(repo, ignore_errors=True)
-            shutil.rmtree(provider, ignore_errors=True)
 
 
 if __name__ == "__main__":
