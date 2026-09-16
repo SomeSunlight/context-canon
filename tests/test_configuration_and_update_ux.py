@@ -52,7 +52,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.4")
+        self.assertEqual(out.getvalue().strip(), "contextcanon 0.7.5")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())
@@ -310,6 +310,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertIn("Propagation review complete: applied 2 changed Parent/Child update(s).", out.getvalue())
         finally:
             shutil.rmtree(repo, ignore_errors=True)
+            shutil.rmtree(provider, ignore_errors=True)
 
 
 if __name__ == "__main__":
