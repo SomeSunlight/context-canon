@@ -25,7 +25,7 @@ class EntryWindowsLockTests(unittest.TestCase):
 
         text = stderr.getvalue()
         self.assertEqual(result, 2)
-        self.assertIn("Windows denied a ContextCanon filesystem operation", text)
+        self.assertIn("Windows filesystem operation failed", text)
         self.assertIn("WinError 5", text)
         self.assertIn("antivirus and other background scanners", text)
         self.assertIn("exclude the project directory from real-time scanning", text)
