@@ -72,22 +72,22 @@ class OnboardingResetTests(unittest.TestCase):
             next_action="Review the exact next command.",
         )
         plan = workspace.plan_path.read_text(encoding="utf-8")
-        self.assertIn("STEP 05 — Reusable Contexts", plan)
-        self.assertIn("STEP 07 — Placement validate", plan)
+        self.assertIn("STEP 07 — Reusable Contexts", plan)
+        self.assertIn("STEP 09 — Placement validate", plan)
         self.assertIn("contextcanon onboard placement-validate", plan)
         self.assertNotIn("--catalog-package", plan)
         self.assertNotIn("/tmp/catalog workflow", plan)
         self.assertIn("contextcanon onboard reset", plan)
-        self.assertIn("Each step keeps its explanation, completion checkbox, exact command", plan)
-        self.assertIn("Set this run variable once in your terminal", plan)
+        self.assertIn("These commands continue from the **accepted inventory and exact Evidence snapshot**", plan)
+        self.assertIn("Set this run variable once for the snapshot-bound semantic steps", plan)
         self.assertIn("$SNAPSHOT", plan)
-        self.assertEqual(STRUCTURE_INSTRUCTION_NAME, "STEP-02a-structure-instruction.md")
-        self.assertEqual(STRUCTURE_PROPOSAL_NAME, "STEP-02b-structure-proposal.json")
-        self.assertEqual(PLACEMENT_REVIEW_NAME, "STEP-08-placement.md")
-        self.assertEqual(PLACEMENT_AUDIT_NAME, "STEP-08a-source-audit.md")
+        self.assertEqual(STRUCTURE_INSTRUCTION_NAME, "STEP-04a-structure-instruction.md")
+        self.assertEqual(STRUCTURE_PROPOSAL_NAME, "STEP-04b-structure-proposal.json")
+        self.assertEqual(PLACEMENT_REVIEW_NAME, "STEP-10-placement.md")
+        self.assertEqual(PLACEMENT_AUDIT_NAME, "STEP-10a-source-audit.md")
         self.assertIn(PLACEMENT_AUDIT_NAME, plan)
 
-    def test_reset_from_step8_removes_split_review_directory(self):
+    def test_reset_from_step10_removes_split_review_directory(self):
         _, prepared = self.make_repo()
         workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
         split_dir = workspace.placement_dir_path
@@ -96,23 +96,23 @@ class OnboardingResetTests(unittest.TestCase):
         edit_dir.mkdir()
         (split_dir / "P-001-example.md").write_text("human reviewed finding", encoding="utf-8")
         (edit_dir / "E-001-example.md").write_text("human reviewed source edit", encoding="utf-8")
-        workspace.placement_path.write_text("owned STEP-08 index", encoding="utf-8")
+        workspace.placement_path.write_text("owned STEP-10 index", encoding="utf-8")
 
-        result = reset_onboarding(prepared.snapshot_root, from_step=8)
+        result = reset_onboarding(prepared.snapshot_root, from_step=10)
 
         self.assertFalse(workspace.placement_path.exists())
         self.assertFalse(split_dir.exists())
         self.assertFalse(edit_dir.exists())
-        self.assertIn("STEP-08-placement/", result["workspace_files_removed"])
-        self.assertIn("STEP-08-source-edits/", result["workspace_files_removed"])
+        self.assertIn("STEP-10-placement/", result["workspace_files_removed"])
+        self.assertIn("STEP-10-source-edits/", result["workspace_files_removed"])
 
-    def test_reset_from_step8_removes_generated_source_audit(self):
+    def test_reset_from_step10_removes_generated_source_audit(self):
         _, prepared = self.make_repo()
         workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
         workspace.placement_path.write_text("human review\n", encoding="utf-8")
         workspace.placement_audit_path.write_text("generated audit\n", encoding="utf-8")
 
-        reset = reset_onboarding(prepared.snapshot_root, from_step=8)
+        reset = reset_onboarding(prepared.snapshot_root, from_step=10)
         self.assertFalse(workspace.placement_path.exists())
         self.assertFalse(workspace.placement_audit_path.exists())
         self.assertIn(PLACEMENT_AUDIT_NAME, reset["workspace_files_removed"])
@@ -176,14 +176,14 @@ class OnboardingResetTests(unittest.TestCase):
         workspace_root = repo / "contextcanon-onboarding"
         self.assertFalse(workspace_root.exists())
 
-        reset = reset_onboarding(prepared.snapshot_root, from_step=2)
+        reset = reset_onboarding(prepared.snapshot_root, from_step=4)
 
         self.assertTrue(workspace_root.is_dir())
         self.assertTrue((workspace_root / "README.md").is_file())
         self.assertTrue((workspace_root / "PLAN.md").is_file())
         plan = (workspace_root / "PLAN.md").read_text(encoding="utf-8")
-        self.assertIn("Stage: **reset before step 2**", plan)
-        self.assertIn("Restart at numbered step 2", plan)
+        self.assertIn("Stage: **reset before step 4**", plan)
+        self.assertIn("Restart at numbered step 4", plan)
         self.assertIn("contextcanon onboard structure-instruction", plan)
         self.assertIn(prepared.evidence_digest, plan)
         self.assertTrue(reset["evidence_preserved"])
@@ -223,7 +223,7 @@ class OnboardingResetTests(unittest.TestCase):
         refreshed = workspace.plan_path.read_text(encoding="utf-8")
         self.assertIn("STEP 07 — Reusable Contexts", refreshed)
         self.assertIn("STEP 09 — Placement validate", refreshed)
-        self.assertIn("STEP 08 — Placement review", refreshed)
+        self.assertIn("STEP 10 — Placement review", refreshed)
         self.assertIn("STEP-10-placement.md", refreshed)
         self.assertIn("contextcanon onboard reset", refreshed)
 
@@ -246,11 +246,11 @@ class OnboardingResetTests(unittest.TestCase):
         self.assertIn("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40", state)
         self.assertNotIn("C:/catalog/development-workflow", plan)
         self.assertNotIn("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40", plan)
-        self.assertIn("STEP 05 — Reusable Contexts", plan)
+        self.assertIn("STEP 07 — Reusable Contexts", plan)
 
     def test_remembered_owner_source_is_reused_only_when_review_is_created(self):
         root = Path(tempfile.mkdtemp())
-        review = root / "STEP-08-placement.md"
+        review = root / "STEP-10-placement.md"
         remembered = ("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40",)
         self.assertEqual(_owner_specs_for_review(review, (), remembered), remembered)
         review.write_text("existing human review\n", encoding="utf-8")
@@ -258,7 +258,7 @@ class OnboardingResetTests(unittest.TestCase):
         explicit = ("N-002=11111111-1111-4111-8111-111111111111",)
         self.assertEqual(_owner_specs_for_review(review, explicit, remembered), explicit)
 
-    def test_step10_journal_restores_reviewed_source_document(self):
+    def test_step12_journal_restores_reviewed_source_document(self):
         repo, prepared = self.make_repo()
         source_before = (repo / "README.md").read_bytes()
 
@@ -272,7 +272,7 @@ class OnboardingResetTests(unittest.TestCase):
         )
         self.assertEqual(result, 0)
         self.assertNotEqual((repo / "README.md").read_bytes(), source_before)
-        reset_onboarding(prepared.snapshot_root, from_step=10)
+        reset_onboarding(prepared.snapshot_root, from_step=12)
         self.assertEqual((repo / "README.md").read_bytes(), source_before)
 
 
