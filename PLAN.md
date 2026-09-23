@@ -573,7 +573,7 @@ Follow-up Issues #39–#43 are recorded for later work; no new framework develop
 
 Purpose: add a human-reviewed file inventory before Evidence freezing so first adoption no longer depends on hidden README/docs-oriented selection heuristics, while keeping this implementation slice small enough for immediate use on a document-only architecture project.
 
-**Fast-run status — ACTIVE**
+**Fast-run status — CLOSED**
 
 - **Owner-approved scope:** Steps 1–3 only as a coherent first slice: pre-onboarding cleanup guidance; deterministic inventory CSV from one or more repository directories; explicit CSV review/acceptance as the input to frozen Evidence.
 - **Deterministic defaults:** familiar files may receive configurable rule-based initial classification, but the CSV remains the human-owned decision surface.
@@ -586,4 +586,6 @@ Purpose: add a human-reviewed file inventory before Evidence freezing so first a
 - [x] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
 - [x] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
 - [x] 4. Add the Hello World Extended shared fixture and focused regression coverage.
-- [ ] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
+- [x] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
+
+Checkpoint: reviewed onboarding inventory is implemented on draft PR #54 as ContextCanon 0.9.0. The final product head passes 275 deterministic tests, `contextcanon build --all .`, `contextcanon check --all .`, and diff hygiene with zero generated drift. STEP 01–03 are ready for the shared Hello World Extended owner walkthrough; LLM inventory triage and interpretation remain deliberately deferred. PR #54 remains draft and must not be merged without explicit project-owner approval.
