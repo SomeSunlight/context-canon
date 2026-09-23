@@ -77,8 +77,9 @@ class OnboardingInventoryTests(unittest.TestCase):
             custom_csv,
             rule_specs=["src/*.py=source-code:source"],
         )
-        self.assertEqual((custom.rows[0].kind, custom.rows[0].handling), ("source-code", "source"))
-        self.assertEqual(custom.rows[0].rule, "custom:src/*.py")
+        custom_row = {row.path: row for row in custom.rows}["src/main.py"]
+        self.assertEqual((custom_row.kind, custom_row.handling), ("source-code", "source"))
+        self.assertEqual(custom_row.rule, "custom:src/*.py")
 
     def test_reviewed_inventory_drives_evidence_and_lookup_stays_out(self):
         repo = self.make_repo()
