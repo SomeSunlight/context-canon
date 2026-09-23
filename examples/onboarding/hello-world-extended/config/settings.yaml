@@ -1,1 +1,4 @@
-preview:\n  enabled: true\napi:\n  path: /greeting\n
+preview:
+  enabled: true
+api:
+  path: /greeting

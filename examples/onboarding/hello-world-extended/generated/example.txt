@@ -1,1 +1,1 @@
-Generated output that is intentionally ignored by the fixture .gitignore.\n
+Generated output that is intentionally ignored by the fixture .gitignore.
