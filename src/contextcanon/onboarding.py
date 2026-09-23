@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from .parser import ContextCanonError
 
@@ -301,7 +301,10 @@ def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -
 
 
 def _manifest_payload(
-    included: tuple[EvidenceEntry, ...], excluded: tuple[ExcludedEvidence, ...]
+    included: tuple[EvidenceEntry, ...],
+    excluded: tuple[ExcludedEvidence, ...],
+    *,
+    selection_policy: str = SELECTION_POLICY,
 ) -> dict[str, object]:
     return {
         "schema": EVIDENCE_SCHEMA,
@@ -309,7 +312,7 @@ def _manifest_payload(
             "accepted_encoding": "utf-8",
             "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
             "max_total_bytes": MAX_EVIDENCE_TOTAL_BYTES,
-            "policy": SELECTION_POLICY,
+            "policy": selection_policy,
             "repository_listing": "git ls-files --cached --others --exclude-standard",
         },
         "included": [entry.to_dict() for entry in included],
@@ -365,19 +368,28 @@ def prepare_onboarding_evidence(
     project: Path,
     *,
     explicit_paths: Iterable[str] = (),
+    selected_reasons: Mapping[str, str] | None = None,
+    selection_policy: str = SELECTION_POLICY,
 ) -> PreparedEvidence:
     project_root = _require_git_repository_root(project)
 
     selected: dict[str, tuple[str, bool]] = {}
-    for path in _repository_paths(project_root):
-        # ContextCanon/derived trees are outside the project-evidence domain. In
-        # particular, an earlier onboarding snapshot must never become a new
-        # candidate merely because it contains copied docs/ paths.
-        if _blocked_reason(path) == "framework-or-derived-path":
-            continue
-        reason = _default_reason(path)
-        if reason:
-            selected[path] = (reason, False)
+    if selected_reasons is None:
+        for path in _repository_paths(project_root):
+            # ContextCanon/derived trees are outside the project-evidence domain. In
+            # particular, an earlier onboarding snapshot must never become a new
+            # candidate merely because it contains copied docs/ paths.
+            if _blocked_reason(path) == "framework-or-derived-path":
+                continue
+            reason = _default_reason(path)
+            if reason:
+                selected[path] = (reason, False)
+    else:
+        for value, reason in selected_reasons.items():
+            path = _explicit_path(project_root, value)
+            if not reason:
+                raise ContextCanonError(f"Reviewed inventory Evidence reason must not be empty: {path}")
+            selected[path] = (reason, True)
 
     for value in explicit_paths:
         path = _explicit_path(project_root, value)
@@ -405,7 +417,7 @@ def prepare_onboarding_evidence(
 
     included = tuple(included_items)
     excluded = tuple(excluded_items)
-    payload = _manifest_payload(included, excluded)
+    payload = _manifest_payload(included, excluded, selection_policy=selection_policy)
     digest = _evidence_digest(payload)
     manifest = _manifest_bytes(payload, digest)
 
