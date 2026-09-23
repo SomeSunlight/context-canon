@@ -705,7 +705,7 @@ def update_workspace_checkpoint(
         state = "complete" if placement_review_complete else "still has pending decisions"
         lines.append(f"- Placement review: `{placement_review_digest}` — {state}")
     # Catalog paths, package identities and Source assignments are domain inputs owned by
-    # STEP-05-reusable-contexts.md / machine state, not by this orchestration PLAN.
+    # STEP-07-reusable-contexts.md / machine state, not by this orchestration PLAN.
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")
     lines.extend([
