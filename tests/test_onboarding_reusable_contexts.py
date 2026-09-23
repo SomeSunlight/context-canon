@@ -67,7 +67,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertTrue(created)
             self.assertFalse(first.is_complete)
             text = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("# STEP 05 — Reusable Contexts", text)
+            self.assertIn("# STEP 07 — Reusable Contexts", text)
             self.assertNotIn("workflow-node", text)
 
             text = text.replace(
