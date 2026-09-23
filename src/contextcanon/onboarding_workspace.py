@@ -27,19 +27,20 @@ RUN_INPUTS_NAME = "run-inputs.json"
 
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
-STRUCTURE_INSTRUCTION_NAME = "STEP-02a-structure-instruction.md"
-STRUCTURE_PROPOSAL_NAME = "STEP-02b-structure-proposal.json"
-STRUCTURE_REVIEW_NAME = "STEP-03-structure.md"
-STRUCTURE_PREVIEW_NAME = "STEP-04-structure-preview.md"
-REUSABLE_CONTEXTS_NAME = "STEP-05-reusable-contexts.md"
-PLACEMENT_INSTRUCTION_NAME = "STEP-06a-placement-instruction.md"
-PLACEMENT_PROPOSAL_NAME = "STEP-06b-placement-proposal.json"
-PLACEMENT_REVIEW_NAME = "STEP-08-placement.md"
-PLACEMENT_REVIEW_DIR_NAME = "STEP-08-placement"
-PLACEMENT_SOURCE_EDIT_DIR_NAME = "STEP-08-source-edits"
-PLACEMENT_AUDIT_NAME = "STEP-08a-source-audit.md"
-PLACEMENT_PREVIEW_NAME = "STEP-09-placement-preview.md"
-PLACEMENT_FOLLOWUP_NAME = "STEP-10-placement-followup.md"
+INVENTORY_NAME = "STEP-02-inventory.csv"
+STRUCTURE_INSTRUCTION_NAME = "STEP-04a-structure-instruction.md"
+STRUCTURE_PROPOSAL_NAME = "STEP-04b-structure-proposal.json"
+STRUCTURE_REVIEW_NAME = "STEP-05-structure.md"
+STRUCTURE_PREVIEW_NAME = "STEP-06-structure-preview.md"
+REUSABLE_CONTEXTS_NAME = "STEP-07-reusable-contexts.md"
+PLACEMENT_INSTRUCTION_NAME = "STEP-08a-placement-instruction.md"
+PLACEMENT_PROPOSAL_NAME = "STEP-08b-placement-proposal.json"
+PLACEMENT_REVIEW_NAME = "STEP-10-placement.md"
+PLACEMENT_REVIEW_DIR_NAME = "STEP-10-placement"
+PLACEMENT_SOURCE_EDIT_DIR_NAME = "STEP-10-source-edits"
+PLACEMENT_AUDIT_NAME = "STEP-10a-source-audit.md"
+PLACEMENT_PREVIEW_NAME = "STEP-11-placement-preview.md"
+PLACEMENT_FOLLOWUP_NAME = "STEP-12-placement-followup.md"
 
 LEGACY_ARTIFACT_NAMES = {
     "structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
@@ -51,6 +52,17 @@ LEGACY_ARTIFACT_NAMES = {
     "placement.md": PLACEMENT_REVIEW_NAME,
     "placement-preview.md": PLACEMENT_PREVIEW_NAME,
     "placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
+    "STEP-02a-structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
+    "STEP-02b-structure-proposal.json": STRUCTURE_PROPOSAL_NAME,
+    "STEP-03-structure.md": STRUCTURE_REVIEW_NAME,
+    "STEP-04-structure-preview.md": STRUCTURE_PREVIEW_NAME,
+    "STEP-05-reusable-contexts.md": REUSABLE_CONTEXTS_NAME,
+    "STEP-06a-placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
+    "STEP-06b-placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
+    "STEP-08-placement.md": PLACEMENT_REVIEW_NAME,
+    "STEP-08a-source-audit.md": PLACEMENT_AUDIT_NAME,
+    "STEP-09-placement-preview.md": PLACEMENT_PREVIEW_NAME,
+    "STEP-10-placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
     "STEP-05a-placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
     "STEP-05b-placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
     "STEP-07-placement.md": PLACEMENT_REVIEW_NAME,
@@ -71,6 +83,10 @@ class OnboardingWorkspace:
     @property
     def plan_path(self) -> Path:
         return self.root / PLAN_NAME
+
+    @property
+    def inventory_path(self) -> Path:
+        return self.root / INVENTORY_NAME
 
     @property
     def structure_instruction_path(self) -> Path:
