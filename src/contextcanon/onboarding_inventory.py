@@ -227,6 +227,9 @@ def _default_classification(path: str, custom_rules: tuple[InventoryRule, ...]) 
     if suffix in _TEXT_SUFFIXES and stem_tokens.intersection(_RAW_RECORD_TOKENS):
         return "raw-record", "interpret", "raw-record-name", ""
 
+    if len(pure.parts) == 1 and lower_name == ".gitignore":
+        return "configuration", "source", "gitignore", "Git ignore policy."
+
     reason = _default_reason(path)
     if reason in {"root-document", "documentation", "agent-instruction"}:
         descriptions = {
@@ -378,6 +381,25 @@ def _write_csv(path: Path, rows: tuple[InventoryRow, ...]) -> None:
             writer.writerow(row.to_csv_dict())
 
 
+def _is_inventory_control_path(project_root: Path, csv_path: Path, path: str) -> bool:
+    """Keep the inventory/workspace itself out of the project material it inventories."""
+
+    try:
+        csv_relative = csv_path.resolve().relative_to(project_root).as_posix()
+    except ValueError:
+        return False
+    if path == csv_relative:
+        return True
+    parent = csv_path.resolve().parent
+    if parent == project_root:
+        return False
+    try:
+        parent_relative = parent.relative_to(project_root).as_posix()
+    except ValueError:
+        return False
+    return path.startswith(parent_relative + "/")
+
+
 def refresh_inventory(
     project: Path,
     csv_path: Path,
@@ -394,6 +416,8 @@ def refresh_inventory(
     live_paths = [
         path for path in _repository_paths(project_root)
         if _in_scope(path, normalized_directories)
+        and not _is_inventory_control_path(project_root, csv_path, path)
+        and _blocked_reason(path) != "framework-or-derived-path"
     ]
     rows: list[InventoryRow] = []
     live_set = set(live_paths)
