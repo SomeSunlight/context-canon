@@ -192,9 +192,9 @@ class OnboardingResetTests(unittest.TestCase):
         env = dict(**__import__("os").environ)
         env["PYTHONPATH"] = str(ROOT / "src")
         cases = [
-            (["onboard", "structure-review", "--help"], ("STEP-02b-structure-proposal.json", "STEP-03-structure.md")),
-            (["onboard", "placement-instruction", "--help"], ("STEP-02b-structure-proposal.json", "STEP-03-structure.md", "STEP-06a-placement-instruction.md")),
-            (["onboard", "placement-review", "--help"], ("STEP-06b-placement-proposal.json", "STEP-08-placement.md")),
+            (["onboard", "structure-review", "--help"], ("STEP-04b-structure-proposal.json", "STEP-05-structure.md")),
+            (["onboard", "placement-instruction", "--help"], ("STEP-04b-structure-proposal.json", "STEP-05-structure.md", "STEP-08a-placement-instruction.md")),
+            (["onboard", "placement-review", "--help"], ("STEP-08b-placement-proposal.json", "STEP-10-placement.md")),
         ]
         for args, expected in cases:
             completed = subprocess.run(
@@ -215,16 +215,16 @@ class OnboardingResetTests(unittest.TestCase):
         _, prepared = self.make_repo()
         workspace = open_onboarding_workspace(prepared.snapshot_root, create=True)
         stale = workspace.plan_path.read_text(encoding="utf-8")
-        stale = stale.replace("### STEP 07 — Placement validate", "### OLD STEP — Placement validate")
-        stale = stale.replace("STEP-08-placement.md", "placement.md")
+        stale = stale.replace("### STEP 09 — Placement validate", "### OLD STEP — Placement validate")
+        stale = stale.replace("STEP-10-placement.md", "placement.md")
         workspace.plan_path.write_text(stale, encoding="utf-8")
 
         reset_onboarding(prepared.snapshot_root, from_step=5)
         refreshed = workspace.plan_path.read_text(encoding="utf-8")
-        self.assertIn("STEP 05 — Reusable Contexts", refreshed)
-        self.assertIn("STEP 07 — Placement validate", refreshed)
+        self.assertIn("STEP 07 — Reusable Contexts", refreshed)
+        self.assertIn("STEP 09 — Placement validate", refreshed)
         self.assertIn("STEP 08 — Placement review", refreshed)
-        self.assertIn("STEP-08-placement.md", refreshed)
+        self.assertIn("STEP-10-placement.md", refreshed)
         self.assertIn("contextcanon onboard reset", refreshed)
 
     def test_machine_run_inputs_survive_missing_workspace_plan(self):
