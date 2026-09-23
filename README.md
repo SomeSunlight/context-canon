@@ -62,23 +62,48 @@ The LLM proposes semantics; it does not publish project truth. The project owner
 
 That does not conflict with ContextCanon's goal of making smaller/local models useful for normal project work. Once the context has been organized, those models benefit from receiving less but better-targeted information. The occasional context-structuring or restructuring step is where stronger reasoning has unusually high leverage.
 
-### Structure-first experimental run
+### Reviewed structure-first onboarding
 
-With the ContextCanon CLI available, start in the root of the Git repository you want to onboard:
+With the ContextCanon CLI available, start in the Git repository root. The generated `contextcanon-onboarding/PLAN.md` is the run-specific operator console.
+
+**STEP 01 — tidy before durable references.** Before ContextCanon records long-lived Topic/Resource paths, remove obvious duplicates, accidental document versions and clearly misplaced files. ContextCanon does not move them for you.
+
+**STEP 02 — inventory the files.**
 
 ```text
-contextcanon onboard prepare .
+contextcanon onboard inventory .
 ```
 
-The command prints the path of a frozen evidence snapshot under:
+For a narrower product/document area, repeat `--directory`:
+
+```text
+contextcanon onboard inventory . --directory Jira --directory P1
+```
+
+ContextCanon writes `contextcanon-onboarding/STEP-02-inventory.csv`. Review that table directly. Its important human decisions are:
+
+- `source` — freeze as direct project Evidence;
+- `interpret` — freeze the original bytes, but treat the material as raw/ambiguous input requiring explicit interpretation;
+- `lookup` — keep it known and available to be selected later without eagerly placing it in the semantic Evidence set;
+- `ignore` — intentionally exclude it;
+- `undecided` — block Evidence freeze until the owner decides.
+
+Simple deterministic defaults classify familiar documents, structured data, source code, obvious raw meeting/chat/prestudy records and common binary/generated material. They are proposals, not hidden authority. Rerunning inventory preserves reviewed semantic columns while surfacing new, changed and missing files.
+
+**STEP 03 — freeze the reviewed Evidence.**
+
+```text
+contextcanon onboard prepare . \
+  --inventory contextcanon-onboarding/STEP-02-inventory.csv
+```
+
+The command refuses a stale/incomplete inventory and prints a content-addressed snapshot under:
 
 ```text
 .context/onboarding/<evidence-digest>/
 ```
 
-The snapshot is an immutable review anchor, not a lock on the live repository. It lets different semantic instructions or human review iterations operate on **the same exact project bytes** until you deliberately choose a new evidence basis.
-
-Store the printed snapshot path once instead of repeatedly typing the long digest. Use the assignment form for your shell:
+Store that path once:
 
 ```powershell
 $SNAPSHOT = '.context/onboarding/<evidence-digest>'
@@ -92,71 +117,27 @@ SNAPSHOT='.context/onboarding/<evidence-digest>'
 set SNAPSHOT=.context\onboarding\<evidence-digest>
 ```
 
-The commands below use `$SNAPSHOT` in PowerShell, bash and zsh; in `cmd.exe`, use `%SNAPSHOT%` instead. As soon as ContextCanon creates `contextcanon-onboarding/PLAN.md`, that file becomes the run-specific copy/paste console and shows the shell-native variable and exact commands again.
-
-Generate the first semantic assignment:
+From here the established semantic workflow continues, now numbered STEP 04–12:
 
 ```text
-contextcanon onboard structure-instruction $SNAPSHOT
-```
-
-ContextCanon writes important working files itself as UTF-8 into the visible:
-
-```text
-contextcanon-onboarding/
-```
-
-This avoids shell-redirection/codepage surprises and keeps editable review artifacts out of both the repository root and the machine-oriented `.context/` tree.
-
-Give `contextcanon-onboarding/structure-instruction.md` to a strong reasoning model together with read access to the frozen snapshot's `evidence/` directory. Save the returned JSON as:
-
-```text
-contextcanon-onboarding/structure-proposal.json
-```
-
-Validate and render the editable hierarchy:
-
-```text
-contextcanon onboard structure-validate $SNAPSHOT
-contextcanon onboard structure-review   $SNAPSHOT
-```
-
-Now review and edit `contextcanon-onboarding/structure.md`. Indentation defines the primary human hierarchy. Existing proposal Nodes retain review-local keys; future/reserved Nodes can be added explicitly when the evidence and project owner justify them.
-
-Before creating any missing Nodes:
-
-```text
-contextcanon onboard structure-preview $SNAPSHOT
-```
-
-The preview protects existing Context Nodes by stable identity and shows exactly which missing skeletons would be created. When the coarse structure is satisfactory, explicit materialization creates only those missing skeletons:
-
-```text
+contextcanon onboard structure-instruction $SNAPSHOT   # STEP 04
+contextcanon onboard structure-validate    $SNAPSHOT
+contextcanon onboard structure-review      $SNAPSHOT   # STEP 05
+contextcanon onboard structure-preview     $SNAPSHOT   # STEP 06
 contextcanon onboard structure-materialize $SNAPSHOT
+contextcanon onboard reusable-contexts     $SNAPSHOT   # STEP 07
+contextcanon onboard placement-instruction $SNAPSHOT   # STEP 08
+contextcanon onboard placement-validate    $SNAPSHOT   # STEP 09
+contextcanon onboard placement-review      $SNAPSHOT   # STEP 10
+contextcanon onboard placement-preview     $SNAPSHOT   # STEP 11
+contextcanon onboard placement-publish     $SNAPSHOT   # STEP 12
 ```
 
-Existing Nodes and ordinary project files are not rewritten by this step.
+Do not reconstruct the detailed arguments from this README during a real run: once the workspace exists, use `contextcanon-onboarding/PLAN.md`. It keeps exact snapshot-bound commands and current validated checkpoint together.
 
-The second semantic pass is then generated from the **same frozen Evidence plus the exact edited structure digest**:
+The compatibility form `contextcanon onboard prepare .` without an inventory remains available for older workflows, but reviewed inventory is the normal first-adoption path.
 
-```text
-contextcanon onboard placement-instruction $SNAPSHOT
-```
-
-Reusable immutable Source packages may be supplied explicitly with repeated `--catalog-package` arguments. The model compares generic-looking local guidance with those exact packages rather than inventing duplicate reusable rules.
-
-Save the returned JSON as `contextcanon-onboarding/placement-proposal.json`, then:
-
-```text
-contextcanon onboard placement-validate $SNAPSHOT
-contextcanon onboard placement-review   $SNAPSHOT
-```
-
-`placement.md` shows each source excerpt beside its proposed destination, operation and canonical wording. The current experiment deliberately stops there: destructive cleanup or publication of relocated knowledge is designed only after the real placement result has been reviewed.
-
-The older single-pass first-adoption `instruction → validate → review → accept` path remains available while this larger experiment is being validated; it is not silently reinterpreted as the new two-pass contract.
-
-For the user walkthrough and technical trust boundaries, read **[Onboard an existing project](docs/onboarding.md)**.
+For the full user walkthrough and trust boundaries, read **[Onboard an existing project](docs/onboarding.md)**.
 
 ## Maintain an onboarded project
 
