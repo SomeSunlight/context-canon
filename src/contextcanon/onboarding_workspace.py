@@ -71,6 +71,11 @@ LEGACY_ARTIFACT_NAMES = {
     "STEP-09-placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
 }
 
+LEGACY_DIRECTORY_NAMES = {
+    "STEP-08-placement": PLACEMENT_REVIEW_DIR_NAME,
+    "STEP-08-source-edits": PLACEMENT_SOURCE_EDIT_DIR_NAME,
+}
+
 
 @dataclass(frozen=True)
 class OnboardingWorkspace:
@@ -724,6 +729,20 @@ def _default_workspace_root(snapshot_root: Path) -> Path:
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
+    for legacy_name, numbered_name in LEGACY_DIRECTORY_NAMES.items():
+        legacy = workspace.root / legacy_name
+        numbered = workspace.root / numbered_name
+        if not legacy.exists():
+            continue
+        if not legacy.is_dir() or legacy.is_symlink():
+            raise ContextCanonError(f"Legacy onboarding review path is not a normal directory: {legacy}")
+        if numbered.exists():
+            raise ContextCanonError(
+                f"Onboarding workspace contains both legacy and numbered review directories: "
+                f"{legacy.name}, {numbered.name}"
+            )
+        legacy.rename(numbered)
+
     for legacy_name, numbered_name in LEGACY_ARTIFACT_NAMES.items():
         legacy = workspace.root / legacy_name
         numbered = workspace.root / numbered_name
