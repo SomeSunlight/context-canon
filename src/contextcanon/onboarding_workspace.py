@@ -828,6 +828,58 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_r
     write_utf8(workspace.plan_path, refreshed)
 
 
+def open_inventory_workspace(
+    project_root: Path,
+    workspace_root: Path | None = None,
+) -> OnboardingWorkspace:
+    """Open/create the visible workspace before an Evidence snapshot exists."""
+
+    project = _require_project_root_for_inventory(project_root)
+    root = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    workspace = OnboardingWorkspace(root)
+
+    if root.exists() or root.is_symlink():
+        if root.is_symlink() or not root.is_dir():
+            raise ContextCanonError(f"Onboarding workspace path is not a normal directory: {root}")
+        try:
+            readme = workspace.readme_path.read_text(encoding="utf-8")
+        except FileNotFoundError as exc:
+            raise ContextCanonError(
+                f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
+            ) from exc
+        except UnicodeDecodeError as exc:
+            raise ContextCanonError(f"Onboarding workspace README is not valid UTF-8: {workspace.readme_path}") from exc
+        if WORKSPACE_MARKER not in readme:
+            raise ContextCanonError(
+                f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
+            )
+        write_utf8(workspace.readme_path, _workspace_readme())
+        if workspace.plan_path.exists():
+            try:
+                plan = workspace.plan_path.read_text(encoding="utf-8")
+            except UnicodeDecodeError as exc:
+                raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
+            if PLAN_MARKER not in plan:
+                raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
+        else:
+            write_utf8(workspace.plan_path, _workspace_plan())
+        return workspace
+
+    root.mkdir(parents=True)
+    write_utf8(workspace.readme_path, _workspace_readme())
+    write_utf8(workspace.plan_path, _workspace_plan())
+    return workspace
+
+
+def _require_project_root_for_inventory(project_root: Path) -> Path:
+    project = project_root.resolve()
+    if not (project / ".git").exists():
+        raise ContextCanonError(
+            f"Inventory workspace must be opened at the Git repository root: {project}"
+        )
+    return project
+
+
 def open_onboarding_workspace(
     snapshot_root: Path,
     workspace_root: Path | None = None,
