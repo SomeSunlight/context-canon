@@ -8,17 +8,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class OnboardingWalkthroughCurrentTests(unittest.TestCase):
-    def test_walkthrough_matches_human_first_ten_step_flow(self) -> None:
+    def test_walkthrough_matches_reviewed_twelve_step_flow(self) -> None:
         text = (ROOT / "docs" / "onboarding.md").read_text(encoding="utf-8")
-        self.assertIn("## 5. Select reusable Contexts", text)
-        self.assertIn("STEP-05-reusable-contexts.md", text)
+        self.assertIn("## 1. Tidy before durable references", text)\n        self.assertIn("## 2. Inventory and review the project files", text)\n        self.assertIn("STEP-02-inventory.csv", text)\n        self.assertIn("## 3. Freeze the reviewed Evidence", text)\n        self.assertIn("## 7. Select reusable Contexts", text)
+        self.assertIn("STEP-07-reusable-contexts.md", text)
         self.assertIn("sparse relationships", text)
         self.assertIn("why this whole reusable Context", text)
-        self.assertIn("## 6. Generate the content-placement assignment", text)
-        self.assertIn("STEP-06a-placement-instruction.md", text)
-        self.assertIn("## 8. Review and revalidate `STEP-08-placement.md`", text)
-        self.assertIn("STEP-09-placement-preview.md", text)
-        self.assertIn("STEP-10-placement-followup.md", text)
+        self.assertIn("## 8. Generate the content-placement assignment", text)
+        self.assertIn("STEP-08a-placement-instruction.md", text)
+        self.assertIn("## 10. Review and revalidate `STEP-10-placement.md`", text)
+        self.assertIn("STEP-11-placement-preview.md", text)
+        self.assertIn("STEP-12-placement-followup.md", text)
         self.assertIn("PLAN is orchestration only", text)
         current = text.split("## Legacy single-pass first adoption", 1)[0]
         self.assertNotIn("--owner-source", current)
