@@ -38,12 +38,15 @@ _SOURCE_IDENTITY_FIELDS = {
     "source_normalized_digest",
     "source_package_digest",
 }
-_EXPECTED_SELECTION = {
+_EXPECTED_SELECTION_COMMON = {
     "accepted_encoding": "utf-8",
     "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
     "max_total_bytes": MAX_EVIDENCE_TOTAL_BYTES,
-    "policy": SELECTION_POLICY,
     "repository_listing": "git ls-files --cached --others --exclude-standard",
+}
+_SUPPORTED_SELECTION_POLICIES = {
+    SELECTION_POLICY,
+    "contextcanon/onboarding-reviewed-inventory/v0",
 }
 
 _PAYLOAD_FIELDS: dict[str, tuple[set[str], set[str]]] = {
@@ -231,8 +234,14 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
         raise ContextCanonError(f"Invalid onboarding evidence manifest ({'; '.join(detail)})")
     if manifest["schema"] != EVIDENCE_SCHEMA:
         raise ContextCanonError(f"Unsupported onboarding evidence schema: {manifest['schema']!r}")
-    if manifest["selection"] != _EXPECTED_SELECTION:
-        raise ContextCanonError("Onboarding evidence manifest does not match the supported v0 selection policy")
+    selection = manifest["selection"]
+    if not isinstance(selection, dict):
+        raise ContextCanonError("Onboarding evidence manifest selection must be an object")
+    if set(selection) != set(_EXPECTED_SELECTION_COMMON) | {"policy"}:
+        raise ContextCanonError("Onboarding evidence manifest does not match the supported v0 selection contract")
+    common = {key: selection[key] for key in _EXPECTED_SELECTION_COMMON}
+    if common != _EXPECTED_SELECTION_COMMON or selection["policy"] not in _SUPPORTED_SELECTION_POLICIES:
+        raise ContextCanonError("Onboarding evidence manifest does not match a supported v0 selection policy")
 
     digest = manifest["evidence_digest"]
     if not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
