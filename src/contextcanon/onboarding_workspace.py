@@ -500,7 +500,7 @@ def _exact_commands(
         cmd("placement-review"),
         "```",
         "",
-        f"Use `{PLACEMENT_REVIEW_NAME}` as the index; rerun the same command after edits to validate and refresh the audit.",
+        f"Use `{PLACEMENT_REVIEW_NAME}` as the index; rerun the same command after edits to validate and refresh `{PLACEMENT_AUDIT_NAME}`.",
         "",
         "### STEP 11 — Publication preview",
         f"- [{mark(11)}] **Done**",
