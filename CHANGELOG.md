@@ -6,6 +6,8 @@ All notable ContextCanon changes will be documented here.
 
 ### Added
 
+- Reviewed onboarding inventory preflight with a human-editable CSV, repeatable new/changed/missing detection, deterministic classification defaults, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
+
 - Initial public ContextCanon specification.
 - Human-editable `CONTEXT.src.md` local-delta model.
 - Generated compact `CONTEXT.md` entry view and optional `CONTEXT/` package resources.
