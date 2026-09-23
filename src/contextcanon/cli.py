@@ -921,6 +921,8 @@ def main(argv: list[str] | None = None) -> int:
                         directories=args.directory,
                     )
                     workspace = open_inventory_workspace(prepared.project_root, _workspace_path(args.workspace))
+                    if selection.csv_path != workspace.inventory_path.resolve():
+                        workspace.inventory_path.write_bytes(selection.csv_path.read_bytes())
                     snapshot_workspace = open_onboarding_workspace(
                         prepared.snapshot_root,
                         workspace.root,
