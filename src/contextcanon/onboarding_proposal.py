@@ -11,6 +11,7 @@ from .onboarding import (
     EVIDENCE_SCHEMA,
     MAX_EVIDENCE_FILE_BYTES,
     MAX_EVIDENCE_TOTAL_BYTES,
+    REVIEWED_INVENTORY_SELECTION_POLICY,
     SELECTION_POLICY,
 )
 from .parser import ContextCanonError
@@ -46,7 +47,7 @@ _EXPECTED_SELECTION_COMMON = {
 }
 _SUPPORTED_SELECTION_POLICIES = {
     SELECTION_POLICY,
-    "contextcanon/onboarding-reviewed-inventory/v0",
+    REVIEWED_INVENTORY_SELECTION_POLICY,
 }
 
 _PAYLOAD_FIELDS: dict[str, tuple[set[str], set[str]]] = {
@@ -95,6 +96,10 @@ class SnapshotEvidence:
     size: int
     reason: str
     line_count: int
+    kind: str | None = None
+    handling: str | None = None
+    description: str | None = None
+    note: str | None = None
 
 
 @dataclass(frozen=True)
@@ -261,8 +266,9 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
     for index, raw_entry in enumerate(included):
         if not isinstance(raw_entry, dict):
             raise ContextCanonError(f"Onboarding evidence included[{index}] must be an object")
-        expected_keys = {"path", "reason", "sha256", "size", "snapshot"}
-        if set(raw_entry) != expected_keys:
+        required_keys = {"path", "reason", "sha256", "size", "snapshot"}
+        optional_keys = {"kind", "handling", "description", "note"}
+        if not required_keys.issubset(raw_entry) or not set(raw_entry).issubset(required_keys | optional_keys):
             raise ContextCanonError(f"Onboarding evidence included[{index}] has invalid fields")
         path = _safe_relative_path(raw_entry["path"], f"evidence included[{index}].path")
         if previous_path is not None and path <= previous_path:
@@ -294,7 +300,25 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
             text = data.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise ContextCanonError(f"Onboarding evidence file is not valid UTF-8: {path}") from exc
-        entries.append(SnapshotEvidence(path, sha256, size, reason, len(text.splitlines())))
+        optional: dict[str, str | None] = {}
+        for key in ("kind", "handling", "description", "note"):
+            value = raw_entry.get(key)
+            if value is not None and not isinstance(value, str):
+                raise ContextCanonError(f"Onboarding evidence included[{index}].{key} must be a string")
+            optional[key] = value
+        entries.append(
+            SnapshotEvidence(
+                path,
+                sha256,
+                size,
+                reason,
+                len(text.splitlines()),
+                kind=optional["kind"],
+                handling=optional["handling"],
+                description=optional["description"],
+                note=optional["note"],
+            )
+        )
         expected_paths.add(path)
 
     evidence_root = root / "evidence"
