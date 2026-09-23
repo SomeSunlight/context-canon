@@ -136,7 +136,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         # A freshly opened workspace has no snapshot-bound checkpoint yet, so
         # the integrated STEP chapters are inserted only when ContextCanon first
         # records run state. The stable human-gate summary already names STEP 05.
-        self.assertIn("STEP-05-reusable-contexts.md", plan)
+        self.assertIn("STEP-07-reusable-contexts.md", plan)
         self.assertIn("LLM handoff 1", plan)
         self.assertIn("LLM handoff 2", plan)
         self.assertIn("Human gate 1", plan)
@@ -148,7 +148,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
             workspace,
             prepared.snapshot_root,
             stage="human placement review",
-            next_action="Edit `STEP-08-placement.md`, then preview.",
+            next_action="Edit `STEP-10-placement.md`, then preview.",
             source_catalog_inputs=("C:/contextcanon/development-workflow",),
             owner_source_specs=("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40",),
         )
@@ -161,7 +161,7 @@ class OnboardingOwnerReviewFollowupTests(unittest.TestCase):
         self.assertNotIn("--catalog-package", checkpoint)
         self.assertNotIn("C:/contextcanon/development-workflow", checkpoint)
         self.assertNotIn("N-001=c4c94726-3cc7-4df6-b779-72bbf9c06f40", checkpoint)
-        self.assertIn("STEP-08-placement.md", checkpoint)
+        self.assertIn("STEP-10-placement.md", checkpoint)
 
 
 if __name__ == "__main__":
