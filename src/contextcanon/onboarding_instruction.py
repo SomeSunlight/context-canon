@@ -66,9 +66,19 @@ def _render_evidence(snapshot: EvidenceSnapshot) -> list[str]:
         return lines
 
     for entry in snapshot.entries:
-        lines.append(
-            f"- `{entry.path}` — sha256 `{entry.sha256}` — {entry.line_count} lines — selection `{entry.reason}`"
+        detail = (
+            f"- `{entry.path}` — sha256 `{entry.sha256}` — {entry.line_count} lines "
+            f"— selection `{entry.reason}`"
         )
+        if entry.kind:
+            detail += f" — kind `{entry.kind}`"
+        if entry.handling:
+            detail += f" — handling `{entry.handling}`"
+        lines.append(detail)
+        if entry.description:
+            lines.append(f"  - Owner-reviewed description: {entry.description}")
+        if entry.note:
+            lines.append(f"  - Owner note: {entry.note}")
     lines.append("")
     return lines
 
