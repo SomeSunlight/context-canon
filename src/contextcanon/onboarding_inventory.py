@@ -583,10 +583,7 @@ def validate_inventory_for_prepare(
         if row.handling in {"source", "interpret"} and not row.description:
             errors.append(f"{row.path}: {row.handling} rows require a short description")
         if row.handling in {"source", "interpret"}:
-            description = " ".join(row.description.split())
-            evidence_reasons[row.path] = (
-                f"inventory-{row.handling}; kind={row.kind}; description={description}"
-            )
+            evidence_reasons[row.path] = f"inventory-{row.handling}"
 
     if errors:
         detail = "\n".join(f"- {item}" for item in errors[:20])
