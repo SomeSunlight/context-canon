@@ -44,21 +44,22 @@ RESET_JOURNAL_NAME = "onboarding-reset-journal.json"
 RESET_JOURNAL_SCHEMA = "contextcanon/onboarding-reset-journal/v1"
 
 _ARTIFACT_STEPS = {
-    STRUCTURE_INSTRUCTION_NAME: 2,
-    STRUCTURE_PROPOSAL_NAME: 2,
-    STRUCTURE_REVIEW_NAME: 3,
-    STRUCTURE_PREVIEW_NAME: 4,
-    REUSABLE_CONTEXTS_NAME: 5,
-    PLACEMENT_INSTRUCTION_NAME: 6,
-    PLACEMENT_PROPOSAL_NAME: 6,
-    PLACEMENT_REVIEW_NAME: 8,
-    PLACEMENT_REVIEW_DIR_NAME: 8,
-    PLACEMENT_SOURCE_EDIT_DIR_NAME: 8,
-    PLACEMENT_AUDIT_NAME: 8,
-    PLACEMENT_PREVIEW_NAME: 9,
-    PLACEMENT_FOLLOWUP_NAME: 10,
+    STRUCTURE_INSTRUCTION_NAME: 4,
+    STRUCTURE_PROPOSAL_NAME: 4,
+    STRUCTURE_REVIEW_NAME: 5,
+    STRUCTURE_PREVIEW_NAME: 6,
+    REUSABLE_CONTEXTS_NAME: 7,
+    PLACEMENT_INSTRUCTION_NAME: 8,
+    PLACEMENT_PROPOSAL_NAME: 8,
+    PLACEMENT_REVIEW_NAME: 10,
+    PLACEMENT_REVIEW_DIR_NAME: 10,
+    PLACEMENT_SOURCE_EDIT_DIR_NAME: 10,
+    PLACEMENT_AUDIT_NAME: 10,
+    PLACEMENT_PREVIEW_NAME: 11,
+    PLACEMENT_FOLLOWUP_NAME: 12,
 }
 _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGACY_ARTIFACT_NAMES.items()}
+_LEGACY_STEPS.update({"STEP-08-placement": 10, "STEP-08-source-edits": 10})
 
 _SKELETON_RE = re.compile(
     r'^# .+ — Local Context Source\n'
@@ -200,7 +201,7 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
     if result != 0:
         return result
     after = _managed_state(project, extra_paths)
-    step = 4 if argv[1] == "structure-materialize" else 10
+    step = 6 if argv[1] == "structure-materialize" else 12
     record_transition(snapshot, project, step=step, command=list(argv), before=before, after=after)
     return result
 
@@ -342,8 +343,8 @@ def reset_onboarding(
     workspace_root: Path | None = None,
     project_root: Path | None = None,
 ) -> dict[str, object]:
-    if from_step < 2 or from_step > 10:
-        raise _error("--from must be a numbered onboarding step from 2 through 10; frozen Evidence is intentionally preserved")
+    if from_step < 4 or from_step > 12:
+        raise _error("--from must be a semantic onboarding step from 4 through 12; inventory and frozen Evidence are intentionally preserved")
     snapshot = snapshot_root.resolve()
     project = (project_root or find_repo_root(snapshot)).resolve()
     workspace_state = open_onboarding_workspace(
