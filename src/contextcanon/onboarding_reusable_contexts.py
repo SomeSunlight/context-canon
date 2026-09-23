@@ -309,7 +309,7 @@ def render_reusable_contexts(
     root_node = next((node for node in structure.nodes if node.path == "."), structure.nodes[0] if structure.nodes else None)
     example_package = packages[0] if packages else None
     lines = [
-        "# STEP 05 — Reusable Contexts",
+        "# STEP 07 — Reusable Contexts",
         f'<!-- contextcanon-reusable-contexts schema="{REUSABLE_CONTEXTS_SCHEMA}" evidence="{evidence_digest}" structure="{structure.structure_digest}" -->',
         "",
         "This step says **which reusable Context Nodes are available and where they apply in this project**. It happens after the project's own Context Node structure is accepted and before the placement LLM distributes project knowledge.",
@@ -438,7 +438,7 @@ def _parse_bound_text(path: Path, evidence_digest: str, structure: HumanStructur
         raise _error("Evidence digest differs from this onboarding snapshot")
     if header.group("structure") != structure.structure_digest:
         raise _error(
-            "Accepted project Context structure changed; recreate/review STEP-05-reusable-contexts.md against the new structure"
+            "Accepted project Context structure changed; recreate/review STEP-07-reusable-contexts.md against the new structure"
         )
     return text, _catalog_locations(text)
 
@@ -503,7 +503,7 @@ def load_accepted_reusable_contexts(
 ) -> ReusableContextsPlan:
     state_path = snapshot_root.resolve() / REUSABLE_CONTEXTS_STATE_NAME
     if not state_path.is_file():
-        raise _error("STEP 05 has not been validated yet; run `contextcanon onboard reusable-contexts` first")
+        raise _error("STEP 07 has not been validated yet; run `contextcanon onboard reusable-contexts` first")
     try:
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -513,12 +513,12 @@ def load_accepted_reusable_contexts(
     if state.get("evidence_digest") != evidence_digest or state.get("structure_digest") != structure.structure_digest:
         raise _error("reusable Context machine state does not match this Evidence/Structure")
     if state.get("decision") != "accept":
-        raise _error("STEP 05 is still pending; set Decision to `accept` and rerun the step")
+        raise _error("STEP 07 is still pending; set Decision to `accept` and rerun the step")
     if not path.is_file():
         raise _error(f"missing human reusable Context review: {path}")
     current_sha = hashlib.sha256(path.read_bytes()).hexdigest()
     if current_sha != state.get("human_file_sha256"):
-        raise _error("STEP-05-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
+        raise _error("STEP-07-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
 
     text, locations = _parse_bound_text(path, evidence_digest, structure)
     roots, packages = discover_catalog(locations) if locations else ((), ())
@@ -535,7 +535,7 @@ def load_accepted_reusable_contexts(
     review_digest = _digest(payload)
     if review_digest != state.get("review_digest"):
         raise _error(
-            "Reusable Context Catalog/package identity changed after STEP 05 acceptance; rerun the step and review the change"
+            "Reusable Context Catalog/package identity changed after STEP 07 acceptance; rerun the step and review the change"
         )
     return ReusableContextsPlan(
         evidence_digest,
