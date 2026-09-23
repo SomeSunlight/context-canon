@@ -75,7 +75,7 @@ def placement_review_directory(index_path: Path) -> Path:
 
 
 def placement_source_edit_directory(index_path: Path) -> Path:
-    return index_path.resolve().parent / "STEP-08-source-edits"
+    return index_path.resolve().parent / "STEP-10-source-edits"
 
 
 def _slug(value: str) -> str:
@@ -199,7 +199,7 @@ def _render_finding(
         _finding_binding_line(proposal, review_item.proposal_id),
         f'<!-- cc:placement-item id="{review_item.proposal_id}" authoring-id="{review_item.authoring_id}" -->',
         "",
-        "[← STEP 08 index](../STEP-08-placement.md)",
+        "[← STEP 10 index](../STEP-10-placement.md)",
         "",
         "## What this page decides",
         "",
@@ -233,7 +233,7 @@ def _render_finding(
             filename = placement_source_edit_filename(candidate)
             lines.append(
                 f"- [`{edit.proposal_id}` — `{edit.path}` lines {edit.start_line}–{edit.end_line}]"
-                f"(../STEP-08-source-edits/{filename}) — decision `{edit.decision}`"
+                f"(../STEP-10-source-edits/{filename}) — decision `{edit.decision}`"
             )
     else:
         lines.append("- None. This finding does not propose a concrete source-file rewrite.")
@@ -276,7 +276,7 @@ def _render_source_edit(
         f'<!-- cc:source-edit id="{edit.proposal_id}" path="{edit.path}" sha256="{edit.sha256}" '
         f'start-line="{edit.start_line}" end-line="{edit.end_line}" linked-items="{linked_ids}" -->',
         "",
-        "[← STEP 08 index](../STEP-08-placement.md)",
+        "[← STEP 10 index](../STEP-10-placement.md)",
         "",
         "## What this page decides",
         "",
@@ -311,7 +311,7 @@ def _render_source_edit(
         item = review_by_id[item_id]
         filename = placement_finding_filename(proposal_by_id[item_id])
         lines.append(
-            f"- [`{item_id}` — {item.title}](../STEP-08-placement/{filename}) — decision `{item.decision}`"
+            f"- [`{item_id}` — {item.title}](../STEP-10-placement/{filename}) — decision `{item.decision}`"
         )
 
     lines.extend(["", "## Before — frozen source", ""])
@@ -372,7 +372,7 @@ def _render_index(
         "# ContextCanon onboarding placement review",
         SPLIT_LAYOUT_MARKER,
         "",
-        "This is the STEP-08 **index**. P sheets review semantic placement; E sheets review concrete source transformations.",
+        "This is the STEP-10 **index**. P sheets review semantic placement; E sheets review concrete source transformations.",
         "",
         "## Status",
         "",
@@ -421,13 +421,13 @@ def _render_index(
         for edit in edits_by_item.get(review_item.proposal_id, []):
             candidate = candidates[edit.proposal_id]
             edit_links.append(
-                f"[`{edit.proposal_id}`](STEP-08-source-edits/{placement_source_edit_filename(candidate)}) "
+                f"[`{edit.proposal_id}`](STEP-10-source-edits/{placement_source_edit_filename(candidate)}) "
                 f"`{edit.decision}`"
             )
         edit_label = ", ".join(edit_links) or "—"
         lines.append(
             f"| `{review_item.decision}` | [`{review_item.proposal_id}` — {review_item.title}]"
-            f"(STEP-08-placement/{filename}) | {destination_label} | `{review_item.kind}` | {edit_label} |"
+            f"(STEP-10-placement/{filename}) | {destination_label} | `{review_item.kind}` | {edit_label} |"
         )
 
     lines.extend(
@@ -453,11 +453,11 @@ def _render_index(
             candidate = candidates[edit.proposal_id]
             filename = placement_source_edit_filename(candidate)
             linked = ", ".join(
-                f"[`{item_id}`](STEP-08-placement/{placement_finding_filename(proposal_by_id[item_id])})"
+                f"[`{item_id}`](STEP-10-placement/{placement_finding_filename(proposal_by_id[item_id])})"
                 for item_id in edit.linked_item_ids
             )
             lines.append(
-                f"| `{edit.decision}` | [`{edit.proposal_id}`](STEP-08-source-edits/{filename}) | "
+                f"| `{edit.decision}` | [`{edit.proposal_id}`](STEP-10-source-edits/{filename}) | "
                 f"`{edit.path}` {edit.start_line}–{edit.end_line} | {linked} |"
             )
 
@@ -551,7 +551,7 @@ def _initial_review(
 def _validate_index_binding(text: str, proposal: OnboardingPlacementProposal) -> None:
     header = _HEADER_RE.search(text)
     if header is None:
-        raise _error("STEP-08-placement.md is missing its ContextCanon binding header")
+        raise _error("STEP-10-placement.md is missing its ContextCanon binding header")
     if header.group("schema") != PLACEMENT_REVIEW_SCHEMA:
         raise _error(f"unsupported review schema {header.group('schema')!r}")
     if header.group("evidence") != proposal.evidence_digest:
@@ -693,17 +693,17 @@ def _exact_directory_entries(
     label: str,
 ) -> dict[str, Path]:
     if not directory.is_dir() or directory.is_symlink():
-        raise _error(f"split STEP-08 {label} directory is missing or invalid: {directory}")
+        raise _error(f"split STEP-10 {label} directory is missing or invalid: {directory}")
     actual = {entry.name: entry for entry in directory.iterdir()}
     missing = sorted(set(expected) - set(actual))
     foreign = sorted(set(actual) - set(expected))
     if missing:
         raise _error(
-            f"split STEP-08 review is missing {label} files: " + ", ".join(missing)
+            f"split STEP-10 review is missing {label} files: " + ", ".join(missing)
         )
     if foreign:
         raise _error(
-            f"split STEP-08 review contains foreign {label} files/directories: "
+            f"split STEP-10 review contains foreign {label} files/directories: "
             + ", ".join(foreign)
         )
     return actual
@@ -720,12 +720,12 @@ def _parse_split(
     except FileNotFoundError as exc:
         raise ContextCanonError(f"Missing onboarding placement review: {index_path}") from exc
     except UnicodeDecodeError as exc:
-        raise _error("STEP-08-placement.md is not valid UTF-8") from exc
+        raise _error("STEP-10-placement.md is not valid UTF-8") from exc
 
     if LEGACY_SPLIT_LAYOUT_MARKER in index_text:
         raise _error(
-            "STEP-08 split-v1 is an interim owner-test layout and is intentionally not migrated. "
-            "Run `contextcanon onboard reset $SNAPSHOT --from 8`, then recreate STEP 08."
+            "STEP-10 split-v1 is an interim owner-test layout and is intentionally not migrated. "
+            "Run `contextcanon onboard reset $SNAPSHOT --from 10`, then recreate STEP 10."
         )
     if SPLIT_LAYOUT_MARKER not in index_text:
         return _load_monolithic_placement_review(index_path, proposal, snapshot_root)
@@ -813,7 +813,7 @@ def _write_split_layout(
     if creating:
         for directory in (finding_dir, edit_dir):
             if directory.exists() or directory.is_symlink():
-                raise _error(f"refusing to replace existing STEP-08 review directory: {directory}")
+                raise _error(f"refusing to replace existing STEP-10 review directory: {directory}")
             directory.mkdir(parents=False, exist_ok=False)
 
     for item in proposal.items:
@@ -852,18 +852,18 @@ def create_or_load_split_placement_review(
     if path.exists():
         if tuple(owner_source_specs):
             raise _error(
-                "--owner-source is only used when STEP-08 review is first created; "
+                "--owner-source is only used when STEP-10 review is first created; "
                 "edit the existing human review instead of silently changing it"
             )
         try:
             index_text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError as exc:
-            raise _error("STEP-08-placement.md is not valid UTF-8") from exc
+            raise _error("STEP-10-placement.md is not valid UTF-8") from exc
 
         if LEGACY_SPLIT_LAYOUT_MARKER in index_text:
             raise _error(
-                "STEP-08 split-v1 is intentionally not migrated during owner testing. "
-                "Reset from STEP 08 and recreate the review."
+                "STEP-10 split-v1 is intentionally not migrated during owner testing. "
+                "Reset from STEP 10 and recreate the review."
             )
         if SPLIT_LAYOUT_MARKER not in index_text:
             if (
@@ -873,7 +873,7 @@ def create_or_load_split_placement_review(
                 or edit_dir.is_symlink()
             ):
                 raise _error(
-                    "legacy STEP-08 review exists beside split directories; refusing to guess "
+                    "legacy STEP-10 review exists beside split directories; refusing to guess "
                     "which human edits are authoritative"
                 )
             legacy = _load_monolithic_placement_review(path, proposal, snapshot_root)
@@ -896,7 +896,7 @@ def create_or_load_split_placement_review(
         or edit_dir.is_symlink()
     ):
         raise _error(
-            "STEP-08 review index is missing but one or more split review directories already exist"
+            "STEP-10 review index is missing but one or more split review directories already exist"
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     review = _initial_review(
