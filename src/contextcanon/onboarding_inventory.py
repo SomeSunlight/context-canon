@@ -10,6 +10,7 @@ from typing import Iterable, Mapping
 
 from .onboarding import (
     PreparedEvidence,
+    REVIEWED_INVENTORY_SELECTION_POLICY,
     _blocked_reason,
     _default_reason,
     _repository_paths,
