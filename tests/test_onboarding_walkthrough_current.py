@@ -10,7 +10,11 @@ ROOT = Path(__file__).resolve().parents[1]
 class OnboardingWalkthroughCurrentTests(unittest.TestCase):
     def test_walkthrough_matches_reviewed_twelve_step_flow(self) -> None:
         text = (ROOT / "docs" / "onboarding.md").read_text(encoding="utf-8")
-        self.assertIn("## 1. Tidy before durable references", text)\n        self.assertIn("## 2. Inventory and review the project files", text)\n        self.assertIn("STEP-02-inventory.csv", text)\n        self.assertIn("## 3. Freeze the reviewed Evidence", text)\n        self.assertIn("## 7. Select reusable Contexts", text)
+        self.assertIn("## 1. Tidy before durable references", text)
+        self.assertIn("## 2. Inventory and review the project files", text)
+        self.assertIn("STEP-02-inventory.csv", text)
+        self.assertIn("## 3. Freeze the reviewed Evidence", text)
+        self.assertIn("## 7. Select reusable Contexts", text)
         self.assertIn("STEP-07-reusable-contexts.md", text)
         self.assertIn("sparse relationships", text)
         self.assertIn("why this whole reusable Context", text)
@@ -34,7 +38,9 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertIn("$SNAPSHOT = '.context/onboarding/<evidence-digest>'", onboarding)
         self.assertIn("SNAPSHOT='.context/onboarding/<evidence-digest>'", onboarding)
         self.assertIn(r"set SNAPSHOT=.context\onboarding\<evidence-digest>", onboarding)
-        self.assertIn("contextcanon onboard inventory .", onboarding)\n        self.assertIn("--inventory contextcanon-onboarding/STEP-02-inventory.csv", onboarding)\n        self.assertIn("contextcanon onboard structure-instruction $SNAPSHOT", onboarding)
+        self.assertIn("contextcanon onboard inventory .", onboarding)
+        self.assertIn("--inventory contextcanon-onboarding/STEP-02-inventory.csv", onboarding)
+        self.assertIn("contextcanon onboard structure-instruction $SNAPSHOT", onboarding)
         self.assertIn("contextcanon-onboarding/PLAN.md", onboarding)
         self.assertNotIn("contextcanon onboard structure-preview .context/onboarding/<evidence-digest>", onboarding)
 
