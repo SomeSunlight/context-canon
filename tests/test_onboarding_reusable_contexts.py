@@ -59,7 +59,7 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 
@@ -116,7 +116,7 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 
