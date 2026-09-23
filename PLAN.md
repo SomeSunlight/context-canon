@@ -567,3 +567,23 @@ PR #31 was squash-merged to `main` as `d285ae09795994239a802ce50342404fadd482b7`
 The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR workflow #901 / run `35127260963`: 262 deterministic tests, generated-output verification with zero drift, and installation of `contextcanon==0.8.0`. The real `Llama_Dispatcher` onboarding completed publication with review digest `7c1712d0327fdd44759784e6c0511ed63386795ec73790e510ff895fe85de0a4` and acceptance digest `c72b6bb4b0df3d1df657407f72feaa7ea899ba7189284fd9dd7269dae4089255`.
 
 Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
+
+
+## Active fast-run: reviewed onboarding inventory — Issue #53
+
+Purpose: add a human-reviewed file inventory before Evidence freezing so first adoption no longer depends on hidden README/docs-oriented selection heuristics, while keeping this implementation slice small enough for immediate use on a document-only architecture project.
+
+**Fast-run status — ACTIVE**
+
+- **Owner-approved scope:** Steps 1–3 only as a coherent first slice: pre-onboarding cleanup guidance; deterministic inventory CSV from one or more repository directories; explicit CSV review/acceptance as the input to frozen Evidence.
+- **Deterministic defaults:** familiar files may receive configurable rule-based initial classification, but the CSV remains the human-owned decision surface.
+- **Change detection:** rerunning inventory must surface new, changed and missing files instead of silently reusing an old list.
+- **Shared example:** add a committed Hello World Extended project that exercises document, structured-data, source-code, raw/ambiguous record, ignored/generated and later-added-file cases and is usable both by tests and owner discussion.
+- **Deferred:** LLM inventory triage, interpretation, chat/meeting onboarding, structured semantic diffs, resource move/rename support, and larger-repository scaling optimizations.
+- **Exit condition:** focused inventory regressions, complete deterministic suite, self-build/check and diff hygiene pass on one coherent draft-PR head; then mark this fast-run CLOSED and return to owner review. No merge without explicit owner approval.
+
+- [ ] 1. Add the preflight/inventory data model, CSV review surface and deterministic default rules.
+- [ ] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
+- [ ] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
+- [ ] 4. Add the Hello World Extended shared fixture and focused regression coverage.
+- [ ] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
