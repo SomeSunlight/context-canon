@@ -640,17 +640,62 @@ The human review is explicit. It participates only after the proposal is structu
 
 For structure-first placement publication, the accepted Step-03 Parent hierarchy is also published deterministically. Preview computes the future Parent packages in semantic parent-to-child order using a read-only compiler overlay for reviewed `CONTEXT.src.md`, Source-After Resource bytes and exact catalog packages. Every non-root Child therefore receives an explicit `## Parent` pin to the exact final Parent package that the same publication will create. Publication installs that immutable Parent package locally before compiling the Child; repository nesting itself still carries no inheritance meaning.
 
+## Reviewed inventory preflight contract
+
+The normal structure-first first-adoption path now separates **repository inventory** from the later immutable Evidence snapshot. This prevents a hidden filename/suffix heuristic from deciding which project material exists before the project owner can review that boundary.
+
+The preflight has three operator steps:
+
+```text
+STEP 01  tidy obvious repository/document clutter before durable references exist
+STEP 02  contextcanon onboard inventory → STEP-02-inventory.csv → human review
+STEP 03  contextcanon onboard prepare --inventory ... → immutable Evidence snapshot
+```
+
+STEP 01 is guidance only. ContextCanon does not move/delete project files during first adoption.
+
+STEP 02 inventories Git-visible tracked and non-ignored untracked files in the whole repository or one/more explicitly selected repository-relative directories. ContextCanon-owned `.context/` state and the visible onboarding workspace are outside the project-material inventory domain. The generated CSV is a human-owned review surface; exact scanning/state bookkeeping remains machine-owned under `.context/onboarding/`.
+
+The reviewed row has two independent semantic axes:
+
+- **kind** says what the file roughly is: `document`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`;
+- **handling** says what first-adoption Evidence should do with it:
+  - `source` — include the exact bytes as direct project Evidence;
+  - `interpret` — include the exact bytes, while recording that the material is raw/ambiguous input whose statements must not silently become canonical truth;
+  - `lookup` — keep the file explicitly known but do not eagerly freeze it into the semantic Evidence set;
+  - `ignore` — intentionally exclude it;
+  - `undecided` — block STEP 03.
+
+The distinction is deliberate. `lookup` is not a claim that a file is irrelevant; it is a progressive-disclosure choice. A later large-repository workflow may inspect/activate selected lookup material when a concrete semantic task requires it. Likewise, `interpret` is not a weaker Evidence identity: the original bytes remain exact Evidence, while any synthesized decision/meaning requires a later explicit semantic/human acceptance boundary.
+
+Deterministic default rules may prefill classification (for example familiar documentation, CSV/TSV, source-code suffixes, obvious meeting/chat/prestudy names, generated paths or common binary formats). They are convenience only. The owner may edit the CSV directly, and optional repeatable `--rule GLOB=KIND:HANDLING` inputs can customize deterministic defaults without adding an LLM to the inventory stage.
+
+STEP 02 is repeatable. After an accepted inventory exists, refresh compares live repository material with the accepted per-path SHA-256 baseline and surfaces `new`, `changed`, `missing`, or `present`. Human semantic columns for known paths are preserved. This makes newly arriving files an explicit later review event rather than silently absent context.
+
+STEP 03 is the inventory acceptance boundary. Before freezing Evidence, ContextCanon refuses:
+
+- live in-scope files omitted from the CSV;
+- stale listed SHA-256 values;
+- non-ignored missing files;
+- `undecided` handling;
+- blocked/sensitive paths selected for inclusion;
+- `source` / `interpret` rows without a short description.
+
+Only `source` and `interpret` rows enter the snapshot. The accepted inventory identity and per-file reviewed baseline are stored separately from the content-addressed Evidence package so later inventory refresh can explain repository drift.
+
+For compatibility, `contextcanon onboard prepare .` without `--inventory` retains the earlier conservative selector. The generated current onboarding PLAN uses the reviewed inventory path; compatibility behavior must not become the hidden definition of normal first adoption again.
+
 ## Evidence snapshot contract
 
 `onboard prepare` freezes the exact project evidence offered to the later semantic step. Every included file is bound by repository-relative path, byte size, SHA-256 hash, selection reason, and exact copied bytes.
 
-Automatic inventory uses Git's repository visibility rules:
+The legacy automatic Evidence selector and the reviewed inventory scanner both start from Git's repository visibility rules:
 
 ```text
 git ls-files --cached --others --exclude-standard
 ```
 
-Tracked files and non-ignored untracked files are visible to the default selector. Git-ignored files are not silently offered. An explicit `--include` can add an otherwise ignored safe file, subject to path, secret, size, symlink, and UTF-8 checks.
+Tracked files and non-ignored untracked files are visible. Git-ignored files are not silently offered. In the reviewed path, the CSV decides which visible files become Evidence. In the compatibility path, the older default selector chooses familiar context carriers and explicit `--include` may add an otherwise ignored safe file, subject to path, secret, size, symlink, and UTF-8 checks.
 
 Current deterministic evidence boundaries include:
 

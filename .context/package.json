@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "32269129c66361cc59279edd3d8f2b4bf373d90a219465d4acfcf396c7507a9b",
-    "package": "796382d24030a419cd0b46359aac20b6431eb254410e71f7a0c6376ba362fb4a"
+    "normalized": "81ffb9c9ae1e4cda815aaad3aaa6f9da18bf683514785d5871653a334d8b61cf",
+    "package": "85a7cac4106c37c6723b4f69b7d0969eef56a967fac66007b0c39d5cfc6c3136"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "e99625e5e78041cdafbe151aeedf25227e5efe08726582ead667f6812553ef6f",
+      "sha256": "1d4fb7330bfeb6e3180cdfd6b67d5da9c99234801c24b6611dfe5013926379f5",
       "size": 3117
     },
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
-      "sha256": "395dad5c07cb86bc61792d6c840f157b28e853f6062f61fd5a4c3a962f9eff21",
-      "size": 4179
+      "sha256": "627f72293061a82dc9a6f9bde1c2bdf727cf9732eb42949be69f6d5b1f3d89f5",
+      "size": 4660
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
@@ -28,8 +28,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
-      "sha256": "ed41166188dcc17a7d0c9c2564a6fdfcabca8ef6a66cfe0a26605db12ccaf3e8",
-      "size": 23204
+      "sha256": "3b25ef5690cf15626e7d668e917b26f57a1b29b6adbc20608b87bd671e860108",
+      "size": 27057
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
@@ -38,8 +38,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "0ccbab6d59e0d44b857cc9675af30c753e14aa22b282f3fdf134a85f0b387f03",
-      "size": 41000
+      "sha256": "e856a2c2f011ebb03746a48659b5ddee2ca208b755ffcb2d1384b922f37a333c",
+      "size": 45121
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md",
@@ -51,7 +51,7 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.2.1-draft"
+    "version": "0.3.0-draft"
   },
   "parents": [],
   "removed_rules": [],
