@@ -491,7 +491,7 @@ def _render_index(
             else:
                 lines.extend(
                     [
-                        "This Source was selected explicitly by the project owner. When it came from STEP 05, "
+                        "This Source was selected explicitly by the project owner. When it came from STEP 07, "
                         "that relationship is already accepted here and is shown only for compact traceability; "
                         "it is design input, not a claim derived from frozen project Evidence.",
                         "",
