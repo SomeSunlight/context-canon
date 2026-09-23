@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -161,6 +162,23 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.write_csv(csv_path, rows)
         prepared, _ = prepare_from_inventory(repo, csv_path)
         self.assertEqual(prepared.included, ())
+
+    def test_shared_hello_world_extended_fixture_covers_core_inventory_cases(self):
+        repo = self.make_repo()
+        fixture = ROOT / "examples" / "onboarding" / "hello-world-extended"
+        shutil.copytree(fixture, repo, dirs_exist_ok=True)
+
+        csv_path = repo / "inventory.csv"
+        refreshed = refresh_inventory(repo, csv_path)
+        by_path = {row.path: row for row in refreshed.rows}
+
+        self.assertEqual(by_path["P1/parameters.csv"].kind, "structured-data")
+        self.assertEqual(by_path["P1/F1/prestudy.md"].handling, "interpret")
+        self.assertEqual(by_path["P1/F1/meeting-notes.md"].handling, "interpret")
+        self.assertEqual(by_path["src/hello.py"].handling, "lookup")
+        self.assertEqual(by_path["assets/reference.pdf"].handling, "ignore")
+        self.assertEqual(by_path["unknown.weird"].handling, "undecided")
+        self.assertNotIn("generated/example.txt", by_path)
 
     def test_minimal_speedyboarding_csv_is_valid_when_it_accounts_for_live_scope(self):
         repo = self.make_repo()
