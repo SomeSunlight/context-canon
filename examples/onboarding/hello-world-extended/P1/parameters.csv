@@ -1,0 +1,1 @@
+name,type,default,description\nlanguage,string,en,Output language\nsalutation,string,Hello,Greeting prefix\npunctuation,string,!,Trailing punctuation\n

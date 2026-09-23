@@ -1,0 +1,1 @@
+# F1 Developer Specification\n\nThe UI reads parameter definitions from the P1 parameter catalog.\n\nValidation must happen before save. The preview uses the same rendering rules as the saved greeting.\n

@@ -1,0 +1,1 @@
+# F1 Prestudy\n\nEarly discussion considered a desktop client and a browser UI.\n\nThe browser UI was selected because deployment should not require local installation. The desktop alternative is retained here as history, not as the current decision.\n\nOpen question: whether greeting previews must work offline.\n

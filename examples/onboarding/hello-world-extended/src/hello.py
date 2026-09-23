@@ -1,0 +1,1 @@
+def render(salutation: str, name: str, punctuation: str = \"!\") -> str:\n    return f\"{salutation}, {name}{punctuation}\"\n

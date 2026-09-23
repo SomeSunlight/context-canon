@@ -1,0 +1,1 @@
+# Jira Story Template\n\nAs a user, I want ... so that ...\n\n## Acceptance criteria\n- Given ...\n- When ...\n- Then ...\n

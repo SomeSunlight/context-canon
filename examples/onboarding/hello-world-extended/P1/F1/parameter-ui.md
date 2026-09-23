@@ -1,0 +1,1 @@
+# Parameter UI\n\nRender one editor per parameter. String parameters use text inputs. Validation errors appear beside the owning parameter.\n\nThe parameter catalog remains the authority for parameter names and defaults.\n

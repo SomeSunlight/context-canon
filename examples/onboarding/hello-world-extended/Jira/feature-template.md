@@ -1,0 +1,1 @@
+# Jira Feature Template\n\n## Goal\nDescribe the user/business outcome.\n\n## Scope\nState what is inside and outside the feature.\n\n## Acceptance\nList feature-level acceptance conditions.\n

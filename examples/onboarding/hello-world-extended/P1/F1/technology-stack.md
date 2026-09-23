@@ -1,0 +1,1 @@
+# Technology Stack\n\nDecision: implement F1 as a TypeScript web application with a small HTTP API.\n\nThe exact UI framework is intentionally not fixed by this example.\n

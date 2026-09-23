@@ -1,0 +1,1 @@
+# Initial F1 Stories\n\n1. Show the editable greeting parameters.\n2. Preview the greeting using unsaved values.\n3. Save valid parameter values.\n
