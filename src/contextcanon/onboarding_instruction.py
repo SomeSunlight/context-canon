@@ -76,9 +76,11 @@ def _render_evidence(snapshot: EvidenceSnapshot) -> list[str]:
             detail += f" — handling `{entry.handling}`"
         lines.append(detail)
         if entry.description:
-            lines.append(f"  - Owner-reviewed description: {entry.description}")
+            description = " ".join(entry.description.split())
+            lines.append(f"  - Owner-reviewed description: {description}")
         if entry.note:
-            lines.append(f"  - Owner note: {entry.note}")
+            note = " ".join(entry.note.split())
+            lines.append(f"  - Owner note: {note}")
     lines.append("")
     return lines
 
