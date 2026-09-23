@@ -145,23 +145,27 @@ def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
 {WORKSPACE_MARKER}
 
-This directory is the **visible human working area** for one structure-first ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.
+This directory is the **visible human working area** for one ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.
 
-Start with [`{PLAN_NAME}`]({PLAN_NAME}). It is deliberately written as an operator runbook: the numbered flow, exact copy/paste commands for this Evidence snapshot, current validated checkpoint, and reset commands all live there. You should not need chat history or ContextCanon source-code archaeology to remember how to continue.
+Start with [`{PLAN_NAME}`]({PLAN_NAME}). It keeps the numbered flow, current validated checkpoint and exact commands together so the onboarding can be resumed without chat history.
 
 ## Mental model
 
-ContextCanon separates three jobs:
+ContextCanon now separates the preflight from semantic onboarding:
 
-- `.context/onboarding/<evidence-digest>/` keeps immutable machine-owned frozen Evidence and acceptance/provenance state;
-- this directory keeps human/LLM review artifacts in workflow order;
-- the actual Context Nodes remain in their accepted repository locations and may use directories that did not exist before onboarding.
+- STEP 01 asks you to tidy obvious repository/document clutter **before durable Context references exist**;
+- STEP 02 inventories the selected repository area in a human-editable CSV;
+- STEP 03 freezes only the reviewed `source` / `interpret` rows as immutable Evidence;
+- later steps design semantic shelves and place meaning onto them.
 
-The repository's old directory tree is evidence about the project, not a taxonomy ContextCanon must preserve. Structure review designs the shelves first; placement review then decides where the existing meaning belongs.
+`.context/onboarding/` keeps machine-owned inventory state, frozen Evidence and acceptance/provenance. This directory keeps human review artifacts. The actual Context Nodes remain in their accepted repository locations.
+
+The repository directory tree is evidence about the project, not a taxonomy ContextCanon must preserve.
 
 ## Human-facing artifacts — sorted in workflow order
 
 - `{PLAN_NAME}` — generated operator runbook and current validated checkpoint.
+- `{INVENTORY_NAME}` — human-editable file inventory. `kind` says what a file is; `handling` says whether onboarding treats it as `source`, `interpret`, `lookup`, `ignore`, or still `undecided`.
 - `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for the coarse-structure reasoning pass.
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
@@ -169,65 +173,87 @@ The repository's old directory tree is evidence about the project, not a taxonom
 - `{REUSABLE_CONTEXTS_NAME}` — human-owned reusable Context Catalog locations, sparse assignments, and Why rationale.
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
-- Step 07 is validation-only and therefore intentionally has no separate artifact.
-- `{PLACEMENT_REVIEW_NAME}` — compact STEP-08 index/status; `{PLACEMENT_REVIEW_DIR_NAME}/` contains per-finding semantic placement decisions (P), while `{PLACEMENT_SOURCE_EDIT_DIR_NAME}/` contains concrete source transformations (E).
+- STEP 09 is validation-only and therefore intentionally has no separate artifact.
+- `{PLACEMENT_REVIEW_NAME}` — compact STEP-10 index/status; `{PLACEMENT_REVIEW_DIR_NAME}/` contains per-finding semantic placement decisions, while `{PLACEMENT_SOURCE_EDIT_DIR_NAME}/` contains concrete source transformations.
 - `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
 
-None of these working files become canonical Context merely because they exist. Explicit publication changes reviewed Context Node authoring.
+None of these working files become canonical Context merely because they exist.
+
+## Inventory semantics
+
+`source` means the file is direct onboarding Evidence. `interpret` also freezes the original bytes, but flags that the material is raw/ambiguous and should not silently become canonical truth. `lookup` records a file as potentially useful without eagerly freezing it into the semantic Evidence set. `ignore` intentionally excludes it. `undecided` blocks STEP 03.
+
+Rerun STEP 02 whenever repository files are added, changed, moved or removed. ContextCanon preserves human CSV decisions for known paths and surfaces `new`, `changed` and `missing` status instead of silently trusting an old inventory.
 
 ## Reset for testing
 
-`contextcanon onboard reset <snapshot> --from N` removes workspace artifacts from step N onward and reverses recorded ContextCanon project mutations from those steps. Frozen Evidence is deliberately preserved.
-
-For newly journaled runs, reset restores exact pre-command bytes and refuses to overwrite a managed file that changed afterward. For pre-journal structure tests, ContextCanon can also remove unmistakable untouched onboarding skeleton Nodes conservatively.
-
-## Why frozen Evidence exists
-
-Freezing does not lock the live Git repository. ContextCanon copies selected review material into a content-addressed snapshot so the LLM, human review, preview and publication can all refer to the **same exact project bytes**. Prepare a new snapshot only when you intentionally want a new evidence basis.
+`contextcanon onboard reset <snapshot> --from N` resets semantic onboarding artifacts from STEP 04 through STEP 12. Frozen Evidence and the preflight inventory are deliberately preserved.
 
 ## Ownership
 
-ContextCanon recognizes this workspace by the marker directly below the H1. Files such as this README and `{PLAN_NAME}` are framework-owned operating surfaces; `{STRUCTURE_REVIEW_NAME}` and `{PLACEMENT_REVIEW_NAME}` are the human-editable review gates.
+ContextCanon recognizes this workspace by the marker directly below the H1. Framework-owned README/PLAN surfaces may be regenerated; `{INVENTORY_NAME}`, `{STRUCTURE_REVIEW_NAME}` and the placement review sheets are human decision surfaces.
 
 If a directory with the same name already exists without the marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
 """
-
 
 def _workspace_plan() -> str:
     return f"""# ContextCanon onboarding plan
 {PLAN_MARKER}
 
-This is the **operator console** for the current onboarding. Work from top to bottom. Each step keeps its explanation, completion checkbox, exact command and produced artifact together so you do not have to scroll between a checklist and a separate command manual.
+This is the **operator console** for the current onboarding. Work from top to bottom. The first three steps are deliberately useful on their own: for a small document/architecture project you can stop after the reviewed Evidence snapshot and continue semantic onboarding later.
 
 ## Onboarding steps
 
 {COMMANDS_START}
-The exact snapshot-bound steps appear here after ContextCanon opens this workspace.
+### STEP 01 — Tidy before durable references
+- [ ] **Done**
+
+Before ContextCanon starts creating durable references, use this cheapest moment to remove obvious duplicates, settle accidental `final-final` document versions, and move clearly misplaced files. This is guidance, not a machine gate.
+
+### STEP 02 — Review file inventory
+- [ ] **Done**
+
+Generate or refresh the deterministic CSV inventory:
+
+```text
+contextcanon onboard inventory .
+```
+
+Edit `{INVENTORY_NAME}`. Every relevant file needs a deliberate `handling`: `source`, `interpret`, `lookup`, or `ignore`. Rerun the command after repository changes; existing human classifications are preserved while new/changed/missing files are surfaced.
+
+### STEP 03 — Freeze reviewed Evidence
+- [ ] **Done**
+
+Accept the current inventory as the Evidence boundary:
+
+```text
+contextcanon onboard prepare . --inventory {DEFAULT_WORKSPACE_NAME}/{INVENTORY_NAME}
+```
+
+ContextCanon refuses stale inventory, unresolved `undecided` rows, missing reviewed files, and newly discovered files that are absent from the CSV. Only `source` and `interpret` rows are copied into the immutable Evidence snapshot.
+
+After STEP 03, ContextCanon replaces this section with the complete snapshot-bound STEP 01–12 runbook.
 {COMMANDS_END}
 
 ## Current checkpoint
 
 {CHECKPOINT_START}
-No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
+No frozen Evidence snapshot has been accepted yet.
 {CHECKPOINT_END}
 
-The checkpoint is the **last state ContextCanon validated**, not a file watcher. After editing a human gate, rerun that same step before advancing.
+The checkpoint is the **last state ContextCanon validated**, not a file watcher. Rerun inventory before STEP 03 after repository changes; after Evidence is frozen, later semantic steps stay bound to those exact bytes.
 
 ## Human gates
 
-- **LLM handoff 1:** `STEP-02a-structure-instruction.md` + only the frozen `evidence/` tree → `STEP-02b-structure-proposal.json`.
-- **Human gate 1:** review/edit `STEP-03-structure.md`.
-- **Reusable Context gate:** review/edit `STEP-05-reusable-contexts.md`; this owns Catalog locations, Source assignments and their Why rationale.
-- **LLM handoff 2:** `STEP-06a-placement-instruction.md` + only the same frozen `evidence/` tree → `STEP-06b-placement-proposal.json`.
-- **Human gate 2:** use `STEP-08-placement.md` as the index; review semantic P findings under `STEP-08-placement/` and concrete E source transformations under `STEP-08-source-edits/`.
-
-Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.
+- **Inventory gate:** review/edit `{INVENTORY_NAME}` before freezing Evidence.
+- **LLM handoff 1:** `{STRUCTURE_INSTRUCTION_NAME}` + only the frozen `evidence/` tree → `{STRUCTURE_PROPOSAL_NAME}`.
+- **Human structure gate:** review/edit `{STRUCTURE_REVIEW_NAME}`.
+- **Reusable Context gate:** review/edit `{REUSABLE_CONTEXTS_NAME}`.
+- **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
+- **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
-
-_ATOMIC_REPLACE_RETRY_DELAYS = (0.05, 0.10, 0.20, 0.40, 0.80)
-
 
 def _replace_file_with_retry(temporary: Path, path: Path) -> None:
     """Publish one prepared sibling file atomically despite brief Windows locks."""
@@ -321,6 +347,11 @@ def _exact_commands(
     snapshot = _snapshot_label(snapshot_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
+    project_root = find_repo_root(snapshot_root)
+    try:
+        inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
+    except ValueError:
+        inventory_label = str(workspace.inventory_path.resolve())
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
         snapshot_token = "$SNAPSHOT"
@@ -342,136 +373,152 @@ def _exact_commands(
 
     lines = [
         COMMANDS_START,
-        "These commands are for **this exact Evidence snapshot**. ContextCanon carries forward machine identities and accepted human inputs; copy the short command shown in the current step.",
+        "These commands continue from the **accepted inventory and exact Evidence snapshot**. The first three steps remain visible so the provenance of the semantic run is obvious.",
         "",
-        "Set this run variable once in your terminal:",
+        "### STEP 01 — Tidy before durable references",
+        f"- [{mark(1)}] **Done**",
+        "",
+        "Before inventory acceptance, remove obvious duplicates, settle accidental document versions and move clearly misplaced files. Once durable Topic/Resource references exist, moves deserve deliberate tooling instead of casual cleanup.",
+        "",
+        "### STEP 02 — Review file inventory",
+        f"- [{mark(2)}] **Done**",
+        "",
+        "Generate or refresh the CSV whenever repository files change:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "inventory", ".", *workspace_args]),
+        "```",
+        "",
+        f"Review `{INVENTORY_NAME}`. Existing human classifications survive refresh; new/changed/missing files become visible.",
+        "",
+        "### STEP 03 — Freeze reviewed Evidence",
+        f"- [{mark(3)}] **Done**",
+        "",
+        "Accept the current inventory and freeze only its `source` / `interpret` rows:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "prepare", ".", "--inventory", inventory_label, *workspace_args]),
+        "```",
+        "",
+        "Set this run variable once for the snapshot-bound semantic steps:",
         "",
         f"```{shell}",
         snapshot_assignment,
         "```",
         "",
-        "### STEP 01 — Freeze Evidence",
-        f"- [{mark(1)}] **Done**",
+        "### STEP 04 — Structure proposal",
+        f"- [{mark(4)}] **Done**",
         "",
-        "ContextCanon freezes the exact project files used as onboarding Evidence so every later LLM/human decision refers to the same bytes. Reuse the current snapshot unless you intentionally want new Evidence.",
+        "A reasoning LLM proposes the project's semantic Context Node structure — the responsibility shelves, not merely the existing directory tree.",
         "",
-        "```text",
-        "contextcanon onboard prepare .",
-        "```",
-        "",
-        "### STEP 02 — Structure proposal",
-        f"- [{mark(2)}] **Done**",
-        "",
-        "A reasoning LLM proposes the project's **semantic Context Node structure** — the responsibility shelves, not merely the existing directory tree.",
-        "",
-        "Generate `STEP-02a-structure-instruction.md`:",
+        f"Generate `{STRUCTURE_INSTRUCTION_NAME}`:",
         "",
         "```text",
         cmd("structure-instruction"),
         "```",
         "",
-        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-02b-structure-proposal.json`. Then validate:",
+        f"Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
         "",
         "```text",
         cmd("structure-validate"),
         "```",
         "",
-        "### STEP 03 — Structure review",
-        f"- [{mark(3)}] **Done**",
+        "### STEP 05 — Structure review",
+        f"- [{mark(5)}] **Done**",
         "",
-        "You review the proposed project Context Node hierarchy: which semantic shelves exist, their names, paths and parent/child grouping.",
+        "Review the proposed semantic shelf hierarchy.",
         "",
         "```text",
         cmd("structure-review"),
         "```",
         "",
-        "Edit `STEP-03-structure.md` as needed, then run the same command again to validate the human gate.",
+        f"Edit `{STRUCTURE_REVIEW_NAME}` as needed, then run the same command again.",
         "",
-        "### STEP 04 — Materialize shelves",
-        f"- [{mark(4)}] **Done**",
+        "### STEP 06 — Materialize shelves",
+        f"- [{mark(6)}] **Done**",
         "",
-        "ContextCanon previews and then creates only the missing accepted Context Node directories/skeletons. No project knowledge is placed yet.",
+        "Preview and create only missing accepted Context Node directories/skeletons. No project knowledge is placed yet.",
         "",
         "```text",
         cmd("structure-preview"),
         cmd("structure-materialize"),
         "```",
         "",
-        "Review `STEP-04-structure-preview.md` between the two commands.",
+        f"Review `{STRUCTURE_PREVIEW_NAME}` between the two commands.",
         "",
-        "### STEP 05 — Reusable Contexts",
-        f"- [{mark(5)}] **Done**",
+        "### STEP 07 — Reusable Contexts",
+        f"- [{mark(7)}] **Done**",
         "",
-        "You tell ContextCanon **where reusable external Context Nodes can be found, which accepted project Nodes they apply to, and why**. This prepares the foreign shelves before the placement LLM distributes project knowledge.",
+        "Configure reusable external Context Nodes, sparse assignments and their Why rationale.",
         "",
         "```text",
         cmd("reusable-contexts"),
         "```",
         "",
-        "The first run creates `STEP-05-reusable-contexts.md`. Edit its Catalog locations and sparse Assignments, set `Decision` to `accept` when correct, and rerun the same command after every edit. You work with names/path/version; ContextCanon owns IDs and digests.",
+        f"The first run creates `{REUSABLE_CONTEXTS_NAME}`. Edit it and rerun the same command until accepted.",
         "",
-        "### STEP 06 — Placement proposal",
-        f"- [{mark(6)}] **Done**",
+        "### STEP 08 — Placement proposal",
+        f"- [{mark(8)}] **Done**",
         "",
-        "A reasoning LLM now places the project's frozen knowledge onto the already accepted own/reusable Context shelves and proposes any reviewed source-document cleanup.",
+        "A reasoning LLM places frozen project knowledge onto the accepted own/reusable Context shelves.",
         "",
-        "Generate `STEP-06a-placement-instruction.md`:",
+        f"Generate `{PLACEMENT_INSTRUCTION_NAME}`:",
         "",
         "```text",
         cmd("placement-instruction"),
         "```",
         "",
-        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-06b-placement-proposal.json`.",
+        f"Save the LLM JSON as `{PLACEMENT_PROPOSAL_NAME}`.",
         "",
-        "### STEP 07 — Placement validate",
-        f"- [{mark(7)}] **Done**",
+        "### STEP 09 — Placement validate",
+        f"- [{mark(9)}] **Done**",
         "",
-        "ContextCanon checks the LLM proposal against the frozen Evidence, accepted project structure and exact reusable Context packages. This is machine validation; there is no separate STEP-07 artifact.",
+        "Machine-validate the proposal against frozen Evidence, accepted structure and exact reusable Context packages.",
         "",
         "```text",
         cmd("placement-validate"),
         "```",
         "",
-        "### STEP 08 — Placement review",
-        f"- [{mark(8)}] **Done**",
+        "### STEP 10 — Placement review",
+        f"- [{mark(10)}] **Done**",
         "",
-        "You review **which project knowledge goes into which Context Node**. Reusable Context assignments from STEP 05 are already decided and appear only as compact traceability, not as a giant selection matrix.",
+        "Review which project meaning belongs in which Context Node and any concrete source transformations.",
         "",
         "```text",
         cmd("placement-review"),
         "```",
         "",
-        "Review/edit the linked P sheets in `STEP-08-placement/` and E sheets in `STEP-08-source-edits/`. The tables in `STEP-08-placement.md` are generated snapshots, not live views; rerun this same `placement-review` command after edits to validate dependencies and refresh the index. Every successful run also regenerates read-only `STEP-08a-source-audit.md`.",
+        f"Use `{PLACEMENT_REVIEW_NAME}` as the index; rerun the same command after edits to validate and refresh the audit.",
         "",
-        "### STEP 09 — Publication preview",
-        f"- [{mark(9)}] **Done**",
+        "### STEP 11 — Publication preview",
+        f"- [{mark(11)}] **Done**",
         "",
-        "ContextCanon shows the exact Context/source-document changes that publication would make, including semantic Parent pins and reusable Source installation.",
+        "Show the exact Context/source-document changes publication would make.",
         "",
         "```text",
         cmd("placement-preview"),
         "```",
         "",
-        "Review `STEP-09-placement-preview.md` before publishing.",
+        f"Review `{PLACEMENT_PREVIEW_NAME}` before publishing.",
         "",
-        "### STEP 10 — Publish placement",
-        f"- [{mark(10)}] **Done**",
+        "### STEP 12 — Publish placement",
+        f"- [{mark(12)}] **Done**",
         "",
-        "ContextCanon transactionally publishes the fully reviewed Context Node authoring and produces the durable follow-up report.",
+        "Transactionally publish the fully reviewed Context Node authoring.",
         "",
         "```text",
         cmd("placement-publish"),
         "```",
         "",
-        "Inspect `STEP-10-placement-followup.md` afterwards.",
+        f"Inspect `{PLACEMENT_FOLLOWUP_NAME}` afterwards.",
         "",
-        "## Reset commands for testing",
+        "## Reset commands for semantic testing",
         "",
-        "Frozen Evidence is preserved. Restart from the semantic step you want to retest:",
+        "Inventory and frozen Evidence are preserved. Restart from the semantic step you want to retest:",
         "",
         "```text",
     ]
-    for step in range(2, 11):
+    for step in range(4, 13):
         lines.append(render(["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]))
     lines.extend(["```", COMMANDS_END])
     return "\n".join(lines)
@@ -483,22 +530,23 @@ def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[
         return set(range(1, max(1, target)))
 
     rank = {
-        "structure instruction ready": 1,
-        "structure proposal validated": 2,
-        "human structure validated": 3,
-        "structure previewed": 3,
-        "structure materialized": 4,
-        "reusable contexts review": 4,
-        "reusable contexts accepted": 5,
-        "placement instruction ready": 5,
-        "placement proposal validated": 7,
-        "human placement review": 7,
-        "placement publication previewed": 9,
-        "placement published": 10,
-    }.get(stage, 1)
+        "evidence prepared": 3,
+        "structure instruction ready": 3,
+        "structure proposal validated": 4,
+        "human structure validated": 5,
+        "structure previewed": 5,
+        "structure materialized": 6,
+        "reusable contexts review": 6,
+        "reusable contexts accepted": 7,
+        "placement instruction ready": 7,
+        "placement proposal validated": 9,
+        "human placement review": 9,
+        "placement publication previewed": 11,
+        "placement published": 12,
+    }.get(stage, 3)
     completed = set(range(1, rank + 1))
     if stage == "human placement review" and placement_review_complete is True:
-        completed.add(8)
+        completed.add(10)
     return completed
 
 def _rewrite_checklist(text: str, completed: set[int], path: Path) -> str:
