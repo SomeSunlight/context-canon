@@ -15,6 +15,7 @@ from .parser import ContextCanonError
 
 EVIDENCE_SCHEMA = "contextcanon/onboarding-evidence/v0"
 SELECTION_POLICY = "contextcanon/onboarding-default/v0"
+REVIEWED_INVENTORY_SELECTION_POLICY = "contextcanon/onboarding-reviewed-inventory/v0"
 MAX_EVIDENCE_FILE_BYTES = 1024 * 1024
 MAX_EVIDENCE_TOTAL_BYTES = 16 * 1024 * 1024
 _TEXT_SUFFIXES = {".md", ".mdx", ".rst", ".txt", ".adoc", ".asciidoc"}
@@ -79,19 +80,32 @@ class EvidenceEntry:
     sha256: str
     size: int
     reason: str
+    kind: str | None = None
+    handling: str | None = None
+    description: str | None = None
+    note: str | None = None
 
     @property
     def snapshot_path(self) -> str:
         return f"evidence/{self.path}"
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "path": self.path,
             "reason": self.reason,
             "sha256": self.sha256,
             "size": self.size,
             "snapshot": self.snapshot_path,
         }
+        if self.kind is not None:
+            result["kind"] = self.kind
+        if self.handling is not None:
+            result["handling"] = self.handling
+        if self.description is not None:
+            result["description"] = self.description
+        if self.note:
+            result["note"] = self.note
+        return result
 
 
 @dataclass(frozen=True)
@@ -260,7 +274,13 @@ def _explicit_path(project_root: Path, value: str) -> str:
     return path
 
 
-def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -> tuple[EvidenceEntry | None, ExcludedEvidence | None, bytes | None]:
+def _collect_entry(
+    project_root: Path,
+    path: str,
+    reason: str,
+    explicit: bool,
+    metadata: Mapping[str, str] | None = None,
+) -> tuple[EvidenceEntry | None, ExcludedEvidence | None, bytes | None]:
     blocked = _blocked_reason(path)
     if blocked:
         if explicit:
@@ -297,7 +317,17 @@ def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -
         return None, ExcludedEvidence(path, "non-utf8"), None
 
     digest = hashlib.sha256(data).hexdigest()
-    return EvidenceEntry(path=path, sha256=digest, size=size, reason=reason), None, data
+    metadata = metadata or {}
+    return EvidenceEntry(
+        path=path,
+        sha256=digest,
+        size=size,
+        reason=reason,
+        kind=metadata.get("kind"),
+        handling=metadata.get("handling"),
+        description=metadata.get("description"),
+        note=metadata.get("note"),
+    ), None, data
 
 
 def _manifest_payload(
@@ -369,6 +399,7 @@ def prepare_onboarding_evidence(
     *,
     explicit_paths: Iterable[str] = (),
     selected_reasons: Mapping[str, str] | None = None,
+    selected_metadata: Mapping[str, Mapping[str, str]] | None = None,
     selection_policy: str = SELECTION_POLICY,
 ) -> PreparedEvidence:
     project_root = _require_git_repository_root(project)
@@ -401,7 +432,13 @@ def prepare_onboarding_evidence(
     total_bytes = 0
     for path in sorted(selected):
         reason, explicit = selected[path]
-        entry, excluded, data = _collect_entry(project_root, path, reason, explicit)
+        entry, excluded, data = _collect_entry(
+            project_root,
+            path,
+            reason,
+            explicit,
+            None if selected_metadata is None else selected_metadata.get(path),
+        )
         if entry is not None and data is not None:
             total_bytes += entry.size
             if total_bytes > MAX_EVIDENCE_TOTAL_BYTES:
