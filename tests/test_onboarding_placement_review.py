@@ -271,7 +271,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
         index = workspace.placement_path.read_text(encoding="utf-8")
         workspace.placement_path.write_text(index.replace("split-v2", "split-v1", 1), encoding="utf-8")
-        with self.assertRaisesRegex(ContextCanonError, "not migrated|Reset from STEP 08"):
+        with self.assertRaisesRegex(ContextCanonError, "not migrated|Reset from STEP 10"):
             create_or_load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
     def test_legacy_monolith_can_still_enter_current_review_layout(self):
