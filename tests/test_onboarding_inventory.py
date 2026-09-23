@@ -11,6 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from contextcanon.cli import main as cli_main
+from contextcanon.onboarding_structure_instruction import build_onboarding_structure_instruction
+from contextcanon.onboarding_proposal import load_evidence_snapshot
 from contextcanon.onboarding_inventory import (
     INVENTORY_COLUMNS,
     prepare_from_inventory,
@@ -100,6 +103,65 @@ class OnboardingInventoryTests(unittest.TestCase):
         )
         self.assertEqual({row.path: row.handling for row in selection.rows}["src/main.py"], "lookup")
         self.assertFalse((prepared.snapshot_root / "evidence/src/main.py").exists())
+
+    def test_reviewed_description_is_snapshot_bound_and_visible_to_semantic_llm(self):
+        repo = self.make_repo()
+        (repo / "parameters.csv").write_text("name,default\nanswer,42\n", encoding="utf-8")
+        csv_path = repo / "inventory.csv"
+        refresh_inventory(repo, csv_path)
+        rows = self.read_csv(csv_path)
+        row = next(item for item in rows if item["path"] == "parameters.csv")
+        row["description"] = "Canonical P1 parameter catalog used by every sub-product."
+        row["note"] = "Owner-confirmed during onboarding."
+        self.write_csv(csv_path, rows)
+
+        prepared, _ = prepare_from_inventory(repo, csv_path)
+        snapshot = load_evidence_snapshot(prepared.snapshot_root)
+        entry = snapshot.by_path["parameters.csv"]
+        self.assertEqual(entry.kind, "structured-data")
+        self.assertEqual(entry.handling, "source")
+        self.assertEqual(entry.description, "Canonical P1 parameter catalog used by every sub-product.")
+        self.assertEqual(entry.note, "Owner-confirmed during onboarding.")
+
+        instruction = build_onboarding_structure_instruction(prepared.snapshot_root).text
+        self.assertIn("kind `structured-data`", instruction)
+        self.assertIn("handling `source`", instruction)
+        self.assertIn("Owner-reviewed description: Canonical P1 parameter catalog used by every sub-product.", instruction)
+        self.assertIn("Owner note: Owner-confirmed during onboarding.", instruction)
+
+    def test_external_speedyboarding_csv_does_not_hide_sibling_project_files(self):
+        repo = self.make_repo()
+        (repo / "setup").mkdir()
+        (repo / "setup/inventory.csv").write_text(
+            "path,kind,handling,description\n"
+            "product.md,document,source,Product definition\n",
+            encoding="utf-8",
+        )
+        (repo / "product.md").write_text("# Product\n", encoding="utf-8")
+        (repo / "setup/important.md").write_text("# Important\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(ContextCanonError, "setup/important.md"):
+            prepare_from_inventory(repo, repo / "setup/inventory.csv")
+
+    def test_cli_copies_external_speedyboarding_csv_into_canonical_workspace(self):
+        repo = self.make_repo()
+        (repo / "product.md").write_text("# Product\n", encoding="utf-8")
+        external = repo / "speedy.csv"
+        external.write_text(
+            "path,kind,handling,description\n"
+            "product.md,document,source,Product definition\n",
+            encoding="utf-8",
+        )
+
+        result = cli_main([
+            "onboard", "prepare", str(repo),
+            "--inventory", str(external),
+        ])
+        self.assertEqual(result, 0)
+        canonical = repo / "contextcanon-onboarding" / "STEP-02-inventory.csv"
+        self.assertEqual(canonical.read_bytes(), external.read_bytes())
+        plan = (repo / "contextcanon-onboarding" / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("--inventory contextcanon-onboarding/STEP-02-inventory.csv", plan)
 
     def test_prepare_rejects_repository_file_added_after_inventory(self):
         repo = self.make_repo()
