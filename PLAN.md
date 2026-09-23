@@ -582,8 +582,8 @@ Purpose: add a human-reviewed file inventory before Evidence freezing so first a
 - **Deferred:** LLM inventory triage, interpretation, chat/meeting onboarding, structured semantic diffs, resource move/rename support, and larger-repository scaling optimizations.
 - **Exit condition:** focused inventory regressions, complete deterministic suite, self-build/check and diff hygiene pass on one coherent draft-PR head; then mark this fast-run CLOSED and return to owner review. No merge without explicit owner approval.
 
-- [ ] 1. Add the preflight/inventory data model, CSV review surface and deterministic default rules.
-- [ ] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
-- [ ] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
-- [ ] 4. Add the Hello World Extended shared fixture and focused regression coverage.
+- [x] 1. Add the preflight/inventory data model, CSV review surface and deterministic default rules.
+- [x] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
+- [x] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
+- [x] 4. Add the Hello World Extended shared fixture and focused regression coverage.
 - [ ] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
