@@ -167,6 +167,10 @@ ContextCanon now separates the preflight from semantic onboarding:
 
 The repository directory tree is evidence about the project, not a taxonomy ContextCanon must preserve.
 
+## Why frozen Evidence exists
+
+STEP 03 copies the reviewed `source` / `interpret` files into one immutable content-addressed snapshot. Later LLM proposals and human reviews therefore refer to the same exact bytes even if the live repository keeps changing. Start a new Evidence basis deliberately; do not let later semantic steps silently rescan the project.
+
 ## Human-facing artifacts — sorted in workflow order
 
 - `{PLAN_NAME}` — generated operator runbook and current validated checkpoint.
