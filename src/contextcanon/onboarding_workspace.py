@@ -255,7 +255,7 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 - **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
 
-def _replace_file_with_retry(temporary: Path, path: Path) -> None:
+_ATOMIC_REPLACE_RETRY_DELAYS = (0.05, 0.10, 0.20, 0.40, 0.80)\n\n\ndef _replace_file_with_retry(temporary: Path, path: Path) -> None:
     """Publish one prepared sibling file atomically despite brief Windows locks."""
 
     for attempt in range(len(_ATOMIC_REPLACE_RETRY_DELAYS) + 1):
