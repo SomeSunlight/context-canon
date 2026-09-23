@@ -537,6 +537,8 @@ def validate_inventory_for_prepare(
     live_paths = [
         path for path in _repository_paths(project_root)
         if _in_scope(path, normalized_directories)
+        and not _is_inventory_control_path(project_root, csv_path, path)
+        and _blocked_reason(path) != "framework-or-derived-path"
     ]
     missing_rows = sorted(set(live_paths) - set(row_by_path))
     if missing_rows:
