@@ -20,15 +20,15 @@ class OnboardingPlanStepsTests(unittest.TestCase):
                 snapshot,
                 ("/legacy/catalog/package",),
                 ("N-001=opaque-id",),
-                completed={1, 2, 3, 4},
+                completed={1, 2, 3, 4, 5, 6},
             )
-            self.assertIn("### STEP 05 — Reusable Contexts", text)
-            self.assertIn("where reusable external Context Nodes can be found", text)
+            self.assertIn("### STEP 07 — Reusable Contexts", text)
+            self.assertIn("Configure reusable external Context Nodes", text)
             self.assertIn("contextcanon onboard reusable-contexts", text)
-            self.assertIn("### STEP 06 — Placement proposal", text)
-            self.assertIn("STEP-06a-placement-instruction.md", text)
-            self.assertIn("STEP-08-placement.md", text)
-            self.assertIn("STEP-10-placement-followup.md", text)
+            self.assertIn("### STEP 08 — Placement proposal", text)
+            self.assertIn("STEP-08a-placement-instruction.md", text)
+            self.assertIn("STEP-10-placement.md", text)
+            self.assertIn("STEP-12-placement-followup.md", text)
             self.assertNotIn("--catalog-package", text)
             self.assertNotIn("--owner-source", text)
             self.assertNotIn("opaque-id", text)
