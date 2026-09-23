@@ -594,7 +594,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_validate.add_argument(
         "proposal",
         nargs="?",
-        help="JSON onboarding structure proposal (default: <workspace>/STEP-02b-structure-proposal.json)",
+        help="JSON onboarding structure proposal (default: <workspace>/STEP-04b-structure-proposal.json)",
     )
     _add_workspace(onboard_structure_validate)
 
@@ -606,12 +606,12 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_review.add_argument(
         "proposal",
         nargs="?",
-        help="validated JSON onboarding structure proposal (default: <workspace>/STEP-02b-structure-proposal.json)",
+        help="validated JSON onboarding structure proposal (default: <workspace>/STEP-04b-structure-proposal.json)",
     )
     onboard_structure_review.add_argument(
         "structure",
         nargs="?",
-        help="human-editable structure Markdown file (default: <workspace>/STEP-03-structure.md)",
+        help="human-editable structure Markdown file (default: <workspace>/STEP-05-structure.md)",
     )
     _add_workspace(onboard_structure_review)
 
@@ -687,7 +687,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_review.add_argument(
         "proposal",
         nargs="?",
-        help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)",
+        help="placement proposal JSON (default: <workspace>/STEP-08b-placement-proposal.json)",
     )
     _add_workspace(onboard_placement_review)
     _add_structure_inputs(onboard_placement_review)
@@ -718,7 +718,7 @@ def main(argv: list[str] | None = None) -> int:
         command = onboard_sub.add_parser(command_name, help=command_help)
         command.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
         command.add_argument(
-            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)"
+            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-08b-placement-proposal.json)"
         )
         _add_workspace(command)
         _add_structure_inputs(command)
@@ -730,7 +730,7 @@ def main(argv: list[str] | None = None) -> int:
             help="same exact immutable Source catalog used for placement review; may be repeated",
         )
         command.add_argument(
-            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-08-placement.md)"
+            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-10-placement.md)"
         )
         command.add_argument(
             "--project", metavar="PATH", help="target Git repository root (default: infer from snapshot)"
@@ -986,8 +986,8 @@ def main(argv: list[str] | None = None) -> int:
                     source_catalog=_catalog_labels(instruction.catalog_packages),
                     source_catalog_inputs=tuple(args.catalog_package),
                     next_action=(
-                        "Give `STEP-02a-structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                        "Save its single JSON result as `STEP-02b-structure-proposal.json`, then run "
+                        "Give `STEP-04a-structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
+                        "Save its single JSON result as `STEP-04b-structure-proposal.json`, then run "
                         f"`contextcanon onboard structure-validate {_snapshot_cli(snapshot)}`."
                     ),
                 )
@@ -1010,7 +1010,7 @@ def main(argv: list[str] | None = None) -> int:
                     update_workspace_checkpoint(
                         workspace, snapshot,
                         stage="structure proposal validated",
-                        next_action=f"Run `contextcanon onboard structure-review {_snapshot_cli(snapshot)}` and edit `STEP-03-structure.md`.",
+                        next_action=f"Run `contextcanon onboard structure-review {_snapshot_cli(snapshot)}` and edit `STEP-05-structure.md`.",
                     )
                 return 0
 
@@ -1185,8 +1185,8 @@ def main(argv: list[str] | None = None) -> int:
                         source_catalog=_catalog_labels(instruction.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            "Give `STEP-06a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                            "Save its single JSON result as `STEP-06b-placement-proposal.json`, then run "
+                            "Give `STEP-08a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
+                            "Save its single JSON result as `STEP-08b-placement-proposal.json`, then run "
                             f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}`."
                         ),
                     )
@@ -1277,7 +1277,7 @@ def main(argv: list[str] | None = None) -> int:
                     next_action = (
                         f"Review `STEP-11-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}`."
                         if preview.review_complete else
-                        "Return to the `STEP-08-placement.md` index and its linked finding files, resolve all pending decisions, and preview again."
+                        "Return to the `STEP-10-placement.md` index and its linked finding files, resolve all pending decisions, and preview again."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement publication previewed",
