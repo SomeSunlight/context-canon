@@ -211,12 +211,12 @@ def _default_classification(path: str, custom_rules: tuple[InventoryRule, ...]) 
     lower_name = pure.name.lower()
     suffix = pure.suffix.lower()
 
-    if any(part in _GENERATED_COMPONENTS for part in lower_parts[:-1]):
-        return "generated", "ignore", "generated-directory", ""
-
     for rule in custom_rules:
         if fnmatch.fnmatchcase(path, rule.pattern):
             return rule.kind, rule.handling, f"custom:{rule.pattern}", ""
+
+    if any(part in _GENERATED_COMPONENTS for part in lower_parts[:-1]):
+        return "generated", "ignore", "generated-directory", ""
 
     stem_tokens = {
         token
@@ -397,7 +397,15 @@ def _is_inventory_control_path(project_root: Path, csv_path: Path, path: str) ->
         parent_relative = parent.relative_to(project_root).as_posix()
     except ValueError:
         return False
-    return path.startswith(parent_relative + "/")
+    marker = '<!-- contextcanon:onboarding-workspace schema="contextcanon/onboarding-workspace/v0" -->'
+    readme = parent / "README.md"
+    if not readme.is_file():
+        return False
+    try:
+        owned_workspace = marker in readme.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        owned_workspace = False
+    return owned_workspace and path.startswith(parent_relative + "/")
 
 
 def refresh_inventory(
@@ -574,7 +582,10 @@ def validate_inventory_for_prepare(
         if row.handling in {"source", "interpret"} and not row.description:
             errors.append(f"{row.path}: {row.handling} rows require a short description")
         if row.handling in {"source", "interpret"}:
-            evidence_reasons[row.path] = f"inventory-{row.handling}"
+            description = " ".join(row.description.split())
+            evidence_reasons[row.path] = (
+                f"inventory-{row.handling}; kind={row.kind}; description={description}"
+            )
 
     if errors:
         detail = "\n".join(f"- {item}" for item in errors[:20])
@@ -623,6 +634,11 @@ def prepare_from_inventory(
         {
             "schema": INVENTORY_ACCEPTANCE_SCHEMA,
             "inventory_sha256": hashlib.sha256(inventory_bytes).hexdigest(),
+            "inventory_path": (
+                selection.csv_path.relative_to(selection.project_root).as_posix()
+                if selection.csv_path.is_relative_to(selection.project_root)
+                else str(selection.csv_path)
+            ),
             "evidence_digest": prepared.evidence_digest,
             "directories": list(selection.directories),
             "files": files,
