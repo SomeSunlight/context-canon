@@ -23,7 +23,7 @@ from .parser import ContextCanonError
 INVENTORY_SCHEMA = "contextcanon/onboarding-inventory/v0"
 INVENTORY_STATE_SCHEMA = "contextcanon/onboarding-inventory-state/v0"
 INVENTORY_ACCEPTANCE_SCHEMA = "contextcanon/onboarding-inventory-acceptance/v0"
-INVENTORY_SELECTION_POLICY = "contextcanon/onboarding-reviewed-inventory/v0"
+INVENTORY_SELECTION_POLICY = REVIEWED_INVENTORY_SELECTION_POLICY
 
 INVENTORY_COLUMNS = (
     "path",
@@ -609,9 +609,20 @@ def prepare_from_inventory(
     directories: Iterable[str] = (),
 ) -> tuple[PreparedEvidence, InventorySelection]:
     selection = validate_inventory_for_prepare(project, csv_path, directories=directories)
+    metadata = {
+        row.path: {
+            "kind": row.kind,
+            "handling": row.handling,
+            "description": row.description,
+            "note": row.note,
+        }
+        for row in selection.rows
+        if row.path in selection.evidence_reasons
+    }
     prepared = prepare_onboarding_evidence(
         selection.project_root,
         selected_reasons=selection.evidence_reasons,
+        selected_metadata=metadata,
         selection_policy=INVENTORY_SELECTION_POLICY,
     )
 
