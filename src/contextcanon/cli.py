@@ -1155,7 +1155,7 @@ def main(argv: list[str] | None = None) -> int:
                     accepted_reusable_assignments = reusable.assignments
                     preaccepted_owner_sources = True
                 elif not catalog_inputs and remembered_catalog:
-                    # Legacy/scripting compatibility for an onboarding started before STEP 05 existed.
+                    # Legacy/scripting compatibility for an onboarding started before STEP 07 existed.
                     catalog_inputs = remembered_catalog
                     catalog = tuple(Path(path) for path in catalog_inputs)
 
@@ -1216,7 +1216,7 @@ def main(argv: list[str] | None = None) -> int:
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
                             f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`. "
-                            "Reusable Context relationships were already accepted in STEP 05; no Source IDs need to be typed here."
+                            "Reusable Context relationships were already accepted in STEP 07; no Source IDs need to be typed here."
                         ),
                     )
                     return 0
