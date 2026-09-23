@@ -19,7 +19,7 @@ ContextCanon freezes selected Evidence
         ↓
 strong reasoning LLM proposes coarse structure
         ↓
-human edits STEP-03-structure.md until it matches the project mental model
+human edits STEP-05-structure.md until it matches the project mental model
         ↓
 ContextCanon previews/materializes only missing Node skeletons
         ↓
@@ -27,7 +27,7 @@ human configures reusable Context catalog + sparse assignments in STEP-05
         ↓
 strong reasoning LLM places existing knowledge into the already composed structure
         ↓
-human reviews STEP-08-placement.md with exact source excerpts
+human reviews STEP-10-placement.md with exact source excerpts
         ↓
 publication preview → explicit publish → later duplicate cleanup
 ```
@@ -43,19 +43,99 @@ Once the context is organized, smaller or local models can benefit from receivin
 
 This page explains **why** the stages exist. It is deliberately not the place where an operator should reconstruct long snapshot IDs or remember which flags belong on which nearly-identical command.
 
-As soon as Step 2 opens `contextcanon-onboarding/`, use **`contextcanon-onboarding/PLAN.md` as the executable console for that run**. Each numbered STEP keeps its short title, beginner-oriented explanation, completion checkbox, exact command, and artifact guidance together. The PLAN is orchestration only: it deliberately does **not** become a second configuration file for Catalog paths, Source identities, or project decisions.
+As soon as STEP 02 opens `contextcanon-onboarding/`, use **`contextcanon-onboarding/PLAN.md` as the executable console for that run**. Each numbered STEP keeps its short title, beginner-oriented explanation, completion checkbox, exact command, and artifact guidance together. The PLAN is orchestration only: it deliberately does **not** become a second configuration file for Catalog paths, Source identities, or project decisions.
 
-Reusable Context configuration lives in `STEP-05-reusable-contexts.md`, where it belongs. ContextCanon keeps exact IDs, digests, and remembered machine state behind that human gate. `contextcanon-onboarding/README.md` remains the stable orientation page; `PLAN.md` tells you what to do next.
+Reusable Context configuration lives in `STEP-07-reusable-contexts.md`, where it belongs. ContextCanon keeps exact IDs, digests, and remembered machine state behind that human gate. `contextcanon-onboarding/README.md` remains the stable orientation page; `PLAN.md` tells you what to do next.
 
-## 1. Freeze the project Evidence
+## 1. Tidy before durable references
 
-Run from the root of the Git repository:
+Before ContextCanon creates durable Topic/Resource paths, use this cheapest moment to remove obvious repository/document clutter: accidental duplicates, `final-final` versions, clearly misplaced files, and temporary exports that should not become long-lived project landmarks.
+
+This is deliberately **guidance rather than an automated rewrite**. ContextCanon does not move or delete project files during onboarding. The point is simply to avoid creating durable references to locations you already know are wrong.
+
+## 2. Inventory and review the project files
+
+Run from the Git repository root:
 
 ```text
-contextcanon onboard prepare .
+contextcanon onboard inventory .
 ```
 
-ContextCanon creates a content-addressed snapshot such as:
+The command creates the visible onboarding workspace immediately and writes:
+
+```text
+contextcanon-onboarding/
+├── README.md
+├── PLAN.md
+└── STEP-02-inventory.csv
+```
+
+For a narrower first adoption, one or more repository-relative directories can be scanned:
+
+```text
+contextcanon onboard inventory . \
+  --directory Jira \
+  --directory P1
+```
+
+The inventory uses Git's visible tracked/untracked file set, respects normal Git ignores, and excludes ContextCanon's own machine/workspace material. It does **not** ask an LLM to decide what matters.
+
+The CSV is the human gate. Its key editable columns are:
+
+- `kind` — a deliberately coarse description of what the file is, such as `document`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`;
+- `handling` — what first-adoption Evidence should do with it:
+  - `source` — direct project Evidence;
+  - `interpret` — freeze the original bytes, but flag that raw/ambiguous material needs explicit interpretation rather than silent promotion to truth;
+  - `lookup` — known potentially useful material that is **not eagerly frozen into the semantic Evidence set**;
+  - `ignore` — intentionally outside this onboarding Evidence;
+  - `undecided` — unresolved and therefore blocks STEP 03;
+- `description` — a short human explanation of what the file actually represents. `source` and `interpret` rows require one before Evidence can be frozen;
+- `note` — optional owner context.
+
+Size, exact SHA-256, accepted SHA-256, status and the deterministic default rule remain visible for audit. Defaults are intentionally simple and correctable: ordinary readable documents/structured data are usually proposed as `source`, source code as `lookup`, obvious meeting/chat/prestudy-like records as `interpret`, and common binary/generated material as `ignore`. Custom deterministic rules can be supplied without introducing an LLM:
+
+```text
+contextcanon onboard inventory . \
+  --rule "src/generated/**=generated:ignore" \
+  --rule "contracts/*.csv=structured-data:source"
+```
+
+Rerunning STEP 02 preserves reviewed semantic columns for known paths while surfacing repository drift as `new`, `changed`, `missing`, or `present`. That makes the same gate useful when new project material arrives later.
+
+### Speedyboarding
+
+A team/tool may generate its own CSV. At minimum it can provide:
+
+```csv
+path,kind,handling,description
+P1/product.md,document,source,Product definition
+P1/parameters.csv,structured-data,source,Canonical P1 parameter catalog
+src/main.py,source-code,lookup,
+```
+
+ContextCanon still compares that table with the real repository scope before accepting it. An incomplete custom table cannot make unlisted live files disappear silently.
+
+## 3. Freeze the reviewed Evidence
+
+Once the CSV is reviewed:
+
+```text
+contextcanon onboard prepare . \
+  --inventory contextcanon-onboarding/STEP-02-inventory.csv
+```
+
+Running STEP 03 is the explicit acceptance action for the inventory. ContextCanon refuses:
+
+- live repository files in scope that are absent from the CSV;
+- stale hashes when a listed file changed after inventory generation;
+- non-ignored missing files;
+- `undecided` handling;
+- blocked/sensitive paths marked for inclusion;
+- `source` / `interpret` rows without a description.
+
+Only `source` and `interpret` rows are copied into the content-addressed Evidence snapshot. `lookup` remains deliberately outside that eager semantic set.
+
+ContextCanon creates a snapshot such as:
 
 ```text
 .context/onboarding/<evidence-digest>/
@@ -63,26 +143,13 @@ ContextCanon creates a content-addressed snapshot such as:
 
 ### What "frozen" means
 
-Freezing does **not** lock the live repository. ContextCanon copies the selected review material into an immutable snapshot and records exact paths, sizes, hashes, and line counts.
+Freezing does **not** lock the live repository. ContextCanon copies the reviewed Evidence into an immutable snapshot with exact paths, sizes and hashes. Later structure/placement work therefore refers to the same bytes even when the live repository continues changing.
 
-That gives two important properties:
+Prepare a new snapshot when you intentionally accept a new Evidence basis. For compatibility, `contextcanon onboard prepare .` without `--inventory` still uses the earlier conservative automatic selection path; the generated onboarding PLAN uses the reviewed inventory path.
 
-1. the LLM and later human review are talking about the **same exact project bytes**;
-2. another semantic pass, corrected instruction, or review iteration can deliberately reuse the **same Evidence digest** without rescanning the live project and silently changing the basis of comparison.
+## 4. Discover the coarse structure
 
-Prepare a new snapshot when you intentionally want a new evidence basis, not merely because another onboarding experiment starts.
-
-ContextCanon selects likely context carriers conservatively: README/CONTRIBUTING files, architecture/design/development documentation, common manifests and configuration, CI workflows, and common agent instructions. Ordinary source code is not copied wholesale. Important safe UTF-8 files can be added explicitly:
-
-```text
-contextcanon onboard prepare . \
-  --include src/project_policy.py \
-  --include config/example.ini
-```
-
-## 2. Discover the coarse structure
-
-Use the snapshot from step 1:
+Use the snapshot from STEP 03:
 
 ```text
 contextcanon onboard structure-instruction \
@@ -95,22 +162,22 @@ ContextCanon creates a visible human working directory:
 contextcanon-onboarding/
 ├── README.md
 ├── PLAN.md
-└── STEP-02a-structure-instruction.md
+└── STEP-04a-structure-instruction.md
 ```
 
-`contextcanon-onboarding/PLAN.md` is the operator console for the in-progress onboarding. It contains the ten numbered steps, with each step's explanation, checkbox, exact copy/paste command, and artifact guidance in one place, plus the external-LLM handoffs, human gates, reset commands, and latest ContextCanon-validated checkpoint. When returning after a pause, start there rather than reconstructing the command sequence from memory. `README.md` explains the workspace and points back to the PLAN.
+`contextcanon-onboarding/PLAN.md` is the operator console for the in-progress onboarding. It contains the twelve numbered steps, with each step's explanation, checkbox, exact copy/paste command, and artifact guidance in one place, plus the external-LLM handoffs, human gates, reset commands, and latest ContextCanon-validated checkpoint. When returning after a pause, start there rather than reconstructing the command sequence from memory. `README.md` explains the workspace and points back to the PLAN.
 
 Important onboarding Markdown is written directly as UTF-8 by ContextCanon rather than through shell redirection. This keeps the workflow reliable across shells — in particular Windows PowerShell codepage behavior — while `.context/` remains machine-oriented state.
 
 Give the strong reasoning LLM:
 
-- `contextcanon-onboarding/STEP-02a-structure-instruction.md` as the controlling assignment;
+- `contextcanon-onboarding/STEP-04a-structure-instruction.md` as the controlling assignment;
 - read access only to the frozen snapshot's `evidence/` directory.
 
 The model returns exactly one JSON object. Save it as:
 
 ```text
-contextcanon-onboarding/STEP-02b-structure-proposal.json
+contextcanon-onboarding/STEP-04b-structure-proposal.json
 ```
 
 The structure pass asks for:
@@ -124,7 +191,7 @@ The current repository directory tree is **evidence about the project, not the t
 
 It deliberately does **not** distribute individual Rules or rewrite project prose yet.
 
-## 3. Validate and edit the shelf map
+## 5. Validate and edit the shelf map
 
 Validate the machine proposal:
 
@@ -143,7 +210,7 @@ contextcanon onboard structure-review \
 ContextCanon creates:
 
 ```text
-contextcanon-onboarding/STEP-03-structure.md
+contextcanon-onboarding/STEP-05-structure.md
 ```
 
 The top of that file is deliberately simple Markdown:
@@ -170,7 +237,7 @@ The details below the tree retain the LLM rationale and exact Evidence excerpts.
 
 The project owner's mental model is authoritative here. The LLM proposes structure; it does not impose taxonomy or future architecture.
 
-## 4. Preview and materialize only missing Node skeletons
+## 6. Preview and materialize only missing Node skeletons
 
 Before touching project Context files:
 
@@ -182,7 +249,7 @@ contextcanon onboard structure-preview \
 This writes:
 
 ```text
-contextcanon-onboarding/STEP-04-structure-preview.md
+contextcanon-onboarding/STEP-06-structure-preview.md
 ```
 
 The preview distinguishes:
@@ -207,7 +274,7 @@ At this point **the shelves exist, but the books have not been distributed yet**
 
 A useful side effect appears during the later book-placement pass: forcing every maintained statement onto an explicit semantic shelf often surfaces responsibilities, boundaries, duplicates, and unresolved questions that were previously scattered through prose. Even before opening the detailed Evidence, the concise placement finding titles become a surprisingly useful project index. Treat that as review value, not as permission for the LLM to invent answers: unresolved questions remain explicit local State until the project resolves them.
 
-## 5. Select reusable Contexts
+## 7. Select reusable Contexts
 
 The project's own shelves now exist. Before asking an LLM to place the books, establish any **reusable external Context Nodes** that should already apply to those shelves.
 
@@ -221,7 +288,7 @@ contextcanon onboard reusable-contexts \
 The first run creates:
 
 ```text
-contextcanon-onboarding/STEP-05-reusable-contexts.md
+contextcanon-onboarding/STEP-07-reusable-contexts.md
 ```
 
 This is a human-owned configuration/review surface, not part of the PLAN. It has three jobs:
@@ -253,7 +320,7 @@ The relationship `Why` is not a Rule. A Rule says **what applies**; the Source r
 
 This gate deliberately happens **before** placement reasoning. The placement LLM therefore sees which reusable context already exists and can avoid promoting the same generic guidance again as a duplicate local Rule.
 
-## 6. Generate the content-placement assignment
+## 8. Generate the content-placement assignment
 
 The second semantic pass is bound to the exact frozen Evidence, the human-edited project structure, and the exact reusable Context state accepted in Step 5:
 
@@ -262,7 +329,7 @@ contextcanon onboard placement-instruction \
   .context/onboarding/<evidence-digest>
 ```
 
-ContextCanon writes `contextcanon-onboarding/STEP-06a-placement-instruction.md`. Give that instruction and **only the same frozen `evidence/` tree** to a strong reasoning LLM. Save its single JSON response as `contextcanon-onboarding/STEP-06b-placement-proposal.json`.
+ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md`. Give that instruction and **only the same frozen `evidence/` tree** to a strong reasoning LLM. Save its single JSON response as `contextcanon-onboarding/STEP-08b-placement-proposal.json`.
 
 The placement question is no longer "where is this text today?". It is:
 
@@ -275,7 +342,7 @@ The v1 proposal distinguishes:
 - `topic-resource` — deeper Markdown maintained at its natural repository path and routed to by a Topic;
 - `state` / `plan` — current situation or future work, kept distinct from inherited governance;
 - `ordinary-documentation` — useful documents that remain ordinary documents;
-- `authority-mapping` — a local interpretation of Markdown deliberately marked fixed/authoritative in `STEP-03-structure.md`;
+- `authority-mapping` — a local interpretation of Markdown deliberately marked fixed/authoritative in `STEP-05-structure.md`;
 - `unresolved` — ambiguity that must remain visible.
 
 Actions are deliberately narrow:
@@ -289,18 +356,18 @@ The non-redundancy goal is **one canonical meaning, many useful routes**. After 
 
 Preserve precise existing wording for facts, constraints, and Rules when it is already the best canonical wording. **Overview is a condensation task, not a quotation task:** summarize durable responsibility sharply and keep volatile compatibility detail in local State. Prefer several atomic findings over one long snake sentence.
 
-The human cockpit has one additional safety net: when a promoted finding has one unambiguous mutable Markdown range but the LLM proposes no Source After edit, `STEP-08-placement.md` exposes that exact range as an optional human override. It defaults to `reject`, so it never creates cleanup work by itself.
+The human cockpit has one additional safety net: when a promoted finding has one unambiguous mutable Markdown range but the LLM proposes no Source After edit, `STEP-10-placement.md` exposes that exact range as an optional human override. It defaults to `reject`, so it never creates cleanup work by itself.
 
 ### Mutable and fixed Markdown
 
-Ordinary `project-documentation` Markdown is mutable by default. Markdown proposed as `authoritative-reference` or `imported-corpus` is preselected as fixed in `STEP-03-structure.md`, and the project owner can correct that list before placement.
+Ordinary `project-documentation` Markdown is mutable by default. Markdown proposed as `authoritative-reference` or `imported-corpus` is preselected as fixed in `STEP-05-structure.md`, and the project owner can correct that list before placement.
 
 - **mutable** means ContextCanon may become the future owner of promoted meaning, but the first publication still does not delete or rewrite the old document;
 - **fixed** means the document remains authoritative and may only be referenced/mapped by this onboarding flow.
 
 Non-Markdown document authorities such as PDF/Word are deliberately unsupported in this version rather than hidden behind an implicit conversion mechanism.
 
-## 7. Validate the placement proposal
+## 9. Validate the placement proposal
 
 Validate the LLM result:
 
@@ -311,7 +378,7 @@ contextcanon onboard placement-validate \
 
 ContextCanon checks the proposal against the frozen Evidence, accepted project structure, and exact reusable Context packages from Step 5. There is intentionally no separate Step-07 artifact.
 
-## 8. Review and revalidate `STEP-08-placement.md`
+## 10. Review and revalidate `STEP-10-placement.md`
 
 Create/load the human review:
 
@@ -320,15 +387,15 @@ contextcanon onboard placement-review \
   .context/onboarding/<evidence-digest>
 ```
 
-`STEP-08-placement.md` is the **human-owned placement decision file**, not merely a rendered report. Each project finding is destination-first: destination, decision, kind/action, maintained meaning, proposal rationale, and exact Evidence excerpts.
+`STEP-10-placement.md` is the **human-owned placement decision file**, not merely a rendered report. Each project finding is destination-first: destination, decision, kind/action, maintained meaning, proposal rationale, and exact Evidence excerpts.
 
 The owner may edit destination, decision, title, supported kind/action semantics, maintained wording, and review note directly in Markdown. ContextCanon allocates stable authoring identity once and preserves it across reloads.
 
 Reusable Context assignments already accepted in Step 5 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in Step 5, that proposal remains an explicit human decision rather than being silently adopted.
 
-Every successful placement-review validation regenerates read-only `STEP-08a-source-audit.md`, grouping source-before/source-after transformations by original file/range so semantic loss is easy to inspect.
+Every successful placement-review validation regenerates read-only `STEP-10a-source-audit.md`, grouping source-before/source-after transformations by original file/range so semantic loss is easy to inspect.
 
-## 9. Preview exact publication before mutation
+## 11. Preview exact publication before mutation
 
 Once every placement decision is resolved:
 
@@ -337,11 +404,11 @@ contextcanon onboard placement-preview \
   .context/onboarding/<evidence-digest>
 ```
 
-The command writes `contextcanon-onboarding/STEP-09-placement-preview.md` and changes no project file. The preview shows exact `CONTEXT.src.md` deltas, semantic Parent pins, reusable Source installation/provenance, accepted follow-ups, and reviewed mutable-document changes.
+The command writes `contextcanon-onboarding/STEP-11-placement-preview.md` and changes no project file. The preview shows exact `CONTEXT.src.md` deltas, semantic Parent pins, reusable Source installation/provenance, accepted follow-ups, and reviewed mutable-document changes.
 
 Preview verifies live Evidence-covered bytes and current Node source bytes. Publication later refuses if those inputs changed after preview.
 
-## 10. Explicitly publish the reviewed placement
+## 12. Explicitly publish the reviewed placement
 
 After reviewing the preview:
 
@@ -352,7 +419,7 @@ contextcanon onboard placement-publish \
 
 Publication transactionally materializes the semantics represented by the reviewed ContextCanon grammar: accepted local Overview/Rules/Topics/Resources, local State/Plan where supported, semantic Parent pins, and accepted exact reusable Sources. Existing Node identity and unrelated authored content are preserved.
 
-The command writes `contextcanon-onboarding/STEP-10-placement-followup.md`. Generated Node `CONTEXT.md` files then expose inherited context and reusable provenance; a direct reusable Source's Why remains visible through immutable imported-context provenance in descendants.
+The command writes `contextcanon-onboarding/STEP-12-placement-followup.md`. Generated Node `CONTEXT.md` files then expose inherited context and reusable provenance; a direct reusable Source's Why remains visible through immutable imported-context provenance in descendants.
 
 Normal onboarding after Step 5 no longer asks the operator to repeat Catalog paths, Source Node IDs, or one-time Source-selection CLI syntax. ContextCanon retains those exact machine identities behind the accepted human gate.
 
@@ -364,17 +431,17 @@ A typical workspace is:
 contextcanon-onboarding/
 ├── README.md
 ├── PLAN.md
-├── STEP-02a-structure-instruction.md
-├── STEP-02b-structure-proposal.json
-├── STEP-03-structure.md
-├── STEP-04-structure-preview.md
-├── STEP-05-reusable-contexts.md
-├── STEP-06a-placement-instruction.md
-├── STEP-06b-placement-proposal.json
-├── STEP-08-placement.md
-├── STEP-08a-source-audit.md
-├── STEP-09-placement-preview.md
-└── STEP-10-placement-followup.md
+├── STEP-04a-structure-instruction.md
+├── STEP-04b-structure-proposal.json
+├── STEP-05-structure.md
+├── STEP-06-structure-preview.md
+├── STEP-07-reusable-contexts.md
+├── STEP-08a-placement-instruction.md
+├── STEP-08b-placement-proposal.json
+├── STEP-10-placement.md
+├── STEP-10a-source-audit.md
+├── STEP-11-placement-preview.md
+└── STEP-12-placement-followup.md
 ```
 
 The visible workspace has a ContextCanon ownership marker. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over; use `--workspace <path>` instead.
