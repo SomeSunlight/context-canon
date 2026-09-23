@@ -15,7 +15,13 @@ That distinction matters. Repository archaeology can discover surprisingly good 
 ```text
 existing Git repository
         ↓
-ContextCanon freezes selected Evidence
+human tidies obvious file/document clutter
+        ↓
+ContextCanon inventories Git-visible project files
+        ↓
+human reviews kind / handling / description in STEP-02-inventory.csv
+        ↓
+ContextCanon freezes the accepted source / interpret Evidence
         ↓
 strong reasoning LLM proposes coarse structure
         ↓
@@ -23,7 +29,7 @@ human edits STEP-05-structure.md until it matches the project mental model
         ↓
 ContextCanon previews/materializes only missing Node skeletons
         ↓
-human configures reusable Context catalog + sparse assignments in STEP-05
+human configures reusable Context catalog + sparse assignments in STEP-07
         ↓
 strong reasoning LLM places existing knowledge into the already composed structure
         ↓
@@ -322,7 +328,7 @@ This gate deliberately happens **before** placement reasoning. The placement LLM
 
 ## 8. Generate the content-placement assignment
 
-The second semantic pass is bound to the exact frozen Evidence, the human-edited project structure, and the exact reusable Context state accepted in Step 5:
+The second semantic pass is bound to the exact frozen Evidence, the human-edited project structure, and the exact reusable Context state accepted in Step 7:
 
 ```text
 contextcanon onboard placement-instruction \
@@ -391,7 +397,7 @@ contextcanon onboard placement-review \
 
 The owner may edit destination, decision, title, supported kind/action semantics, maintained wording, and review note directly in Markdown. ContextCanon allocates stable authoring identity once and preserves it across reloads.
 
-Reusable Context assignments already accepted in Step 5 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in Step 5, that proposal remains an explicit human decision rather than being silently adopted.
+Reusable Context assignments already accepted in Step 7 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in Step 5, that proposal remains an explicit human decision rather than being silently adopted.
 
 Every successful placement-review validation regenerates read-only `STEP-10a-source-audit.md`, grouping source-before/source-after transformations by original file/range so semantic loss is easy to inspect.
 
@@ -421,9 +427,9 @@ Publication transactionally materializes the semantics represented by the review
 
 The command writes `contextcanon-onboarding/STEP-12-placement-followup.md`. Generated Node `CONTEXT.md` files then expose inherited context and reusable provenance; a direct reusable Source's Why remains visible through immutable imported-context provenance in descendants.
 
-Normal onboarding after Step 5 no longer asks the operator to repeat Catalog paths, Source Node IDs, or one-time Source-selection CLI syntax. ContextCanon retains those exact machine identities behind the accepted human gate.
+Normal onboarding after Step 7 no longer asks the operator to repeat Catalog paths, Source Node IDs, or one-time Source-selection CLI syntax. ContextCanon retains those exact machine identities behind the accepted human gate.
 
-### Visible workspace after the ten-step path
+### Visible workspace after the twelve-step path
 
 A typical workspace is:
 
@@ -431,6 +437,7 @@ A typical workspace is:
 contextcanon-onboarding/
 ├── README.md
 ├── PLAN.md
+├── STEP-02-inventory.csv
 ├── STEP-04a-structure-instruction.md
 ├── STEP-04b-structure-proposal.json
 ├── STEP-05-structure.md
@@ -464,7 +471,8 @@ PR #12 does **not** silently reinterpret those accepted artifacts. The structure
 The flow is longer than a one-shot "read my repository and reorganize it" prompt because each stage owns a different kind of truth:
 
 ```text
-prepare                  Which exact project bytes may be considered?
+inventory                Which repository files exist and how should onboarding treat them?
+prepare                  Which reviewed source/interpret bytes become exact Evidence?
 structure instruction    What coarse semantic task is being asked?
 reasoning LLM             What knowledge areas seem to exist?
 structure validate        Does the proposal honestly cite those exact bytes?
@@ -484,6 +492,6 @@ Deterministic mechanisms handle identity, integrity, reproducibility, and state 
 
 This page is the first-user walkthrough. Compiler/schema details and the older accepted onboarding trust contract remain in the [onboarding technical reference](../nodes/internal/framework-development/docs/onboarding-reference.md#technical-reference).
 
-The structure-first/reusable-context/placement contracts are validated through the real `ai-workstation` exercise in PR #13. The older single-pass technical reference remains useful for its trust-boundary details; the ten-step walkthrough on this page is the current human-facing structure-first path.
+The structure-first/reusable-context/placement contracts were validated through the real `ai-workstation` onboarding line. The technical reference preserves the trust boundaries and compatibility path; this twelve-step walkthrough is the current human-facing first-adoption flow.
 
 State and Plan are local first-class Node authoring: accepted placement findings of those kinds are written to `## Local State` and `## Local Plan` in the destination `CONTEXT.src.md` and therefore appear in generated `CONTEXT.md`. They are intentionally not inherited through reusable Sources; current project situation and future project work stay local to the Node that owns them.
