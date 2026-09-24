@@ -234,7 +234,7 @@ def _default_classification(path: str, custom_rules: tuple[InventoryRule, ...]) 
     if suffix in _TEXT_SUFFIXES and stem_tokens.intersection(_RAW_RECORD_TOKENS):
         return "raw-record", "interpret", "raw-record-name", ""
 
-    if len(pure.parts) == 1 and lower_name == ".gitignore":
+    if lower_name == ".gitignore":
         return "configuration", "ignore", "gitignore", ""
 
     reason = _default_reason(path)
