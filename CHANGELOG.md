@@ -6,6 +6,7 @@ All notable ContextCanon changes will be documented here.
 
 ### Fixed
 
+- ContextCanon 0.9.2 owner-test candidate: `onboard init` now manages a bounded project `.gitignore` block so transient onboarding work/snapshots stay out of Git while compact accepted inventory state remains versionable and can reconstruct reviewed classifications after a clone; inventory refresh also restores prior scope and deterministic rules when not supplied explicitly.
 - ContextCanon 0.9.1 owner-test candidate: onboarding inventory now handles Git directory/gitlink entries without trying to hash them as files, reports inventory read failures with operation/path context, and no longer rewrites a generic Windows Errno 13 permission error as the known WinError-5/scanner-lock case.
 - The Hello World Extended fixture now ignores transient `contextcanon-onboarding/` and `.context/onboarding/` run data.
 
