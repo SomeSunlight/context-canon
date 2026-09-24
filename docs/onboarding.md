@@ -49,9 +49,22 @@ Once the context is organized, smaller or local models can benefit from receivin
 
 This page explains **why** the stages exist. It is deliberately not the place where an operator should reconstruct long snapshot IDs or remember which flags belong on which nearly-identical command.
 
-As soon as STEP 02 opens `contextcanon-onboarding/`, use **`contextcanon-onboarding/PLAN.md` as the executable console for that run**. Each numbered STEP keeps its short title, beginner-oriented explanation, completion checkbox, exact command, and artifact guidance together. The PLAN is orchestration only: it deliberately does **not** become a second configuration file for Catalog paths, Source identities, or project decisions.
+Create the workspace first with `contextcanon onboard init .`. From that moment, use **`contextcanon-onboarding/PLAN.md` as the executable console for that run**. Each numbered STEP keeps its short title, beginner-oriented explanation, completion checkbox, exact command, and artifact guidance together. The PLAN is orchestration only: it deliberately does **not** become a second configuration file for Catalog paths, Source identities, or project decisions.
 
 Reusable Context configuration lives in `STEP-07-reusable-contexts.md`, where it belongs. ContextCanon keeps exact IDs, digests, and remembered machine state behind that human gate. `contextcanon-onboarding/README.md` remains the stable orientation page; `PLAN.md` tells you what to do next.
+
+## 0. Install and create the operator workspace
+
+For ordinary use, install ContextCanon as an isolated uv tool rather than into the project environment being onboarded. The repository README keeps the short current installation commands.
+
+From the Git repository root:
+
+```text
+contextcanon --version
+contextcanon onboard init .
+```
+
+The second command creates the visible `contextcanon-onboarding/` directory before any inventory/Evidence decision exists. Open its `PLAN.md`; all concrete run commands continue there. This page remains background/reference documentation rather than a keyboard script.
 
 ## 1. Tidy before durable references
 
@@ -73,6 +86,7 @@ The command creates the visible onboarding workspace immediately and writes:
 contextcanon-onboarding/
 ├── README.md
 ├── PLAN.md
+├── STEP-02-inventory-guide.md
 └── STEP-02-inventory.csv
 ```
 
@@ -86,27 +100,26 @@ contextcanon onboard inventory . \
 
 The inventory uses Git's visible tracked/untracked file set, respects normal Git ignores, and excludes ContextCanon's own machine/workspace material. It does **not** ask an LLM to decide what matters.
 
-The CSV is the human gate. Its key editable columns are:
+The CSV is the human gate. A generated local reference, `contextcanon-onboarding/STEP-02-inventory-guide.md`, explains **every** column, which fields the human edits, all handling/status values, and when a refresh is actually required. Keep that guide beside the CSV instead of reconstructing its semantics from this longer architecture page.
 
-- `kind` — a deliberately coarse description of what the file is, such as `document`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`;
-- `handling` — what first-adoption Evidence should do with it:
-  - `source` — direct project Evidence;
-  - `interpret` — freeze the original bytes, but flag that raw/ambiguous material needs explicit interpretation rather than silent promotion to truth;
-  - `lookup` — known potentially useful material that is **not eagerly frozen into the semantic Evidence set**;
-  - `ignore` — intentionally outside this onboarding Evidence;
-  - `undecided` — unresolved and therefore blocks STEP 03;
-- `description` — a short human explanation of what the file actually represents. `source` and `interpret` rows require one before Evidence can be frozen;
-- `note` — optional owner context.
+The important policy is:
 
-Size, exact SHA-256, accepted SHA-256, status and the deterministic default rule remain visible for audit. Defaults are intentionally simple and correctable: ordinary readable documents/structured data are usually proposed as `source`, source code as `lookup`, obvious meeting/chat/prestudy-like records as `interpret`, and common binary/generated material as `ignore`. Custom deterministic rules can be supplied without introducing an LLM:
+- readable project documents and structured data are candidates for reviewed Evidence;
+- raw meeting/chat/prestudy-like records default to `interpret`;
+- opaque PDF/Word/PowerPoint-style originals default to `binary / ignore`; if relevant, provide a faithful same-basename Markdown transcription, which is recognized as `transcription / source`;
+- ordinary source-code files are omitted from the default first-adoption CSV because per-file tracking would create noise/churn in real codebases; explicit custom rules can opt selected files back in;
+- `.gitignore` is technical repository configuration and is ignored for semantic onboarding by default;
+- unknown material remains `undecided` and blocks STEP 03 until the owner decides.
+
+Rerunning STEP 02 is **not** part of editing the CSV. Rerun it only when repository files were added, changed, renamed/moved, or removed before STEP 03. Existing semantic decisions for known rows are preserved while machine-owned hashes/status are refreshed. The human-facing status `unchanged` means the path and bytes still match the previous inventory/accepted baseline.
+
+Custom deterministic rules remain available for deliberate exceptions:
 
 ```text
-contextcanon onboard inventory . \
-  --rule "src/generated/**=generated:ignore" \
-  --rule "contracts/*.csv=structured-data:source"
+contextcanon onboard inventory . \\
+  --rule "contracts/*.csv=structured-data:source" \\
+  --rule "src/architecture.py=source-code:interpret"
 ```
-
-Rerunning STEP 02 preserves reviewed semantic columns for known paths while surfacing repository drift as `new`, `changed`, `missing`, or `present`. That makes the same gate useful when new project material arrives later.
 
 ### Speedyboarding
 
@@ -438,6 +451,7 @@ contextcanon-onboarding/
 ├── README.md
 ├── PLAN.md
 ├── STEP-02-inventory.csv
+├── STEP-02-inventory-guide.md
 ├── STEP-04a-structure-instruction.md
 ├── STEP-04b-structure-proposal.json
 ├── STEP-05-structure.md
