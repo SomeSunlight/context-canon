@@ -902,6 +902,7 @@ def main(argv: list[str] | None = None) -> int:
                 project = Path(args.project).resolve()
                 workspace = open_inventory_workspace(project, _workspace_path(args.workspace))
                 print(f"ContextCanon onboarding workspace ready: {workspace.root}")
+                print("Git policy: transient onboarding workspace/snapshots are ignored; accepted inventory state remains Git-visible.")
                 print(f"Open {workspace.plan_path} and continue from STEP 01.")
                 return 0
 
@@ -970,6 +971,9 @@ def main(argv: list[str] | None = None) -> int:
                         "Inventory handling: "
                         + ", ".join(f"{name}={inventory_counts[name]}" for name in sorted(inventory_counts))
                     )
+                    print("Durable inventory restore state (keep in Git):")
+                    print("  .context/onboarding/inventory-state.json")
+                    print("  .context/onboarding/inventory-acceptance.json")
                 return 0
 
             if args.onboard_command == "reset":
