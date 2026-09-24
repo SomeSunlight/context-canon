@@ -632,7 +632,7 @@ Purpose: keep transient onboarding review machinery out of Git without losing ow
 - [x] Document that later accepted semantic meaning lives in canonical ContextCanon sources/relationships rather than requiring the review workspace in Git.
 - [x] Keep full semantic re-onboarding of an already adopted project explicitly outside this restore mechanism.
 - [x] Advance the owner-test package version from 0.9.1 to 0.9.2.
-- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.2 review head.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.2 review head.
 
-Checkpoint: Issue #58 is implemented on draft PR #54 as the ContextCanon 0.9.2 owner-test candidate. Focused restore/Git-ignore regressions are present; full self-hosted verification remains before the next owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+Checkpoint: Issue #58 is implemented on draft PR #54 as the ContextCanon 0.9.2 owner-test candidate. The corrected head passes the complete deterministic suite (285 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 

@@ -660,6 +660,13 @@ STEP 01 is guidance only. ContextCanon does not move/delete project files during
 
 STEP 02 starts from Git-visible tracked and non-ignored untracked files in the whole repository or one/more explicitly selected repository-relative directories. ContextCanon-owned `.context/` state and the visible onboarding workspace are outside the project-material inventory domain. The generated CSV is a human review surface; exact scanning/state bookkeeping remains machine-owned under `.context/onboarding/`.
 
+The Git persistence boundary is explicit. `onboard init` maintains one bounded block in the repository `.gitignore` that ignores the visible workspace and transient/heavy `.context/onboarding/` material while re-including exactly `inventory-state.json` and `inventory-acceptance.json`. The former records portable inventory scope/rules; the latter records the accepted per-path baseline and owner-reviewed semantic columns. They are intentionally compact and Git-visible so a clone can reconstruct the inventory review surface. If no explicit `--directory` or `--rule` arguments are supplied on a later refresh, STEP 02 reuses the durable state.
+
+Unaccepted CSV edits remain workspace state. STEP 03 is the durability boundary: only then is the reviewed inventory written into the compact acceptance baseline. Frozen Evidence snapshots remain reproducible cache/review material rather than normal Git history. Canonical semantic publication later carries accepted structure/Source/placement meaning into ContextCanon authoring itself; the visible onboarding workspace is not a second canonical authority.
+
+This restore behavior preserves inventory decisions and drift detection. It does not silently turn first-adoption publication into an update protocol for an already adopted project; semantic re-onboarding/merge remains a separate reviewed contract.
+
+
 The normal inventory intentionally does **not** enumerate every visible source-code file. Ordinary language source suffixes are omitted by default because large, fast-changing code trees would turn the onboarding table into a per-file change tracker. A deliberate `--rule GLOB=KIND:HANDLING` may opt selected source files back into the inventory. A later code-aware selection mechanism may replace this coarse boundary without changing the human acceptance principle.
 
 The reviewed row has two independent semantic axes:

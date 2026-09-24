@@ -100,6 +100,23 @@ contextcanon onboard inventory . \
 
 The inventory uses Git's visible tracked/untracked file set, respects normal Git ignores, and excludes ContextCanon's own machine/workspace material. It does **not** ask an LLM to decide what matters.
 
+### What goes into Git
+
+`contextcanon onboard init .` maintains a small marked block in the project `.gitignore`:
+
+- the visible `contextcanon-onboarding/` workspace is transient and ignored;
+- heavy `.context/onboarding/` Evidence snapshots, journals and temporary acceptance artifacts are ignored;
+- two compact files remain Git-visible and should normally be committed:
+  - `.context/onboarding/inventory-state.json` — inventory scope and deterministic rule configuration;
+  - `.context/onboarding/inventory-acceptance.json` — the accepted per-path baseline including hashes plus reviewed `kind`, `handling`, `description` and `note`.
+
+This split is deliberate. Before STEP 03, edits in the CSV are still unaccepted working state. STEP 03 turns that reviewed boundary into the compact durable acceptance files. After a fresh clone, `onboard init` followed by `onboard inventory` can regenerate the CSV from those committed files and surface current `new / changed / missing / unchanged` state without asking the owner to repeat prior classifications.
+
+Later accepted structure/reusable-Context/placement decisions do not need the whole onboarding workspace as a second authority: after publication their meaning lives in canonical `CONTEXT.src.md`, Parent/Source relationships and reviewed project-source changes. The workspace remains useful review history but is not the canonical maintenance surface.
+
+This does **not** yet mean that an already adopted project can be semantically re-onboarded by blindly replaying first-adoption publication. Incremental inventory recovery is supported; a full reviewed semantic update/re-onboarding contract remains separate work.
+
+
 The CSV is the human gate. A generated local reference, `contextcanon-onboarding/STEP-02-inventory-guide.md`, explains **every** column, which fields the human edits, all handling/status values, and when a refresh is actually required. Keep that guide beside the CSV instead of reconstructing its semantics from this longer architecture page.
 
 The important policy is:
