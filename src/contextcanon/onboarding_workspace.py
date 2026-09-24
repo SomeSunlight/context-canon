@@ -28,6 +28,7 @@ RUN_INPUTS_NAME = "run-inputs.json"
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
 INVENTORY_NAME = "STEP-02-inventory.csv"
+INVENTORY_GUIDE_NAME = "STEP-02-inventory-guide.md"
 STRUCTURE_INSTRUCTION_NAME = "STEP-04a-structure-instruction.md"
 STRUCTURE_PROPOSAL_NAME = "STEP-04b-structure-proposal.json"
 STRUCTURE_REVIEW_NAME = "STEP-05-structure.md"
@@ -92,6 +93,10 @@ class OnboardingWorkspace:
     @property
     def inventory_path(self) -> Path:
         return self.root / INVENTORY_NAME
+
+    @property
+    def inventory_guide_path(self) -> Path:
+        return self.root / INVENTORY_GUIDE_NAME
 
     @property
     def structure_instruction_path(self) -> Path:
@@ -174,7 +179,8 @@ STEP 03 copies the reviewed `source` / `interpret` files into one immutable cont
 ## Human-facing artifacts — sorted in workflow order
 
 - `{PLAN_NAME}` — generated operator runbook and current validated checkpoint.
-- `{INVENTORY_NAME}` — human-editable file inventory. `kind` says what a file is; `handling` says whether onboarding treats it as `source`, `interpret`, `lookup`, `ignore`, or still `undecided`.
+- `{INVENTORY_NAME}` — human-editable file inventory.
+- `{INVENTORY_GUIDE_NAME}` — short local reference for every inventory column, status and handling value.
 - `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for the coarse-structure reasoning pass.
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
@@ -192,9 +198,7 @@ None of these working files become canonical Context merely because they exist.
 
 ## Inventory semantics
 
-`source` means the file is direct onboarding Evidence. `interpret` also freezes the original bytes, but flags that the material is raw/ambiguous and should not silently become canonical truth. `lookup` records a file as potentially useful without eagerly freezing it into the semantic Evidence set. `ignore` intentionally excludes it. `undecided` blocks STEP 03.
-
-Rerun STEP 02 whenever repository files are added, changed, moved or removed. ContextCanon preserves human CSV decisions for known paths and surfaces `new`, `changed` and `missing` status instead of silently trusting an old inventory.
+STEP 02 deliberately keeps the PLAN short. The complete table reference lives next to the CSV in [`{INVENTORY_GUIDE_NAME}`]({INVENTORY_GUIDE_NAME}).
 
 ## Reset for testing
 
@@ -206,6 +210,71 @@ ContextCanon recognizes this workspace by the marker directly below the H1. Fram
 
 If a directory with the same name already exists without the marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
 """
+
+def _inventory_guide() -> str:
+    return f"""# STEP 02 — Inventory guide
+
+This page explains the human review table `{INVENTORY_NAME}`. The PLAN tells you **when** to use the table; this page tells you **how** to read and edit it.
+
+## What you normally edit
+
+Edit only these semantic columns unless you deliberately know why you are changing something else:
+
+- `kind` — what the artifact is.
+- `handling` — what onboarding should do with it.
+- `description` — short human explanation of what the artifact represents. Required for `source` and `interpret`.
+- `note` — optional owner context for the review.
+
+Do not hand-edit `status`, `size`, `sha256`, `accepted_sha256`, or `rule`. Rename/move files in the repository itself and rerun STEP 02 instead of editing `path` by hand.
+
+## Columns
+
+| Column | Meaning |
+| --- | --- |
+| `path` | Repository-relative file path. |
+| `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
+| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
+| `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
+| `description` | Human explanation carried into frozen Evidence metadata. |
+| `note` | Optional owner note. |
+| `size` | Current file size in bytes. Machine-owned. |
+| `sha256` | Hash of the current file bytes when inventory was generated. Machine-owned. |
+| `accepted_sha256` | Hash from the last successful STEP 03 acceptance; blank before first acceptance. Machine-owned. |
+| `rule` | Deterministic rule that supplied the current automatic default; useful for understanding why a row started with that classification. It is not an owner decision. |
+
+## Handling values
+
+- `source` — direct project Evidence for the semantic onboarding passes.
+- `interpret` — freeze the original bytes, but mark them as raw/ambiguous material whose meaning must be interpreted explicitly rather than silently promoted to truth.
+- `lookup` — known material that may be consulted later but is not eagerly frozen into the semantic Evidence set.
+- `ignore` — intentionally outside this onboarding Evidence.
+- `undecided` — unresolved; STEP 03 refuses to freeze Evidence until you decide.
+
+## Status values
+
+- `new` — first time this path is seen in the current inventory history.
+- `unchanged` — the path is still present with the same bytes as the previous inventory/accepted baseline.
+- `changed` — the path is still present but its bytes changed.
+- `missing` — the previously known path no longer exists in the repository scope.
+
+You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if repository files were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
+
+## PDF, Word, PowerPoint and similar documents
+
+Opaque office/PDF originals are not semantic Evidence by default. If one matters for onboarding, create a careful Markdown transcription beside it with the **same basename**, for example:
+
+```text
+architecture.pdf
+architecture.md
+```
+
+On the next inventory refresh ContextCanon keeps the original as `binary / ignore` and recognizes the Markdown companion as `transcription / source`. The transcription should faithfully carry the source content; semantic condensation or reinterpretation belongs in the later onboarding review, not in a supposedly faithful transcription.
+
+## Source code
+
+Normal source-code files are intentionally omitted from this first-adoption CSV. Large repositories can contain hundreds or thousands of fast-changing source files, and treating each one as a durable onboarding row creates noise and change-management debt. ContextCanon will later need language/tool-aware code selection. Until then, use a deliberate custom `--rule` only when a particular source file really belongs in this onboarding Evidence review.
+"""
+
 
 def _workspace_plan() -> str:
     return f"""# ContextCanon onboarding plan
@@ -230,7 +299,7 @@ Generate or refresh the deterministic CSV inventory:
 contextcanon onboard inventory .
 ```
 
-Edit `{INVENTORY_NAME}`. Every relevant file needs a deliberate `handling`: `source`, `interpret`, `lookup`, or `ignore`. Rerun the command after repository changes; existing human classifications are preserved while new/changed/missing files are surfaced.
+Open [`{INVENTORY_GUIDE_NAME}`]({INVENTORY_GUIDE_NAME}) and review/edit `{INVENTORY_NAME}`. The guide explains every column and value. **Do not rerun inventory just because you edited the CSV**; rerun only if repository files changed before STEP 03.
 
 ### STEP 03 — Freeze reviewed Evidence
 - [ ] **Done**
@@ -401,7 +470,7 @@ def _exact_commands(
         render(["contextcanon", "onboard", "inventory", ".", *workspace_args]),
         "```",
         "",
-        f"Review `{INVENTORY_NAME}`. Existing human classifications survive refresh; new/changed/missing files become visible.",
+        f"Use `{INVENTORY_GUIDE_NAME}` while reviewing `{INVENTORY_NAME}`. Do not refresh merely because you edited the CSV; rerun inventory only when repository files changed.",
         "",
         "### STEP 03 — Freeze reviewed Evidence",
         f"- [{mark(3)}] **Done**",
@@ -802,6 +871,7 @@ def _remember_first(text: str, headings: tuple[str, ...]) -> tuple[str, ...]:
 def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_root: Path) -> None:
     _migrate_legacy_artifacts(workspace)
     write_utf8(workspace.readme_path, _workspace_readme())
+    write_utf8(workspace.inventory_guide_path, _inventory_guide())
     if not workspace.plan_path.exists():
         write_utf8(workspace.plan_path, _workspace_plan())
         plan = workspace.plan_path.read_text(encoding="utf-8")
@@ -880,6 +950,7 @@ def open_inventory_workspace(
                 f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
             )
         write_utf8(workspace.readme_path, _workspace_readme())
+        write_utf8(workspace.inventory_guide_path, _inventory_guide())
         if workspace.plan_path.exists():
             try:
                 plan = workspace.plan_path.read_text(encoding="utf-8")
@@ -894,6 +965,7 @@ def open_inventory_workspace(
     root.mkdir(parents=True)
     write_utf8(workspace.readme_path, _workspace_readme())
     write_utf8(workspace.plan_path, _workspace_plan())
+    write_utf8(workspace.inventory_guide_path, _inventory_guide())
     return workspace
 
 
