@@ -146,11 +146,17 @@ def _acceptance_path(project_root: Path) -> Path:
     return project_root / ".context" / "onboarding" / "inventory-acceptance.json"
 
 
-def _sha256(path: Path) -> str:
+def _sha256(path: Path, *, inventory_path: str | None = None) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(block)
+    try:
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+    except OSError as exc:
+        label = inventory_path or str(path)
+        raise ContextCanonError(
+            f"Inventory could not read file while hashing {label!r}: {exc}"
+        ) from exc
     return digest.hexdigest()
 
 
@@ -377,18 +383,41 @@ def _row_from_live(
     live_paths: frozenset[str],
 ) -> InventoryRow:
     source = _safe_project_file(project_root, path)
+    hint = ""
     if source.is_symlink():
         size = None
         digest = ""
         default_kind, default_handling, default_rule, default_description = (
             "other", "ignore", "symlink", ""
         )
+        hint = "Symlinks are not onboarding Evidence."
+    elif source.is_dir():
+        size = None
+        digest = ""
+        default_kind, default_handling, default_rule, default_description = (
+            "other", "ignore", "git-directory-entry", ""
+        )
+        hint = (
+            "Git exposes this directory as one repository entry (commonly a submodule/gitlink). "
+            "The parent inventory does not scan its contents; onboard that repository separately if it matters."
+        )
+    elif not source.is_file():
+        size = None
+        digest = ""
+        default_kind, default_handling, default_rule, default_description = (
+            "other", "ignore", "non-regular-path", ""
+        )
+        hint = "This Git-visible path is not a regular file and cannot become onboarding Evidence."
     else:
-        size = source.stat().st_size
-        digest = _sha256(source)
+        try:
+            size = source.stat().st_size
+        except OSError as exc:
+            raise ContextCanonError(
+                f"Inventory could not inspect file metadata for {path!r}: {exc}"
+            ) from exc
+        digest = _sha256(source, inventory_path=path)
         default_kind, default_handling, default_rule, default_description = _default_classification(path, rules)
 
-    hint = ""
     if not default_rule.startswith("custom:"):
         companions = _opaque_companions(path, live_paths)
         suffix = PurePosixPath(path).suffix.lower()
@@ -652,10 +681,20 @@ def validate_inventory_for_prepare(
         if not _in_scope(row.path, normalized_directories):
             continue
         live = _safe_project_file(project_root, row.path)
-        exists = live.is_file() and not live.is_symlink()
-        if not exists:
+        if live.is_symlink():
+            if row.handling != "ignore":
+                errors.append(f"{row.path}: path is a symlink and must use handling=ignore")
+            continue
+        if not live.exists():
             if row.handling != "ignore":
                 errors.append(f"{row.path}: file is missing; set handling=ignore or restore it")
+            continue
+        if not live.is_file():
+            if row.handling != "ignore":
+                errors.append(
+                    f"{row.path}: path is not a regular file (for example a Git submodule/gitlink directory) "
+                    "and must use handling=ignore"
+                )
             continue
         blocked = _blocked_reason(row.path)
         if blocked and row.handling != "ignore":
@@ -664,7 +703,7 @@ def validate_inventory_for_prepare(
         if row.handling == "undecided":
             errors.append(f"{row.path}: handling is undecided")
             continue
-        current_sha = _sha256(live)
+        current_sha = _sha256(live, inventory_path=row.path)
         if row.sha256 and row.sha256 != current_sha:
             errors.append(f"{row.path}: content changed since inventory was generated; rerun inventory")
             continue
@@ -717,7 +756,7 @@ def prepare_from_inventory(
         if not _in_scope(row.path, selection.directories):
             continue
         live = _safe_project_file(selection.project_root, row.path)
-        digest = _sha256(live) if live.is_file() and not live.is_symlink() else ""
+        digest = _sha256(live, inventory_path=row.path) if live.is_file() and not live.is_symlink() else ""
         files[row.path] = {
             "sha256": digest,
             "kind": row.kind,
