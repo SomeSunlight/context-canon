@@ -33,6 +33,7 @@ INVENTORY_COLUMNS = (
     "handling",
     "description",
     "note",
+    "hint",
     "size",
     "sha256",
     "accepted_sha256",
@@ -40,6 +41,7 @@ INVENTORY_COLUMNS = (
 )
 INVENTORY_KINDS = {
     "document",
+    "transcription",
     "structured-data",
     "configuration",
     "source-code",
@@ -50,7 +52,7 @@ INVENTORY_KINDS = {
     "unknown",
 }
 INVENTORY_HANDLINGS = {"source", "interpret", "lookup", "ignore", "undecided"}
-INVENTORY_STATUSES = {"new", "present", "changed", "missing"}
+INVENTORY_STATUSES = {"new", "unchanged", "changed", "missing"}
 
 _TEXT_SUFFIXES = {".md", ".mdx", ".rst", ".txt", ".adoc", ".asciidoc"}
 _STRUCTURED_SUFFIXES = {".csv", ".tsv"}
@@ -60,9 +62,10 @@ _SOURCE_SUFFIXES = {
     ".c", ".cc", ".cpp", ".h", ".hpp", ".cs", ".rb", ".php", ".sh", ".bash",
     ".zsh", ".ps1", ".sql", ".swift", ".scala",
 }
+_OPAQUE_DOCUMENT_SUFFIXES = {".doc", ".docx", ".odt", ".pdf", ".ppt", ".pptx", ".odp", ".xls", ".xlsx", ".ods"}
 _BINARY_SUFFIXES = {
     ".7z", ".avi", ".bin", ".bmp", ".doc", ".docx", ".exe", ".gif", ".gz", ".ico",
-    ".jar", ".jpeg", ".jpg", ".mov", ".mp3", ".mp4", ".pdf", ".png", ".ppt", ".pptx",
+    ".jar", ".jpeg", ".jpg", ".mov", ".mp3", ".mp4", ".odt", ".ods", ".odp", ".pdf", ".png", ".ppt", ".pptx",
     ".tar", ".tif", ".tiff", ".wav", ".webp", ".xls", ".xlsx", ".zip",
 }
 _GENERATED_COMPONENTS = {"build", "dist", "generated", "out", "target", ".cache", "coverage"}
@@ -87,6 +90,7 @@ class InventoryRow:
     handling: str
     description: str
     note: str
+    hint: str
     size: int | None
     sha256: str
     accepted_sha256: str
@@ -100,6 +104,7 @@ class InventoryRow:
             "handling": self.handling,
             "description": self.description,
             "note": self.note,
+            "hint": self.hint,
             "size": "" if self.size is None else str(self.size),
             "sha256": self.sha256,
             "accepted_sha256": self.accepted_sha256,
@@ -114,6 +119,7 @@ class InventoryRefresh:
     directories: tuple[str, ...]
     rules: tuple[InventoryRule, ...]
     rows: tuple[InventoryRow, ...]
+    omitted_source_code: int = 0
 
     @property
     def counts(self) -> dict[str, int]:
@@ -229,7 +235,7 @@ def _default_classification(path: str, custom_rules: tuple[InventoryRule, ...]) 
         return "raw-record", "interpret", "raw-record-name", ""
 
     if len(pure.parts) == 1 and lower_name == ".gitignore":
-        return "configuration", "source", "gitignore", "Git ignore policy."
+        return "configuration", "ignore", "gitignore", ""
 
     reason = _default_reason(path)
     if reason in {"root-document", "documentation", "agent-instruction"}:
@@ -258,10 +264,54 @@ def _default_classification(path: str, custom_rules: tuple[InventoryRule, ...]) 
     if suffix in _CONFIGURATION_SUFFIXES:
         return "configuration", "source", "configuration", ""
     if suffix in _SOURCE_SUFFIXES:
-        return "source-code", "lookup", "source-code", ""
+        return "source-code", "ignore", "source-code", ""
     if suffix in _BINARY_SUFFIXES:
         return "binary", "ignore", "binary", ""
     return "unknown", "undecided", "unclassified", ""
+
+
+def _matches_custom_rule(path: str, rules: tuple[InventoryRule, ...]) -> bool:
+    return any(fnmatch.fnmatchcase(path, rule.pattern) for rule in rules)
+
+
+def _default_source_code_omitted(
+    path: str,
+    rules: tuple[InventoryRule, ...],
+    previous: Mapping[str, str] | None = None,
+    accepted: Mapping[str, str] | None = None,
+) -> bool:
+    """Keep ordinary fast-changing source files out of the default human inventory."""
+
+    if PurePosixPath(path).suffix.lower() not in _SOURCE_SUFFIXES or _matches_custom_rule(path, rules):
+        return False
+    for known in (previous, accepted):
+        if not known:
+            continue
+        kind = known.get("kind", "")
+        handling = known.get("handling", "")
+        description = known.get("description", "")
+        note = known.get("note", "")
+        # Preserve a deliberate human source-code row, but migrate the old default
+        # source-code/lookup rows out of the first-adoption CSV.
+        if kind and (kind != "source-code" or handling not in {"lookup", "ignore"} or description or note):
+            return False
+    return True
+
+
+def _opaque_companions(path: str, live_paths: frozenset[str]) -> tuple[str, ...]:
+    pure = PurePosixPath(path)
+    suffix = pure.suffix.lower()
+    if suffix == ".md":
+        return tuple(
+            candidate
+            for extension in sorted(_OPAQUE_DOCUMENT_SUFFIXES)
+            for candidate in [str(pure.with_suffix(extension))]
+            if candidate in live_paths
+        )
+    if suffix in _OPAQUE_DOCUMENT_SUFFIXES:
+        markdown = str(pure.with_suffix(".md"))
+        return (markdown,) if markdown in live_paths else ()
+    return ()
 
 
 def _load_existing_csv(path: Path) -> dict[str, dict[str, str]]:
@@ -324,6 +374,7 @@ def _row_from_live(
     previous: dict[str, str] | None,
     accepted: dict[str, str] | None,
     rules: tuple[InventoryRule, ...],
+    live_paths: frozenset[str],
 ) -> InventoryRow:
     source = _safe_project_file(project_root, path)
     if source.is_symlink():
@@ -337,11 +388,32 @@ def _row_from_live(
         digest = _sha256(source)
         default_kind, default_handling, default_rule, default_description = _default_classification(path, rules)
 
+    hint = ""
+    if not default_rule.startswith("custom:"):
+        companions = _opaque_companions(path, live_paths)
+        suffix = PurePosixPath(path).suffix.lower()
+        if suffix == ".md" and companions:
+            default_kind = "transcription"
+            default_handling = "source"
+            default_rule = "markdown-transcription"
+            default_description = "Markdown transcription of " + ", ".join(companions) + "."
+            hint = "Keep this transcription faithful to the original; semantic interpretation belongs in later review."
+        elif suffix in _OPAQUE_DOCUMENT_SUFFIXES:
+            default_kind = "binary"
+            default_handling = "ignore"
+            if companions:
+                default_rule = "opaque-document-with-transcription"
+                hint = f"Onboarding uses the same-name Markdown transcription: {companions[0]}"
+            else:
+                default_rule = "opaque-document-needs-transcription"
+                markdown = str(PurePosixPath(path).with_suffix(".md"))
+                hint = f"If this document matters for onboarding, create a careful Markdown transcription as {markdown} and rerun STEP 02."
+
     baseline = (accepted or {}).get("sha256") or (previous or {}).get("sha256", "")
     if accepted:
-        status = "present" if baseline == digest else "changed"
+        status = "unchanged" if baseline == digest else "changed"
     elif previous and baseline:
-        status = "present" if baseline == digest else "changed"
+        status = "unchanged" if baseline == digest else "changed"
     else:
         status = "new"
 
@@ -351,7 +423,7 @@ def _row_from_live(
     note = (previous or {}).get("note") or (accepted or {}).get("note") or ""
     accepted_sha = (accepted or {}).get("sha256", "")
     rule = default_rule
-    return InventoryRow(path, status, kind, handling, description, note, size, digest, accepted_sha, rule)
+    return InventoryRow(path, status, kind, handling, description, note, hint, size, digest, accepted_sha, rule)
 
 
 def _row_missing(path: str, previous: dict[str, str] | None, accepted: dict[str, str]) -> InventoryRow:
@@ -366,6 +438,7 @@ def _row_missing(path: str, previous: dict[str, str] | None, accepted: dict[str,
         handling=handling,
         description=description,
         note=note,
+        hint="Previously known path is no longer present in the repository scope.",
         size=None,
         sha256="",
         accepted_sha256=accepted.get("sha256", ""),
@@ -422,11 +495,16 @@ def refresh_inventory(
     existing = _load_existing_csv(csv_path)
     accepted = _load_acceptance(project_root)
 
-    live_paths = [
+    all_live_paths = [
         path for path in _repository_paths(project_root)
         if _in_scope(path, normalized_directories)
         and not _is_inventory_control_path(project_root, csv_path, path)
         and _blocked_reason(path) != "framework-or-derived-path"
+    ]
+    all_live_set = frozenset(all_live_paths)
+    live_paths = [
+        path for path in all_live_paths
+        if not _default_source_code_omitted(path, rules, existing.get(path), accepted.get(path))
     ]
     rows: list[InventoryRow] = []
     live_set = set(live_paths)
@@ -438,10 +516,13 @@ def refresh_inventory(
                 previous=existing.get(path),
                 accepted=accepted.get(path),
                 rules=rules,
+                live_paths=all_live_set,
             )
         )
     for path in sorted(set(accepted).union(existing) - live_set):
         if not _in_scope(path, normalized_directories):
+            continue
+        if _default_source_code_omitted(path, rules, existing.get(path), accepted.get(path)):
             continue
         baseline = accepted.get(path)
         if baseline is None:
@@ -461,6 +542,7 @@ def refresh_inventory(
         directories=normalized_directories,
         rules=rules,
         rows=tuple(sorted(rows, key=lambda item: item.path)),
+        omitted_source_code=len(all_live_paths) - len(live_paths),
     )
     _write_csv(result.csv_path, result.rows)
     _write_json(
@@ -498,6 +580,8 @@ def _row_from_csv(path: str, raw: dict[str, str]) -> InventoryRow:
     kind = raw.get("kind", "").strip() or "unknown"
     handling = raw.get("handling", "").strip() or "undecided"
     status = raw.get("status", "").strip() or "new"
+    if status == "present":
+        status = "unchanged"
     if kind not in INVENTORY_KINDS:
         raise ContextCanonError(f"Inventory path {path!r} has unsupported kind {kind!r}")
     if handling not in INVENTORY_HANDLINGS:
@@ -516,6 +600,7 @@ def _row_from_csv(path: str, raw: dict[str, str]) -> InventoryRow:
         handling=handling,
         description=raw.get("description", "").strip(),
         note=raw.get("note", "").strip(),
+        hint=raw.get("hint", "").strip(),
         size=size,
         sha256=raw.get("sha256", "").strip(),
         accepted_sha256=raw.get("accepted_sha256", "").strip(),
@@ -549,7 +634,10 @@ def validate_inventory_for_prepare(
         and not _is_inventory_control_path(project_root, csv_path, path)
         and _blocked_reason(path) != "framework-or-derived-path"
     ]
-    missing_rows = sorted(set(live_paths) - set(row_by_path))
+    missing_rows = sorted(
+        path for path in set(live_paths) - set(row_by_path)
+        if PurePosixPath(path).suffix.lower() not in _SOURCE_SUFFIXES
+    )
     if missing_rows:
         preview = ", ".join(missing_rows[:5])
         suffix = "" if len(missing_rows) <= 5 else f" (+{len(missing_rows) - 5} more)"
