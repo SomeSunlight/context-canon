@@ -81,6 +81,54 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertIn("unchanged", guide)
         self.assertIn("same basename", guide)
 
+    def test_gitlink_directory_is_visible_but_safe_and_must_remain_ignored(self):
+        repo = self.make_repo()
+        nested = Path(tempfile.mkdtemp())
+        subprocess.run(["git", "init", "-q", str(nested)], check=True)
+        subprocess.run(["git", "-C", str(nested), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(nested), "config", "user.name", "Test"], check=True)
+        (nested / "README.md").write_text("# Nested\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(nested), "add", "README.md"], check=True)
+        subprocess.run(["git", "-C", str(nested), "commit", "-qm", "nested"], check=True)
+        commit = subprocess.run(
+            ["git", "-C", str(nested), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            capture_output=True,
+        ).stdout.strip()
+        target = repo / "P1" / "F1"
+        shutil.copytree(nested, target)
+        subprocess.run(
+            ["git", "-C", str(repo), "update-index", "--add", "--cacheinfo", f"160000,{commit},P1/F1"],
+            check=True,
+        )
+
+        csv_path = repo / "inventory.csv"
+        refreshed = refresh_inventory(repo, csv_path)
+        row = {item.path: item for item in refreshed.rows}["P1/F1"]
+
+        self.assertEqual((row.kind, row.handling), ("other", "ignore"))
+        self.assertEqual(row.rule, "git-directory-entry")
+        self.assertIn("submodule/gitlink", row.hint)
+        self.assertEqual(row.sha256, "")
+
+        rows = self.read_csv(csv_path)
+        rows[0]["handling"] = "source"
+        rows[0]["description"] = "Nested project."
+        self.write_csv(csv_path, rows)
+        with self.assertRaisesRegex(ContextCanonError, "not a regular file.*submodule/gitlink"):
+            prepare_from_inventory(repo, csv_path)
+
+    def test_inventory_hash_error_names_operation_and_relative_path(self):
+        repo = self.make_repo()
+        (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+        csv_path = repo / "inventory.csv"
+        from unittest.mock import patch
+
+        with patch("contextcanon.onboarding_inventory.Path.open", side_effect=PermissionError(13, "Permission denied")):
+            with self.assertRaisesRegex(ContextCanonError, "while hashing 'README.md'"):
+                refresh_inventory(repo, csv_path)
+
     def test_opaque_document_uses_same_stem_markdown_as_transcription(self):
         repo = self.make_repo()
         (repo / "architecture.pdf").write_bytes(b"%PDF placeholder\n")
