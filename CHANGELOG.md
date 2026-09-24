@@ -6,7 +6,7 @@ All notable ContextCanon changes will be documented here.
 
 ### Added
 
-- Reviewed onboarding inventory preflight with a human-editable CSV, repeatable new/changed/missing detection, deterministic classification defaults, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
+- Reviewed onboarding preflight with `onboard init`, a generated PLAN-first operator flow, human-editable inventory CSV + local field guide, repeatable new/changed/missing/unchanged detection, deterministic defaults, same-basename Markdown transcription for opaque office/PDF material, default source-code omission with explicit opt-in rules, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
 
 - Initial public ContextCanon specification.
 - Human-editable `CONTEXT.src.md` local-delta model.
