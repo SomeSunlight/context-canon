@@ -225,7 +225,7 @@ Edit only these semantic columns unless you deliberately know why you are changi
 - `description` — short human explanation of what the artifact represents. Required for `source` and `interpret`.
 - `note` — optional owner context for the review.
 
-Do not hand-edit `status`, `size`, `sha256`, `accepted_sha256`, or `rule`. Rename/move files in the repository itself and rerun STEP 02 instead of editing `path` by hand.
+Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule`. Rename/move files in the repository itself and rerun STEP 02 instead of editing `path` by hand.
 
 ## Columns
 
@@ -233,10 +233,11 @@ Do not hand-edit `status`, `size`, `sha256`, `accepted_sha256`, or `rule`. Renam
 | --- | --- |
 | `path` | Repository-relative file path. |
 | `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
-| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
+| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
 | `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
 | `description` | Human explanation carried into frozen Evidence metadata. |
 | `note` | Optional owner note. |
+| `hint` | Machine-generated guidance for the row, for example that an opaque document needs a same-basename Markdown transcription. Do not edit it. |
 | `size` | Current file size in bytes. Machine-owned. |
 | `sha256` | Hash of the current file bytes when inventory was generated. Machine-owned. |
 | `accepted_sha256` | Hash from the last successful STEP 03 acceptance; blank before first acceptance. Machine-owned. |
