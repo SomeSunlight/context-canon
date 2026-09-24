@@ -122,6 +122,94 @@ class OnboardingInventoryTests(unittest.TestCase):
             with self.assertRaisesRegex(ContextCanonError, "while hashing 'README.md'"):
                 refresh_inventory(repo, csv_path)
 
+    def test_onboard_init_manages_gitignore_for_transient_workspace_but_keeps_inventory_state_visible(self):
+        repo = self.make_repo()
+        (repo / ".gitignore").write_text("existing-temp/\n", encoding="utf-8")
+
+        self.assertEqual(cli_main(["onboard", "init", str(repo)]), 0)
+        self.assertEqual(cli_main(["onboard", "init", str(repo)]), 0)
+
+        text = (repo / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("existing-temp/", text)
+        self.assertEqual(text.count("# >>> ContextCanon onboarding (managed)"), 1)
+        self.assertIn("/contextcanon-onboarding/", text)
+        self.assertIn("/.context/onboarding/*", text)
+        self.assertIn("!/.context/onboarding/inventory-state.json", text)
+        self.assertIn("!/.context/onboarding/inventory-acceptance.json", text)
+
+        (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+        workspace = repo / "contextcanon-onboarding"
+        refresh_inventory(repo, workspace / "STEP-02-inventory.csv")
+        self.describe_sources(workspace / "STEP-02-inventory.csv")
+        prepared, _ = prepare_from_inventory(repo, workspace / "STEP-02-inventory.csv")
+
+        ignored_workspace = subprocess.run(
+            ["git", "-C", str(repo), "check-ignore", "contextcanon-onboarding/PLAN.md"],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(ignored_workspace.returncode, 0)
+        ignored_snapshot = subprocess.run(
+            ["git", "-C", str(repo), "check-ignore", f".context/onboarding/{prepared.evidence_digest}/manifest.json"],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(ignored_snapshot.returncode, 0)
+        for durable in (
+            ".context/onboarding/inventory-state.json",
+            ".context/onboarding/inventory-acceptance.json",
+        ):
+            visible = subprocess.run(
+                ["git", "-C", str(repo), "check-ignore", durable],
+                text=True,
+                capture_output=True,
+            )
+            self.assertNotEqual(visible.returncode, 0, durable)
+
+    def test_inventory_can_be_reconstructed_after_workspace_and_snapshot_are_removed(self):
+        repo = self.make_repo()
+        (repo / "docs").mkdir()
+        (repo / "docs/product.md").write_text("# Product\n", encoding="utf-8")
+        (repo / "docs/data.foo").write_text("opaque but deliberately ignored\n", encoding="utf-8")
+        (repo / "outside.md").write_text("# Outside\n", encoding="utf-8")
+
+        self.assertEqual(cli_main(["onboard", "init", str(repo)]), 0)
+        csv_path = repo / "contextcanon-onboarding" / "STEP-02-inventory.csv"
+        refresh_inventory(
+            repo,
+            csv_path,
+            directories=["docs"],
+            rule_specs=["docs/*.foo=other:ignore"],
+        )
+        rows = self.read_csv(csv_path)
+        product = next(row for row in rows if row["path"] == "docs/product.md")
+        product["description"] = "Owner-reviewed product definition."
+        product["note"] = "Keep for later onboarding refreshes."
+        self.write_csv(csv_path, rows)
+        prepared, _ = prepare_from_inventory(repo, csv_path)
+
+        shutil.rmtree(repo / "contextcanon-onboarding")
+        for child in (repo / ".context" / "onboarding").iterdir():
+            if child.name not in {"inventory-state.json", "inventory-acceptance.json"}:
+                if child.is_dir():
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
+
+        self.assertEqual(cli_main(["onboard", "init", str(repo)]), 0)
+        restored_csv = repo / "contextcanon-onboarding" / "STEP-02-inventory.csv"
+        restored = refresh_inventory(repo, restored_csv)
+        by_path = {row.path: row for row in restored.rows}
+
+        self.assertEqual(restored.directories, ("docs",))
+        self.assertEqual([(rule.pattern, rule.kind, rule.handling) for rule in restored.rules], [("docs/*.foo", "other", "ignore")])
+        self.assertEqual(set(by_path), {"docs/data.foo", "docs/product.md"})
+        self.assertEqual(by_path["docs/product.md"].description, "Owner-reviewed product definition.")
+        self.assertEqual(by_path["docs/product.md"].note, "Keep for later onboarding refreshes.")
+        self.assertEqual(by_path["docs/product.md"].status, "unchanged")
+        self.assertEqual(by_path["docs/data.foo"].handling, "ignore")
+        self.assertFalse((repo / ".context" / "onboarding" / prepared.evidence_digest).exists())
+
     def test_opaque_document_uses_same_stem_markdown_as_transcription(self):
         repo = self.make_repo()
         (repo / "architecture.pdf").write_bytes(b"%PDF placeholder\n")
