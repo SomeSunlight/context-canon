@@ -398,7 +398,7 @@ def _row_from_live(
             "other", "ignore", "git-directory-entry", ""
         )
         hint = (
-            "Git exposes this directory as one repository entry (commonly a submodule/gitlink). "
+            "Git exposes this directory as one repository entry (for example an embedded repository, submodule, or gitlink). "
             "The parent inventory does not scan its contents; onboard that repository separately if it matters."
         )
     elif not source.is_file():
@@ -692,7 +692,7 @@ def validate_inventory_for_prepare(
         if not live.is_file():
             if row.handling != "ignore":
                 errors.append(
-                    f"{row.path}: path is not a regular file (for example a Git submodule/gitlink directory) "
+                    f"{row.path}: path is not a regular file (for example an embedded Git repository/submodule/gitlink directory) "
                     "and must use handling=ignore"
                 )
             continue
