@@ -616,7 +616,7 @@ Purpose: correct the first real-project STEP-02 failure after the improved onboa
 - [x] Stop decorating generic Windows Errno 13 with the WinError-5/scanner-lock advice; retain that advice for actual WinError 5.
 - [x] Ignore transient `contextcanon-onboarding/` and `.context/onboarding/` state in the Hello World fixture.
 - [x] Advance the user-facing owner-test package version from 0.9.0 to 0.9.1.
-- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.1 review head.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.1 review head.
 
-Checkpoint: Issue #57 is implemented on draft PR #54 and focused regressions are present. Full self-hosted regeneration/verification remains before the next real-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+Checkpoint: Issue #57 is implemented on draft PR #54 as the ContextCanon 0.9.1 owner-test candidate. The corrected head passes the complete deterministic suite (283 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next real-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 

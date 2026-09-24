@@ -109,6 +109,7 @@ The important policy is:
 - opaque PDF/Word/PowerPoint-style originals default to `binary / ignore`; if relevant, provide a faithful same-basename Markdown transcription, which is recognized as `transcription / source`;
 - ordinary source-code files are omitted from the default first-adoption CSV because per-file tracking would create noise/churn in real codebases; explicit custom rules can opt selected files back in;
 - `.gitignore` is technical repository configuration and is ignored for semantic onboarding by default;
+- Git submodule/gitlink directory entries are surfaced as `other / ignore`; the parent inventory does not descend into them, so onboard a relevant nested repository separately from its own Git root;
 - unknown material remains `undecided` and blocks STEP 03 until the owner decides.
 
 Rerunning STEP 02 is **not** part of editing the CSV. Rerun it only when repository files were added, changed, renamed/moved, or removed before STEP 03. Existing semantic decisions for known rows are preserved while machine-owned hashes/status are refreshed. The human-facing status `unchanged` means the path and bytes still match the previous inventory/accepted baseline.
