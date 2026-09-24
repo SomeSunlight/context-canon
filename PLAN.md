@@ -620,3 +620,19 @@ Purpose: correct the first real-project STEP-02 failure after the improved onboa
 
 Checkpoint: Issue #57 is implemented on draft PR #54 as the ContextCanon 0.9.1 owner-test candidate. The corrected head passes the complete deterministic suite (283 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next real-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: durable inventory restore state — Issue #58
+
+Purpose: keep transient onboarding review machinery out of Git without losing owner-reviewed inventory decisions needed after a clone or when later repository files appear.
+
+- [x] Maintain a bounded ContextCanon block in the project `.gitignore` from `onboard init`/inventory workspace creation.
+- [x] Ignore the visible `contextcanon-onboarding/` workspace and heavy/transient `.context/onboarding/` material by default.
+- [x] Keep `.context/onboarding/inventory-state.json` and `inventory-acceptance.json` Git-visible as the compact durable inventory restore anchor.
+- [x] Reconstruct the inventory CSV from accepted state after the workspace/Evidence cache is absent, preserving reviewed `kind`, `handling`, `description`, `note`, scope and deterministic rules.
+- [x] Keep STEP 03 as the durability boundary: unaccepted CSV edits remain transient working state; ContextCanon never stages/commits automatically.
+- [x] Document that later accepted semantic meaning lives in canonical ContextCanon sources/relationships rather than requiring the review workspace in Git.
+- [x] Keep full semantic re-onboarding of an already adopted project explicitly outside this restore mechanism.
+- [x] Advance the owner-test package version from 0.9.1 to 0.9.2.
+- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.2 review head.
+
+Checkpoint: Issue #58 is implemented on draft PR #54 as the ContextCanon 0.9.2 owner-test candidate. Focused restore/Git-ignore regressions are present; full self-hosted verification remains before the next owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
