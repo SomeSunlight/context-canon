@@ -589,3 +589,19 @@ Purpose: add a human-reviewed file inventory before Evidence freezing so first a
 - [x] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
 
 Checkpoint: reviewed onboarding inventory is implemented on draft PR #54 as ContextCanon 0.9.0. The final product head passes 275 deterministic tests, `contextcanon build --all .`, `contextcanon check --all .`, and diff hygiene with zero generated drift. STEP 01–03 are ready for the shared Hello World Extended owner walkthrough; LLM inventory triage and interpretation remain deliberately deferred. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: first-contact onboarding UX — Issues #55 and #56
+
+Purpose: incorporate the first real Hello World Extended owner walkthrough before PR #54 is accepted. The preflight mechanics worked, but installation and STEP 01–03 still assumed too much prior knowledge.
+
+- [x] Make the root README lead a new user through the shortest uv/GitHub CLI installation and version check.
+- [x] Add `contextcanon onboard init .` so the visible onboarding workspace and PLAN exist before any inventory decision; from that point the generated PLAN is the operator console.
+- [x] Add a compact generated `STEP-02-inventory-guide.md` covering all CSV columns, editable/machine-owned fields, handling/status meanings, and exactly when inventory should be rerun.
+- [x] Replace human-facing `present` with `unchanged` while accepting legacy `present` CSVs.
+- [x] Keep opaque PDF/Office originals outside semantic Evidence by default and recognize a faithful same-basename Markdown companion as `transcription / source`.
+- [x] Default `.gitignore` to `configuration / ignore`; omit ordinary source-code files from the standard inventory while retaining explicit `--rule` opt-in for selected code.
+- [x] Extend Hello World Extended and focused regressions for the corrected first-contact behavior.
+- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact review head.
+
+Checkpoint: Issues #55/#56 are implemented on draft PR #54 and the complete deterministic suite currently passes 279 tests. The remaining expected failure is self-hosted generated drift after the documentation/contract changes; regenerate and verify before returning the branch for the next owner walkthrough. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
