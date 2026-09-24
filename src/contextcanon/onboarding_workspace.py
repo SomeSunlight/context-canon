@@ -274,6 +274,10 @@ On the next inventory refresh ContextCanon keeps the original as `binary / ignor
 ## Source code
 
 Normal source-code files are intentionally omitted from this first-adoption CSV. Large repositories can contain hundreds or thousands of fast-changing source files, and treating each one as a durable onboarding row creates noise and change-management debt. ContextCanon will later need language/tool-aware code selection. Until then, use a deliberate custom `--rule` only when a particular source file really belongs in this onboarding Evidence review.
+
+## Git submodules and nested repositories
+
+Git can expose a submodule/gitlink as one path even though the working-tree path is a directory. ContextCanon shows such an entry as `other / ignore` with rule `git-directory-entry`; it does **not** descend into or hash that directory as part of the parent repository inventory. If the nested repository matters, onboard it separately from its own Git root.
 """
 
 
