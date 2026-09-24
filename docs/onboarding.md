@@ -116,8 +116,8 @@ Rerunning STEP 02 is **not** part of editing the CSV. Rerun it only when reposit
 Custom deterministic rules remain available for deliberate exceptions:
 
 ```text
-contextcanon onboard inventory . \\
-  --rule "contracts/*.csv=structured-data:source" \\
+contextcanon onboard inventory . \
+  --rule "contracts/*.csv=structured-data:source" \
   --rule "src/architecture.py=source-code:interpret"
 ```
 
@@ -129,10 +129,9 @@ A team/tool may generate its own CSV. At minimum it can provide:
 path,kind,handling,description
 P1/product.md,document,source,Product definition
 P1/parameters.csv,structured-data,source,Canonical P1 parameter catalog
-src/main.py,source-code,lookup,
 ```
 
-ContextCanon still compares that table with the real repository scope before accepting it. An incomplete custom table cannot make unlisted live files disappear silently.
+ContextCanon still compares that table with the real repository scope before accepting it. An incomplete custom table cannot make unlisted live non-source-code files disappear silently. Ordinary source code follows the same default omission boundary as the generated inventory unless it is deliberately opted in.
 
 ## 3. Freeze the reviewed Evidence
 
