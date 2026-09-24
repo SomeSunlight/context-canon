@@ -519,8 +519,18 @@ def refresh_inventory(
     rule_specs: Iterable[str] = (),
 ) -> InventoryRefresh:
     project_root = _require_git_repository_root(project)
-    normalized_directories = normalize_directories(project_root, directories)
-    rules = tuple(parse_inventory_rule(value) for value in rule_specs)
+    explicit_directories = tuple(directories)
+    explicit_rules = tuple(rule_specs)
+    normalized_directories = (
+        normalize_directories(project_root, explicit_directories)
+        if explicit_directories
+        else (_directories_from_state(project_root, csv_path) or (".",))
+    )
+    rules = (
+        tuple(parse_inventory_rule(value) for value in explicit_rules)
+        if explicit_rules
+        else (_rules_from_state(project_root, csv_path) or ())
+    )
     existing = _load_existing_csv(csv_path)
     accepted = _load_acceptance(project_root)
 
@@ -586,6 +596,33 @@ def refresh_inventory(
         },
     )
     return result
+
+
+def _rules_from_state(project_root: Path, csv_path: Path) -> tuple[InventoryRule, ...] | None:
+    payload = _load_json(_state_path(project_root), INVENTORY_STATE_SCHEMA)
+    if payload is None:
+        return None
+    raw_csv = payload.get("csv_path")
+    if isinstance(raw_csv, str):
+        expected = Path(raw_csv)
+        if not expected.is_absolute():
+            expected = project_root / expected
+        if expected.resolve() != csv_path.resolve():
+            return None
+    raw_rules = payload.get("rules")
+    if not isinstance(raw_rules, list):
+        return None
+    result: list[InventoryRule] = []
+    for raw in raw_rules:
+        if not isinstance(raw, dict):
+            return None
+        pattern = raw.get("pattern")
+        kind = raw.get("kind")
+        handling = raw.get("handling")
+        if not all(isinstance(value, str) for value in (pattern, kind, handling)):
+            return None
+        result.append(parse_inventory_rule(f"{pattern}={kind}:{handling}"))
+    return tuple(result)
 
 
 def _directories_from_state(project_root: Path, csv_path: Path) -> tuple[str, ...] | None:
