@@ -24,6 +24,8 @@ COMMANDS_START = "<!-- contextcanon-onboarding-commands:start -->"
 COMMANDS_END = "<!-- contextcanon-onboarding-commands:end -->"
 RUN_INPUTS_SCHEMA = "contextcanon/onboarding-run-inputs/v0"
 RUN_INPUTS_NAME = "run-inputs.json"
+GITIGNORE_START = "# >>> ContextCanon onboarding (managed)"
+GITIGNORE_END = "# <<< ContextCanon onboarding (managed)"
 
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
@@ -170,6 +172,8 @@ ContextCanon now separates the preflight from semantic onboarding:
 
 `.context/onboarding/` keeps machine-owned inventory state, frozen Evidence and acceptance/provenance. This directory keeps human review artifacts. The actual Context Nodes remain in their accepted repository locations.
 
+Git storage is deliberately split: the visible workspace and heavy Evidence/review machinery are ignored by default, while the compact accepted inventory baseline (`.context/onboarding/inventory-acceptance.json`) and its small run configuration (`inventory-state.json`) remain Git-visible so a clone can reconstruct reviewed inventory choices.
+
 The repository directory tree is evidence about the project, not a taxonomy ContextCanon must preserve.
 
 ## Why frozen Evidence exists
@@ -194,7 +198,7 @@ STEP 03 copies the reviewed `source` / `interpret` files into one immutable cont
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
 
-None of these working files become canonical Context merely because they exist.
+None of these working files become canonical Context merely because they exist. After publication, accepted structure, reusable-Context and placement meaning lives in the canonical ContextCanon sources/relationships. The compact accepted inventory baseline remains durable separately because ignored/lookup choices and owner descriptions are otherwise not represented by the canonical Nodes.
 
 ## Inventory semantics
 
@@ -929,6 +933,57 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_r
     write_utf8(workspace.plan_path, refreshed)
 
 
+def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Path:
+    """Ignore transient onboarding artifacts while keeping compact accepted inventory state Git-visible."""
+
+    project = _require_project_root_for_inventory(project_root)
+    gitignore = project / ".gitignore"
+    try:
+        existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
+    except UnicodeDecodeError as exc:
+        raise ContextCanonError(f"Project .gitignore is not valid UTF-8: {gitignore}") from exc
+
+    try:
+        workspace_rel = workspace_root.resolve().relative_to(project).as_posix().rstrip("/")
+    except ValueError:
+        workspace_rel = ""
+
+    lines = [GITIGNORE_START]
+    if workspace_rel:
+        lines.append(f"/{workspace_rel}/")
+    lines.extend([
+        "/.context/onboarding/*",
+        "!/.context/onboarding/inventory-state.json",
+        "!/.context/onboarding/inventory-acceptance.json",
+        GITIGNORE_END,
+    ])
+    block = "\n".join(lines)
+
+    start = existing.find(GITIGNORE_START)
+    end = existing.find(GITIGNORE_END)
+    if (start >= 0) != (end >= 0) or (start >= 0 and end < start):
+        raise ContextCanonError(
+            f"Project .gitignore contains an incomplete ContextCanon managed block: {gitignore}"
+        )
+    if start >= 0:
+        end += len(GITIGNORE_END)
+        prefix = existing[:start].rstrip("\n")
+        suffix = existing[end:].lstrip("\n")
+        updated = (prefix + ("\n\n" if prefix else "") + block)
+        if suffix:
+            updated += "\n\n" + suffix.rstrip("\n")
+        updated += "\n"
+    else:
+        updated = existing.rstrip("\n")
+        if updated:
+            updated += "\n\n"
+        updated += block + "\n"
+
+    if updated != existing:
+        write_utf8(gitignore, updated)
+    return gitignore
+
+
 def open_inventory_workspace(
     project_root: Path,
     workspace_root: Path | None = None,
@@ -938,6 +993,7 @@ def open_inventory_workspace(
     project = _require_project_root_for_inventory(project_root)
     root = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
     workspace = OnboardingWorkspace(root)
+    ensure_onboarding_gitignore(project, root)
 
     if root.exists() or root.is_symlink():
         if root.is_symlink() or not root.is_dir():
