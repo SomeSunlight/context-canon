@@ -81,27 +81,20 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertIn("unchanged", guide)
         self.assertIn("same basename", guide)
 
-    def test_gitlink_directory_is_visible_but_safe_and_must_remain_ignored(self):
+    def test_embedded_git_directory_entry_is_visible_but_safe_and_must_remain_ignored(self):
         repo = self.make_repo()
-        nested = Path(tempfile.mkdtemp())
+        nested = repo / "P1" / "F1"
+        nested.mkdir(parents=True)
         subprocess.run(["git", "init", "-q", str(nested)], check=True)
-        subprocess.run(["git", "-C", str(nested), "config", "user.email", "test@example.com"], check=True)
-        subprocess.run(["git", "-C", str(nested), "config", "user.name", "Test"], check=True)
         (nested / "README.md").write_text("# Nested\n", encoding="utf-8")
-        subprocess.run(["git", "-C", str(nested), "add", "README.md"], check=True)
-        subprocess.run(["git", "-C", str(nested), "commit", "-qm", "nested"], check=True)
-        commit = subprocess.run(
-            ["git", "-C", str(nested), "rev-parse", "HEAD"],
+
+        listed = subprocess.run(
+            ["git", "-C", str(repo), "ls-files", "--cached", "--others", "--exclude-standard"],
             check=True,
             text=True,
             capture_output=True,
-        ).stdout.strip()
-        target = repo / "P1" / "F1"
-        shutil.copytree(nested, target)
-        subprocess.run(
-            ["git", "-C", str(repo), "update-index", "--add", "--cacheinfo", f"160000,{commit},P1/F1"],
-            check=True,
-        )
+        ).stdout.splitlines()
+        self.assertIn("P1/F1/", listed)
 
         csv_path = repo / "inventory.csv"
         refreshed = refresh_inventory(repo, csv_path)
@@ -109,14 +102,14 @@ class OnboardingInventoryTests(unittest.TestCase):
 
         self.assertEqual((row.kind, row.handling), ("other", "ignore"))
         self.assertEqual(row.rule, "git-directory-entry")
-        self.assertIn("submodule/gitlink", row.hint)
+        self.assertIn("embedded repository", row.hint)
         self.assertEqual(row.sha256, "")
 
         rows = self.read_csv(csv_path)
         rows[0]["handling"] = "source"
         rows[0]["description"] = "Nested project."
         self.write_csv(csv_path, rows)
-        with self.assertRaisesRegex(ContextCanonError, "not a regular file.*submodule/gitlink"):
+        with self.assertRaisesRegex(ContextCanonError, "not a regular file.*embedded Git repository"):
             prepare_from_inventory(repo, csv_path)
 
     def test_inventory_hash_error_names_operation_and_relative_path(self):
