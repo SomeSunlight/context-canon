@@ -605,3 +605,18 @@ Purpose: incorporate the first real Hello World Extended owner walkthrough befor
 
 Checkpoint: Issues #55/#56 are implemented on draft PR #54. The owner-walkthrough correction head passes the complete deterministic suite (279 tests), self-hosted build/check with zero generated drift, and diff hygiene. The corrected STEP 01-03 first-contact flow is ready for the next Hello World Extended owner walkthrough. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: Git directory entries and Windows Errno 13 — Issue #57
+
+Purpose: correct the first real-project STEP-02 failure after the improved onboarding UX was accepted by the owner.
+
+- [x] Reproduce the failure shape: a Git-visible directory/gitlink path reached file hashing and raised Windows `[Errno 13] Permission denied`.
+- [x] Treat Git directory/gitlink entries as `other / ignore` with explicit nested-repository guidance instead of opening them as files.
+- [x] Make STEP 03 reject a non-regular path changed to `source`/`interpret`.
+- [x] Preserve inventory operation + relative-path context for actual read/hash errors.
+- [x] Stop decorating generic Windows Errno 13 with the WinError-5/scanner-lock advice; retain that advice for actual WinError 5.
+- [x] Ignore transient `contextcanon-onboarding/` and `.context/onboarding/` state in the Hello World fixture.
+- [x] Advance the user-facing owner-test package version from 0.9.0 to 0.9.1.
+- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.1 review head.
+
+Checkpoint: Issue #57 is implemented on draft PR #54 and focused regressions are present. Full self-hosted regeneration/verification remains before the next real-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
