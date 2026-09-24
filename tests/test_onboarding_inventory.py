@@ -65,14 +65,68 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertEqual((rows["P1/F1/prestudy.md"].kind, rows["P1/F1/prestudy.md"].handling), ("raw-record", "interpret"))
         self.assertEqual(rows["P1/parameters.csv"].description, "Structured parameter data.")
 
-    def test_source_code_defaults_to_lookup_and_custom_rule_can_override_it(self):
+    def test_onboard_init_creates_plan_and_inventory_guide_before_inventory(self):
+        repo = self.make_repo()
+
+        result = cli_main(["onboard", "init", str(repo)])
+
+        self.assertEqual(result, 0)
+        workspace = repo / "contextcanon-onboarding"
+        self.assertTrue((workspace / "README.md").is_file())
+        self.assertTrue((workspace / "PLAN.md").is_file())
+        self.assertTrue((workspace / "STEP-02-inventory-guide.md").is_file())
+        self.assertFalse((workspace / "STEP-02-inventory.csv").exists())
+        guide = (workspace / "STEP-02-inventory-guide.md").read_text(encoding="utf-8")
+        self.assertIn("Do not hand-edit", guide)
+        self.assertIn("unchanged", guide)
+        self.assertIn("same basename", guide)
+
+    def test_opaque_document_uses_same_stem_markdown_as_transcription(self):
+        repo = self.make_repo()
+        (repo / "architecture.pdf").write_bytes(b"%PDF placeholder\n")
+        (repo / "architecture.md").write_text("# Architecture transcription\n", encoding="utf-8")
+
+        refreshed = refresh_inventory(repo, repo / "inventory.csv")
+        rows = {row.path: row for row in refreshed.rows}
+
+        self.assertEqual((rows["architecture.pdf"].kind, rows["architecture.pdf"].handling), ("binary", "ignore"))
+        self.assertEqual((rows["architecture.md"].kind, rows["architecture.md"].handling), ("transcription", "source"))
+        self.assertIn("architecture.md", rows["architecture.pdf"].hint)
+        self.assertIn("architecture.pdf", rows["architecture.md"].description)
+
+    def test_opaque_document_without_transcription_explains_required_markdown_companion(self):
+        repo = self.make_repo()
+        (repo / "architecture.docx").write_bytes(b"placeholder")
+
+        refreshed = refresh_inventory(repo, repo / "inventory.csv")
+        row = refreshed.rows[0]
+
+        self.assertEqual((row.kind, row.handling), ("binary", "ignore"))
+        self.assertIn("architecture.md", row.hint)
+
+    def test_legacy_present_status_is_accepted_as_unchanged(self):
+        repo = self.make_repo()
+        (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+        csv_path = repo / "inventory.csv"
+        refresh_inventory(repo, csv_path)
+        rows = self.read_csv(csv_path)
+        rows[0]["status"] = "present"
+        rows[0]["description"] = "Project overview."
+        self.write_csv(csv_path, rows)
+
+        _, selection = prepare_from_inventory(repo, csv_path)
+
+        self.assertEqual(selection.rows[0].status, "unchanged")
+
+    def test_source_code_is_omitted_by_default_and_custom_rule_can_opt_it_in(self):
         repo = self.make_repo()
         (repo / "src").mkdir()
         (repo / "src/main.py").write_text("print('hello')\n", encoding="utf-8")
 
         default_csv = repo / "default.csv"
         default = refresh_inventory(repo, default_csv)
-        self.assertEqual((default.rows[0].kind, default.rows[0].handling), ("source-code", "lookup"))
+        self.assertEqual(default.rows, ())
+        self.assertEqual(default.omitted_source_code, 1)
 
         custom_csv = repo / "custom.csv"
         custom = refresh_inventory(
@@ -101,7 +155,7 @@ class OnboardingInventoryTests(unittest.TestCase):
             [(entry.path, entry.reason) for entry in prepared.included],
             [("README.md", "inventory-source"), ("data.csv", "inventory-source")],
         )
-        self.assertEqual({row.path: row.handling for row in selection.rows}["src/main.py"], "lookup")
+        self.assertNotIn("src/main.py", {row.path for row in selection.rows})
         self.assertFalse((prepared.snapshot_root / "evidence/src/main.py").exists())
 
     def test_reviewed_description_is_snapshot_bound_and_visible_to_semantic_llm(self):
@@ -202,7 +256,7 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertEqual(by_path["parameters.csv"].status, "changed")
         self.assertEqual(by_path["feature.md"].status, "new")
         self.assertEqual(by_path["notes.md"].status, "missing")
-        self.assertEqual(by_path["README.md"].status, "present")
+        self.assertEqual(by_path["README.md"].status, "unchanged")
         self.assertEqual(by_path["parameters.csv"].description, "Authoritative product parameter catalog.")
         self.assertEqual(by_path["parameters.csv"].note, "Owner-reviewed.")
         self.assertTrue(by_path["parameters.csv"].accepted_sha256)
@@ -238,12 +292,19 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertEqual(by_path["P1/parameters.csv"].kind, "structured-data")
         self.assertEqual(by_path["P1/F1/prestudy.md"].handling, "interpret")
         self.assertEqual(by_path["P1/F1/meeting-notes.md"].handling, "interpret")
-        self.assertEqual(by_path["src/hello.py"].handling, "lookup")
+        self.assertNotIn("src/hello.py", by_path)
+        self.assertEqual(refreshed.omitted_source_code, 1)
         self.assertEqual(by_path["assets/reference.pdf"].handling, "ignore")
+        self.assertEqual(by_path["assets/reference.pdf"].kind, "binary")
+        self.assertEqual(by_path["assets/reference.md"].kind, "transcription")
+        self.assertEqual(by_path["assets/reference.md"].handling, "source")
+        self.assertIn("assets/reference.md", by_path["assets/reference.pdf"].hint)
+        self.assertEqual(by_path[".gitignore"].handling, "ignore")
+        self.assertEqual(by_path[".gitignore"].kind, "configuration")
         self.assertEqual(by_path["unknown.weird"].handling, "undecided")
         self.assertNotIn("generated/example.txt", by_path)
 
-    def test_minimal_speedyboarding_csv_is_valid_when_it_accounts_for_live_scope(self):
+    def test_minimal_speedyboarding_csv_may_omit_default_source_code(self):
         repo = self.make_repo()
         (repo / "product.md").write_text("# Product\n", encoding="utf-8")
         (repo / "src").mkdir()
@@ -251,13 +312,13 @@ class OnboardingInventoryTests(unittest.TestCase):
         csv_path = repo / "speedy.csv"
         csv_path.write_text(
             "path,kind,handling,description\n"
-            "product.md,document,source,Product definition\n"
-            "src/main.py,source-code,lookup,\n",
+            "product.md,document,source,Product definition\n",
             encoding="utf-8",
         )
 
-        prepared, _ = prepare_from_inventory(repo, csv_path)
+        prepared, selection = prepare_from_inventory(repo, csv_path)
         self.assertEqual([entry.path for entry in prepared.included], ["product.md"])
+        self.assertEqual([row.path for row in selection.rows], ["product.md"])
 
 
 if __name__ == "__main__":
