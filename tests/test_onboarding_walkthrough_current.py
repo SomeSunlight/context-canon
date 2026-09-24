@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 class OnboardingWalkthroughCurrentTests(unittest.TestCase):
     def test_walkthrough_matches_reviewed_twelve_step_flow(self) -> None:
         text = (ROOT / "docs" / "onboarding.md").read_text(encoding="utf-8")
+        self.assertIn("## 0. Install and create the operator workspace", text)
+        self.assertIn("contextcanon onboard init .", text)
+        self.assertIn("STEP-02-inventory-guide.md", text)
         self.assertIn("## 1. Tidy before durable references", text)
         self.assertIn("## 2. Inventory and review the project files", text)
         self.assertIn("STEP-02-inventory.csv", text)
@@ -31,18 +34,18 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertNotIn("STEP-05a-placement-instruction.md", current)
 
 
-    def test_root_readme_teaches_snapshot_variable_before_reuse(self) -> None:
+    def test_root_readme_gets_new_user_into_generated_plan_without_reconstructing_workflow(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
-        onboarding = text.split("### Reviewed structure-first onboarding", 1)[1].split("## Maintain an onboarded project", 1)[0]
+        onboarding = text.split("## Bring an existing project aboard", 1)[1].split("## Maintain an onboarded project", 1)[0]
 
-        self.assertIn("$SNAPSHOT = '.context/onboarding/<evidence-digest>'", onboarding)
-        self.assertIn("SNAPSHOT='.context/onboarding/<evidence-digest>'", onboarding)
-        self.assertIn(r"set SNAPSHOT=.context\onboarding\<evidence-digest>", onboarding)
-        self.assertIn("contextcanon onboard inventory .", onboarding)
-        self.assertIn("--inventory contextcanon-onboarding/STEP-02-inventory.csv", onboarding)
-        self.assertIn("contextcanon onboard structure-instruction $SNAPSHOT", onboarding)
+        self.assertIn("uv tool install git+https://github.com/SomeSunlight/context-canon.git", onboarding)
+        self.assertIn("contextcanon --version", onboarding)
+        self.assertIn("contextcanon onboard init .", onboarding)
         self.assertIn("contextcanon-onboarding/PLAN.md", onboarding)
-        self.assertNotIn("contextcanon onboard structure-preview .context/onboarding/<evidence-digest>", onboarding)
+        self.assertIn("STEP-02-inventory-guide.md", onboarding)
+        self.assertNotIn("contextcanon onboard inventory .", onboarding)
+        self.assertNotIn("--inventory contextcanon-onboarding/STEP-02-inventory.csv", onboarding)
+        self.assertNotIn("contextcanon onboard structure-instruction", onboarding)
 
 
 if __name__ == "__main__":
