@@ -676,6 +676,8 @@ The reviewed row has two independent semantic axes:
 
 `.gitignore` is classified truthfully as configuration but defaults to `ignore`; repository ignore mechanics are not project semantic Evidence merely because the file is visible.
 
+Git may expose a submodule/gitlink as one index path while its working-tree path is a directory. Reviewed inventory classifies that path as `other / ignore` with rule `git-directory-entry`, does not hash or descend into it, and tells the operator to onboard the nested repository separately if its content matters. STEP 03 refuses a directory/gitlink row changed to `source` or `interpret` instead of attempting a file read.
+
 Deterministic default rules may prefill classification for familiar documentation, structured data, raw-record names, generated paths and opaque formats. They are convenience only. The owner may edit the human semantic columns directly, and optional repeatable `--rule GLOB=KIND:HANDLING` inputs customize deterministic defaults without adding an LLM to the inventory stage.
 
 STEP 02 is repeatable **when the repository files changed**. It is not rerun merely because the owner edited the CSV. Refresh compares live material with the previous/accepted per-path SHA-256 baseline and surfaces `new`, `changed`, `missing`, or `unchanged`. Human semantic columns for known paths are preserved. Legacy CSV status `present` is accepted and normalized to `unchanged`.
