@@ -518,6 +518,13 @@ def main(argv: list[str] | None = None) -> int:
     onboard_parser = sub.add_parser("onboard", help="inventory, prepare, review, and accept project onboarding state")
     onboard_sub = onboard_parser.add_subparsers(dest="onboard_command", required=True)
 
+    onboard_init = onboard_sub.add_parser(
+        "init",
+        help="create the visible onboarding workspace and PLAN before starting STEP 01",
+    )
+    onboard_init.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    _add_workspace(onboard_init)
+
     onboard_inventory = onboard_sub.add_parser(
         "inventory",
         help="create or refresh the human-reviewed onboarding file inventory CSV",
@@ -891,6 +898,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "onboard":
             snapshot = Path(args.snapshot) if hasattr(args, "snapshot") else None
 
+            if args.onboard_command == "init":
+                project = Path(args.project).resolve()
+                workspace = open_inventory_workspace(project, _workspace_path(args.workspace))
+                print(f"ContextCanon onboarding workspace ready: {workspace.root}")
+                print(f"Open {workspace.plan_path} and continue from STEP 01.")
+                return 0
+
             if args.onboard_command == "inventory":
                 project = Path(args.project).resolve()
                 workspace = open_inventory_workspace(project, _workspace_path(args.workspace))
@@ -903,12 +917,14 @@ def main(argv: list[str] | None = None) -> int:
                 counts = refreshed.counts
                 print(f"wrote onboarding inventory {refreshed.csv_path}")
                 print(f"Inventory scope: {', '.join(refreshed.directories)}")
-                print(f"Files: {len(refreshed.rows)}")
+                print(f"Files listed for review: {len(refreshed.rows)}")
+                if refreshed.omitted_source_code:
+                    print(f"Source-code files omitted by default: {refreshed.omitted_source_code}")
                 print(
-                    "Status: "
-                    + ", ".join(f"{name}={counts.get(name, 0)}" for name in ("new", "changed", "missing", "present"))
+                    "File status: "
+                    + ", ".join(f"{name}={counts.get(name, 0)}" for name in ("new", "changed", "missing", "unchanged"))
                 )
-                print("Review kind/handling/description in STEP-02-inventory.csv, then run STEP 03 prepare.")
+                print(f"Next: open {workspace.plan_path} and continue STEP 02 there.")
                 return 0
 
             if args.onboard_command == "prepare":
