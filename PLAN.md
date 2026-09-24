@@ -601,7 +601,7 @@ Purpose: incorporate the first real Hello World Extended owner walkthrough befor
 - [x] Keep opaque PDF/Office originals outside semantic Evidence by default and recognize a faithful same-basename Markdown companion as `transcription / source`.
 - [x] Default `.gitignore` to `configuration / ignore`; omit ordinary source-code files from the standard inventory while retaining explicit `--rule` opt-in for selected code.
 - [x] Extend Hello World Extended and focused regressions for the corrected first-contact behavior.
-- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact review head.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact review head.
 
-Checkpoint: Issues #55/#56 are implemented on draft PR #54 and the complete deterministic suite currently passes 279 tests. The remaining expected failure is self-hosted generated drift after the documentation/contract changes; regenerate and verify before returning the branch for the next owner walkthrough. PR #54 remains draft and must not be merged without explicit project-owner approval.
+Checkpoint: Issues #55/#56 are implemented on draft PR #54. The owner-walkthrough correction head passes the complete deterministic suite (279 tests), self-hosted build/check with zero generated drift, and diff hygiene. The corrected STEP 01-03 first-contact flow is ready for the next Hello World Extended owner walkthrough. PR #54 remains draft and must not be merged without explicit project-owner approval.
 

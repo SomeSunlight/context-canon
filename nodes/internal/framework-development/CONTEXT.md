@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.0-draft`
+**Context version:** `0.3.1-draft`
 
 **Resulting imported Contexts:**
 

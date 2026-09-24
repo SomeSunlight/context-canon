@@ -54,16 +54,15 @@ This compares two compiled snapshots of the same Node using stable Context ident
 
 ## Onboard a project
 
-The normal first-adoption entry now begins with a reviewed file inventory:
+The normal first-adoption entry is deliberately small:
 
 ```text
-contextcanon onboard inventory .
-contextcanon onboard prepare . --inventory contextcanon-onboarding/STEP-02-inventory.csv
+contextcanon onboard init .
 ```
 
-Use repeated `--directory` on `inventory` to scope a first adoption to selected repository areas. Optional `--rule "GLOB=KIND:HANDLING"` values customize deterministic defaults without invoking an LLM.
+That creates the visible `contextcanon-onboarding/` workspace. **Open `contextcanon-onboarding/PLAN.md` and follow it from STEP 01.** The PLAN supplies the concrete inventory/prepare commands and later snapshot-bound workflow. `STEP-02-inventory-guide.md` beside it explains the CSV fields and handling/status semantics.
 
-After STEP 03 prints the immutable Evidence snapshot, continue from `contextcanon-onboarding/PLAN.md`; it contains the exact STEP 04–12 commands. Start with [Onboard an existing project](onboarding.md) for the handling semantics and full reviewed workflow.
+Use repeated `--directory` on `onboard inventory` to scope a first adoption to selected repository areas. Optional `--rule "GLOB=KIND:HANDLING"` values opt specific files/patterns into different deterministic treatment without invoking an LLM. Start with [Onboard an existing project](onboarding.md) for the trust boundaries and conceptual workflow.
 
 ## Lower-level Source commands
 

@@ -642,39 +642,47 @@ For structure-first placement publication, the accepted Step-03 Parent hierarchy
 
 ## Reviewed inventory preflight contract
 
-The normal structure-first first-adoption path now separates **repository inventory** from the later immutable Evidence snapshot. This prevents a hidden filename/suffix heuristic from deciding which project material exists before the project owner can review that boundary.
-
-The preflight has three operator steps:
+The normal structure-first first-adoption path separates **repository inventory** from the later immutable Evidence snapshot. It also gives the operator a visible runbook before any inventory decision exists:
 
 ```text
+contextcanon onboard init .
+        ↓
+contextcanon-onboarding/PLAN.md
+        ↓
 STEP 01  tidy obvious repository/document clutter before durable references exist
 STEP 02  contextcanon onboard inventory → STEP-02-inventory.csv → human review
 STEP 03  contextcanon onboard prepare --inventory ... → immutable Evidence snapshot
 ```
 
+`onboard init` creates only the ContextCanon-owned visible workspace, including the generated PLAN and `STEP-02-inventory-guide.md`. It does not scan or accept project material. The generated PLAN is the operator console; the guide is the field/value reference for the CSV.
+
 STEP 01 is guidance only. ContextCanon does not move/delete project files during first adoption.
 
-STEP 02 inventories Git-visible tracked and non-ignored untracked files in the whole repository or one/more explicitly selected repository-relative directories. ContextCanon-owned `.context/` state and the visible onboarding workspace are outside the project-material inventory domain. The generated CSV is a human-owned review surface; exact scanning/state bookkeeping remains machine-owned under `.context/onboarding/`.
+STEP 02 starts from Git-visible tracked and non-ignored untracked files in the whole repository or one/more explicitly selected repository-relative directories. ContextCanon-owned `.context/` state and the visible onboarding workspace are outside the project-material inventory domain. The generated CSV is a human review surface; exact scanning/state bookkeeping remains machine-owned under `.context/onboarding/`.
+
+The normal inventory intentionally does **not** enumerate every visible source-code file. Ordinary language source suffixes are omitted by default because large, fast-changing code trees would turn the onboarding table into a per-file change tracker. A deliberate `--rule GLOB=KIND:HANDLING` may opt selected source files back into the inventory. A later code-aware selection mechanism may replace this coarse boundary without changing the human acceptance principle.
 
 The reviewed row has two independent semantic axes:
 
-- **kind** says what the file roughly is: `document`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`;
+- **kind** says what the artifact roughly is: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`;
 - **handling** says what first-adoption Evidence should do with it:
   - `source` — include the exact bytes as direct project Evidence;
   - `interpret` — include the exact bytes, while recording that the material is raw/ambiguous input whose statements must not silently become canonical truth;
-  - `lookup` — keep the file explicitly known but do not eagerly freeze it into the semantic Evidence set;
+  - `lookup` — keep explicitly known material outside the eager Evidence set;
   - `ignore` — intentionally exclude it;
   - `undecided` — block STEP 03.
 
-The distinction is deliberate. `lookup` is not a claim that a file is irrelevant; it is a progressive-disclosure choice. A later large-repository workflow may inspect/activate selected lookup material when a concrete semantic task requires it. Likewise, `interpret` is not a weaker Evidence identity: the original bytes remain exact Evidence, while any synthesized decision/meaning requires a later explicit semantic/human acceptance boundary.
+`transcription` is a technical representation kind, not semantic interpretation. Opaque office/PDF originals default to `binary / ignore`. If `name.pdf`, `name.docx`, `name.pptx`, or a similar opaque document matters for semantic onboarding, the owner supplies a faithful same-directory, same-basename `name.md`. ContextCanon then recognizes that Markdown companion as `transcription / source` and keeps the original ignored. The generated `hint` column explains missing/recognized companions. Semantic condensation belongs later; a transcription should remain faithful to the original.
 
-Deterministic default rules may prefill classification (for example familiar documentation, CSV/TSV, source-code suffixes, obvious meeting/chat/prestudy names, generated paths or common binary formats). They are convenience only. The owner may edit the CSV directly, and optional repeatable `--rule GLOB=KIND:HANDLING` inputs can customize deterministic defaults without adding an LLM to the inventory stage.
+`.gitignore` is classified truthfully as configuration but defaults to `ignore`; repository ignore mechanics are not project semantic Evidence merely because the file is visible.
 
-STEP 02 is repeatable. After an accepted inventory exists, refresh compares live repository material with the accepted per-path SHA-256 baseline and surfaces `new`, `changed`, `missing`, or `present`. Human semantic columns for known paths are preserved. This makes newly arriving files an explicit later review event rather than silently absent context.
+Deterministic default rules may prefill classification for familiar documentation, structured data, raw-record names, generated paths and opaque formats. They are convenience only. The owner may edit the human semantic columns directly, and optional repeatable `--rule GLOB=KIND:HANDLING` inputs customize deterministic defaults without adding an LLM to the inventory stage.
+
+STEP 02 is repeatable **when the repository files changed**. It is not rerun merely because the owner edited the CSV. Refresh compares live material with the previous/accepted per-path SHA-256 baseline and surfaces `new`, `changed`, `missing`, or `unchanged`. Human semantic columns for known paths are preserved. Legacy CSV status `present` is accepted and normalized to `unchanged`.
 
 STEP 03 is the inventory acceptance boundary. Before freezing Evidence, ContextCanon refuses:
 
-- live in-scope files omitted from the CSV;
+- live in-scope non-source-code files omitted from the CSV;
 - stale listed SHA-256 values;
 - non-ignored missing files;
 - `undecided` handling;

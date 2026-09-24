@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "296d74966d304258cd38ec653124e040106b86c9416e7db7ecea2514df24b49a",
-    "package": "9d7f8ece1e0e2404c002416559161e510acc53de4303d62ab935295ab5352817"
+    "normalized": "5112749c9ea771fb28f8db146042280dd7bd2e2a3c0c7243962918233ee920b5",
+    "package": "8e26a164d1fba8fa829aec5182ef5ff93bf2551704eeb4d6e8a92107a3bc182d"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "b57230d1557adfcd474603920d84d27324fb631812b302257dca0d7da7964845",
+      "sha256": "6423f5479d51b772a5bfd6010d8a7e428be8aa2b21be21ab1f443982d565049d",
       "size": 18484
     },
     {
@@ -58,8 +58,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "e856a2c2f011ebb03746a48659b5ddee2ca208b755ffcb2d1384b922f37a333c",
-      "size": 45121
+      "sha256": "ea3bc831230e9a950e85a4b29dca0be60bff1e0faa627a3de35895c66d9df5e1",
+      "size": 46164
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
@@ -128,7 +128,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.0-draft"
+    "version": "0.3.1-draft"
   },
   "parents": [],
   "removed_rules": [],
