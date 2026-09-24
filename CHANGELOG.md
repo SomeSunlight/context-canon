@@ -4,6 +4,11 @@ All notable ContextCanon changes will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- ContextCanon 0.9.1 owner-test candidate: onboarding inventory now handles Git directory/gitlink entries without trying to hash them as files, reports inventory read failures with operation/path context, and no longer rewrites a generic Windows Errno 13 permission error as the known WinError-5/scanner-lock case.
+- The Hello World Extended fixture now ignores transient `contextcanon-onboarding/` and `.context/onboarding/` run data.
+
 ### Added
 
 - Reviewed onboarding preflight with `onboard init`, a generated PLAN-first operator flow, human-editable inventory CSV + local field guide, repeatable new/changed/missing/unchanged detection, deterministic defaults, same-basename Markdown transcription for opaque office/PDF material, default source-code omission with explicit opt-in rules, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
