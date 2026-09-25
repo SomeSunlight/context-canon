@@ -98,7 +98,7 @@ preview + explicit publication
 
 The LLM proposes semantics; it does not publish project truth. For the two semantic passes, use a strong reasoning-capable model. ContextCanon validates provenance and structure, but the project owner remains responsible for architecture and acceptance.
 
-For background, trust boundaries, and the full explanation of each stage, see **[Onboard an existing project](docs/onboarding.md)**. During an actual run, follow the generated `contextcanon-onboarding/PLAN.md`, not this README.
+For the conceptual walkthrough, see **[Onboard an existing project](docs/onboarding.md)**. For a stable command map — especially reset/restart — see **[Onboarding CLI](docs/onboarding-cli.md)**. During an actual run, follow the generated `contextcanon-onboarding/PLAN.md`.
 
 ## Maintain an onboarded project
 
@@ -305,7 +305,8 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
-- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough and current structure-first experiment.
+- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough for delivery triage, shelf design and placement.
+- [Onboarding CLI](docs/onboarding-cli.md) — onboarding command map, including reset/restart from any STEP 01–12.
 - [Maintain an existing ContextCanon project](docs/maintenance.md) — Source updates, downstream propagation review, build, and check.
 - [CLI quick reference](docs/cli.md) — compact command map for normal operation.
 - [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable planning, review, merge-gate and baseline-closure workflow.
