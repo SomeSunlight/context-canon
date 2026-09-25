@@ -984,6 +984,38 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
     return gitignore
 
 
+def remove_onboarding_gitignore(project_root: Path) -> bool:
+    """Remove only ContextCanon's marked onboarding block from the project .gitignore."""
+
+    project = _require_project_root_for_inventory(project_root)
+    gitignore = project / ".gitignore"
+    if not gitignore.exists():
+        return False
+    try:
+        existing = gitignore.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise ContextCanonError(f"Project .gitignore is not valid UTF-8: {gitignore}") from exc
+
+    start = existing.find(GITIGNORE_START)
+    end = existing.find(GITIGNORE_END)
+    if start < 0 and end < 0:
+        return False
+    if start < 0 or end < start:
+        raise ContextCanonError(
+            f"Project .gitignore contains an incomplete ContextCanon managed block: {gitignore}"
+        )
+    end += len(GITIGNORE_END)
+    prefix = existing[:start].rstrip("\n")
+    suffix = existing[end:].lstrip("\n")
+    parts = [part for part in (prefix, suffix.rstrip("\n")) if part]
+    updated = "\n\n".join(parts)
+    if updated:
+        write_utf8(gitignore, updated + "\n")
+    else:
+        gitignore.unlink()
+    return True
+
+
 def open_inventory_workspace(
     project_root: Path,
     workspace_root: Path | None = None,
