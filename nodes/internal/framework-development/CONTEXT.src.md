@@ -137,7 +137,7 @@ Optional:
 When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:
 
 Required:
-- Resource: `docs/onboarding-reference.md`
+- Resource: `docs/onboarding-design.md`
 <!-- ctx:topic id="CCI-TOPIC-ONBOARDING" -->
 
 ### Source and official formats
