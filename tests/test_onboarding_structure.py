@@ -45,7 +45,18 @@ class OnboardingStructureTests(unittest.TestCase):
             "Open WebUI is a separate application container.\n",
             encoding="utf-8",
         )
-        prepared = prepare_onboarding_evidence(repo)
+        (repo / "parameters.csv").write_text(
+            "name,value\nworkers,4\nmode,local\n",
+            encoding="utf-8",
+        )
+        (repo / "catalog.json").write_text(
+            "{\n  \"runtime\": \"local\",\n  \"workers\": 4\n}\n",
+            encoding="utf-8",
+        )
+        prepared = prepare_onboarding_evidence(
+            repo,
+            explicit_paths=["parameters.csv", "catalog.json"],
+        )
         entry = next(item for item in prepared.included if item.path == "README.md")
         return repo, prepared, entry
 
@@ -143,8 +154,8 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertIn("files it primarily governs", first.text)
         self.assertIn("non-Node knowledge bodies", first.text)
         self.assertIn("authoritative-reference", first.text)
-        self.assertIn("Markdown knowledge-body paths only", first.text)
-        self.assertIn("Non-Markdown authorities such as PDF", first.text)
+        self.assertIn("including Markdown, CSV, JSON, YAML", first.text)
+        self.assertIn("Do **not** conclude that structured data is ineligible", first.text)
         self.assertIn("Individual Rules, Topics, state/planning items", first.text)
         self.assertIn('"schema": "contextcanon/onboarding-structure-proposal/v0"', first.text)
 
@@ -159,6 +170,70 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertEqual([node.key for node in first.nodes], ["N-001", "N-002", "N-003", "N-004"])
         self.assertEqual(first.nodes_by_key["N-004"].parent_key, "N-003")
         self.assertEqual(first.knowledge_bodies[0].kind, "project-documentation")
+
+    def test_structure_proposal_accepts_csv_and_json_as_first_class_knowledge_bodies(self):
+        _, prepared, entry = self.make_snapshot()
+        raw = self.proposal_dict(prepared, entry)
+        by_path = {item.path: item for item in prepared.included}
+        raw["knowledge_bodies"].extend(
+            [
+                {
+                    "key": "K-CSV",
+                    "kind": "authoritative-reference",
+                    "name": "Parameter catalog",
+                    "suggested_node_key": "N-001",
+                    "paths": ["parameters.csv"],
+                    "purpose": "Keep the tabular parameter source in its natural structured format.",
+                    "rationale": "CSV is the authoritative tabular representation and should not be flattened to Markdown.",
+                    "confidence": "high",
+                    "evidence": [
+                        {
+                            "path": "parameters.csv",
+                            "sha256": by_path["parameters.csv"].sha256,
+                            "start_line": 1,
+                            "end_line": by_path["parameters.csv"].line_count,
+                        }
+                    ],
+                },
+                {
+                    "key": "K-JSON",
+                    "kind": "authoritative-reference",
+                    "name": "Runtime catalog",
+                    "suggested_node_key": "N-001",
+                    "paths": ["catalog.json"],
+                    "purpose": "Keep structured runtime data as JSON.",
+                    "rationale": "JSON carries machine-readable structure that Markdown would weaken.",
+                    "confidence": "high",
+                    "evidence": [
+                        {
+                            "path": "catalog.json",
+                            "sha256": by_path["catalog.json"].sha256,
+                            "start_line": 1,
+                            "end_line": by_path["catalog.json"].line_count,
+                        }
+                    ],
+                },
+            ]
+        )
+        proposal_path = Path(tempfile.mkdtemp()) / "structured.json"
+        proposal_path.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+
+        proposal = load_onboarding_structure_proposal(proposal_path, prepared.snapshot_root)
+        self.assertEqual(proposal.knowledge_bodies[-2].paths, ("parameters.csv",))
+        self.assertEqual(proposal.knowledge_bodies[-1].paths, ("catalog.json",))
+
+        structure_path = Path(tempfile.mkdtemp()) / STRUCTURE_REVIEW_NAME
+        plan, _, _, _ = create_or_load_structure_markdown(
+            prepared.snapshot_root,
+            proposal_path,
+            structure_path,
+        )
+        self.assertNotIn("parameters.csv", plan.fixed_markdown)
+        self.assertNotIn("catalog.json", plan.fixed_markdown)
+        rendered = structure_path.read_text(encoding="utf-8")
+        self.assertIn("parameters.csv", rendered)
+        self.assertIn("catalog.json", rendered)
+        self.assertIn("never source-edit targets", rendered)
 
     def test_structure_proposal_rejects_child_path_outside_primary_parent(self):
         _, prepared, entry = self.make_snapshot()
@@ -310,6 +385,23 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertIn("created onboarding structure", stdout.getvalue())
         self.assertIn(str(structure_path), stdout.getvalue())
         self.assertIn("Nodes in edited tree: 4", stdout.getvalue())
+
+    def test_wrong_snapshot_argument_cannot_rewrite_bound_plan(self):
+        repo, prepared, entry = self.make_snapshot()
+        workspace_root = repo / DEFAULT_WORKSPACE_NAME
+
+        self.assertEqual(main(["onboard", "structure-instruction", str(prepared.snapshot_root)]), 0)
+        proposal_path = self.write_proposal(prepared, entry, workspace_root / STRUCTURE_PROPOSAL_NAME)
+        plan_path = workspace_root / "PLAN.md"
+        before = plan_path.read_bytes()
+
+        with self.assertRaisesRegex(ContextCanonError, "Expected a prepared Evidence snapshot directory|bound to a different frozen Evidence snapshot"):
+            main(["onboard", "structure-validate", str(proposal_path)])
+
+        self.assertEqual(plan_path.read_bytes(), before)
+        plan_text = plan_path.read_text(encoding="utf-8")
+        expected_snapshot = prepared.snapshot_root.relative_to(repo).as_posix()
+        self.assertIn(f"$SNAPSHOT = '{expected_snapshot}'", plan_text)
 
     def test_cli_stdout_and_explicit_paths_remain_available(self):
         _, prepared, entry = self.make_snapshot()
