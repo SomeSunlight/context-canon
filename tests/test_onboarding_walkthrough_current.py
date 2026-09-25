@@ -15,6 +15,8 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertIn("STEP-02-inventory-guide.md", text)
         self.assertIn("## 1. Tidy before durable references", text)
         self.assertIn("## 2. Inventory and review the project files", text)
+        self.assertIn("existing project deliveries", text)
+        self.assertIn("[coming soon] interpret raw/ambiguous Evidence", text)
         self.assertIn("STEP-02-inventory.csv", text)
         self.assertIn("## 3. Freeze the reviewed Evidence", text)
         self.assertIn("## 7. Select reusable Contexts", text)
@@ -34,6 +36,38 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertNotIn("STEP-05a-placement-instruction.md", current)
 
 
+    def test_onboarding_docs_separate_walkthrough_commands_and_framework_design(self) -> None:
+        walkthrough = (ROOT / "docs" / "onboarding.md").read_text(encoding="utf-8")
+        cli = (ROOT / "docs" / "onboarding-cli.md").read_text(encoding="utf-8")
+        cli_index = (ROOT / "docs" / "cli.md").read_text(encoding="utf-8")
+        docs_index = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+        framework_source = (ROOT / "nodes" / "internal" / "framework-development" / "CONTEXT.src.md").read_text(encoding="utf-8")
+        design = (ROOT / "nodes" / "internal" / "framework-development" / "docs" / "onboarding-design.md").read_text(encoding="utf-8")
+
+        self.assertIn("existing project deliveries", walkthrough)
+        self.assertIn("human triage: source / interpret / lookup / ignore", walkthrough)
+        self.assertIn("[coming soon] interpret raw/ambiguous Evidence", walkthrough)
+        self.assertIn("[Onboarding CLI reference](onboarding-cli.md)", walkthrough)
+        self.assertIn("exact reusable Context packages from STEP 07", walkthrough)
+        self.assertNotIn("exact reusable Context packages from Step 5", walkthrough)
+        self.assertNotIn("not established in Step 5", walkthrough)
+
+        self.assertIn("contextcanon onboard reset . --from <STEP>", cli)
+        self.assertIn("`--from 1`", cli)
+        self.assertIn("`--from 3`", cli)
+        self.assertIn("[Onboarding CLI reference](onboarding-cli.md)", cli_index)
+        self.assertIn("onboarding-cli.md", docs_index)
+        self.assertNotIn("onboarding-reference.md", docs_index)
+        self.assertFalse((ROOT / "docs" / "onboarding-reference.md").exists())
+
+        self.assertIn("Resource: `docs/onboarding-design.md`", framework_source)
+        self.assertNotIn("Resource: `docs/onboarding-reference.md`", framework_source)
+        self.assertTrue((ROOT / "nodes" / "internal" / "framework-development" / "docs" / "onboarding-design.md").is_file())
+        self.assertFalse((ROOT / "nodes" / "internal" / "framework-development" / "docs" / "onboarding-reference.md").exists())
+        self.assertIn("framework-development document", design)
+        self.assertIn("STEP 12  explicit transactional publication", design)
+        self.assertIn("Legacy single-pass semantic instruction contract", design)
+        self.assertNotIn("Step-9 reset journals", design)
     def test_root_readme_gets_new_user_into_generated_plan_without_reconstructing_workflow(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
         onboarding = text.split("## Bring an existing project aboard", 1)[1].split("## Maintain an onboarded project", 1)[0]
