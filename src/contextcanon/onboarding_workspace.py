@@ -1062,6 +1062,22 @@ def open_inventory_workspace(
     return workspace
 
 
+def reset_inventory_workspace_plan(
+    project_root: Path,
+    workspace_root: Path | None = None,
+    *,
+    completed_steps: tuple[int, ...] = (),
+) -> OnboardingWorkspace:
+    """Regenerate the pre-Evidence operator PLAN after a STEP 01-03 reset."""
+
+    workspace = open_inventory_workspace(project_root, workspace_root)
+    plan = _workspace_plan()
+    if completed_steps:
+        plan = _rewrite_checklist(plan, set(completed_steps), workspace.plan_path)
+    write_utf8(workspace.plan_path, plan)
+    return workspace
+
+
 def _require_project_root_for_inventory(project_root: Path) -> Path:
     project = project_root.resolve()
     if not (project / ".git").exists():
