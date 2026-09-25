@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.3-draft"
+  version: "0.3.4-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -190,7 +190,7 @@ targets:
   - topic: "CCI-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCI-TOPIC-FORMATS"
@@ -246,7 +246,7 @@ resources:
   - {"source": "docs/architecture.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"}
   - {"source": "docs/compiler.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"}
   - {"source": "docs/concepts.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"}
-  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "docs/onboarding-design.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"}
   - {"source": "docs/state.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"}
   - {"source": "docs/tests-and-ci.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"}
   - {"source": "docs/use-case-walkthrough.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"}
@@ -259,5 +259,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "a81b28a0ae6d20a812ededc939ae6fd416b2b966044355596f1205170aca6cfc"
-  package_digest: "b2738994f15aabcb8b1b036af84e5a71f53e0f477519fb6ad8cce44ebef383b2"
+  normalized_digest: "4506ac245f39ba8a05c99460ff4a23a21f3048123bc980eaa420e0144f46e806"
+  package_digest: "324b6c120892049d9e0ac555a851e392cf55efc5c970a2255e1740de79434d3a"

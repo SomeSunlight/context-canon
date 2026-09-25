@@ -54,15 +54,15 @@ This compares two compiled snapshots of the same Node using stable Context ident
 
 ## Onboard a project
 
-The normal first-adoption entry is deliberately small:
+Start a first adoption with:
 
 ```text
 contextcanon onboard init .
 ```
 
-That creates the visible `contextcanon-onboarding/` workspace. **Open `contextcanon-onboarding/PLAN.md` and follow it from STEP 01.** The PLAN supplies the concrete inventory/prepare commands and later snapshot-bound workflow. `STEP-02-inventory-guide.md` beside it explains the CSV fields and handling/status semantics.
+Then follow the generated `contextcanon-onboarding/PLAN.md`.
 
-Use repeated `--directory` on `onboard inventory` to scope a first adoption to selected repository areas. Optional `--rule "GLOB=KIND:HANDLING"` values opt specific files/patterns into different deterministic treatment without invoking an LLM. Start with [Onboard an existing project](onboarding.md) for the trust boundaries and conceptual workflow.
+For the onboarding command map — especially **go back / restart** with `contextcanon onboard reset . --from <STEP>` — use the dedicated **[Onboarding CLI reference](onboarding-cli.md)**. The conceptual walkthrough remains in **[Onboard an existing project](onboarding.md)**.
 
 ## Lower-level Source commands
 

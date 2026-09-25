@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "a81b28a0ae6d20a812ededc939ae6fd416b2b966044355596f1205170aca6cfc",
-    "package": "b2738994f15aabcb8b1b036af84e5a71f53e0f477519fb6ad8cce44ebef383b2"
+    "normalized": "4506ac245f39ba8a05c99460ff4a23a21f3048123bc980eaa420e0144f46e806",
+    "package": "324b6c120892049d9e0ac555a851e392cf55efc5c970a2255e1740de79434d3a"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "25c405324e3e16f4badd15b93e47746f7a6da8a37c58a1c8c70ae89058a64a1a",
-      "size": 18484
+      "sha256": "8005d48a0cabe2981d2f67ed11d2d24129adafe34b402650b34529b0768f2fca",
+      "size": 18478
     },
     {
       "path": "CONTEXT/README.md",
@@ -57,9 +57,9 @@
       "size": 5003
     },
     {
-      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "59a5fea337fb0e17e84c6b80d830356b3a1702a92d37f7e684f3763cef2c26c9",
-      "size": 47947
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md",
+      "sha256": "baa7c19c7e80dbc65f5837dd2fe410a67df3ccb9c9e0a7f55429af657747326c",
+      "size": 21119
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
@@ -128,7 +128,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.3-draft"
+    "version": "0.3.4-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -657,7 +657,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"
         }
       ],
       "title": "Reviewed project onboarding"

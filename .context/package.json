@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "8e1859a5971300f5bdc011a2c8a2d20f824c376cc059fd7abb57911edeb91939",
-    "package": "2976046f0cb0ef14d01e5a65f82cb2c08ed95906bc2591dbbbe7a7f28fc4572b"
+    "normalized": "c5310a5ba5d1b5e4524eb91f9a359dc6117aef3fee172b00932b277c6942ec20",
+    "package": "d24f01c868575f141c7a338786d65211f5782018a73acace9a25c8bdb626180e"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "f8647c9954b3254e4b9872b1530ad6c73c2e1e6dd3a9ffe0a4b4c578618fb2f3",
-      "size": 3117
+      "sha256": "bc98697c8bbaebd423f0d66087b3159a5fc43edfb10e01fc07d2560ceb9d2a22",
+      "size": 3282
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
-      "sha256": "5556ebb6e589aeafb9ab6cd19367e219223de86fcbf5f1386504ba03758ba08e",
-      "size": 4756
+      "sha256": "cf4de2dd9a5a8be03a282d1b689441901d4e3aba103edd2edbf1f3428ab28c77",
+      "size": 4399
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
@@ -27,9 +27,14 @@
       "size": 6587
     },
     {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
+      "sha256": "23c232ed6747f96838411c60c0289fb40ce283e0616e9324601f4a0dbd4073c1",
+      "size": 4874
+    },
+    {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
-      "sha256": "357647d3b03eb99286da710a833123ba32d061fa19d008691f48e4f2bcbd162f",
-      "size": 29694
+      "sha256": "f0c8806eef0b1b1411fe1196bfec0e0424a5af632c03e00436d666f44d0c91f4",
+      "size": 30646
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
@@ -37,9 +42,9 @@
       "size": 15768
     },
     {
-      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "59a5fea337fb0e17e84c6b80d830356b3a1702a92d37f7e684f3763cef2c26c9",
-      "size": 47947
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md",
+      "sha256": "baa7c19c7e80dbc65f5837dd2fe410a67df3ccb9c9e0a7f55429af657747326c",
+      "size": 21119
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md",
@@ -51,7 +56,7 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.3-draft"
+    "version": "0.3.4-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -65,6 +70,11 @@
       "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
       "origin_node_name": "ContextCanon Gateway",
       "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md"
+        },
         {
           "intent": "required",
           "kind": "resource",
