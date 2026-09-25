@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "c5310a5ba5d1b5e4524eb91f9a359dc6117aef3fee172b00932b277c6942ec20",
-    "package": "d24f01c868575f141c7a338786d65211f5782018a73acace9a25c8bdb626180e"
+    "normalized": "04b124908186da13f7dbb46b01b2be6be0d41d4e63ce6cf01719335f9aae1690",
+    "package": "bc3a9e850867b1a52cb553291026a69789447fc2de21fe7cc31b02f55e7d76d4"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "bc98697c8bbaebd423f0d66087b3159a5fc43edfb10e01fc07d2560ceb9d2a22",
+      "sha256": "774aaffcf07c101ab72b95d331b71349ea9f1428a0620cd974ec04da3292e146",
       "size": 3282
     },
     {
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
-      "sha256": "23c232ed6747f96838411c60c0289fb40ce283e0616e9324601f4a0dbd4073c1",
-      "size": 4874
+      "sha256": "a005811f991678c2ba240e2a0cc9b180b047785689b92c120219e6dc8fac3531",
+      "size": 5222
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
-      "sha256": "f0c8806eef0b1b1411fe1196bfec0e0424a5af632c03e00436d666f44d0c91f4",
-      "size": 30646
+      "sha256": "517b374670aa0e1a2f7050827e9be174b54dd354b3792e20bad7ec234e3d87a4",
+      "size": 31498
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
@@ -43,8 +43,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md",
-      "sha256": "baa7c19c7e80dbc65f5837dd2fe410a67df3ccb9c9e0a7f55429af657747326c",
-      "size": 21119
+      "sha256": "8032a8724bdc1a29b02258ba6a13e89ef0280de5e33e402926213a0e070b23c2",
+      "size": 23095
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md",
@@ -56,7 +56,7 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.4-draft"
+    "version": "0.3.5-draft"
   },
   "parents": [],
   "removed_rules": [],

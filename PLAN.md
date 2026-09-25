@@ -666,7 +666,7 @@ Purpose: harden the first real semantic LLM handoff after the corporate-project 
 - [x] Make both semantic handoffs explicitly recommend a separate scratch IDE/agent project containing only the generated instruction + frozen Evidence; copy only the returned JSON back to the live onboarding workspace.
 - [x] Record future LLM-assisted inventory triage: derive candidate descriptions progressively from filename/path + title/front matter/introduction/first meaningful section (or schema/header/top-level keys for structured data), then read deeper only when needed. Human CSV review remains authoritative.
 - [x] Advance the owner-test package version from 0.9.3 to 0.9.4.
-- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.4 review head.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.4 review head.
 
-Checkpoint: Issue #60 is implemented on draft PR #54 as the ContextCanon 0.9.4 owner-test candidate. Focused snapshot-binding and structured-data regressions are present; full self-hosted verification remains before the next STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+Checkpoint: Issue #60 is implemented on draft PR #54 as the ContextCanon 0.9.4 owner-test candidate. The corrected head passes the complete deterministic suite (293 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 

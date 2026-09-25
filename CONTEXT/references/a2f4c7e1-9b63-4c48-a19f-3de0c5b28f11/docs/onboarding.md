@@ -216,6 +216,8 @@ Give the strong reasoning LLM:
 - `contextcanon-onboarding/STEP-04a-structure-instruction.md` as the controlling assignment;
 - read access only to the frozen snapshot's `evidence/` directory.
 
+**For an IDE/agent model, do not use the live repository as its project/workspace.** Open a separate temporary IDE project containing only a copy of the instruction and frozen `evidence/` tree. Let the agent create only the requested JSON there, then copy that JSON back into `contextcanon-onboarding/`. The semantic reviewer does not need to run ContextCanon or edit the PLAN.
+
 The model returns exactly one JSON object. Save it as:
 
 ```text
@@ -226,7 +228,7 @@ The structure pass asks for:
 
 - candidate local/grouping Nodes;
 - one simple primary parent/child hierarchy for human orientation;
-- larger knowledge bodies that should remain documentation, authoritative references, or imported corpora rather than becoming Nodes merely because they contain information;
+- larger knowledge bodies that should remain documentation, structured data, authoritative references, or imported corpora rather than becoming Nodes merely because they contain information;
 - rationale, confidence, and exact frozen-Evidence provenance.
 
 The current repository directory tree is **evidence about the project, not the taxonomy ContextCanon must preserve**. A proposed semantic Node may use an existing directory or a new repository-relative directory that does not exist yet. This matters especially for document-heavy repositories where many distinct knowledge areas currently live together in one folder. The human accepts the shelf map first; materialization can create the missing Node directories safely afterwards.
@@ -371,7 +373,7 @@ contextcanon onboard placement-instruction \
   .context/onboarding/<evidence-digest>
 ```
 
-ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md`. Give that instruction and **only the same frozen `evidence/` tree** to a strong reasoning LLM. Save its single JSON response as `contextcanon-onboarding/STEP-08b-placement-proposal.json`.
+ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md`. Again, for an IDE/agent model, use a **separate temporary project** containing only that instruction plus a copy of the same frozen `evidence/` tree. Save/copy only its single JSON response back as `contextcanon-onboarding/STEP-08b-placement-proposal.json`.
 
 The placement question is no longer "where is this text today?". It is:
 
@@ -381,18 +383,18 @@ The v1 proposal distinguishes:
 
 - `overview` — short stable orientation about what a Node owns;
 - `rule` — durable project-local governance;
-- `topic-resource` — deeper Markdown maintained at its natural repository path and routed to by a Topic;
+- `topic-resource` — deeper material maintained at its natural repository path and routed to by a Topic; this may be Markdown or structured textual data such as CSV/JSON/YAML;
 - `state` / `plan` — current situation or future work, kept distinct from inherited governance;
 - `ordinary-documentation` — useful documents that remain ordinary documents;
-- `authority-mapping` — a local interpretation of Markdown deliberately marked fixed/authoritative in `STEP-05-structure.md`;
+- `authority-mapping` — a local interpretation of fixed/authoritative material; Markdown must already be marked fixed in `STEP-05-structure.md`, while structured technical Evidence such as CSV/JSON may remain authoritative in its natural format;
 - `unresolved` — ambiguity that must remain visible.
 
 Actions are deliberately narrow:
 
 - `promote` — make the destination ContextCanon surface the **single canonical maintenance surface** for the reviewed meaning. Initial publication may temporarily leave original mutable prose untouched for migration safety, but that duplicate is transitional;
-- `reference` — only for `topic-resource`; keep referenced Markdown as the maintenance surface and store routing rather than a copied second meaning;
+- `reference` — only for `topic-resource`; keep the referenced resource as the maintenance surface and store routing rather than a copied second meaning;
 - `keep` — intentionally remain outside canonical Node authoring;
-- `map` — preserve fixed Markdown as authority while recording the reviewed local relationship to it.
+- `map` — preserve fixed/technical authority in its natural format while recording the reviewed local relationship to it.
 
 The non-redundancy goal is **one canonical meaning, many useful routes**. After promoted meaning is safely canonical, reviewed cleanup can remove true duplicates or leave a concise orientation/summary plus a link.
 
@@ -407,7 +409,7 @@ Ordinary `project-documentation` Markdown is mutable by default. Markdown propos
 - **mutable** means ContextCanon may become the future owner of promoted meaning, but the first publication still does not delete or rewrite the old document;
 - **fixed** means the document remains authoritative and may only be referenced/mapped by this onboarding flow.
 
-Non-Markdown document authorities such as PDF/Word are deliberately unsupported in this version rather than hidden behind an implicit conversion mechanism.
+Structured textual data such as CSV/JSON/YAML is first-class Evidence and may remain a Topic/Resource or technical authority without conversion to Markdown. Opaque document authorities such as PDF/Word are deliberately unsupported directly; use the reviewed same-basename textual transcription path when their content matters.
 
 ## 9. Validate the placement proposal
 

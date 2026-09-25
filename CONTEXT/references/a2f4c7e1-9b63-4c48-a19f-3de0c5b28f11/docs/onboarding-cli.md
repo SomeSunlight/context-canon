@@ -77,6 +77,8 @@ Generate the structure task:
 contextcanon onboard structure-instruction .context/onboarding/<evidence-digest>
 ```
 
+For IDE/agent models, use a separate scratch project containing only a copy of `STEP-04a-structure-instruction.md` plus the frozen `evidence/` directory; copy only the returned JSON back into the onboarding workspace.
+
 After the reasoning model writes `STEP-04b-structure-proposal.json`:
 
 ```text
@@ -96,6 +98,8 @@ Generate the placement task:
 ```text
 contextcanon onboard placement-instruction .context/onboarding/<evidence-digest>
 ```
+
+Use the same isolated scratch-project pattern for STEP 08; do not give the semantic agent the live repository as its workspace.
 
 After the reasoning model writes `STEP-08b-placement-proposal.json`:
 
