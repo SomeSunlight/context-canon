@@ -670,3 +670,23 @@ Purpose: harden the first real semantic LLM handoff after the corporate-project 
 
 Checkpoint: Issue #60 is implemented on draft PR #54 as the ContextCanon 0.9.4 owner-test candidate. The corrected head passes the complete deterministic suite (293 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: deterministic per-step semantic handoffs — Issue #61
+
+Purpose: apply ContextCanon's own perfect-context principle to every external reasoning model used during onboarding.
+
+- [x] Add a reusable model-neutral Semantic Handoff Workspace registry; current semantic LLM steps are STEP 04 structure and STEP 08 placement, with future interpretation/reasoning steps able to register the same harness.
+- [x] Give every semantic step a separate disposable workspace rather than one long-lived agent project.
+- [x] Materialize exact frozen Evidence directly at repository-relative paths in each handoff root.
+- [x] Add only `.contextcanon-handoff/PLAN.md`, `INSTRUCTION.md`, `manifest.json`, and optional `RESULT.json` as the control surface.
+- [x] Generate a deterministic ZIP carrying exactly the same bound input set and never package `RESULT.json` or later IDE metadata.
+- [x] Make structure/placement instruction commands create their handoff directory + ZIP automatically.
+- [x] Add generic `onboard handoff <snapshot> --step 4|8` regeneration/export and explicit `--refresh` semantics.
+- [x] Add `onboard handoff-import <snapshot> --step 4|8 [RESULT]`; import only verifies one UTF-8 JSON object and preserves its exact text, while existing structure/placement validation remains a separate explicit command.
+- [x] Preserve an unchanged handoff's RESULT.json; refuse changed handoff inputs from silently destroying an existing result.
+- [x] Remove STEP-owned handoff directories/ZIPs through normal `onboard reset`.
+- [x] Keep previous raw LLM proposals/reviews out of later handoffs; accepted state reaches later models only through their ContextCanon-generated instruction.
+- [x] Advance the owner-test package version from 0.9.4 to 0.9.5.
+- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.5 review head.
+
+Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 owner-test candidate. Focused semantic-handoff regressions are present; full self-hosted verification remains before the next corporate-project STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
