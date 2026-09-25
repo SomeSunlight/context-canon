@@ -356,7 +356,6 @@ def import_semantic_handoff_result(
     if not isinstance(value, dict):
         raise ContextCanonError(f"Semantic handoff result must be one JSON object: {source}")
 
-    normalized = json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    write_utf8(handoff.result_path, normalized)
-    write_utf8(handoff.canonical_result_path, normalized)
+    write_utf8(handoff.result_path, text)
+    write_utf8(handoff.canonical_result_path, text)
     return handoff
