@@ -1082,6 +1082,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Semantic handoff workspace: {handoff.root}")
                 print(f"Semantic handoff ZIP: {handoff.zip_path}")
                 print(f"Expected LLM output: {handoff.result_path}")
+                print(f"Canonical proposal after import: {workspace.structure_proposal_path}")
                 update_workspace_checkpoint(
                     workspace, snapshot,
                     stage="structure instruction ready",
@@ -1290,6 +1291,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Semantic handoff workspace: {handoff.root}")
                     print(f"Semantic handoff ZIP: {handoff.zip_path}")
                     print(f"Expected LLM output: {handoff.result_path}")
+                    print(f"Canonical proposal after import: {workspace.placement_proposal_path}")
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement instruction ready",
                         structure_digest=instruction.structure_digest,
