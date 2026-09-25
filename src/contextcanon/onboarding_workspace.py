@@ -458,8 +458,12 @@ def _exact_commands(
     project_root = find_repo_root(snapshot_root)
     try:
         inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
+        workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
     except ValueError:
         inventory_label = str(workspace.inventory_path.resolve())
+        workspace_label = str(workspace.root.resolve())
+    structure_handoff_label = f"{workspace_label}/handoffs/STEP-04-structure"
+    placement_handoff_label = f"{workspace_label}/handoffs/STEP-08-placement"
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
         snapshot_token = "$SNAPSHOT"
@@ -528,8 +532,8 @@ def _exact_commands(
         "The instruction command also creates the isolated handoff directory and matching ZIP:",
         "",
         "```text",
-        "contextcanon-onboarding/handoffs/STEP-04-structure/",
-        "contextcanon-onboarding/handoffs/STEP-04-structure.zip",
+        f"{structure_handoff_label}/",
+        f"{structure_handoff_label}.zip",
         "```",
         "",
         "Open **only** that directory as the agent project, or upload the ZIP. Tell the model: `Follow .contextcanon-handoff/PLAN.md`. When it has produced RESULT.json, import it and validate as two explicit steps:",
@@ -587,8 +591,8 @@ def _exact_commands(
         "This instruction command creates a **new** isolated handoff; STEP 04's agent workspace is not reused:",
         "",
         "```text",
-        "contextcanon-onboarding/handoffs/STEP-08-placement/",
-        "contextcanon-onboarding/handoffs/STEP-08-placement.zip",
+        f"{placement_handoff_label}/",
+        f"{placement_handoff_label}.zip",
         "```",
         "",
         "Open/upload only that handoff and tell the model: `Follow .contextcanon-handoff/PLAN.md`. Then import the result explicitly:",
