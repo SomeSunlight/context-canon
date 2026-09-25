@@ -13,6 +13,13 @@ from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence
 from .onboarding_inventory import prepare_from_inventory, refresh_inventory
 from .onboarding_instruction import build_onboarding_instruction
+from .onboarding_handoff import (
+    HANDOFF_CONTROL_DIR,
+    HANDOFF_PLAN_NAME,
+    build_semantic_handoff,
+    handoff_relative_paths,
+    import_semantic_handoff_result,
+)
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
 from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
@@ -566,6 +573,32 @@ def main(argv: list[str] | None = None) -> int:
     _add_workspace(onboard_prepare)
     add_reset_parser(onboard_sub)
 
+    onboard_handoff = onboard_sub.add_parser(
+        "handoff",
+        help="prepare or refresh one isolated semantic LLM workspace and deterministic ZIP",
+    )
+    onboard_handoff.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_handoff.add_argument("--step", type=int, choices=(4, 8), required=True, help="semantic onboarding step")
+    onboard_handoff.add_argument(
+        "--refresh",
+        action="store_true",
+        help="explicitly discard an existing owned handoff (including RESULT.json) and rebuild it",
+    )
+    _add_workspace(onboard_handoff)
+
+    onboard_handoff_import = onboard_sub.add_parser(
+        "handoff-import",
+        help="copy one semantic handoff JSON result into the canonical onboarding proposal path",
+    )
+    onboard_handoff_import.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_handoff_import.add_argument("--step", type=int, choices=(4, 8), required=True, help="semantic onboarding step")
+    onboard_handoff_import.add_argument(
+        "result",
+        nargs="?",
+        help="external JSON result path; default: <handoff>/.contextcanon-handoff/RESULT.json",
+    )
+    _add_workspace(onboard_handoff_import)
+
     onboard_prepare.add_argument(
         "--include",
         action="append",
@@ -991,6 +1024,39 @@ def main(argv: list[str] | None = None) -> int:
                 print(result["next_action"])
                 return 0
 
+            if args.onboard_command == "handoff":
+                workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
+                handoff = build_semantic_handoff(
+                    snapshot,
+                    workspace.root,
+                    step=args.step,
+                    refresh=args.refresh,
+                )
+                verb = "created" if handoff.created else "verified"
+                print(f"{verb} semantic handoff STEP {args.step:02d}: {handoff.root}")
+                print(f"LLM PLAN: {handoff.root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME}")
+                print(f"ZIP: {handoff.zip_path}")
+                print(f"Handoff digest: {handoff.handoff_digest}")
+                print(
+                    f"Next: open the handoff directory as its own project or upload the ZIP, "
+                    f"then tell the model to follow {HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}."
+                )
+                return 0
+
+            if args.onboard_command == "handoff-import":
+                workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
+                handoff = import_semantic_handoff_result(
+                    snapshot,
+                    workspace.root,
+                    step=args.step,
+                    result_path=Path(args.result) if args.result is not None else None,
+                )
+                print(f"imported semantic handoff STEP {args.step:02d} result")
+                print(f"Canonical proposal: {handoff.canonical_result_path}")
+                next_command = "structure-validate" if args.step == 4 else "placement-validate"
+                print(f"Next: contextcanon onboard {next_command} {_snapshot_cli(snapshot)}")
+                return 0
+
             if args.onboard_command == "structure-instruction":
                 instruction = build_onboarding_structure_instruction(
                     snapshot,
@@ -1004,18 +1070,27 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=True)
                 write_utf8(workspace.structure_instruction_path, instruction.text)
+                handoff = build_semantic_handoff(
+                    snapshot,
+                    workspace.root,
+                    step=4,
+                    instruction_path=workspace.structure_instruction_path,
+                )
                 print(f"wrote onboarding structure instruction {workspace.structure_instruction_path}")
                 print(f"Instruction digest: {instruction.instruction_digest}")
                 print(f"Evidence snapshot: {instruction.evidence_digest}")
-                print(f"Expected LLM output: {workspace.structure_proposal_path}")
+                print(f"Semantic handoff workspace: {handoff.root}")
+                print(f"Semantic handoff ZIP: {handoff.zip_path}")
+                print(f"Expected LLM output: {handoff.result_path}")
                 update_workspace_checkpoint(
                     workspace, snapshot,
                     stage="structure instruction ready",
                     source_catalog=_catalog_labels(instruction.catalog_packages),
                     source_catalog_inputs=tuple(args.catalog_package),
                     next_action=(
-                        "Give `STEP-04a-structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                        "Save its single JSON result as `STEP-04b-structure-proposal.json`, then run "
+                        f"Open `{handoff.root}` as a separate agent project (or upload `{handoff.zip_path}`) and tell the model "
+                        f"to follow `{HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}`. Then run "
+                        f"`contextcanon onboard handoff-import {_snapshot_cli(snapshot)} --step 4` followed by "
                         f"`contextcanon onboard structure-validate {_snapshot_cli(snapshot)}`."
                     ),
                 )
@@ -1202,19 +1277,28 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"contextcanon onboarding placement instruction digest: {instruction.instruction_digest}", file=sys.stderr)
                         return 0
                     write_utf8(workspace.placement_instruction_path, instruction.text)
+                    handoff = build_semantic_handoff(
+                        snapshot,
+                        workspace.root,
+                        step=8,
+                        instruction_path=workspace.placement_instruction_path,
+                    )
                     print(f"wrote onboarding placement instruction {workspace.placement_instruction_path}")
                     print(f"Instruction digest: {instruction.instruction_digest}")
                     print(f"Evidence snapshot: {instruction.evidence_digest}")
                     print(f"Structure digest: {instruction.structure_digest}")
-                    print(f"Expected LLM output: {workspace.placement_proposal_path}")
+                    print(f"Semantic handoff workspace: {handoff.root}")
+                    print(f"Semantic handoff ZIP: {handoff.zip_path}")
+                    print(f"Expected LLM output: {handoff.result_path}")
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement instruction ready",
                         structure_digest=instruction.structure_digest,
                         source_catalog=_catalog_labels(instruction.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            "Give `STEP-08a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                            "Save its single JSON result as `STEP-08b-placement-proposal.json`, then run "
+                            f"Open `{handoff.root}` as a separate agent project (or upload `{handoff.zip_path}`) and tell the model "
+                            f"to follow `{HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}`. Then run "
+                            f"`contextcanon onboard handoff-import {_snapshot_cli(snapshot)} --step 8` followed by "
                             f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}`."
                         ),
                     )
