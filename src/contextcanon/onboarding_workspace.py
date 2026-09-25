@@ -291,6 +291,18 @@ def _workspace_plan() -> str:
 
 This is the **operator console** for the current onboarding. Work from top to bottom. The first three steps are deliberately useful on their own: for a small document/architecture project you can stop after the reviewed Evidence snapshot and continue semantic onboarding later.
 
+## Need to go back?
+
+You do not need a Git rollback or a fresh clone. From the Git repository root, reset the onboarding from any numbered step and then continue from that step:
+
+```text
+contextcanon onboard reset . --from <STEP>
+```
+
+Examples: `--from 1` removes the owned onboarding workspace and onboarding machine state so you can run `contextcanon onboard init .` again; `--from 3` keeps the reviewed STEP-02 CSV but discards accepted Evidence and all later onboarding work. ContextCanon only rolls back files it can prove belong to the onboarding run.
+
+Full reset/reference details: [Onboarding CLI](../docs/onboarding-cli.md) when the default workspace is at the repository root.
+
 ## Onboarding steps
 
 {COMMANDS_START}
