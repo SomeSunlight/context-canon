@@ -867,6 +867,13 @@ def _checkpoint_block(text: str, path: Path) -> str | None:
     return text[start:end]
 
 
+def _checkpoint_snapshot(block: str | None) -> str | None:
+    if block is None:
+        return None
+    match = re.search(r"^- Snapshot: \`(.+?)\`$", block, re.MULTILINE)
+    return match.group(1) if match else None
+
+
 def _checkpoint_stage(block: str | None) -> str | None:
     if block is None:
         return None
@@ -892,6 +899,31 @@ def _remember_first(text: str, headings: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_root: Path) -> None:
+    snapshot = snapshot_root.resolve()
+    if not snapshot.is_dir() or not (snapshot / "manifest.json").is_file():
+        raise ContextCanonError(
+            f"Expected a prepared Evidence snapshot directory, got: {snapshot_root}. "
+            "The onboarding PLAN was not changed."
+        )
+
+    existing_plan = None
+    if workspace.plan_path.exists():
+        try:
+            existing_plan = workspace.plan_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
+        if PLAN_MARKER not in existing_plan:
+            raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
+        checkpoint = _checkpoint_block(existing_plan, workspace.plan_path)
+        bound_snapshot = _checkpoint_snapshot(checkpoint)
+        supplied_snapshot = _snapshot_label(snapshot)
+        if bound_snapshot is not None and bound_snapshot != supplied_snapshot:
+            raise ContextCanonError(
+                "Onboarding workspace is bound to a different frozen Evidence snapshot. "
+                f"PLAN snapshot: {bound_snapshot}; supplied snapshot: {supplied_snapshot}. "
+                "The PLAN was not changed. Use the snapshot shown in PLAN.md or reset to STEP 03."
+            )
+
     _migrate_legacy_artifacts(workspace)
     write_utf8(workspace.readme_path, _workspace_readme())
     write_utf8(workspace.inventory_guide_path, _inventory_guide())
