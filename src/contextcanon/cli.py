@@ -978,11 +978,17 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.onboard_command == "reset":
                 result = handle_reset_args(args)
-                print(f"reset onboarding from step {result['from_step']}")
+                print(f"reset onboarding from STEP {result['from_step']}")
                 print(f"Journal records reversed: {result['journal_records_reversed']}")
                 print(f"Project files restored/removed: {len(result['project_files_restored_or_removed'])}")
                 print(f"Workspace files removed: {len(result['workspace_files_removed'])}")
-                print("Frozen Evidence: preserved")
+                print(f"Frozen Evidence: {'preserved' if result['evidence_preserved'] else 'discarded'}")
+                machine_removed = result.get("machine_state_removed", [])
+                if machine_removed:
+                    print(f"Onboarding machine-state entries removed: {len(machine_removed)}")
+                if result.get("gitignore_block_removed"):
+                    print("Managed onboarding .gitignore block: removed")
+                print(result["next_action"])
                 return 0
 
             if args.onboard_command == "structure-instruction":
