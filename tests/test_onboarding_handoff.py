@@ -126,7 +126,7 @@ class OnboardingHandoffTests(unittest.TestCase):
             result_path=external,
         )
 
-        expected = '{\n  "a": 1,\n  "z": 2\n}\n'
+        expected = '{"z":2,"a":1}\n'
         self.assertEqual(imported.result_path.read_text(encoding="utf-8"), expected)
         self.assertEqual(workspace.structure_proposal_path.read_text(encoding="utf-8"), expected)
         self.assertEqual(imported.canonical_result_path, workspace.structure_proposal_path)
