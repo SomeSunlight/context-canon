@@ -401,7 +401,12 @@ class OnboardingStructureTests(unittest.TestCase):
         self.assertEqual(plan_path.read_bytes(), before)
         plan_text = plan_path.read_text(encoding="utf-8")
         expected_snapshot = prepared.snapshot_root.relative_to(repo).as_posix()
-        self.assertIn(f"$SNAPSHOT = '{expected_snapshot}'", plan_text)
+        snapshot_assignments = [
+            line for line in plan_text.splitlines()
+            if "SNAPSHOT" in line and "=" in line
+        ]
+        self.assertTrue(any(expected_snapshot in line for line in snapshot_assignments))
+        self.assertFalse(any(STRUCTURE_PROPOSAL_NAME in line for line in snapshot_assignments))
 
     def test_cli_stdout_and_explicit_paths_remain_available(self):
         _, prepared, entry = self.make_snapshot()
