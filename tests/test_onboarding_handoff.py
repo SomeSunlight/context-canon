@@ -86,11 +86,16 @@ class OnboardingHandoffTests(unittest.TestCase):
             names,
         )
 
+        (first.root / ".idea").mkdir()
+        (first.root / ".idea" / "workspace.xml").write_text("<idea/>\n", encoding="utf-8")
+
         second = build_semantic_handoff(prepared.snapshot_root, workspace.root, step=4)
         second_zip_sha = hashlib.sha256(second.zip_path.read_bytes()).hexdigest()
         self.assertFalse(second.created)
         self.assertEqual(first.handoff_digest, second.handoff_digest)
         self.assertEqual(first_zip_sha, second_zip_sha)
+        with zipfile.ZipFile(second.zip_path) as archive:
+            self.assertFalse(any("/.idea/" in name for name in archive.namelist()))
 
     def test_same_handoff_preserves_result_but_changed_inputs_require_explicit_refresh(self):
         _, prepared, workspace = self.make_run()
