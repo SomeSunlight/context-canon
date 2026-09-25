@@ -301,7 +301,7 @@ contextcanon onboard reset . --from <STEP>
 
 Examples: `--from 1` removes the owned onboarding workspace and onboarding machine state so you can run `contextcanon onboard init .` again; `--from 3` keeps the reviewed STEP-02 CSV but discards accepted Evidence and all later onboarding work. ContextCanon only rolls back files it can prove belong to the onboarding run.
 
-Full reset/reference details: [Onboarding CLI](../docs/onboarding-cli.md) when the default workspace is at the repository root.
+For the exact reset options, run `contextcanon onboard reset --help`.
 
 ## Onboarding steps
 
