@@ -347,19 +347,16 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 ## Human gates
 
 - **Inventory gate:** review/edit `{INVENTORY_NAME}` before freezing Evidence.
-- **LLM handoff 1:** `{STRUCTURE_INSTRUCTION_NAME}` + only the frozen `evidence/` tree → `{STRUCTURE_PROPOSAL_NAME}`.
+- **LLM handoff 1:** STEP 04 creates an isolated `handoffs/STEP-04-structure/` workspace plus matching ZIP.
 - **Human structure gate:** review/edit `{STRUCTURE_REVIEW_NAME}`.
 - **Reusable Context gate:** review/edit `{REUSABLE_CONTEXTS_NAME}`.
-- **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
+- **LLM handoff 2:** STEP 08 creates a fresh isolated `handoffs/STEP-08-placement/` workspace plus matching ZIP.
 
-### IDE/agent safety for both LLM handoffs
+### Semantic handoff workspaces
 
-When the reasoning model is an IDE agent (Copilot, JetBrains agent, local corporate model, etc.), **do not open the live repository as that agent's project/workspace for the semantic pass**. Use a separate temporary IDE project containing only:
+Each external reasoning pass gets its **own disposable ContextCanon-prepared project**. Frozen Evidence is copied into that project at the original repository-relative paths; the only extra directory is `.contextcanon-handoff/`, which contains the one-task PLAN, exact instruction and deterministic manifest.
 
-1. a copy of the generated STEP-04 or STEP-08 instruction;
-2. a copy of the frozen snapshot's `evidence/` directory.
-
-Let the agent create only the requested proposal JSON in that scratch project. Then copy that one JSON file back to the exact expected `contextcanon-onboarding/` path and continue with ContextCanon validation. The semantic agent does not need to run ContextCanon, edit `PLAN.md`, inspect `.context/`, or see any live project file outside frozen Evidence.
+Open only that handoff directory in an IDE agent, or upload the matching ZIP where policy permits. Tell the model only: **follow `.contextcanon-handoff/PLAN.md`**. It may write only `.contextcanon-handoff/RESULT.json`. Earlier LLM proposals/reviews are never carried into a later handoff unless their owner-accepted meaning has already been deterministically incorporated into that later instruction.
 - **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
 
@@ -528,9 +525,17 @@ def _exact_commands(
         cmd("structure-instruction"),
         "```",
         "",
-        f"For an IDE/agent model, use a **separate scratch project** containing only a copy of this instruction and the frozen `evidence/` tree; do not let that agent work from the live repository root. Save/copy only its JSON result back as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
+        "The instruction command also creates the isolated handoff directory and matching ZIP:",
         "",
         "```text",
+        "contextcanon-onboarding/handoffs/STEP-04-structure/",
+        "contextcanon-onboarding/handoffs/STEP-04-structure.zip",
+        "```",
+        "",
+        "Open **only** that directory as the agent project, or upload the ZIP. Tell the model: `Follow .contextcanon-handoff/PLAN.md`. When it has produced RESULT.json, import it and validate as two explicit steps:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "4", *workspace_args]),
         cmd("structure-validate"),
         "```",
         "",
@@ -579,7 +584,18 @@ def _exact_commands(
         cmd("placement-instruction"),
         "```",
         "",
-        f"For an IDE/agent model, again use a **separate scratch project** containing only a copy of this instruction and the same frozen `evidence/` tree. Save/copy only the returned JSON back as `{PLACEMENT_PROPOSAL_NAME}`.",
+        "This instruction command creates a **new** isolated handoff; STEP 04's agent workspace is not reused:",
+        "",
+        "```text",
+        "contextcanon-onboarding/handoffs/STEP-08-placement/",
+        "contextcanon-onboarding/handoffs/STEP-08-placement.zip",
+        "```",
+        "",
+        "Open/upload only that handoff and tell the model: `Follow .contextcanon-handoff/PLAN.md`. Then import the result explicitly:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "8", *workspace_args]),
+        "```",
         "",
         "### STEP 09 — Placement validate",
         f"- [{mark(9)}] **Done**",
