@@ -418,7 +418,7 @@ contextcanon onboard placement-validate \
   .context/onboarding/<evidence-digest>
 ```
 
-ContextCanon checks the proposal against the frozen Evidence, accepted project structure, and exact reusable Context packages from Step 5. There is intentionally no separate Step-07 artifact.
+ContextCanon checks the proposal against the frozen Evidence, accepted project structure, and exact reusable Context packages from STEP 07. STEP 09 is validation-only and intentionally has no separate artifact.
 
 ## 10. Review and revalidate `STEP-10-placement.md`
 
@@ -433,7 +433,7 @@ contextcanon onboard placement-review \
 
 The owner may edit destination, decision, title, supported kind/action semantics, maintained wording, and review note directly in Markdown. ContextCanon allocates stable authoring identity once and preserves it across reloads.
 
-Reusable Context assignments already accepted in Step 7 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in Step 5, that proposal remains an explicit human decision rather than being silently adopted.
+Reusable Context assignments already accepted in Step 7 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in STEP 07, that proposal remains an explicit human decision rather than being silently adopted.
 
 Every successful placement-review validation regenerates read-only `STEP-10a-source-audit.md`, grouping source-before/source-after transformations by original file/range so semantic loss is easy to inspect.
 
