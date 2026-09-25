@@ -39,6 +39,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
+from .onboarding_handoff import handoff_relative_paths
 from .onboarding_proposal import load_evidence_snapshot
 from .outputs import expected_outputs
 from .parser import ContextCanonError, find_repo_root
@@ -66,6 +67,10 @@ _ARTIFACT_STEPS = {
 }
 _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGACY_ARTIFACT_NAMES.items()}
 _LEGACY_STEPS.update({"STEP-08-placement": 10, "STEP-08-source-edits": 10})
+for _handoff_step in (4, 8):
+    _handoff_dir, _handoff_zip = handoff_relative_paths(_handoff_step)
+    _ARTIFACT_STEPS[_handoff_dir] = _handoff_step
+    _ARTIFACT_STEPS[_handoff_zip] = _handoff_step
 
 _SKELETON_RE = re.compile(
     r'^# .+ — Local Context Source\n'
@@ -328,12 +333,12 @@ def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
         if step < from_step:
             continue
         path = workspace_root / name
-        if name in {PLACEMENT_REVIEW_DIR_NAME, PLACEMENT_SOURCE_EDIT_DIR_NAME} and path.is_dir() and not path.is_symlink():
+        if path.is_dir() and not path.is_symlink():
             shutil.rmtree(path)
-            removed.append(path.name + "/")
+            removed.append(name.rstrip("/") + "/")
         elif path.is_file() or path.is_symlink():
             path.unlink()
-            removed.append(path.name)
+            removed.append(name)
     return sorted(set(removed))
 
 
