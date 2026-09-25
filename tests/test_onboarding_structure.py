@@ -191,7 +191,7 @@ class OnboardingStructureTests(unittest.TestCase):
                             "path": "parameters.csv",
                             "sha256": by_path["parameters.csv"].sha256,
                             "start_line": 1,
-                            "end_line": by_path["parameters.csv"].line_count,
+                            "end_line": 3,
                         }
                     ],
                 },
@@ -209,7 +209,7 @@ class OnboardingStructureTests(unittest.TestCase):
                             "path": "catalog.json",
                             "sha256": by_path["catalog.json"].sha256,
                             "start_line": 1,
-                            "end_line": by_path["catalog.json"].line_count,
+                            "end_line": 4,
                         }
                     ],
                 },
@@ -395,8 +395,11 @@ class OnboardingStructureTests(unittest.TestCase):
         plan_path = workspace_root / "PLAN.md"
         before = plan_path.read_bytes()
 
-        with self.assertRaisesRegex(ContextCanonError, "Expected a prepared Evidence snapshot directory|bound to a different frozen Evidence snapshot"):
-            main(["onboard", "structure-validate", str(proposal_path)])
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            result = main(["onboard", "structure-validate", str(proposal_path)])
+        self.assertEqual(result, 2)
+        self.assertIn("Expected a prepared Evidence snapshot directory", stderr.getvalue())
 
         self.assertEqual(plan_path.read_bytes(), before)
         plan_text = plan_path.read_text(encoding="utf-8")
