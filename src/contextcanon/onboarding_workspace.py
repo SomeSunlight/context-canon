@@ -351,6 +351,15 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 - **Human structure gate:** review/edit `{STRUCTURE_REVIEW_NAME}`.
 - **Reusable Context gate:** review/edit `{REUSABLE_CONTEXTS_NAME}`.
 - **LLM handoff 2:** `{PLACEMENT_INSTRUCTION_NAME}` + only the same frozen `evidence/` tree → `{PLACEMENT_PROPOSAL_NAME}`.
+
+### IDE/agent safety for both LLM handoffs
+
+When the reasoning model is an IDE agent (Copilot, JetBrains agent, local corporate model, etc.), **do not open the live repository as that agent's project/workspace for the semantic pass**. Use a separate temporary IDE project containing only:
+
+1. a copy of the generated STEP-04 or STEP-08 instruction;
+2. a copy of the frozen snapshot's `evidence/` directory.
+
+Let the agent create only the requested proposal JSON in that scratch project. Then copy that one JSON file back to the exact expected `contextcanon-onboarding/` path and continue with ContextCanon validation. The semantic agent does not need to run ContextCanon, edit `PLAN.md`, inspect `.context/`, or see any live project file outside frozen Evidence.
 - **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
 
@@ -519,7 +528,7 @@ def _exact_commands(
         cmd("structure-instruction"),
         "```",
         "",
-        f"Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
+        f"For an IDE/agent model, use a **separate scratch project** containing only a copy of this instruction and the frozen `evidence/` tree; do not let that agent work from the live repository root. Save/copy only its JSON result back as `{STRUCTURE_PROPOSAL_NAME}`. Then validate:",
         "",
         "```text",
         cmd("structure-validate"),
@@ -570,7 +579,7 @@ def _exact_commands(
         cmd("placement-instruction"),
         "```",
         "",
-        f"Save the LLM JSON as `{PLACEMENT_PROPOSAL_NAME}`.",
+        f"For an IDE/agent model, again use a **separate scratch project** containing only a copy of this instruction and the same frozen `evidence/` tree. Save/copy only the returned JSON back as `{PLACEMENT_PROPOSAL_NAME}`.",
         "",
         "### STEP 09 — Placement validate",
         f"- [{mark(9)}] **Done**",
