@@ -686,7 +686,7 @@ Purpose: apply ContextCanon's own perfect-context principle to every external re
 - [x] Remove STEP-owned handoff directories/ZIPs through normal `onboard reset`.
 - [x] Keep previous raw LLM proposals/reviews out of later handoffs; accepted state reaches later models only through their ContextCanon-generated instruction.
 - [x] Advance the owner-test package version from 0.9.4 to 0.9.5.
-- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.5 review head.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.5 review head.
 
-Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 owner-test candidate. Focused semantic-handoff regressions are present; full self-hosted verification remains before the next corporate-project STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 owner-test candidate. The corrected head passes the complete deterministic suite (297 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next corporate-project STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 

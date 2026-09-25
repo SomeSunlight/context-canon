@@ -77,9 +77,24 @@ Generate the structure task:
 contextcanon onboard structure-instruction .context/onboarding/<evidence-digest>
 ```
 
-For IDE/agent models, use a separate scratch project containing only a copy of `STEP-04a-structure-instruction.md` plus the frozen `evidence/` directory; copy only the returned JSON back into the onboarding workspace.
+The instruction command automatically creates `contextcanon-onboarding/handoffs/STEP-04-structure/` and `STEP-04-structure.zip`. Open only the directory as an agent project, or upload the ZIP. Tell the model to follow `.contextcanon-handoff/PLAN.md`.
 
-After the reasoning model writes `STEP-04b-structure-proposal.json`:
+Import the result, then validate it as a separate explicit step:
+
+```text
+contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 4
+contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
+```
+
+To rebuild/export the handoff manually:
+
+```text
+contextcanon onboard handoff .context/onboarding/<evidence-digest> --step 4
+```
+
+Use `--refresh` only when you deliberately want to discard an existing handoff result and rebuild changed inputs.
+
+After the reasoning model result has been imported as `STEP-04b-structure-proposal.json`:
 
 ```text
 contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
@@ -99,9 +114,14 @@ Generate the placement task:
 contextcanon onboard placement-instruction .context/onboarding/<evidence-digest>
 ```
 
-Use the same isolated scratch-project pattern for STEP 08; do not give the semantic agent the live repository as its workspace.
+STEP 08 creates a separate `handoffs/STEP-08-placement/` workspace and ZIP. Never reuse the STEP-04 agent workspace.
 
-After the reasoning model writes `STEP-08b-placement-proposal.json`:
+```text
+contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 8
+contextcanon onboard placement-validate .context/onboarding/<evidence-digest>
+```
+
+After import, `STEP-08b-placement-proposal.json` is the canonical machine proposal:
 
 ```text
 contextcanon onboard placement-validate .context/onboarding/<evidence-digest>

@@ -207,18 +207,33 @@ contextcanon-onboarding/
 └── STEP-04a-structure-instruction.md
 ```
 
+Semantic LLM workspaces are deliberately **disposable transport surfaces**, not another knowledge store. Every external reasoning step receives a fresh handoff assembled only from immutable Evidence plus that step's deterministic instruction. Earlier raw LLM proposals are not fed to later models. This keeps context narrow for strong hosted agents and especially for smaller local models.
+
 `contextcanon-onboarding/PLAN.md` is the operator console for the in-progress onboarding. It contains the twelve numbered steps, with each step's explanation, checkbox, exact copy/paste command, and artifact guidance in one place, plus the external-LLM handoffs, human gates, reset commands, and latest ContextCanon-validated checkpoint. When returning after a pause, start there rather than reconstructing the command sequence from memory. `README.md` explains the workspace and points back to the PLAN.
 
 Important onboarding Markdown is written directly as UTF-8 by ContextCanon rather than through shell redirection. This keeps the workflow reliable across shells — in particular Windows PowerShell codepage behavior — while `.context/` remains machine-oriented state.
 
-Give the strong reasoning LLM:
+The instruction command also prepares a complete **STEP-specific semantic handoff**:
 
-- `contextcanon-onboarding/STEP-04a-structure-instruction.md` as the controlling assignment;
-- read access only to the frozen snapshot's `evidence/` directory.
+```text
+contextcanon-onboarding/handoffs/STEP-04-structure/
+contextcanon-onboarding/handoffs/STEP-04-structure.zip
+```
 
-**For an IDE/agent model, do not use the live repository as its project/workspace.** Open a separate temporary IDE project containing only a copy of the instruction and frozen `evidence/` tree. Let the agent create only the requested JSON there, then copy that JSON back into `contextcanon-onboarding/`. The semantic reviewer does not need to run ContextCanon or edit the PLAN.
+The directory and ZIP contain the same inputs. Frozen Evidence files are materialized directly at their repository-relative paths; the only extra control directory is `.contextcanon-handoff/`, containing a one-task PLAN, the exact ContextCanon instruction and a deterministic manifest.
 
-The model returns exactly one JSON object. Save it as:
+For a corporate IDE agent, open **only** the handoff directory as a separate project and tell the model: `Follow .contextcanon-handoff/PLAN.md`. Where policy permits an external model, upload the matching ZIP and give the same instruction. The agent may create only `.contextcanon-handoff/RESULT.json`.
+
+Import is explicit and does not skip validation:
+
+```text
+contextcanon onboard handoff-import <snapshot> --step 4
+contextcanon onboard structure-validate <snapshot>
+```
+
+If an external/chat model returns JSON outside the handoff directory, pass that file explicitly to `handoff-import`.
+
+The model returns exactly one JSON object. After import it becomes:
 
 ```text
 contextcanon-onboarding/STEP-04b-structure-proposal.json
@@ -373,7 +388,14 @@ contextcanon onboard placement-instruction \
   .context/onboarding/<evidence-digest>
 ```
 
-ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md`. Again, for an IDE/agent model, use a **separate temporary project** containing only that instruction plus a copy of the same frozen `evidence/` tree. Save/copy only its single JSON response back as `contextcanon-onboarding/STEP-08b-placement-proposal.json`.
+ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md` and creates a **new isolated handoff** at `contextcanon-onboarding/handoffs/STEP-08-placement/` plus a matching ZIP. Do not reuse the STEP-04 agent project: STEP 08 receives its own instruction and the same immutable Evidence bytes, while accepted structure/reusable-Context meaning is supplied through the placement instruction rather than through old LLM proposals or review files.
+
+Open/upload only the STEP-08 handoff, tell the model to follow `.contextcanon-handoff/PLAN.md`, then explicitly import and validate:
+
+```text
+contextcanon onboard handoff-import <snapshot> --step 8
+contextcanon onboard placement-validate <snapshot>
+```
 
 The placement question is no longer "where is this text today?". It is:
 

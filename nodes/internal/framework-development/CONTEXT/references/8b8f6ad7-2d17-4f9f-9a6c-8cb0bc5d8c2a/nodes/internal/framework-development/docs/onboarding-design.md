@@ -51,7 +51,13 @@ The future interpretation stage is deliberately shown before shelf/placement rea
 
 The reasoning model is replaceable. It proposes structure or placement only inside an exact task/Evidence boundary. Deterministic code owns identity, hashes, validation, state transitions and publication. The project owner owns architecture and acceptance.
 
-For IDE/agent-based semantic reviewers, that task/Evidence boundary should also be a **filesystem boundary**: run the model in a separate scratch project containing only the generated instruction plus a copy of the frozen `evidence/` tree. The model should return only the proposal JSON. It does not need the live repository, `.context/`, the operator PLAN, or permission to execute ContextCanon. This is operational least privilege rather than a cryptographic sandbox, but it sharply reduces accidental interaction with live project state.
+The task/Evidence boundary is also a **filesystem boundary** implemented by ContextCanon itself. Every external-LLM step receives a fresh disposable **Semantic Handoff Workspace**. Current registry entries are STEP 04 structure and STEP 08 placement; future interpretation or other reasoning steps reuse the same harness instead of inventing model-specific integrations.
+
+A handoff materializes exact frozen Evidence directly at its repository-relative paths and adds only `.contextcanon-handoff/` with a one-task PLAN, exact generated instruction, deterministic manifest and optional RESULT.json. ContextCanon also creates a deterministic ZIP containing the same inputs and excluding RESULT.json. An IDE/agent opens only that directory; an approved external model may receive the ZIP. The model never needs the live repository, `.context/`, the human onboarding PLAN, or permission to execute ContextCanon.
+
+Each step gets a **different** handoff directory. Repeated Evidence bytes are preferable to carrying previous model chatter, raw proposals or abandoned intermediate reasoning into a later task. Accepted state reaches later semantic steps only after ContextCanon has deterministically incorporated it into that step's generated instruction. This is the onboarding form of Progressive Disclosure: the harness reduces both the token/search space and the number of possible actions before asking a model to reason.
+
+The handoff is a transport surface, not durable project knowledge. Import copies exactly one valid JSON object into the canonical proposal path; existing structure/placement validation remains a separate explicit command. Recreating an unchanged handoff preserves RESULT.json, while changed inputs refuse to destroy an existing result unless the operator explicitly requests `--refresh`.
 
 The frozen Evidence identity is sacred for STEP 04–12. Once the generated PLAN carries a snapshot checkpoint, every later workspace refresh must prove that the supplied path is a prepared Evidence snapshot and that it is the **same** snapshot. A malformed or misordered CLI invocation must fail before rewriting the PLAN or its shell-native `SNAPSHOT` assignment.
 
@@ -77,6 +83,14 @@ Reset semantics are intentionally progressive:
 - STEP 04–12 — preserve accepted inventory + frozen Evidence and roll back managed semantic work from the requested step onward.
 
 The journal refuses to overwrite project files that changed after ContextCanon recorded them. Reset is therefore a bounded recovery mechanism, not a disguised repository checkout.
+
+## Semantic handoff ownership and portability
+
+The handoff format is deliberately **model-neutral**. ContextCanon does not call OpenAI, Microsoft Copilot, Claude, Gemini or a local model API. It prepares a bounded filesystem contract that any policy-approved reasoning environment able to read a directory or ZIP can consume.
+
+The deterministic manifest binds step, Evidence digest, instruction digest and expected canonical result name. The handoff mini-PLAN binds behavior: use only this workspace, do not mutate inputs, write one RESULT.json, then stop. ZIP entries use stable ordering/timestamps and contain the same input bytes as the directory workspace.
+
+This keeps human control between every semantic stage: prepare handoff → run chosen model → inspect/import one result → deterministic validate → human review. No model decides to advance the onboarding workflow.
 
 ## Current operator surfaces
 
