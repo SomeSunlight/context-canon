@@ -204,9 +204,9 @@ None of these working files become canonical Context merely because they exist. 
 
 STEP 02 deliberately keeps the PLAN short. The complete table reference lives next to the CSV in [`{INVENTORY_GUIDE_NAME}`]({INVENTORY_GUIDE_NAME}).
 
-## Reset for testing
+## Go back or restart
 
-`contextcanon onboard reset <snapshot> --from N` resets semantic onboarding artifacts from STEP 04 through STEP 12. Frozen Evidence and the preflight inventory are deliberately preserved.
+From the Git repository root, `contextcanon onboard reset . --from <STEP>` returns the onboarding to any STEP 01–12 without requiring a Git rollback or fresh clone. STEP 01 removes all ContextCanon-owned onboarding work/state; STEP 02 keeps only the initialized workspace; STEP 03 keeps the reviewed inventory CSV; STEP 04–12 preserve the accepted inventory and frozen Evidence while rolling back later managed work.
 
 ## Ownership
 
@@ -614,15 +614,17 @@ def _exact_commands(
         "",
         f"Inspect `{PLACEMENT_FOLLOWUP_NAME}` afterwards.",
         "",
-        "## Reset commands for semantic testing",
+        "## Go back or restart",
         "",
-        "Inventory and frozen Evidence are preserved. Restart from the semantic step you want to retest:",
+        "From the Git repository root, reset to any numbered step. STEP 01–03 progressively discard preflight/Evidence state; STEP 04–12 preserve the accepted inventory and frozen Evidence while rolling back later managed work:",
         "",
         "```text",
+        "contextcanon onboard reset . --from <STEP>",
+        "```",
+        "",
+        "Use `contextcanon onboard reset --help` for exact options.",
+        COMMANDS_END,
     ]
-    for step in range(4, 13):
-        lines.append(render(["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]))
-    lines.extend(["```", COMMANDS_END])
     return "\n".join(lines)
 
 def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[int]:
