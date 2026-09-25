@@ -23,6 +23,7 @@ When adopting ContextCanon in an existing repository, preparing onboarding evide
 
 Required:
 - Resource: `docs/onboarding.md`
+- Resource: `docs/onboarding-cli.md`
 <!-- ctx:topic id="CCG-TOPIC-ONBOARDING" -->
 
 ### Use and maintain ContextCanon
