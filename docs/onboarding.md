@@ -6,37 +6,43 @@ The larger `ai-workstation` experiment exposed a simple ordering rule:
 
 > **Design the shelves before placing the books.**
 
-The first semantic pass reconstructs the coarse project model. The project owner reviews and edits that model. Only then does a second semantic pass propose where existing knowledge belongs.
+But even that starts one step too late. Before designing shelves, ContextCanon first looks at the **deliveries** already lying around the project and performs a deliberate **triage**: which material is direct source, which needs interpretation, which is only lookup material, and which should stay out.
+
+The first semantic structure pass then reconstructs the coarse project model. The project owner reviews and edits that model. Only after the shelves exist does a second semantic pass propose where the reviewed meaning belongs.
 
 That distinction matters. Repository archaeology can discover surprisingly good natural groupings, but it cannot safely decide future architecture. The `ai-workstation` structure reviewer, for example, proposed a plausible future local-model area below `compose`; the project owner removed it because the future implementation boundary is intentionally unresolved. That is the human gate working as designed.
 
 ## The whole idea
 
 ```text
-existing Git repository
+existing project deliveries
         ↓
-human tidies obvious file/document clutter
+human tidies obvious clutter
         ↓
-ContextCanon inventories Git-visible project files
+ContextCanon inventories what Git can see
         ↓
-human reviews kind / handling / description in STEP-02-inventory.csv
+human triage: source / interpret / lookup / ignore
         ↓
-ContextCanon freezes the accepted source / interpret Evidence
+ContextCanon freezes the exact reviewed Evidence
         ↓
-strong reasoning LLM proposes coarse structure
+[coming soon] interpret raw/ambiguous Evidence into reviewed meaning
         ↓
-human edits STEP-05-structure.md until it matches the project mental model
+design the shelves: reasoning LLM proposes coarse structure
         ↓
-ContextCanon previews/materializes only missing Node skeletons
+human accepts/edits the shelf map
         ↓
-human configures reusable Context catalog + sparse assignments in STEP-07
+ContextCanon materializes the reviewed Node structure
         ↓
-strong reasoning LLM places existing knowledge into the already composed structure
+compose reusable Contexts where they apply
         ↓
-human reviews STEP-10-placement.md with exact source excerpts
+place the books: reasoning LLM proposes destinations for reviewed meaning
+        ↓
+human reviews exact placement/source transformations
         ↓
 publication preview → explicit publish → later duplicate cleanup
 ```
+
+The dedicated interpretation stage is deliberately marked **coming soon**. Today, `interpret` already preserves raw/ambiguous material as exact Evidence and prevents it from being treated as direct canonical truth; the later stage will turn that boundary into an explicit reviewed interpretation workflow rather than silently blending raw records with durable meaning.
 
 ContextCanon handles exact identity, provenance, validation, deterministic generation, and state transitions. The LLM handles semantic interpretation. The project owner decides which interpretation becomes durable project truth.
 
@@ -47,7 +53,7 @@ Once the context is organized, smaller or local models can benefit from receivin
 
 ## Operator rule: use the generated PLAN, not this page, as your keyboard script
 
-This page explains **why** the stages exist. It is deliberately not the place where an operator should reconstruct long snapshot IDs or remember which flags belong on which nearly-identical command.
+This page explains **why** the stages exist. It is deliberately not the place where an operator should reconstruct long snapshot IDs or remember which flags belong on which nearly-identical command. For a stable command map — including how to go backwards on a live project — use the [Onboarding CLI reference](onboarding-cli.md).
 
 Create the workspace first with `contextcanon onboard init .`. From that moment, use **`contextcanon-onboarding/PLAN.md` as the executable console for that run**. Each numbered STEP keeps its short title, beginner-oriented explanation, completion checkbox, exact command, and artifact guidance together. The PLAN is orchestration only: it deliberately does **not** become a second configuration file for Catalog paths, Source identities, or project decisions.
 
@@ -519,10 +525,10 @@ preview + publication     Which reviewed changes may safely become canonical?
 
 Deterministic mechanisms handle identity, integrity, reproducibility, and state transitions. Reasoning models handle semantic interpretation. Humans own architecture and acceptance.
 
-## Need the exact contracts and safety details?
+## Need the framework design and trust contract?
 
-This page is the first-user walkthrough. Compiler/schema details and the older accepted onboarding trust contract remain in the [onboarding technical reference](../nodes/internal/framework-development/docs/onboarding-reference.md#technical-reference).
+This page is the first-user walkthrough. Framework developers can inspect the internal [onboarding design and trust contract](../nodes/internal/framework-development/docs/onboarding-design.md). It explains compiler/schema boundaries, provenance rules, compatibility behavior, and why the deterministic/semantic stages are separated; it is **not** the operator CLI reference.
 
-The structure-first/reusable-context/placement contracts were validated through the real `ai-workstation` onboarding line. The technical reference preserves the trust boundaries and compatibility path; this twelve-step walkthrough is the current human-facing first-adoption flow.
+The structure-first/reusable-context/placement contracts were validated through the real `ai-workstation` onboarding line. The internal design document preserves those trust boundaries and compatibility decisions; this twelve-step walkthrough remains the current human-facing first-adoption flow.
 
 State and Plan are local first-class Node authoring: accepted placement findings of those kinds are written to `## Local State` and `## Local Plan` in the destination `CONTEXT.src.md` and therefore appear in generated `CONTEXT.md`. They are intentionally not inherited through reusable Sources; current project situation and future project work stay local to the Node that owns them.
