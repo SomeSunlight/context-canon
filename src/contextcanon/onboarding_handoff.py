@@ -350,7 +350,8 @@ def import_semantic_handoff_result(
         )
     try:
         raw = source.read_bytes()
-        value = json.loads(raw.decode("utf-8"))
+        text = raw.decode("utf-8")
+        value = json.loads(text)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContextCanonError(f"Semantic handoff result is not one valid UTF-8 JSON object: {source}") from exc
     if not isinstance(value, dict):
