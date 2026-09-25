@@ -51,6 +51,10 @@ The future interpretation stage is deliberately shown before shelf/placement rea
 
 The reasoning model is replaceable. It proposes structure or placement only inside an exact task/Evidence boundary. Deterministic code owns identity, hashes, validation, state transitions and publication. The project owner owns architecture and acceptance.
 
+For IDE/agent-based semantic reviewers, that task/Evidence boundary should also be a **filesystem boundary**: run the model in a separate scratch project containing only the generated instruction plus a copy of the frozen `evidence/` tree. The model should return only the proposal JSON. It does not need the live repository, `.context/`, the operator PLAN, or permission to execute ContextCanon. This is operational least privilege rather than a cryptographic sandbox, but it sharply reduces accidental interaction with live project state.
+
+The frozen Evidence identity is sacred for STEP 04–12. Once the generated PLAN carries a snapshot checkpoint, every later workspace refresh must prove that the supplied path is a prepared Evidence snapshot and that it is the **same** snapshot. A malformed or misordered CLI invocation must fail before rewriting the PLAN or its shell-native `SNAPSHOT` assignment.
+
 ## Why shelves come before books
 
 Repository archaeology can suggest useful groupings, but filesystem layout and current prose do not automatically define the intended semantic architecture. The structure pass therefore proposes coarse Node boundaries first; the owner edits them; only then may placement reasoning distribute durable meaning.
@@ -156,6 +160,8 @@ Git may expose a submodule/gitlink as one index path while its working-tree path
 
 Deterministic default rules may prefill classification for familiar documentation, structured data, raw-record names, generated paths and opaque formats. They are convenience only. The owner may edit the human semantic columns directly, and optional repeatable `--rule GLOB=KIND:HANDLING` inputs customize deterministic defaults without adding an LLM to the inventory stage.
 
+A later optional LLM-assisted triage layer should exploit **progressive description extraction** rather than eagerly reading every file in full. For likely documents, start from filename/path plus title, front matter, introduction, first meaningful heading/section, or equivalent leading structure; propose a concise description from that surface and read deeper only when the leading material is insufficient or contradictory. Structured data should use schema/header/top-level keys and a small representative sample before deeper inspection. These are proposals only: the CSV remains the human-owned acceptance surface.
+
 STEP 02 is repeatable **when the repository files changed**. It is not rerun merely because the owner edited the CSV. Refresh compares live material with the previous/accepted per-path SHA-256 baseline and surfaces `new`, `changed`, `missing`, or `unchanged`. Human semantic columns for known paths are preserved. Legacy CSV status `present` is accepted and normalized to `unchanged`.
 
 STEP 03 is the inventory acceptance boundary. Before freezing Evidence, ContextCanon refuses:
@@ -168,6 +174,8 @@ STEP 03 is the inventory acceptance boundary. Before freezing Evidence, ContextC
 - `source` / `interpret` rows without a short description.
 
 Only `source` and `interpret` rows enter the snapshot. The accepted inventory identity and per-file reviewed baseline are stored separately from the content-addressed Evidence package so later inventory refresh can explain repository drift.
+
+Structured textual Evidence is not second-class to Markdown. CSV, JSON, YAML and similar UTF-8 text may remain first-class non-Node knowledge bodies, Topic/Resource targets, or technical authorities in their natural format. The structure proposal must not reject them merely because they are not `.md`. Only the **source-edit transformation** surface remains Markdown-only; structured data is referenced/mapped rather than rewritten as prose.
 
 For compatibility, `contextcanon onboard prepare .` without `--inventory` retains the earlier conservative selector. The generated current onboarding PLAN uses the reviewed inventory path; compatibility behavior must not become the hidden definition of normal first adoption again.
 
