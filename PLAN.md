@@ -636,3 +636,21 @@ Purpose: keep transient onboarding review machinery out of Git without losing ow
 
 Checkpoint: Issue #58 is implemented on draft PR #54 as the ContextCanon 0.9.2 owner-test candidate. The corrected head passes the complete deterministic suite (285 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: discoverable full onboarding reset and docs — Issue #59
+
+Purpose: make stepping backwards a normal, discoverable part of live-project onboarding and remove documentation ambiguity between operator commands and framework design.
+
+- [x] Make `contextcanon onboard reset . --from <STEP>` the simple Git-root recovery form while preserving explicit snapshot compatibility.
+- [x] Extend reset from STEP 04–12 to STEP 01–12 with progressive preservation: STEP 01 full onboarding restart; STEP 02 initialized workspace only; STEP 03 reviewed inventory retained; STEP 04–12 accepted inventory/Evidence retained.
+- [x] Put reset/restart guidance before STEP 01 in every generated PLAN and update workspace orientation text.
+- [x] Add a dedicated root `docs/onboarding-cli.md` and make `docs/cli.md` route onboarding commands there.
+- [x] Remove the confusing root `docs/onboarding-reference.md` compatibility pointer.
+- [x] Rename the Framework Development document to `onboarding-design.md`, explicitly mark it as framework architecture/trust-contract material, and put the current 12-step workflow first.
+- [x] Update `docs/onboarding.md` to show delivery inspection/triage before shelf design and mark explicit interpretation as **coming soon**.
+- [x] Correct stale Step-5/Step-7 and historical Step-3/Step-9 references found during the authored-doc sweep.
+- [x] Add focused regressions for STEP 01–04 reset behavior and documentation ownership/current numbering.
+- [x] Advance the owner-test package version from 0.9.2 to 0.9.3.
+- [ ] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.3 review head.
+
+Checkpoint: Issue #59 is implemented on draft PR #54 as the ContextCanon 0.9.3 owner-test candidate. Focused reset/documentation regressions are present; full self-hosted verification remains before the next live-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
