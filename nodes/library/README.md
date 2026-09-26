@@ -9,7 +9,21 @@ The category directory `library/` is not itself a Context Node.
 ## Current reusable Nodes
 
 - [`foundation/`](foundation/) — **ContextCanon Foundation**, the reusable baseline for ContextCanon authoring, composition, progressive disclosure, stable identity, harness neutrality, and repository conventions.
-- [`development-workflow/`](development-workflow/) — **Development Workflow**, a reusable recoverable planning/review/merge workflow proven in ContextCanon and `ai-workstation` development. It intentionally remains Foundation-independent so consumers can choose the two Sources separately.
+- [`development-workflow/`](development-workflow/) — **Development Workflow**, the shared Issue/branch/Pull Request/review/checks/merge lifecycle. It defines the workflow contract without choosing the infrastructure that implements it.
+- [`github/`](github/) — **GitHub**, a concrete Development Workflow provider for ordinary github.com development infrastructure.
+- [`github-local/`](github-local/) — **GitHub Local**, a concrete Development Workflow provider for a local GitHub-compatible development surface with visible repository Issues.
+
+The provider split is intentionally simple:
+
+```text
+Development Workflow
+        ▲
+        │ Source
+   ┌────┴─────┐
+ GitHub    GitHub Local
+```
+
+The workflow keeps the familiar development vocabulary. A provider makes that vocabulary concrete so normal agents do not have to interpret a project-specific abstraction table on every task.
 
 ## Composition policy
 
