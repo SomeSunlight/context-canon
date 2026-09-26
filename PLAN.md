@@ -15,10 +15,10 @@ Historical plan/checkpoint sections below retain the status wording that was tru
 
 Purpose: separate the reusable Development Workflow contract from its concrete GitHub infrastructure without introducing new abstract vocabulary into normal LLM work, and establish the smallest provider seam needed before draft PR #54 resumes owner testing.
 
-- [ ] Keep Development Workflow as the reusable contract using familiar Issue/branch/Pull Request/review/checks/merge vocabulary; remove only assumptions that unnecessarily bind those concepts to github.com.
-- [ ] Add a GitHub provider Node that composes Development Workflow and binds the contract to ordinary github.com infrastructure.
-- [ ] Add a GitHub Local provider Node that composes Development Workflow and defines the minimal local GitHub-compatible surface, with runtime/tooling details behind progressive disclosure.
-- [ ] Keep this block library-local: no github.local runtime, no broad root README rewrite, no Framework Development migration, and no onboarding-semantic changes from draft PR #54.
+- [x] Keep Development Workflow as the reusable contract using familiar Issue/branch/Pull Request/review/checks/merge vocabulary; remove only assumptions that unnecessarily bind those concepts to github.com.
+- [x] Add a GitHub provider Node that composes Development Workflow and binds the contract to ordinary github.com infrastructure.
+- [x] Add a GitHub Local provider Node that composes Development Workflow and defines the minimal local GitHub-compatible surface, with runtime/tooling details behind progressive disclosure.
+- [x] Keep this block library-local: no github.local runtime, no broad root README rewrite, no Framework Development migration, and no onboarding-semantic changes from draft PR #54.
 - [ ] Add focused deterministic composition/build coverage, regenerate affected packages, run the complete deterministic suite and `contextcanon check --all .`, then prepare a review PR. Do not merge without explicit project-owner approval.
 
 Integration boundary: draft PR #54 on `agent/onboarding-inventory` remains frozen during this block. After Issue #63 is accepted into `main`, merge that new `main` into PR #54 and rerun its complete exact-head onboarding gate before owner acceptance.
