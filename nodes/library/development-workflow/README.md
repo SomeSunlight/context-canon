@@ -2,7 +2,14 @@
 
 This is a **reusable Context Node** for recoverable, review-gated project development across long human/LLM-assisted sessions.
 
-It exists so a proven working method can be reused across repositories without copying the same planning, review, merge-gate, and post-merge rules into every project.
+It defines the shared **Issue → branch → Pull Request/review → checks → merge → accepted-baseline** workflow contract. The vocabulary is deliberately familiar and concrete; this Node does not invent a second abstract process language.
+
+The Node itself does **not** choose the development infrastructure that implements those concepts. Concrete reusable provider Nodes can compose this workflow and make the terms operational for a project, for example:
+
+- [GitHub](../github/) — ordinary GitHub Issues, Pull Requests, reviews, checks and merge state.
+- [GitHub Local](../github-local/) — a local GitHub-compatible surface for restricted-network or private development.
+
+A project may still compose Development Workflow directly when its implementation is already unambiguous or deliberately project-specific.
 
 Start here:
 
