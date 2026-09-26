@@ -11,7 +11,17 @@ from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence
+from .onboarding_inventory import prepare_from_inventory, refresh_inventory
 from .onboarding_instruction import build_onboarding_instruction
+from .onboarding_handoff import (
+    HANDOFF_CONTROL_DIR,
+    HANDOFF_PLAN_NAME,
+    build_semantic_handoff,
+    handoff_relative_paths,
+    handoff_spec,
+    import_semantic_handoff_result,
+    semantic_handoff_steps,
+)
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
 from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
@@ -41,7 +51,7 @@ from .onboarding_structure_materialize import (
     preview_structure_materialization,
     render_structure_materialization_preview,
 )
-from .onboarding_workspace import open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
+from .onboarding_workspace import open_inventory_workspace, open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root, parse_node
@@ -110,12 +120,12 @@ def _add_structure_inputs(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--structure-proposal",
         metavar="PATH",
-        help="validated structure proposal (default: <workspace>/STEP-02b-structure-proposal.json)",
+        help="validated structure proposal (default: <workspace>/STEP-04b-structure-proposal.json)",
     )
     parser.add_argument(
         "--structure",
         metavar="PATH",
-        help="human-edited structure Markdown (default: <workspace>/STEP-03-structure.md)",
+        help="human-edited structure Markdown (default: <workspace>/STEP-05-structure.md)",
     )
 
 
@@ -514,21 +524,89 @@ def main(argv: list[str] | None = None) -> int:
     diff_parser.add_argument("after", help="Node root for the later repository snapshot")
     diff_parser.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
 
-    onboard_parser = sub.add_parser("onboard", help="prepare, review, and accept project onboarding state")
+    onboard_parser = sub.add_parser("onboard", help="inventory, prepare, review, and accept project onboarding state")
     onboard_sub = onboard_parser.add_subparsers(dest="onboard_command", required=True)
+
+    onboard_init = onboard_sub.add_parser(
+        "init",
+        help="create the visible onboarding workspace and PLAN before starting STEP 01",
+    )
+    onboard_init.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    _add_workspace(onboard_init)
+
+    onboard_inventory = onboard_sub.add_parser(
+        "inventory",
+        help="create or refresh the human-reviewed onboarding file inventory CSV",
+    )
+    onboard_inventory.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_inventory.add_argument(
+        "--directory",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="repository-relative directory to inventory; may be repeated (default: whole repository)",
+    )
+    onboard_inventory.add_argument(
+        "--rule",
+        action="append",
+        default=[],
+        metavar="GLOB=KIND:HANDLING",
+        help="deterministic classification override, for example '*.csv=structured-data:source'; may be repeated",
+    )
+    _add_workspace(onboard_inventory)
+
     onboard_prepare = onboard_sub.add_parser(
         "prepare",
-        help="create a deterministic content-addressed evidence snapshot from a Git repository",
+        help="freeze reviewed onboarding Evidence; use --inventory for the normal reviewed path",
     )
     onboard_prepare.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_prepare.add_argument(
+        "--inventory",
+        metavar="CSV",
+        help="reviewed inventory CSV; source/interpret rows become frozen Evidence",
+    )
+    onboard_prepare.add_argument(
+        "--directory",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="inventory scope for externally supplied CSVs; normally remembered from the inventory step",
+    )
+    _add_workspace(onboard_prepare)
     add_reset_parser(onboard_sub)
+
+    onboard_handoff = onboard_sub.add_parser(
+        "handoff",
+        help="prepare or refresh one isolated semantic LLM workspace and deterministic ZIP",
+    )
+    onboard_handoff.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_handoff.add_argument("--step", type=int, choices=semantic_handoff_steps(), required=True, help="semantic onboarding step")
+    onboard_handoff.add_argument(
+        "--refresh",
+        action="store_true",
+        help="explicitly discard an existing owned handoff (including RESULT.json) and rebuild it",
+    )
+    _add_workspace(onboard_handoff)
+
+    onboard_handoff_import = onboard_sub.add_parser(
+        "handoff-import",
+        help="copy one semantic handoff JSON result into the canonical onboarding proposal path",
+    )
+    onboard_handoff_import.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
+    onboard_handoff_import.add_argument("--step", type=int, choices=semantic_handoff_steps(), required=True, help="semantic onboarding step")
+    onboard_handoff_import.add_argument(
+        "result",
+        nargs="?",
+        help="external JSON result path; default: <handoff>/.contextcanon-handoff/RESULT.json",
+    )
+    _add_workspace(onboard_handoff_import)
 
     onboard_prepare.add_argument(
         "--include",
         action="append",
         default=[],
         metavar="PATH",
-        help="explicitly include one additional safe UTF-8 repository-relative file; may be repeated",
+        help="legacy explicit Evidence include when --inventory is not used; may be repeated",
     )
 
     onboard_structure_instruction = onboard_sub.add_parser(
@@ -558,7 +636,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_validate.add_argument(
         "proposal",
         nargs="?",
-        help="JSON onboarding structure proposal (default: <workspace>/STEP-02b-structure-proposal.json)",
+        help="JSON onboarding structure proposal (default: <workspace>/STEP-04b-structure-proposal.json)",
     )
     _add_workspace(onboard_structure_validate)
 
@@ -570,12 +648,12 @@ def main(argv: list[str] | None = None) -> int:
     onboard_structure_review.add_argument(
         "proposal",
         nargs="?",
-        help="validated JSON onboarding structure proposal (default: <workspace>/STEP-02b-structure-proposal.json)",
+        help="validated JSON onboarding structure proposal (default: <workspace>/STEP-04b-structure-proposal.json)",
     )
     onboard_structure_review.add_argument(
         "structure",
         nargs="?",
-        help="human-editable structure Markdown file (default: <workspace>/STEP-03-structure.md)",
+        help="human-editable structure Markdown file (default: <workspace>/STEP-05-structure.md)",
     )
     _add_workspace(onboard_structure_review)
 
@@ -620,7 +698,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_instruction.add_argument(
         "--stdout",
         action="store_true",
-        help="emit the instruction to stdout instead of writing <workspace>/STEP-06a-placement-instruction.md",
+        help="emit the instruction to stdout instead of writing <workspace>/STEP-08a-placement-instruction.md",
     )
 
     onboard_placement_validate = onboard_sub.add_parser(
@@ -631,7 +709,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_validate.add_argument(
         "proposal",
         nargs="?",
-        help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)",
+        help="placement proposal JSON (default: <workspace>/STEP-08b-placement-proposal.json)",
     )
     _add_workspace(onboard_placement_validate)
     _add_structure_inputs(onboard_placement_validate)
@@ -651,7 +729,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_review.add_argument(
         "proposal",
         nargs="?",
-        help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)",
+        help="placement proposal JSON (default: <workspace>/STEP-08b-placement-proposal.json)",
     )
     _add_workspace(onboard_placement_review)
     _add_structure_inputs(onboard_placement_review)
@@ -665,7 +743,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_placement_review.add_argument(
         "--review",
         metavar="PATH",
-        help="human-editable placement Markdown (default: <workspace>/STEP-08-placement.md)",
+        help="human-editable placement Markdown (default: <workspace>/STEP-10-placement.md)",
     )
     onboard_placement_review.add_argument(
         "--owner-source",
@@ -682,7 +760,7 @@ def main(argv: list[str] | None = None) -> int:
         command = onboard_sub.add_parser(command_name, help=command_help)
         command.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
         command.add_argument(
-            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-06b-placement-proposal.json)"
+            "proposal", nargs="?", help="placement proposal JSON (default: <workspace>/STEP-08b-placement-proposal.json)"
         )
         _add_workspace(command)
         _add_structure_inputs(command)
@@ -694,7 +772,7 @@ def main(argv: list[str] | None = None) -> int:
             help="same exact immutable Source catalog used for placement review; may be repeated",
         )
         command.add_argument(
-            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-08-placement.md)"
+            "--review", metavar="PATH", help="human-edited placement Markdown (default: <workspace>/STEP-10-placement.md)"
         )
         command.add_argument(
             "--project", metavar="PATH", help="target Git repository root (default: infer from snapshot)"
@@ -855,22 +933,130 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "onboard":
             snapshot = Path(args.snapshot) if hasattr(args, "snapshot") else None
 
+            if args.onboard_command == "init":
+                project = Path(args.project).resolve()
+                workspace = open_inventory_workspace(project, _workspace_path(args.workspace))
+                print(f"ContextCanon onboarding workspace ready: {workspace.root}")
+                print("Git policy: transient onboarding workspace/snapshots are ignored; accepted inventory state remains Git-visible.")
+                print(f"Open {workspace.plan_path} and continue from STEP 01.")
+                return 0
+
+            if args.onboard_command == "inventory":
+                project = Path(args.project).resolve()
+                workspace = open_inventory_workspace(project, _workspace_path(args.workspace))
+                refreshed = refresh_inventory(
+                    project,
+                    workspace.inventory_path,
+                    directories=args.directory,
+                    rule_specs=args.rule,
+                )
+                counts = refreshed.counts
+                print(f"wrote onboarding inventory {refreshed.csv_path}")
+                print(f"Inventory scope: {', '.join(refreshed.directories)}")
+                print(f"Files listed for review: {len(refreshed.rows)}")
+                if refreshed.omitted_source_code:
+                    print(f"Source-code files omitted by default: {refreshed.omitted_source_code}")
+                print(
+                    "File status: "
+                    + ", ".join(f"{name}={counts.get(name, 0)}" for name in ("new", "changed", "missing", "unchanged"))
+                )
+                print(f"Next: open {workspace.plan_path} and continue STEP 02 there.")
+                return 0
+
             if args.onboard_command == "prepare":
-                prepared = prepare_onboarding_evidence(Path(args.project), explicit_paths=args.include)
+                if args.inventory is not None and args.include:
+                    raise ContextCanonError("--inventory cannot be combined with legacy --include")
+                if args.inventory is not None:
+                    prepared, selection = prepare_from_inventory(
+                        Path(args.project),
+                        Path(args.inventory),
+                        directories=args.directory,
+                    )
+                    workspace = open_inventory_workspace(prepared.project_root, _workspace_path(args.workspace))
+                    if selection.csv_path != workspace.inventory_path.resolve():
+                        workspace.inventory_path.write_bytes(selection.csv_path.read_bytes())
+                    snapshot_workspace = open_onboarding_workspace(
+                        prepared.snapshot_root,
+                        workspace.root,
+                        create=True,
+                    )
+                    update_workspace_checkpoint(
+                        snapshot_workspace,
+                        prepared.snapshot_root,
+                        stage="evidence prepared",
+                        next_action=(
+                            f"Run `contextcanon onboard structure-instruction "
+                            f"{prepared.snapshot_root.relative_to(prepared.project_root).as_posix()}` "
+                            "to begin STEP 04."
+                        ),
+                    )
+                    inventory_counts: dict[str, int] = {}
+                    for row in selection.rows:
+                        inventory_counts[row.handling] = inventory_counts.get(row.handling, 0) + 1
+                else:
+                    prepared = prepare_onboarding_evidence(Path(args.project), explicit_paths=args.include)
+                    inventory_counts = {}
                 label = prepared.snapshot_root.relative_to(prepared.project_root).as_posix()
                 print(f"prepared onboarding evidence {prepared.evidence_digest}")
                 print(f"Evidence snapshot: {label}")
                 print(f"Included files: {len(prepared.included)}")
                 print(f"Excluded candidates: {len(prepared.excluded)}")
+                if inventory_counts:
+                    print(
+                        "Inventory handling: "
+                        + ", ".join(f"{name}={inventory_counts[name]}" for name in sorted(inventory_counts))
+                    )
+                    print("Durable inventory restore state (keep in Git):")
+                    print("  .context/onboarding/inventory-state.json")
+                    print("  .context/onboarding/inventory-acceptance.json")
                 return 0
 
             if args.onboard_command == "reset":
                 result = handle_reset_args(args)
-                print(f"reset onboarding from step {result['from_step']}")
+                print(f"reset onboarding from STEP {result['from_step']}")
                 print(f"Journal records reversed: {result['journal_records_reversed']}")
                 print(f"Project files restored/removed: {len(result['project_files_restored_or_removed'])}")
                 print(f"Workspace files removed: {len(result['workspace_files_removed'])}")
-                print("Frozen Evidence: preserved")
+                print(f"Frozen Evidence: {'preserved' if result['evidence_preserved'] else 'discarded'}")
+                machine_removed = result.get("machine_state_removed", [])
+                if machine_removed:
+                    print(f"Onboarding machine-state entries removed: {len(machine_removed)}")
+                if result.get("gitignore_block_removed"):
+                    print("Managed onboarding .gitignore block: removed")
+                print(result["next_action"])
+                return 0
+
+            if args.onboard_command == "handoff":
+                workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
+                handoff = build_semantic_handoff(
+                    snapshot,
+                    workspace.root,
+                    step=args.step,
+                    refresh=args.refresh,
+                )
+                verb = "created" if handoff.created else "verified"
+                print(f"{verb} semantic handoff STEP {args.step:02d}: {handoff.root}")
+                print(f"LLM PLAN: {handoff.root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME}")
+                print(f"ZIP: {handoff.zip_path}")
+                print(f"Handoff digest: {handoff.handoff_digest}")
+                print(
+                    f"Next: open the handoff directory as its own project or upload the ZIP, "
+                    f"then tell the model to follow {HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}."
+                )
+                return 0
+
+            if args.onboard_command == "handoff-import":
+                workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=False)
+                handoff = import_semantic_handoff_result(
+                    snapshot,
+                    workspace.root,
+                    step=args.step,
+                    result_path=Path(args.result) if args.result is not None else None,
+                )
+                print(f"imported semantic handoff STEP {args.step:02d} result")
+                print(f"Canonical proposal: {handoff.canonical_result_path}")
+                next_command = handoff_spec(args.step).validator_command
+                print(f"Next: contextcanon onboard {next_command} {_snapshot_cli(snapshot)}")
                 return 0
 
             if args.onboard_command == "structure-instruction":
@@ -886,18 +1072,28 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 workspace = open_onboarding_workspace(snapshot, _workspace_path(args.workspace), create=True)
                 write_utf8(workspace.structure_instruction_path, instruction.text)
+                handoff = build_semantic_handoff(
+                    snapshot,
+                    workspace.root,
+                    step=4,
+                    instruction_path=workspace.structure_instruction_path,
+                )
                 print(f"wrote onboarding structure instruction {workspace.structure_instruction_path}")
                 print(f"Instruction digest: {instruction.instruction_digest}")
                 print(f"Evidence snapshot: {instruction.evidence_digest}")
-                print(f"Expected LLM output: {workspace.structure_proposal_path}")
+                print(f"Semantic handoff workspace: {handoff.root}")
+                print(f"Semantic handoff ZIP: {handoff.zip_path}")
+                print(f"Expected LLM output: {handoff.result_path}")
+                print(f"Canonical proposal after import: {workspace.structure_proposal_path}")
                 update_workspace_checkpoint(
                     workspace, snapshot,
                     stage="structure instruction ready",
                     source_catalog=_catalog_labels(instruction.catalog_packages),
                     source_catalog_inputs=tuple(args.catalog_package),
                     next_action=(
-                        "Give `STEP-02a-structure-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                        "Save its single JSON result as `STEP-02b-structure-proposal.json`, then run "
+                        f"Open `{handoff.root}` as a separate agent project (or upload `{handoff.zip_path}`) and tell the model "
+                        f"to follow `{HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}`. Then run "
+                        f"`contextcanon onboard handoff-import {_snapshot_cli(snapshot)} --step 4` followed by "
                         f"`contextcanon onboard structure-validate {_snapshot_cli(snapshot)}`."
                     ),
                 )
@@ -920,7 +1116,7 @@ def main(argv: list[str] | None = None) -> int:
                     update_workspace_checkpoint(
                         workspace, snapshot,
                         stage="structure proposal validated",
-                        next_action=f"Run `contextcanon onboard structure-review {_snapshot_cli(snapshot)}` and edit `STEP-03-structure.md`.",
+                        next_action=f"Run `contextcanon onboard structure-review {_snapshot_cli(snapshot)}` and edit `STEP-05-structure.md`.",
                     )
                 return 0
 
@@ -966,7 +1162,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Missing Node skeletons: {missing}")
                 if args.onboard_command == "structure-preview":
                     next_action = (
-                        f"Run `contextcanon onboard structure-materialize {_snapshot_cli(snapshot)}` after reviewing `STEP-04-structure-preview.md`."
+                        f"Run `contextcanon onboard structure-materialize {_snapshot_cli(snapshot)}` after reviewing `STEP-06-structure-preview.md`."
                         if missing or recovering else
                         f"Run `contextcanon onboard reusable-contexts {_snapshot_cli(snapshot)}`."
                     )
@@ -1065,7 +1261,7 @@ def main(argv: list[str] | None = None) -> int:
                     accepted_reusable_assignments = reusable.assignments
                     preaccepted_owner_sources = True
                 elif not catalog_inputs and remembered_catalog:
-                    # Legacy/scripting compatibility for an onboarding started before STEP 05 existed.
+                    # Legacy/scripting compatibility for an onboarding started before STEP 07 existed.
                     catalog_inputs = remembered_catalog
                     catalog = tuple(Path(path) for path in catalog_inputs)
 
@@ -1084,19 +1280,29 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"contextcanon onboarding placement instruction digest: {instruction.instruction_digest}", file=sys.stderr)
                         return 0
                     write_utf8(workspace.placement_instruction_path, instruction.text)
+                    handoff = build_semantic_handoff(
+                        snapshot,
+                        workspace.root,
+                        step=8,
+                        instruction_path=workspace.placement_instruction_path,
+                    )
                     print(f"wrote onboarding placement instruction {workspace.placement_instruction_path}")
                     print(f"Instruction digest: {instruction.instruction_digest}")
                     print(f"Evidence snapshot: {instruction.evidence_digest}")
                     print(f"Structure digest: {instruction.structure_digest}")
-                    print(f"Expected LLM output: {workspace.placement_proposal_path}")
+                    print(f"Semantic handoff workspace: {handoff.root}")
+                    print(f"Semantic handoff ZIP: {handoff.zip_path}")
+                    print(f"Expected LLM output: {handoff.result_path}")
+                    print(f"Canonical proposal after import: {workspace.placement_proposal_path}")
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement instruction ready",
                         structure_digest=instruction.structure_digest,
                         source_catalog=_catalog_labels(instruction.catalog_packages),
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
-                            "Give `STEP-06a-placement-instruction.md` and only the frozen `evidence/` tree to a strong reasoning LLM. "
-                            "Save its single JSON result as `STEP-06b-placement-proposal.json`, then run "
+                            f"Open `{handoff.root}` as a separate agent project (or upload `{handoff.zip_path}`) and tell the model "
+                            f"to follow `{HANDOFF_CONTROL_DIR}/{HANDOFF_PLAN_NAME}`. Then run "
+                            f"`contextcanon onboard handoff-import {_snapshot_cli(snapshot)} --step 8` followed by "
                             f"`contextcanon onboard placement-validate {_snapshot_cli(snapshot)}`."
                         ),
                     )
@@ -1126,7 +1332,7 @@ def main(argv: list[str] | None = None) -> int:
                         source_catalog_inputs=catalog_inputs,
                         next_action=(
                             f"Run `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`. "
-                            "Reusable Context relationships were already accepted in STEP 05; no Source IDs need to be typed here."
+                            "Reusable Context relationships were already accepted in STEP 07; no Source IDs need to be typed here."
                         ),
                     )
                     return 0
@@ -1185,9 +1391,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Touched Context Nodes: {len(preview.nodes)} · follow-ups: {len(preview.followups)}")
                 if args.onboard_command == "placement-preview":
                     next_action = (
-                        f"Review `STEP-09-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}`."
+                        f"Review `STEP-11-placement-preview.md`, then run `contextcanon onboard placement-publish {_snapshot_cli(snapshot)}`."
                         if preview.review_complete else
-                        "Return to the `STEP-08-placement.md` index and its linked finding files, resolve all pending decisions, and preview again."
+                        "Return to the `STEP-10-placement.md` index and its linked finding files, resolve all pending decisions, and preview again."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="placement publication previewed",
@@ -1227,7 +1433,7 @@ def main(argv: list[str] | None = None) -> int:
                     source_catalog=_catalog_labels(proposal.catalog_packages),
                     source_catalog_inputs=catalog_inputs,
                     next_action=(
-                        "Review `STEP-10-placement-followup.md`. Accepted mutable-Markdown Source After transformations were published transactionally with canonical Context; "
+                        "Review `STEP-12-placement-followup.md`. Accepted mutable-Markdown Source After transformations were published transactionally with canonical Context; "
                         "ordinary ContextCanon-native project growth now happens by editing the relevant Node sources directly, not by rerunning migration onboarding."
                     ),
                 )

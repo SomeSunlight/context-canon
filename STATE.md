@@ -1,10 +1,10 @@
 # Current State
 
-The accepted `main` product baseline is ContextCanon **0.8.0** from PR #31, squash-merged as:
+The accepted `main` product baseline is ContextCanon **0.8.1** from PR #50, squash-merged as:
 
-`d285ae09795994239a802ce50342404fadd482b7`
+`4f007eb9a2596a905cd716e2bbefe2351cd4ecdf`
 
-PR #31 completed Issues #30 and #32–#38, hardening genuine first adoption, reusable-Context setup, split P/E placement review, structure-preserving source cleanup, technical authority mappings and placement diagnostics. The renewed real `Llama_Dispatcher` onboarding completed end to end through reviewed publication on this release line. No framework review PR is currently active.
+PR #31 established the 0.8.0 first-adoption baseline; PR #50 then advanced the public package/CLI to 0.8.1 with actionable Windows `WinError 5` scanner-lock guidance while preserving the onboarding semantics. Draft PR #54 is now the current unaccepted ContextCanon 0.9.6 owner-test candidate. Issues #55–#60 hardened installation, inventory/recovery UX, embedded Git handling, immutable Evidence identity, structured-data parity, and isolated semantic-agent guidance. Issue #61 turned that guidance into a deterministic model-neutral Semantic Handoff Workspace harness for STEP 04 structure and STEP 08 placement. Issue #62 then hardened the real STEP-08 owner path and generalized only the task boundary: the registry now owns the next validator, CLI/reset derive supported semantic steps from that registry, and the builder can bind a deterministic subset of the same immutable Evidence snapshot for future narrower tasks while current STEP 04/08 continue to use the full snapshot. STEP-08 regressions prove deterministic ZIP/input binding, exclusion of STEP-04/IDE artifacts, RESULT preservation/explicit refresh, mechanical import before separate validation, and custom-workspace reset behavior. The architecture now records this as Progressive Disclosure between semantic reasoning passes: ContextCanon supplies the bounded task world, a human starts the approved model, and deterministic validation/human acceptance regain control afterward. The 0.9.6 candidate passes the complete deterministic suite (301 tests) and self-hosted build/check with zero generated drift.
 
 Follow-up Issues #39–#43 capture the next owner-test findings (IDE-friendly STEP 09 diff, clearer STEP 10 purpose, explanatory/documentation-gap views, optional reusable repository-documentation philosophy, and excluding unresolved findings from review-only Source-edit fallbacks). They are recorded future work, not an active development block.
 

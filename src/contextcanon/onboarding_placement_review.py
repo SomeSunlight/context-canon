@@ -499,7 +499,7 @@ def _initial_sources(
             raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
         owner_pairs[(target, source_id)] = (spec, package)
 
-    # Evidence-derived suggestions that duplicate an already accepted STEP-05
+    # Evidence-derived suggestions that duplicate an already accepted STEP-07
     # relationship do not create a second decision in Placement.
     for reuse in proposal.source_reuses:
         pair = (reuse.target_node_key, reuse.source_node_id)
@@ -660,7 +660,7 @@ def render_placement_review(
             else:
                 lines.extend(
                     [
-                        "This Source was selected explicitly by the project owner. When it came from STEP 05, that relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
+                        "This Source was selected explicitly by the project owner. When it came from STEP 07, that relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
                         "",
                     ]
                 )

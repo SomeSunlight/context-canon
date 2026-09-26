@@ -24,22 +24,26 @@ COMMANDS_START = "<!-- contextcanon-onboarding-commands:start -->"
 COMMANDS_END = "<!-- contextcanon-onboarding-commands:end -->"
 RUN_INPUTS_SCHEMA = "contextcanon/onboarding-run-inputs/v0"
 RUN_INPUTS_NAME = "run-inputs.json"
+GITIGNORE_START = "# >>> ContextCanon onboarding (managed)"
+GITIGNORE_END = "# <<< ContextCanon onboarding (managed)"
 
 README_NAME = "README.md"
 PLAN_NAME = "PLAN.md"
-STRUCTURE_INSTRUCTION_NAME = "STEP-02a-structure-instruction.md"
-STRUCTURE_PROPOSAL_NAME = "STEP-02b-structure-proposal.json"
-STRUCTURE_REVIEW_NAME = "STEP-03-structure.md"
-STRUCTURE_PREVIEW_NAME = "STEP-04-structure-preview.md"
-REUSABLE_CONTEXTS_NAME = "STEP-05-reusable-contexts.md"
-PLACEMENT_INSTRUCTION_NAME = "STEP-06a-placement-instruction.md"
-PLACEMENT_PROPOSAL_NAME = "STEP-06b-placement-proposal.json"
-PLACEMENT_REVIEW_NAME = "STEP-08-placement.md"
-PLACEMENT_REVIEW_DIR_NAME = "STEP-08-placement"
-PLACEMENT_SOURCE_EDIT_DIR_NAME = "STEP-08-source-edits"
-PLACEMENT_AUDIT_NAME = "STEP-08a-source-audit.md"
-PLACEMENT_PREVIEW_NAME = "STEP-09-placement-preview.md"
-PLACEMENT_FOLLOWUP_NAME = "STEP-10-placement-followup.md"
+INVENTORY_NAME = "STEP-02-inventory.csv"
+INVENTORY_GUIDE_NAME = "STEP-02-inventory-guide.md"
+STRUCTURE_INSTRUCTION_NAME = "STEP-04a-structure-instruction.md"
+STRUCTURE_PROPOSAL_NAME = "STEP-04b-structure-proposal.json"
+STRUCTURE_REVIEW_NAME = "STEP-05-structure.md"
+STRUCTURE_PREVIEW_NAME = "STEP-06-structure-preview.md"
+REUSABLE_CONTEXTS_NAME = "STEP-07-reusable-contexts.md"
+PLACEMENT_INSTRUCTION_NAME = "STEP-08a-placement-instruction.md"
+PLACEMENT_PROPOSAL_NAME = "STEP-08b-placement-proposal.json"
+PLACEMENT_REVIEW_NAME = "STEP-10-placement.md"
+PLACEMENT_REVIEW_DIR_NAME = "STEP-10-placement"
+PLACEMENT_SOURCE_EDIT_DIR_NAME = "STEP-10-source-edits"
+PLACEMENT_AUDIT_NAME = "STEP-10a-source-audit.md"
+PLACEMENT_PREVIEW_NAME = "STEP-11-placement-preview.md"
+PLACEMENT_FOLLOWUP_NAME = "STEP-12-placement-followup.md"
 
 LEGACY_ARTIFACT_NAMES = {
     "structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
@@ -51,12 +55,28 @@ LEGACY_ARTIFACT_NAMES = {
     "placement.md": PLACEMENT_REVIEW_NAME,
     "placement-preview.md": PLACEMENT_PREVIEW_NAME,
     "placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
+    "STEP-02a-structure-instruction.md": STRUCTURE_INSTRUCTION_NAME,
+    "STEP-02b-structure-proposal.json": STRUCTURE_PROPOSAL_NAME,
+    "STEP-03-structure.md": STRUCTURE_REVIEW_NAME,
+    "STEP-04-structure-preview.md": STRUCTURE_PREVIEW_NAME,
+    "STEP-05-reusable-contexts.md": REUSABLE_CONTEXTS_NAME,
+    "STEP-06a-placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
+    "STEP-06b-placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
+    "STEP-08-placement.md": PLACEMENT_REVIEW_NAME,
+    "STEP-08a-source-audit.md": PLACEMENT_AUDIT_NAME,
+    "STEP-09-placement-preview.md": PLACEMENT_PREVIEW_NAME,
+    "STEP-10-placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
     "STEP-05a-placement-instruction.md": PLACEMENT_INSTRUCTION_NAME,
     "STEP-05b-placement-proposal.json": PLACEMENT_PROPOSAL_NAME,
     "STEP-07-placement.md": PLACEMENT_REVIEW_NAME,
     "STEP-07a-source-audit.md": PLACEMENT_AUDIT_NAME,
     "STEP-08-placement-preview.md": PLACEMENT_PREVIEW_NAME,
     "STEP-09-placement-followup.md": PLACEMENT_FOLLOWUP_NAME,
+}
+
+LEGACY_DIRECTORY_NAMES = {
+    "STEP-08-placement": PLACEMENT_REVIEW_DIR_NAME,
+    "STEP-08-source-edits": PLACEMENT_SOURCE_EDIT_DIR_NAME,
 }
 
 
@@ -71,6 +91,14 @@ class OnboardingWorkspace:
     @property
     def plan_path(self) -> Path:
         return self.root / PLAN_NAME
+
+    @property
+    def inventory_path(self) -> Path:
+        return self.root / INVENTORY_NAME
+
+    @property
+    def inventory_guide_path(self) -> Path:
+        return self.root / INVENTORY_GUIDE_NAME
 
     @property
     def structure_instruction_path(self) -> Path:
@@ -129,23 +157,34 @@ def _workspace_readme() -> str:
     return f"""# ContextCanon onboarding workspace
 {WORKSPACE_MARKER}
 
-This directory is the **visible human working area** for one structure-first ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.
+This directory is the **visible human working area** for one ContextCanon onboarding. This README is the stable orientation page; the PLAN is the executable operator surface.
 
-Start with [`{PLAN_NAME}`]({PLAN_NAME}). It is deliberately written as an operator runbook: the numbered flow, exact copy/paste commands for this Evidence snapshot, current validated checkpoint, and reset commands all live there. You should not need chat history or ContextCanon source-code archaeology to remember how to continue.
+Start with [`{PLAN_NAME}`]({PLAN_NAME}). It keeps the numbered flow, current validated checkpoint and exact commands together so the onboarding can be resumed without chat history.
 
 ## Mental model
 
-ContextCanon separates three jobs:
+ContextCanon now separates the preflight from semantic onboarding:
 
-- `.context/onboarding/<evidence-digest>/` keeps immutable machine-owned frozen Evidence and acceptance/provenance state;
-- this directory keeps human/LLM review artifacts in workflow order;
-- the actual Context Nodes remain in their accepted repository locations and may use directories that did not exist before onboarding.
+- STEP 01 asks you to tidy obvious repository/document clutter **before durable Context references exist**;
+- STEP 02 inventories the selected repository area in a human-editable CSV;
+- STEP 03 freezes only the reviewed `source` / `interpret` rows as immutable Evidence;
+- later steps design semantic shelves and place meaning onto them.
 
-The repository's old directory tree is evidence about the project, not a taxonomy ContextCanon must preserve. Structure review designs the shelves first; placement review then decides where the existing meaning belongs.
+`.context/onboarding/` keeps machine-owned inventory state, frozen Evidence and acceptance/provenance. This directory keeps human review artifacts. The actual Context Nodes remain in their accepted repository locations.
+
+Git storage is deliberately split: the visible workspace and heavy Evidence/review machinery are ignored by default, while the compact accepted inventory baseline (`.context/onboarding/inventory-acceptance.json`) and its small run configuration (`inventory-state.json`) remain Git-visible so a clone can reconstruct reviewed inventory choices.
+
+The repository directory tree is evidence about the project, not a taxonomy ContextCanon must preserve.
+
+## Why frozen Evidence exists
+
+STEP 03 copies the reviewed `source` / `interpret` files into one immutable content-addressed snapshot. Later LLM proposals and human reviews therefore refer to the same exact bytes even if the live repository keeps changing. Start a new Evidence basis deliberately; do not let later semantic steps silently rescan the project.
 
 ## Human-facing artifacts — sorted in workflow order
 
 - `{PLAN_NAME}` — generated operator runbook and current validated checkpoint.
+- `{INVENTORY_NAME}` — human-editable file inventory.
+- `{INVENTORY_GUIDE_NAME}` — short local reference for every inventory column, status and handling value.
 - `{STRUCTURE_INSTRUCTION_NAME}` — generated instruction for the coarse-structure reasoning pass.
 - `{STRUCTURE_PROPOSAL_NAME}` — LLM JSON for coarse structure discovery.
 - `{STRUCTURE_REVIEW_NAME}` — human-editable accepted shelf map and fixed-Markdown decision.
@@ -153,29 +192,96 @@ The repository's old directory tree is evidence about the project, not a taxonom
 - `{REUSABLE_CONTEXTS_NAME}` — human-owned reusable Context Catalog locations, sparse assignments, and Why rationale.
 - `{PLACEMENT_INSTRUCTION_NAME}` — generated instruction for the placement reasoning pass.
 - `{PLACEMENT_PROPOSAL_NAME}` — LLM JSON describing where existing meaning belongs.
-- Step 07 is validation-only and therefore intentionally has no separate artifact.
-- `{PLACEMENT_REVIEW_NAME}` — compact STEP-08 index/status; `{PLACEMENT_REVIEW_DIR_NAME}/` contains per-finding semantic placement decisions (P), while `{PLACEMENT_SOURCE_EDIT_DIR_NAME}/` contains concrete source transformations (E).
+- STEP 09 is validation-only and therefore intentionally has no separate artifact.
+- `{PLACEMENT_REVIEW_NAME}` — compact STEP-10 index/status; `{PLACEMENT_REVIEW_DIR_NAME}/` contains per-finding semantic placement decisions, while `{PLACEMENT_SOURCE_EDIT_DIR_NAME}/` contains concrete source transformations.
 - `{PLACEMENT_AUDIT_NAME}` — generated read-only source-file-first audit of the currently validated placement review.
 - `{PLACEMENT_PREVIEW_NAME}` — exact deterministic publication preview.
 - `{PLACEMENT_FOLLOWUP_NAME}` — durable follow-up after placement publication.
 
-None of these working files become canonical Context merely because they exist. Explicit publication changes reviewed Context Node authoring.
+None of these working files become canonical Context merely because they exist. After publication, accepted structure, reusable-Context and placement meaning lives in the canonical ContextCanon sources/relationships. The compact accepted inventory baseline remains durable separately because ignored/lookup choices and owner descriptions are otherwise not represented by the canonical Nodes.
 
-## Reset for testing
+## Inventory semantics
 
-`contextcanon onboard reset <snapshot> --from N` removes workspace artifacts from step N onward and reverses recorded ContextCanon project mutations from those steps. Frozen Evidence is deliberately preserved.
+STEP 02 deliberately keeps the PLAN short. The complete table reference lives next to the CSV in [`{INVENTORY_GUIDE_NAME}`]({INVENTORY_GUIDE_NAME}).
 
-For newly journaled runs, reset restores exact pre-command bytes and refuses to overwrite a managed file that changed afterward. For pre-journal structure tests, ContextCanon can also remove unmistakable untouched onboarding skeleton Nodes conservatively.
+## Go back or restart
 
-## Why frozen Evidence exists
-
-Freezing does not lock the live Git repository. ContextCanon copies selected review material into a content-addressed snapshot so the LLM, human review, preview and publication can all refer to the **same exact project bytes**. Prepare a new snapshot only when you intentionally want a new evidence basis.
+From the Git repository root, `contextcanon onboard reset . --from <STEP>` returns the onboarding to any STEP 01–12 without requiring a Git rollback or fresh clone. STEP 01 removes all ContextCanon-owned onboarding work/state; STEP 02 keeps only the initialized workspace; STEP 03 keeps the reviewed inventory CSV; STEP 04–12 preserve the accepted inventory and frozen Evidence while rolling back later managed work.
 
 ## Ownership
 
-ContextCanon recognizes this workspace by the marker directly below the H1. Files such as this README and `{PLAN_NAME}` are framework-owned operating surfaces; `{STRUCTURE_REVIEW_NAME}` and `{PLACEMENT_REVIEW_NAME}` are the human-editable review gates.
+ContextCanon recognizes this workspace by the marker directly below the H1. Framework-owned README/PLAN surfaces may be regenerated; `{INVENTORY_NAME}`, `{STRUCTURE_REVIEW_NAME}` and the placement review sheets are human decision surfaces.
 
 If a directory with the same name already exists without the marker, ContextCanon refuses to take it over. Use `--workspace <path>` to choose another directory instead.
+"""
+
+def _inventory_guide() -> str:
+    return f"""# STEP 02 — Inventory guide
+
+This page explains the human review table `{INVENTORY_NAME}`. The PLAN tells you **when** to use the table; this page tells you **how** to read and edit it.
+
+## What you normally edit
+
+Edit only these semantic columns unless you deliberately know why you are changing something else:
+
+- `kind` — what the artifact is.
+- `handling` — what onboarding should do with it.
+- `description` — short human explanation of what the artifact represents. Required for `source` and `interpret`.
+- `note` — optional owner context for the review.
+
+Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule`. Rename/move files in the repository itself and rerun STEP 02 instead of editing `path` by hand.
+
+## Columns
+
+| Column | Meaning |
+| --- | --- |
+| `path` | Repository-relative file path. |
+| `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
+| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
+| `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
+| `description` | Human explanation carried into frozen Evidence metadata. |
+| `note` | Optional owner note. |
+| `hint` | Machine-generated guidance for the row, for example that an opaque document needs a same-basename Markdown transcription. Do not edit it. |
+| `size` | Current file size in bytes. Machine-owned. |
+| `sha256` | Hash of the current file bytes when inventory was generated. Machine-owned. |
+| `accepted_sha256` | Hash from the last successful STEP 03 acceptance; blank before first acceptance. Machine-owned. |
+| `rule` | Deterministic rule that supplied the current automatic default; useful for understanding why a row started with that classification. It is not an owner decision. |
+
+## Handling values
+
+- `source` — direct project Evidence for the semantic onboarding passes.
+- `interpret` — freeze the original bytes, but mark them as raw/ambiguous material whose meaning must be interpreted explicitly rather than silently promoted to truth.
+- `lookup` — known material that may be consulted later but is not eagerly frozen into the semantic Evidence set.
+- `ignore` — intentionally outside this onboarding Evidence.
+- `undecided` — unresolved; STEP 03 refuses to freeze Evidence until you decide.
+
+## Status values
+
+- `new` — first time this path is seen in the current inventory history.
+- `unchanged` — the path is still present with the same bytes as the previous inventory/accepted baseline.
+- `changed` — the path is still present but its bytes changed.
+- `missing` — the previously known path no longer exists in the repository scope.
+
+You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if repository files were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
+
+## PDF, Word, PowerPoint and similar documents
+
+Opaque office/PDF originals are not semantic Evidence by default. If one matters for onboarding, create a careful Markdown transcription beside it with the **same basename**, for example:
+
+```text
+architecture.pdf
+architecture.md
+```
+
+On the next inventory refresh ContextCanon keeps the original as `binary / ignore` and recognizes the Markdown companion as `transcription / source`. The transcription should faithfully carry the source content; semantic condensation or reinterpretation belongs in the later onboarding review, not in a supposedly faithful transcription.
+
+## Source code
+
+Normal source-code files are intentionally omitted from this first-adoption CSV. Large repositories can contain hundreds or thousands of fast-changing source files, and treating each one as a durable onboarding row creates noise and change-management debt. ContextCanon will later need language/tool-aware code selection. Until then, use a deliberate custom `--rule` only when a particular source file really belongs in this onboarding Evidence review.
+
+## Git submodules and nested repositories
+
+Git can expose a submodule/gitlink as one path even though the working-tree path is a directory. ContextCanon shows such an entry as `other / ignore` with rule `git-directory-entry`; it does **not** descend into or hash that directory as part of the parent repository inventory. If the nested repository matters, onboard it separately from its own Git root.
 """
 
 
@@ -183,31 +289,75 @@ def _workspace_plan() -> str:
     return f"""# ContextCanon onboarding plan
 {PLAN_MARKER}
 
-This is the **operator console** for the current onboarding. Work from top to bottom. Each step keeps its explanation, completion checkbox, exact command and produced artifact together so you do not have to scroll between a checklist and a separate command manual.
+This is the **operator console** for the current onboarding. Work from top to bottom. The first three steps are deliberately useful on their own: for a small document/architecture project you can stop after the reviewed Evidence snapshot and continue semantic onboarding later.
+
+## Need to go back?
+
+You do not need a Git rollback or a fresh clone. From the Git repository root, reset the onboarding from any numbered step and then continue from that step:
+
+```text
+contextcanon onboard reset . --from <STEP>
+```
+
+Examples: `--from 1` removes the owned onboarding workspace and onboarding machine state so you can run `contextcanon onboard init .` again; `--from 3` keeps the reviewed STEP-02 CSV but discards accepted Evidence and all later onboarding work. ContextCanon only rolls back files it can prove belong to the onboarding run.
+
+For the exact reset options, run `contextcanon onboard reset --help`.
 
 ## Onboarding steps
 
 {COMMANDS_START}
-The exact snapshot-bound steps appear here after ContextCanon opens this workspace.
+### STEP 01 — Tidy before durable references
+- [ ] **Done**
+
+Before ContextCanon starts creating durable references, use this cheapest moment to remove obvious duplicates, settle accidental `final-final` document versions, and move clearly misplaced files. This is guidance, not a machine gate.
+
+### STEP 02 — Review file inventory
+- [ ] **Done**
+
+Generate or refresh the deterministic CSV inventory:
+
+```text
+contextcanon onboard inventory .
+```
+
+Open [`{INVENTORY_GUIDE_NAME}`]({INVENTORY_GUIDE_NAME}) and review/edit `{INVENTORY_NAME}`. The guide explains every column and value. **Do not rerun inventory just because you edited the CSV**; rerun only if repository files changed before STEP 03.
+
+### STEP 03 — Freeze reviewed Evidence
+- [ ] **Done**
+
+Accept the current inventory as the Evidence boundary:
+
+```text
+contextcanon onboard prepare . --inventory {DEFAULT_WORKSPACE_NAME}/{INVENTORY_NAME}
+```
+
+ContextCanon refuses stale inventory, unresolved `undecided` rows, missing reviewed files, and newly discovered files that are absent from the CSV. Only `source` and `interpret` rows are copied into the immutable Evidence snapshot.
+
+After STEP 03, ContextCanon replaces this section with the complete snapshot-bound STEP 01–12 runbook.
 {COMMANDS_END}
 
 ## Current checkpoint
 
 {CHECKPOINT_START}
-No ContextCanon structure-first command has recorded a checkpoint in this workspace yet.
+No frozen Evidence snapshot has been accepted yet.
 {CHECKPOINT_END}
 
-The checkpoint is the **last state ContextCanon validated**, not a file watcher. After editing a human gate, rerun that same step before advancing.
+The checkpoint is the **last state ContextCanon validated**, not a file watcher. Rerun inventory before STEP 03 after repository changes; after Evidence is frozen, later semantic steps stay bound to those exact bytes.
 
 ## Human gates
 
-- **LLM handoff 1:** `STEP-02a-structure-instruction.md` + only the frozen `evidence/` tree → `STEP-02b-structure-proposal.json`.
-- **Human gate 1:** review/edit `STEP-03-structure.md`.
-- **Reusable Context gate:** review/edit `STEP-05-reusable-contexts.md`; this owns Catalog locations, Source assignments and their Why rationale.
-- **LLM handoff 2:** `STEP-06a-placement-instruction.md` + only the same frozen `evidence/` tree → `STEP-06b-placement-proposal.json`.
-- **Human gate 2:** use `STEP-08-placement.md` as the index; review semantic P findings under `STEP-08-placement/` and concrete E source transformations under `STEP-08-source-edits/`.
+- **Inventory gate:** review/edit `{INVENTORY_NAME}` before freezing Evidence.
+- **LLM handoff 1:** STEP 04 creates an isolated `handoffs/STEP-04-structure/` workspace plus matching ZIP.
+- **Human structure gate:** review/edit `{STRUCTURE_REVIEW_NAME}`.
+- **Reusable Context gate:** review/edit `{REUSABLE_CONTEXTS_NAME}`.
+- **LLM handoff 2:** STEP 08 creates a fresh isolated `handoffs/STEP-08-placement/` workspace plus matching ZIP.
 
-Normal onboarding commands deliberately do not require you to reconstruct Source Node IDs, package digests, Catalog paths or one-time Source-selection syntax. Those machine identities are resolved and retained by ContextCanon from STEP 05.
+### Semantic handoff workspaces
+
+Each external reasoning pass gets its **own disposable ContextCanon-prepared project**. Frozen Evidence is copied into that project at the original repository-relative paths; the only extra directory is `.contextcanon-handoff/`, which contains the one-task PLAN, exact instruction and deterministic manifest.
+
+Open only that handoff directory in an IDE agent, or upload the matching ZIP where policy permits. Tell the model only: **follow `.contextcanon-handoff/PLAN.md`**. It may write only `.contextcanon-handoff/RESULT.json`. Earlier LLM proposals/reviews are never carried into a later handoff unless their owner-accepted meaning has already been deterministically incorporated into that later instruction.
+- **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
 
 _ATOMIC_REPLACE_RETRY_DELAYS = (0.05, 0.10, 0.20, 0.40, 0.80)
@@ -305,6 +455,15 @@ def _exact_commands(
     snapshot = _snapshot_label(snapshot_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
+    project_root = find_repo_root(snapshot_root)
+    try:
+        inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
+        workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
+    except ValueError:
+        inventory_label = str(workspace.inventory_path.resolve())
+        workspace_label = str(workspace.root.resolve())
+    structure_handoff_label = f"{workspace_label}/handoffs/STEP-04-structure"
+    placement_handoff_label = f"{workspace_label}/handoffs/STEP-08-placement"
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
         snapshot_token = "$SNAPSHOT"
@@ -326,138 +485,175 @@ def _exact_commands(
 
     lines = [
         COMMANDS_START,
-        "These commands are for **this exact Evidence snapshot**. ContextCanon carries forward machine identities and accepted human inputs; copy the short command shown in the current step.",
+        "These commands continue from the **accepted inventory and exact Evidence snapshot**. The first three steps remain visible so the provenance of the semantic run is obvious.",
         "",
-        "Set this run variable once in your terminal:",
+        "### STEP 01 — Tidy before durable references",
+        f"- [{mark(1)}] **Done**",
+        "",
+        "Before inventory acceptance, remove obvious duplicates, settle accidental document versions and move clearly misplaced files. Once durable Topic/Resource references exist, moves deserve deliberate tooling instead of casual cleanup.",
+        "",
+        "### STEP 02 — Review file inventory",
+        f"- [{mark(2)}] **Done**",
+        "",
+        "Generate or refresh the CSV whenever repository files change:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "inventory", ".", *workspace_args]),
+        "```",
+        "",
+        f"Use `{INVENTORY_GUIDE_NAME}` while reviewing `{INVENTORY_NAME}`. Do not refresh merely because you edited the CSV; rerun inventory only when repository files changed.",
+        "",
+        "### STEP 03 — Freeze reviewed Evidence",
+        f"- [{mark(3)}] **Done**",
+        "",
+        "Accept the current inventory and freeze only its `source` / `interpret` rows:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "prepare", ".", "--inventory", inventory_label, *workspace_args]),
+        "```",
+        "",
+        "Set this run variable once for the snapshot-bound semantic steps:",
         "",
         f"```{shell}",
         snapshot_assignment,
         "```",
         "",
-        "### STEP 01 — Freeze Evidence",
-        f"- [{mark(1)}] **Done**",
+        "### STEP 04 — Structure proposal",
+        f"- [{mark(4)}] **Done**",
         "",
-        "ContextCanon freezes the exact project files used as onboarding Evidence so every later LLM/human decision refers to the same bytes. Reuse the current snapshot unless you intentionally want new Evidence.",
+        "A reasoning LLM proposes the project's semantic Context Node structure — the responsibility shelves, not merely the existing directory tree.",
         "",
-        "```text",
-        "contextcanon onboard prepare .",
-        "```",
-        "",
-        "### STEP 02 — Structure proposal",
-        f"- [{mark(2)}] **Done**",
-        "",
-        "A reasoning LLM proposes the project's **semantic Context Node structure** — the responsibility shelves, not merely the existing directory tree.",
-        "",
-        "Generate `STEP-02a-structure-instruction.md`:",
+        f"Generate `{STRUCTURE_INSTRUCTION_NAME}`:",
         "",
         "```text",
         cmd("structure-instruction"),
         "```",
         "",
-        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-02b-structure-proposal.json`. Then validate:",
+        "The instruction command also creates the isolated handoff directory and matching ZIP:",
         "",
         "```text",
+        f"{structure_handoff_label}/",
+        f"{structure_handoff_label}.zip",
+        "```",
+        "",
+        "Open **only** that directory as the agent project, or upload the ZIP. Tell the model: `Follow .contextcanon-handoff/PLAN.md`. When it has produced RESULT.json, import it and validate as two explicit steps:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "4", *workspace_args]),
         cmd("structure-validate"),
         "```",
         "",
-        "### STEP 03 — Structure review",
-        f"- [{mark(3)}] **Done**",
+        "### STEP 05 — Structure review",
+        f"- [{mark(5)}] **Done**",
         "",
-        "You review the proposed project Context Node hierarchy: which semantic shelves exist, their names, paths and parent/child grouping.",
+        "Review the proposed semantic shelf hierarchy.",
         "",
         "```text",
         cmd("structure-review"),
         "```",
         "",
-        "Edit `STEP-03-structure.md` as needed, then run the same command again to validate the human gate.",
+        f"Edit `{STRUCTURE_REVIEW_NAME}` as needed, then run the same command again.",
         "",
-        "### STEP 04 — Materialize shelves",
-        f"- [{mark(4)}] **Done**",
+        "### STEP 06 — Materialize shelves",
+        f"- [{mark(6)}] **Done**",
         "",
-        "ContextCanon previews and then creates only the missing accepted Context Node directories/skeletons. No project knowledge is placed yet.",
+        "Preview and create only missing accepted Context Node directories/skeletons. No project knowledge is placed yet.",
         "",
         "```text",
         cmd("structure-preview"),
         cmd("structure-materialize"),
         "```",
         "",
-        "Review `STEP-04-structure-preview.md` between the two commands.",
+        f"Review `{STRUCTURE_PREVIEW_NAME}` between the two commands.",
         "",
-        "### STEP 05 — Reusable Contexts",
-        f"- [{mark(5)}] **Done**",
+        "### STEP 07 — Reusable Contexts",
+        f"- [{mark(7)}] **Done**",
         "",
-        "You tell ContextCanon **where reusable external Context Nodes can be found, which accepted project Nodes they apply to, and why**. This prepares the foreign shelves before the placement LLM distributes project knowledge.",
+        "Configure reusable external Context Nodes, sparse assignments and their Why rationale.",
         "",
         "```text",
         cmd("reusable-contexts"),
         "```",
         "",
-        "The first run creates `STEP-05-reusable-contexts.md`. Edit its Catalog locations and sparse Assignments, set `Decision` to `accept` when correct, and rerun the same command after every edit. You work with names/path/version; ContextCanon owns IDs and digests.",
+        f"The first run creates `{REUSABLE_CONTEXTS_NAME}`. Edit it and rerun the same command until accepted.",
         "",
-        "### STEP 06 — Placement proposal",
-        f"- [{mark(6)}] **Done**",
+        "### STEP 08 — Placement proposal",
+        f"- [{mark(8)}] **Done**",
         "",
-        "A reasoning LLM now places the project's frozen knowledge onto the already accepted own/reusable Context shelves and proposes any reviewed source-document cleanup.",
+        "A reasoning LLM places frozen project knowledge onto the accepted own/reusable Context shelves.",
         "",
-        "Generate `STEP-06a-placement-instruction.md`:",
+        f"Generate `{PLACEMENT_INSTRUCTION_NAME}`:",
         "",
         "```text",
         cmd("placement-instruction"),
         "```",
         "",
-        "Give that instruction plus only the frozen `evidence/` tree to the LLM and save its JSON exactly as `STEP-06b-placement-proposal.json`.",
+        "This instruction command creates a **new** isolated handoff; STEP 04's agent workspace is not reused:",
         "",
-        "### STEP 07 — Placement validate",
-        f"- [{mark(7)}] **Done**",
+        "```text",
+        f"{placement_handoff_label}/",
+        f"{placement_handoff_label}.zip",
+        "```",
         "",
-        "ContextCanon checks the LLM proposal against the frozen Evidence, accepted project structure and exact reusable Context packages. This is machine validation; there is no separate STEP-07 artifact.",
+        "Open/upload only that handoff and tell the model: `Follow .contextcanon-handoff/PLAN.md`. Then import the result explicitly:",
+        "",
+        "```text",
+        render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "8", *workspace_args]),
+        "```",
+        "",
+        "### STEP 09 — Placement validate",
+        f"- [{mark(9)}] **Done**",
+        "",
+        "Machine-validate the proposal against frozen Evidence, accepted structure and exact reusable Context packages.",
         "",
         "```text",
         cmd("placement-validate"),
         "```",
         "",
-        "### STEP 08 — Placement review",
-        f"- [{mark(8)}] **Done**",
+        "### STEP 10 — Placement review",
+        f"- [{mark(10)}] **Done**",
         "",
-        "You review **which project knowledge goes into which Context Node**. Reusable Context assignments from STEP 05 are already decided and appear only as compact traceability, not as a giant selection matrix.",
+        "Review which project meaning belongs in which Context Node and any concrete source transformations.",
         "",
         "```text",
         cmd("placement-review"),
         "```",
         "",
-        "Review/edit the linked P sheets in `STEP-08-placement/` and E sheets in `STEP-08-source-edits/`. The tables in `STEP-08-placement.md` are generated snapshots, not live views; rerun this same `placement-review` command after edits to validate dependencies and refresh the index. Every successful run also regenerates read-only `STEP-08a-source-audit.md`.",
+        f"Use `{PLACEMENT_REVIEW_NAME}` as the index; rerun the same command after edits to validate and refresh `{PLACEMENT_AUDIT_NAME}`.",
         "",
-        "### STEP 09 — Publication preview",
-        f"- [{mark(9)}] **Done**",
+        "### STEP 11 — Publication preview",
+        f"- [{mark(11)}] **Done**",
         "",
-        "ContextCanon shows the exact Context/source-document changes that publication would make, including semantic Parent pins and reusable Source installation.",
+        "Show the exact Context/source-document changes publication would make.",
         "",
         "```text",
         cmd("placement-preview"),
         "```",
         "",
-        "Review `STEP-09-placement-preview.md` before publishing.",
+        f"Review `{PLACEMENT_PREVIEW_NAME}` before publishing.",
         "",
-        "### STEP 10 — Publish placement",
-        f"- [{mark(10)}] **Done**",
+        "### STEP 12 — Publish placement",
+        f"- [{mark(12)}] **Done**",
         "",
-        "ContextCanon transactionally publishes the fully reviewed Context Node authoring and produces the durable follow-up report.",
+        "Transactionally publish the fully reviewed Context Node authoring.",
         "",
         "```text",
         cmd("placement-publish"),
         "```",
         "",
-        "Inspect `STEP-10-placement-followup.md` afterwards.",
+        f"Inspect `{PLACEMENT_FOLLOWUP_NAME}` afterwards.",
         "",
-        "## Reset commands for testing",
+        "## Go back or restart",
         "",
-        "Frozen Evidence is preserved. Restart from the semantic step you want to retest:",
+        "From the Git repository root, reset to any numbered step. STEP 01–03 progressively discard preflight/Evidence state; STEP 04–12 preserve the accepted inventory and frozen Evidence while rolling back later managed work:",
         "",
         "```text",
+        "contextcanon onboard reset . --from <STEP>",
+        "```",
+        "",
+        "Use `contextcanon onboard reset --help` for exact options.",
+        COMMANDS_END,
     ]
-    for step in range(2, 11):
-        lines.append(render(["contextcanon", "onboard", "reset", snapshot, "--from", str(step), *workspace_args]))
-    lines.extend(["```", COMMANDS_END])
     return "\n".join(lines)
 
 def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[int]:
@@ -467,22 +663,23 @@ def _completed_steps(stage: str, placement_review_complete: bool | None) -> set[
         return set(range(1, max(1, target)))
 
     rank = {
-        "structure instruction ready": 1,
-        "structure proposal validated": 2,
-        "human structure validated": 3,
-        "structure previewed": 3,
-        "structure materialized": 4,
-        "reusable contexts review": 4,
-        "reusable contexts accepted": 5,
-        "placement instruction ready": 5,
-        "placement proposal validated": 7,
-        "human placement review": 7,
-        "placement publication previewed": 9,
-        "placement published": 10,
-    }.get(stage, 1)
+        "evidence prepared": 3,
+        "structure instruction ready": 3,
+        "structure proposal validated": 4,
+        "human structure validated": 5,
+        "structure previewed": 5,
+        "structure materialized": 6,
+        "reusable contexts review": 6,
+        "reusable contexts accepted": 7,
+        "placement instruction ready": 7,
+        "placement proposal validated": 9,
+        "human placement review": 9,
+        "placement publication previewed": 11,
+        "placement published": 12,
+    }.get(stage, 3)
     completed = set(range(1, rank + 1))
     if stage == "human placement review" and placement_review_complete is True:
-        completed.add(8)
+        completed.add(10)
     return completed
 
 def _rewrite_checklist(text: str, completed: set[int], path: Path) -> str:
@@ -629,7 +826,7 @@ def update_workspace_checkpoint(
         state = "complete" if placement_review_complete else "still has pending decisions"
         lines.append(f"- Placement review: `{placement_review_digest}` — {state}")
     # Catalog paths, package identities and Source assignments are domain inputs owned by
-    # STEP-05-reusable-contexts.md / machine state, not by this orchestration PLAN.
+    # STEP-07-reusable-contexts.md / machine state, not by this orchestration PLAN.
     if acceptance_digest is not None:
         lines.append(f"- Placement acceptance: `{acceptance_digest}`")
     lines.extend([
@@ -657,6 +854,20 @@ def _default_workspace_root(snapshot_root: Path) -> Path:
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
+    for legacy_name, numbered_name in LEGACY_DIRECTORY_NAMES.items():
+        legacy = workspace.root / legacy_name
+        numbered = workspace.root / numbered_name
+        if not legacy.exists():
+            continue
+        if not legacy.is_dir() or legacy.is_symlink():
+            raise ContextCanonError(f"Legacy onboarding review path is not a normal directory: {legacy}")
+        if numbered.exists():
+            raise ContextCanonError(
+                f"Onboarding workspace contains both legacy and numbered review directories: "
+                f"{legacy.name}, {numbered.name}"
+            )
+        legacy.rename(numbered)
+
     for legacy_name, numbered_name in LEGACY_ARTIFACT_NAMES.items():
         legacy = workspace.root / legacy_name
         numbered = workspace.root / numbered_name
@@ -685,6 +896,13 @@ def _checkpoint_block(text: str, path: Path) -> str | None:
     return text[start:end]
 
 
+def _checkpoint_snapshot(block: str | None) -> str | None:
+    if block is None:
+        return None
+    match = re.search(r"^- Snapshot: \`(.+?)\`$", block, re.MULTILINE)
+    return match.group(1) if match else None
+
+
 def _checkpoint_stage(block: str | None) -> str | None:
     if block is None:
         return None
@@ -710,8 +928,34 @@ def _remember_first(text: str, headings: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_root: Path) -> None:
+    snapshot = snapshot_root.resolve()
+    if not snapshot.is_dir() or not (snapshot / "manifest.json").is_file():
+        raise ContextCanonError(
+            f"Expected a prepared Evidence snapshot directory, got: {snapshot_root}. "
+            "The onboarding PLAN was not changed."
+        )
+
+    existing_plan = None
+    if workspace.plan_path.exists():
+        try:
+            existing_plan = workspace.plan_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
+        if PLAN_MARKER not in existing_plan:
+            raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
+        checkpoint = _checkpoint_block(existing_plan, workspace.plan_path)
+        bound_snapshot = _checkpoint_snapshot(checkpoint)
+        supplied_snapshot = _snapshot_label(snapshot)
+        if bound_snapshot is not None and bound_snapshot != supplied_snapshot:
+            raise ContextCanonError(
+                "Onboarding workspace is bound to a different frozen Evidence snapshot. "
+                f"PLAN snapshot: {bound_snapshot}; supplied snapshot: {supplied_snapshot}. "
+                "The PLAN was not changed. Use the snapshot shown in PLAN.md or reset to STEP 03."
+            )
+
     _migrate_legacy_artifacts(workspace)
     write_utf8(workspace.readme_path, _workspace_readme())
+    write_utf8(workspace.inventory_guide_path, _inventory_guide())
     if not workspace.plan_path.exists():
         write_utf8(workspace.plan_path, _workspace_plan())
         plan = workspace.plan_path.read_text(encoding="utf-8")
@@ -762,6 +1006,160 @@ def _refresh_framework_owned_surfaces(workspace: OnboardingWorkspace, snapshot_r
         )
     refreshed = _replace_commands(refreshed, workspace, snapshot_root, catalog_inputs, owner_specs)
     write_utf8(workspace.plan_path, refreshed)
+
+
+def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Path:
+    """Ignore transient onboarding artifacts while keeping compact accepted inventory state Git-visible."""
+
+    project = _require_project_root_for_inventory(project_root)
+    gitignore = project / ".gitignore"
+    try:
+        existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
+    except UnicodeDecodeError as exc:
+        raise ContextCanonError(f"Project .gitignore is not valid UTF-8: {gitignore}") from exc
+
+    try:
+        workspace_rel = workspace_root.resolve().relative_to(project).as_posix().rstrip("/")
+    except ValueError:
+        workspace_rel = ""
+
+    lines = [GITIGNORE_START]
+    if workspace_rel:
+        lines.append(f"/{workspace_rel}/")
+    lines.extend([
+        "/.context/onboarding/*",
+        "!/.context/onboarding/inventory-state.json",
+        "!/.context/onboarding/inventory-acceptance.json",
+        GITIGNORE_END,
+    ])
+    block = "\n".join(lines)
+
+    start = existing.find(GITIGNORE_START)
+    end = existing.find(GITIGNORE_END)
+    if (start >= 0) != (end >= 0) or (start >= 0 and end < start):
+        raise ContextCanonError(
+            f"Project .gitignore contains an incomplete ContextCanon managed block: {gitignore}"
+        )
+    if start >= 0:
+        end += len(GITIGNORE_END)
+        prefix = existing[:start].rstrip("\n")
+        suffix = existing[end:].lstrip("\n")
+        updated = (prefix + ("\n\n" if prefix else "") + block)
+        if suffix:
+            updated += "\n\n" + suffix.rstrip("\n")
+        updated += "\n"
+    else:
+        updated = existing.rstrip("\n")
+        if updated:
+            updated += "\n\n"
+        updated += block + "\n"
+
+    if updated != existing:
+        write_utf8(gitignore, updated)
+    return gitignore
+
+
+def remove_onboarding_gitignore(project_root: Path) -> bool:
+    """Remove only ContextCanon's marked onboarding block from the project .gitignore."""
+
+    project = _require_project_root_for_inventory(project_root)
+    gitignore = project / ".gitignore"
+    if not gitignore.exists():
+        return False
+    try:
+        existing = gitignore.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise ContextCanonError(f"Project .gitignore is not valid UTF-8: {gitignore}") from exc
+
+    start = existing.find(GITIGNORE_START)
+    end = existing.find(GITIGNORE_END)
+    if start < 0 and end < 0:
+        return False
+    if start < 0 or end < start:
+        raise ContextCanonError(
+            f"Project .gitignore contains an incomplete ContextCanon managed block: {gitignore}"
+        )
+    end += len(GITIGNORE_END)
+    prefix = existing[:start].rstrip("\n")
+    suffix = existing[end:].lstrip("\n")
+    parts = [part for part in (prefix, suffix.rstrip("\n")) if part]
+    updated = "\n\n".join(parts)
+    if updated:
+        write_utf8(gitignore, updated + "\n")
+    else:
+        gitignore.unlink()
+    return True
+
+
+def open_inventory_workspace(
+    project_root: Path,
+    workspace_root: Path | None = None,
+) -> OnboardingWorkspace:
+    """Open/create the visible workspace before an Evidence snapshot exists."""
+
+    project = _require_project_root_for_inventory(project_root)
+    root = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    workspace = OnboardingWorkspace(root)
+    ensure_onboarding_gitignore(project, root)
+
+    if root.exists() or root.is_symlink():
+        if root.is_symlink() or not root.is_dir():
+            raise ContextCanonError(f"Onboarding workspace path is not a normal directory: {root}")
+        try:
+            readme = workspace.readme_path.read_text(encoding="utf-8")
+        except FileNotFoundError as exc:
+            raise ContextCanonError(
+                f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
+            ) from exc
+        except UnicodeDecodeError as exc:
+            raise ContextCanonError(f"Onboarding workspace README is not valid UTF-8: {workspace.readme_path}") from exc
+        if WORKSPACE_MARKER not in readme:
+            raise ContextCanonError(
+                f"Refusing to take over existing directory without ContextCanon onboarding marker: {root}"
+            )
+        write_utf8(workspace.readme_path, _workspace_readme())
+        write_utf8(workspace.inventory_guide_path, _inventory_guide())
+        if workspace.plan_path.exists():
+            try:
+                plan = workspace.plan_path.read_text(encoding="utf-8")
+            except UnicodeDecodeError as exc:
+                raise ContextCanonError(f"Onboarding workspace PLAN is not valid UTF-8: {workspace.plan_path}") from exc
+            if PLAN_MARKER not in plan:
+                raise ContextCanonError(f"Refusing to take over existing unowned onboarding plan: {workspace.plan_path}")
+        else:
+            write_utf8(workspace.plan_path, _workspace_plan())
+        return workspace
+
+    root.mkdir(parents=True)
+    write_utf8(workspace.readme_path, _workspace_readme())
+    write_utf8(workspace.plan_path, _workspace_plan())
+    write_utf8(workspace.inventory_guide_path, _inventory_guide())
+    return workspace
+
+
+def reset_inventory_workspace_plan(
+    project_root: Path,
+    workspace_root: Path | None = None,
+    *,
+    completed_steps: tuple[int, ...] = (),
+) -> OnboardingWorkspace:
+    """Regenerate the pre-Evidence operator PLAN after a STEP 01-03 reset."""
+
+    workspace = open_inventory_workspace(project_root, workspace_root)
+    plan = _workspace_plan()
+    if completed_steps:
+        plan = _rewrite_checklist(plan, set(completed_steps), workspace.plan_path)
+    write_utf8(workspace.plan_path, plan)
+    return workspace
+
+
+def _require_project_root_for_inventory(project_root: Path) -> Path:
+    project = project_root.resolve()
+    if not (project / ".git").exists():
+        raise ContextCanonError(
+            f"Inventory workspace must be opened at the Git repository root: {project}"
+        )
+    return project
 
 
 def open_onboarding_workspace(

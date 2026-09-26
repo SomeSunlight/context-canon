@@ -4,7 +4,19 @@ All notable ContextCanon changes will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- ContextCanon 0.9.6 owner-test candidate: STEP 08 placement is now explicitly regression-tested against the isolated Semantic Handoff contract, including deterministic ZIP/input binding, RESULT preservation/refresh, mechanical import, custom-workspace reset, and isolation from STEP-04 artifacts. The handoff registry now also owns each task's next validator and the builder can deterministically bind a frozen-Evidence subset for future narrower semantic tasks while STEP 04/08 retain their full-Evidence behavior.
+- ContextCanon 0.9.5 owner-test candidate: external semantic reasoning now uses model-neutral per-step Semantic Handoff Workspaces. STEP 04/08 automatically materialize repository-relative frozen Evidence plus a one-task `.contextcanon-handoff/` control surface, create deterministic ZIP equivalents, preserve unchanged agent results, import exactly one JSON result explicitly, and keep validation/human review as separate gates.
+- ContextCanon 0.9.4 owner-test candidate: semantic STEP 04–12 workspaces are now bound to the accepted Evidence snapshot before PLAN refresh, so a malformed command cannot rewrite `SNAPSHOT`; CSV/JSON/YAML textual Evidence can remain first-class non-Node knowledge bodies/resources; and generated guidance now recommends isolated IDE-agent scratch projects containing only the instruction + frozen Evidence.
+- ContextCanon 0.9.3 owner-test candidate: onboarding reset is now a first-class STEP 01–12 recovery command from the Git root (`contextcanon onboard reset . --from <STEP>`), with progressive preservation of workspace/inventory/Evidence state; the generated PLAN exposes recovery before STEP 01, onboarding commands moved to a dedicated user CLI reference, and onboarding documentation now reflects delivery triage → Evidence → shelf design → placement while marking explicit interpretation as coming soon.
+- ContextCanon 0.9.2 owner-test candidate: `onboard init` now manages a bounded project `.gitignore` block so transient onboarding work/snapshots stay out of Git while compact accepted inventory state remains versionable and can reconstruct reviewed classifications after a clone; inventory refresh also restores prior scope and deterministic rules when not supplied explicitly.
+- ContextCanon 0.9.1 owner-test candidate: onboarding inventory now handles Git directory/gitlink entries without trying to hash them as files, reports inventory read failures with operation/path context, and no longer rewrites a generic Windows Errno 13 permission error as the known WinError-5/scanner-lock case.
+- The Hello World Extended fixture now ignores transient `contextcanon-onboarding/` and `.context/onboarding/` run data.
+
 ### Added
+
+- Reviewed onboarding preflight with `onboard init`, a generated PLAN-first operator flow, human-editable inventory CSV + local field guide, repeatable new/changed/missing/unchanged detection, deterministic defaults, same-basename Markdown transcription for opaque office/PDF material, default source-code omission with explicit opt-in rules, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
 
 - Initial public ContextCanon specification.
 - Human-editable `CONTEXT.src.md` local-delta model.

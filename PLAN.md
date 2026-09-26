@@ -11,19 +11,17 @@ Follow-up Issues #39–#43 record the next owner-test findings but are not an ac
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
 
 
-## Active development block: Development Workflow providers — Issue #63
+## Accepted prerequisite: Development Workflow providers — Issue #63
 
-Purpose: separate the reusable Development Workflow contract from its concrete GitHub infrastructure without introducing new abstract vocabulary into normal LLM work, and establish the smallest provider seam needed before draft PR #54 resumes owner testing.
+Purpose: separate the reusable Development Workflow contract from its concrete GitHub infrastructure without introducing new abstract vocabulary into normal LLM work.
 
-- [x] Keep Development Workflow as the reusable contract using familiar Issue/branch/Pull Request/review/checks/merge vocabulary; remove only assumptions that unnecessarily bind those concepts to github.com.
-- [x] Add a GitHub provider Node that composes Development Workflow and binds the contract to ordinary github.com infrastructure.
-- [x] Add a GitHub Local provider Node that composes Development Workflow and defines the minimal local GitHub-compatible surface, with runtime/tooling details behind progressive disclosure.
-- [x] Keep this block library-local: no github.local runtime, no broad root README rewrite, no Framework Development migration, and no onboarding-semantic changes from draft PR #54.
-- [x] Add focused deterministic composition/build coverage, regenerate affected packages, run the complete deterministic suite and `contextcanon check --all .`, then prepare a review PR. Do not merge without explicit project-owner approval.
+- [x] Keep Development Workflow as the reusable Issue/branch/Pull Request/review/checks/merge contract.
+- [x] Add GitHub and GitHub Local provider Nodes that compose the unchanged Development Workflow Source.
+- [x] Keep the executable `github.local` runtime outside ContextCanon and its operational details behind progressive disclosure.
+- [x] Keep local Issues visible as project documentation under `issues/`.
+- [x] Verify the provider Nodes deterministically with zero generated drift.
 
-Integration boundary: draft PR #54 on `agent/onboarding-inventory` remains frozen during this block. After Issue #63 is accepted into `main`, merge that new `main` into PR #54 and rerun its complete exact-head onboarding gate before owner acceptance.
-
-Checkpoint: draft PR #64 now contains only the minimal provider seam. Development Workflow semantics remain byte-identical; GitHub and GitHub Local compose the existing `0.3.0-draft` package without Foundation, and GitHub Local keeps runtime/MCP details behind a provider Topic while requiring visible `issues/` documentation. The first CI run passed all unit/repository tests and failed only on expected generated drift; compiler-generated provider packages were then committed. Exact product head `e7e9158036c692d59f1b84b4f3039df2a66c10f2` passed the complete repository workflow including zero generated drift. This PLAN closure commit must receive the same exact-head gate before review; PR #64 remains draft and unmerged pending explicit project-owner approval.
+Checkpoint: PR #64 was owner-reviewed and squash-merged to `main` as `ee6f21203edb26ebec9eda25c45b00fefc660e83`. Development Workflow semantics remain byte-identical; the new GitHub and GitHub Local provider Nodes are now the accepted reusable infrastructure bindings. PR #54 resumes from this accepted provider baseline without expanding its onboarding scope.
 
 ## Active development block: fresh first-adoption root materialization — Issue #30
 
@@ -582,3 +580,147 @@ PR #31 was squash-merged to `main` as `d285ae09795994239a802ce50342404fadd482b7`
 The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR workflow #901 / run `35127260963`: 262 deterministic tests, generated-output verification with zero drift, and installation of `contextcanon==0.8.0`. The real `Llama_Dispatcher` onboarding completed publication with review digest `7c1712d0327fdd44759784e6c0511ed63386795ec73790e510ff895fe85de0a4` and acceptance digest `c72b6bb4b0df3d1df657407f72feaa7ea899ba7189284fd9dd7269dae4089255`.
 
 Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
+
+
+## Active fast-run: reviewed onboarding inventory — Issue #53
+
+Purpose: add a human-reviewed file inventory before Evidence freezing so first adoption no longer depends on hidden README/docs-oriented selection heuristics, while keeping this implementation slice small enough for immediate use on a document-only architecture project.
+
+**Fast-run status — CLOSED**
+
+- **Owner-approved scope:** Steps 1–3 only as a coherent first slice: pre-onboarding cleanup guidance; deterministic inventory CSV from one or more repository directories; explicit CSV review/acceptance as the input to frozen Evidence.
+- **Deterministic defaults:** familiar files may receive configurable rule-based initial classification, but the CSV remains the human-owned decision surface.
+- **Change detection:** rerunning inventory must surface new, changed and missing files instead of silently reusing an old list.
+- **Shared example:** add a committed Hello World Extended project that exercises document, structured-data, source-code, raw/ambiguous record, ignored/generated and later-added-file cases and is usable both by tests and owner discussion.
+- **Deferred:** LLM inventory triage, interpretation, chat/meeting onboarding, structured semantic diffs, resource move/rename support, and larger-repository scaling optimizations.
+- **Exit condition:** focused inventory regressions, complete deterministic suite, self-build/check and diff hygiene pass on one coherent draft-PR head; then mark this fast-run CLOSED and return to owner review. No merge without explicit owner approval.
+
+- [x] 1. Add the preflight/inventory data model, CSV review surface and deterministic default rules.
+- [x] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
+- [x] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
+- [x] 4. Add the Hello World Extended shared fixture and focused regression coverage.
+- [x] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
+
+Checkpoint: reviewed onboarding inventory is implemented on draft PR #54 as ContextCanon 0.9.0. The final product head passes 275 deterministic tests, `contextcanon build --all .`, `contextcanon check --all .`, and diff hygiene with zero generated drift. STEP 01–03 are ready for the shared Hello World Extended owner walkthrough; LLM inventory triage and interpretation remain deliberately deferred. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: first-contact onboarding UX — Issues #55 and #56
+
+Purpose: incorporate the first real Hello World Extended owner walkthrough before PR #54 is accepted. The preflight mechanics worked, but installation and STEP 01–03 still assumed too much prior knowledge.
+
+- [x] Make the root README lead a new user through the shortest uv/GitHub CLI installation and version check.
+- [x] Add `contextcanon onboard init .` so the visible onboarding workspace and PLAN exist before any inventory decision; from that point the generated PLAN is the operator console.
+- [x] Add a compact generated `STEP-02-inventory-guide.md` covering all CSV columns, editable/machine-owned fields, handling/status meanings, and exactly when inventory should be rerun.
+- [x] Replace human-facing `present` with `unchanged` while accepting legacy `present` CSVs.
+- [x] Keep opaque PDF/Office originals outside semantic Evidence by default and recognize a faithful same-basename Markdown companion as `transcription / source`.
+- [x] Default `.gitignore` to `configuration / ignore`; omit ordinary source-code files from the standard inventory while retaining explicit `--rule` opt-in for selected code.
+- [x] Extend Hello World Extended and focused regressions for the corrected first-contact behavior.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact review head.
+
+Checkpoint: Issues #55/#56 are implemented on draft PR #54. The owner-walkthrough correction head passes the complete deterministic suite (279 tests), self-hosted build/check with zero generated drift, and diff hygiene. The corrected STEP 01-03 first-contact flow is ready for the next Hello World Extended owner walkthrough. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: Git directory entries and Windows Errno 13 — Issue #57
+
+Purpose: correct the first real-project STEP-02 failure after the improved onboarding UX was accepted by the owner.
+
+- [x] Reproduce the failure shape: a Git-visible directory/gitlink path reached file hashing and raised Windows `[Errno 13] Permission denied`.
+- [x] Treat Git directory/gitlink entries as `other / ignore` with explicit nested-repository guidance instead of opening them as files.
+- [x] Make STEP 03 reject a non-regular path changed to `source`/`interpret`.
+- [x] Preserve inventory operation + relative-path context for actual read/hash errors.
+- [x] Stop decorating generic Windows Errno 13 with the WinError-5/scanner-lock advice; retain that advice for actual WinError 5.
+- [x] Ignore transient `contextcanon-onboarding/` and `.context/onboarding/` state in the Hello World fixture.
+- [x] Advance the user-facing owner-test package version from 0.9.0 to 0.9.1.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.1 review head.
+
+Checkpoint: Issue #57 is implemented on draft PR #54 as the ContextCanon 0.9.1 owner-test candidate. The corrected head passes the complete deterministic suite (283 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next real-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: durable inventory restore state — Issue #58
+
+Purpose: keep transient onboarding review machinery out of Git without losing owner-reviewed inventory decisions needed after a clone or when later repository files appear.
+
+- [x] Maintain a bounded ContextCanon block in the project `.gitignore` from `onboard init`/inventory workspace creation.
+- [x] Ignore the visible `contextcanon-onboarding/` workspace and heavy/transient `.context/onboarding/` material by default.
+- [x] Keep `.context/onboarding/inventory-state.json` and `inventory-acceptance.json` Git-visible as the compact durable inventory restore anchor.
+- [x] Reconstruct the inventory CSV from accepted state after the workspace/Evidence cache is absent, preserving reviewed `kind`, `handling`, `description`, `note`, scope and deterministic rules.
+- [x] Keep STEP 03 as the durability boundary: unaccepted CSV edits remain transient working state; ContextCanon never stages/commits automatically.
+- [x] Document that later accepted semantic meaning lives in canonical ContextCanon sources/relationships rather than requiring the review workspace in Git.
+- [x] Keep full semantic re-onboarding of an already adopted project explicitly outside this restore mechanism.
+- [x] Advance the owner-test package version from 0.9.1 to 0.9.2.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.2 review head.
+
+Checkpoint: Issue #58 is implemented on draft PR #54 as the ContextCanon 0.9.2 owner-test candidate. The corrected head passes the complete deterministic suite (285 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: discoverable full onboarding reset and docs — Issue #59
+
+Purpose: make stepping backwards a normal, discoverable part of live-project onboarding and remove documentation ambiguity between operator commands and framework design.
+
+- [x] Make `contextcanon onboard reset . --from <STEP>` the simple Git-root recovery form while preserving explicit snapshot compatibility.
+- [x] Extend reset from STEP 04–12 to STEP 01–12 with progressive preservation: STEP 01 full onboarding restart; STEP 02 initialized workspace only; STEP 03 reviewed inventory retained; STEP 04–12 accepted inventory/Evidence retained.
+- [x] Put reset/restart guidance before STEP 01 in every generated PLAN and update workspace orientation text.
+- [x] Add a dedicated root `docs/onboarding-cli.md` and make `docs/cli.md` route onboarding commands there.
+- [x] Remove the confusing root `docs/onboarding-reference.md` compatibility pointer.
+- [x] Rename the Framework Development document to `onboarding-design.md`, explicitly mark it as framework architecture/trust-contract material, and put the current 12-step workflow first.
+- [x] Update `docs/onboarding.md` to show delivery inspection/triage before shelf design and mark explicit interpretation as **coming soon**.
+- [x] Correct stale Step-5/Step-7 and historical Step-3/Step-9 references found during the authored-doc sweep.
+- [x] Add focused regressions for STEP 01–04 reset behavior and documentation ownership/current numbering.
+- [x] Advance the owner-test package version from 0.9.2 to 0.9.3.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.3 review head.
+
+Checkpoint: Issue #59 is implemented on draft PR #54 as the ContextCanon 0.9.3 owner-test candidate. The corrected head passes the complete deterministic suite (291 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next live-project owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: immutable handoff boundary and structured data — Issue #60
+
+Purpose: harden the first real semantic LLM handoff after the corporate-project STEP 04 run exposed both an operator-safety gap and an overly Markdown-centric structure contract.
+
+- [x] Treat the STEP-03 Evidence snapshot as immutable run identity for STEP 04–12; verify the supplied path is an Evidence snapshot before refreshing any framework-owned workspace surface.
+- [x] If PLAN already carries a snapshot checkpoint, refuse a different snapshot path before rewriting PLAN; a malformed/misordered command must never change the shell `SNAPSHOT` assignment.
+- [x] Add a regression reproducing a proposal path supplied in the snapshot position and prove PLAN remains byte-identical.
+- [x] Allow frozen UTF-8 structured text such as CSV/JSON/YAML to be first-class structure knowledge bodies; keep only Fixed Markdown/source-edit transformations Markdown-specific.
+- [x] Update structure/placement instructions and user docs so structured data may remain a Topic/Resource or technical authority in its natural representation.
+- [x] Make both semantic handoffs explicitly recommend a separate scratch IDE/agent project containing only the generated instruction + frozen Evidence; copy only the returned JSON back to the live onboarding workspace.
+- [x] Record future LLM-assisted inventory triage: derive candidate descriptions progressively from filename/path + title/front matter/introduction/first meaningful section (or schema/header/top-level keys for structured data), then read deeper only when needed. Human CSV review remains authoritative.
+- [x] Advance the owner-test package version from 0.9.3 to 0.9.4.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.4 review head.
+
+Checkpoint: Issue #60 is implemented on draft PR #54 as the ContextCanon 0.9.4 owner-test candidate. The corrected head passes the complete deterministic suite (293 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: deterministic per-step semantic handoffs — Issue #61
+
+Purpose: apply ContextCanon's own perfect-context principle to every external reasoning model used during onboarding.
+
+- [x] Add a reusable model-neutral Semantic Handoff Workspace registry; current semantic LLM steps are STEP 04 structure and STEP 08 placement, with future interpretation/reasoning steps able to register the same harness.
+- [x] Give every semantic step a separate disposable workspace rather than one long-lived agent project.
+- [x] Materialize exact frozen Evidence directly at repository-relative paths in each handoff root.
+- [x] Add only `.contextcanon-handoff/PLAN.md`, `INSTRUCTION.md`, `manifest.json`, and optional `RESULT.json` as the control surface.
+- [x] Generate a deterministic ZIP carrying exactly the same bound input set and never package `RESULT.json` or later IDE metadata.
+- [x] Make structure/placement instruction commands create their handoff directory + ZIP automatically.
+- [x] Add generic `onboard handoff <snapshot> --step 4|8` regeneration/export and explicit `--refresh` semantics.
+- [x] Add `onboard handoff-import <snapshot> --step 4|8 [RESULT]`; import only verifies one UTF-8 JSON object and preserves its exact text, while existing structure/placement validation remains a separate explicit command.
+- [x] Preserve an unchanged handoff's RESULT.json; refuse changed handoff inputs from silently destroying an existing result.
+- [x] Remove STEP-owned handoff directories/ZIPs through normal `onboard reset`.
+- [x] Keep previous raw LLM proposals/reviews out of later handoffs; accepted state reaches later models only through their ContextCanon-generated instruction.
+- [x] Advance the owner-test package version from 0.9.4 to 0.9.5.
+- [x] Regenerate self-hosted Context outputs and pass the complete deterministic/build/check/diff gate on the exact 0.9.5 review head.
+
+Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 owner-test candidate. The corrected head passes the complete deterministic suite (297 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next corporate-project STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
+
+## Owner walkthrough follow-up: STEP-08 semantic-handoff hardening — Issue #62
+
+Fast-run status — COMPLETE
+
+Scope: harden the already-implemented 0.9.5 semantic handoff for the real STEP-08 placement owner run, add only the smallest generic task-input selection seam, document the broader deterministic semantic-task harness boundary, and finish at a new exact-head owner-test candidate on draft PR #54.
+
+Deferred ceremony: batch related tests/docs/context/version work before the final full self-hosted/CI gate; keep focused verification and recovery checkpoints inside the block.
+
+Exit: this block closes when the STEP-08 owner-test candidate is exact-head green and the owner has the few concrete commands needed for the real “place the books” run.
+
+Purpose: prove and slightly generalize the existing Issue #61 implementation instead of rebuilding it.
+
+- [x] Audit STEP 04 and STEP 08 against the owner handoff contract; record only real gaps.
+- [x] Add the smallest registry/builder seam that lets a semantic task deterministically select a subset of frozen Evidence while preserving the current full-Evidence behavior for STEP 04/08.
+- [x] Add focused STEP-08 and custom-workspace regressions for deterministic ZIP/input binding, RESULT preservation/refresh, import-vs-validation separation, isolation from STEP-04 artifacts, and reset cleanup.
+- [x] Document Progressive Disclosure between semantic tasks, accepted-state-only transfer, future interpretation/inventory-triage reuse, and the boundary that ContextCanon prepares context/contracts but does not orchestrate providers/models.
+- [x] Advance the owner-test patch version to 0.9.6 and update durable current-state/PR wording.
+- [x] Regenerate self-hosted Context output and pass the complete deterministic suite, build/check with zero drift, diff hygiene, and an exact-head PR workflow. Keep PR #54 draft/unmerged.
+
+Checkpoint: Issue #62 is implemented on draft PR #54 as the ContextCanon 0.9.6 owner-test candidate. STEP 08 remains the same isolated handoff mechanism introduced by #61; this block hardens it, removes remaining step-specific registry branches, and adds the smallest frozen-Evidence selection seam for future semantic tasks. Run #1098 proved 301 deterministic tests plus zero self-hosted drift on the completed implementation tree. This closing state/plan/changelog commit is the final candidate and must itself pass the PR exact-head workflow before owner use. PR #54 remains draft and must not be merged without explicit project-owner approval.
+

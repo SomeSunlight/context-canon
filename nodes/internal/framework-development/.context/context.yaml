@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.2.0-draft"
+  version: "0.3.7-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -49,6 +49,7 @@ local:
   rules:
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "group": "Compiler architecture"}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "group": "Compiler architecture"}
+    - {"id": "CCI-012", "title": "Bind semantic reasoning to an explicit task context", "group": "Compiler architecture"}
     - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "group": "Onboarding trust"}
     - {"id": "CCI-007", "title": "Bind reusable Sources to the exact reviewed package", "group": "Onboarding trust"}
     - {"id": "CCI-008", "title": "Do not seize project-owned paths during first adoption", "group": "Onboarding trust"}
@@ -100,6 +101,7 @@ official:
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCI-001", "title": "Deterministic skeleton, semantic intelligence on top", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-005", "title": "Keep compiler stages separated", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
+    - {"id": "CCI-012", "title": "Bind semantic reasoning to an explicit task context", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-006", "title": "Keep new Node identity independent from Evidence identity", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-007", "title": "Bind reusable Sources to the exact reviewed package", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-008", "title": "Do not seize project-owned paths during first adoption", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
@@ -190,7 +192,7 @@ targets:
   - topic: "CCI-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
+    locator: "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCI-TOPIC-FORMATS"
@@ -246,7 +248,7 @@ resources:
   - {"source": "docs/architecture.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"}
   - {"source": "docs/compiler.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"}
   - {"source": "docs/concepts.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"}
-  - {"source": "docs/onboarding-reference.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"}
+  - {"source": "docs/onboarding-design.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"}
   - {"source": "docs/state.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"}
   - {"source": "docs/tests-and-ci.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"}
   - {"source": "docs/use-case-walkthrough.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"}
@@ -259,5 +261,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "aade01bab3a9cad870813f3f1736b223e0d6c145cba599a535d7d90f1d3811ad"
-  package_digest: "72ca921c8cbbe7115c6e82139e68c44006ee0813bce5ad62e87c823db7d151b2"
+  normalized_digest: "1178f9994672122b6ad2e4c1a3b80c813e59b267f2329c41db6fdd7c8c45b26e"
+  package_digest: "09876d3deb63ec617df037f53a8cd90ad42d7992d74ec195ef2e4d95314a2920"

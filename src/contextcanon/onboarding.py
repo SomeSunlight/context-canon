@@ -8,13 +8,14 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from .parser import ContextCanonError
 
 
 EVIDENCE_SCHEMA = "contextcanon/onboarding-evidence/v0"
 SELECTION_POLICY = "contextcanon/onboarding-default/v0"
+REVIEWED_INVENTORY_SELECTION_POLICY = "contextcanon/onboarding-reviewed-inventory/v0"
 MAX_EVIDENCE_FILE_BYTES = 1024 * 1024
 MAX_EVIDENCE_TOTAL_BYTES = 16 * 1024 * 1024
 _TEXT_SUFFIXES = {".md", ".mdx", ".rst", ".txt", ".adoc", ".asciidoc"}
@@ -79,19 +80,32 @@ class EvidenceEntry:
     sha256: str
     size: int
     reason: str
+    kind: str | None = None
+    handling: str | None = None
+    description: str | None = None
+    note: str | None = None
 
     @property
     def snapshot_path(self) -> str:
         return f"evidence/{self.path}"
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "path": self.path,
             "reason": self.reason,
             "sha256": self.sha256,
             "size": self.size,
             "snapshot": self.snapshot_path,
         }
+        if self.kind is not None:
+            result["kind"] = self.kind
+        if self.handling is not None:
+            result["handling"] = self.handling
+        if self.description is not None:
+            result["description"] = self.description
+        if self.note:
+            result["note"] = self.note
+        return result
 
 
 @dataclass(frozen=True)
@@ -260,7 +274,13 @@ def _explicit_path(project_root: Path, value: str) -> str:
     return path
 
 
-def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -> tuple[EvidenceEntry | None, ExcludedEvidence | None, bytes | None]:
+def _collect_entry(
+    project_root: Path,
+    path: str,
+    reason: str,
+    explicit: bool,
+    metadata: Mapping[str, str] | None = None,
+) -> tuple[EvidenceEntry | None, ExcludedEvidence | None, bytes | None]:
     blocked = _blocked_reason(path)
     if blocked:
         if explicit:
@@ -297,11 +317,24 @@ def _collect_entry(project_root: Path, path: str, reason: str, explicit: bool) -
         return None, ExcludedEvidence(path, "non-utf8"), None
 
     digest = hashlib.sha256(data).hexdigest()
-    return EvidenceEntry(path=path, sha256=digest, size=size, reason=reason), None, data
+    metadata = metadata or {}
+    return EvidenceEntry(
+        path=path,
+        sha256=digest,
+        size=size,
+        reason=reason,
+        kind=metadata.get("kind"),
+        handling=metadata.get("handling"),
+        description=metadata.get("description"),
+        note=metadata.get("note"),
+    ), None, data
 
 
 def _manifest_payload(
-    included: tuple[EvidenceEntry, ...], excluded: tuple[ExcludedEvidence, ...]
+    included: tuple[EvidenceEntry, ...],
+    excluded: tuple[ExcludedEvidence, ...],
+    *,
+    selection_policy: str = SELECTION_POLICY,
 ) -> dict[str, object]:
     return {
         "schema": EVIDENCE_SCHEMA,
@@ -309,7 +342,7 @@ def _manifest_payload(
             "accepted_encoding": "utf-8",
             "max_file_bytes": MAX_EVIDENCE_FILE_BYTES,
             "max_total_bytes": MAX_EVIDENCE_TOTAL_BYTES,
-            "policy": SELECTION_POLICY,
+            "policy": selection_policy,
             "repository_listing": "git ls-files --cached --others --exclude-standard",
         },
         "included": [entry.to_dict() for entry in included],
@@ -365,19 +398,29 @@ def prepare_onboarding_evidence(
     project: Path,
     *,
     explicit_paths: Iterable[str] = (),
+    selected_reasons: Mapping[str, str] | None = None,
+    selected_metadata: Mapping[str, Mapping[str, str]] | None = None,
+    selection_policy: str = SELECTION_POLICY,
 ) -> PreparedEvidence:
     project_root = _require_git_repository_root(project)
 
     selected: dict[str, tuple[str, bool]] = {}
-    for path in _repository_paths(project_root):
-        # ContextCanon/derived trees are outside the project-evidence domain. In
-        # particular, an earlier onboarding snapshot must never become a new
-        # candidate merely because it contains copied docs/ paths.
-        if _blocked_reason(path) == "framework-or-derived-path":
-            continue
-        reason = _default_reason(path)
-        if reason:
-            selected[path] = (reason, False)
+    if selected_reasons is None:
+        for path in _repository_paths(project_root):
+            # ContextCanon/derived trees are outside the project-evidence domain. In
+            # particular, an earlier onboarding snapshot must never become a new
+            # candidate merely because it contains copied docs/ paths.
+            if _blocked_reason(path) == "framework-or-derived-path":
+                continue
+            reason = _default_reason(path)
+            if reason:
+                selected[path] = (reason, False)
+    else:
+        for value, reason in selected_reasons.items():
+            path = _explicit_path(project_root, value)
+            if not reason:
+                raise ContextCanonError(f"Reviewed inventory Evidence reason must not be empty: {path}")
+            selected[path] = (reason, True)
 
     for value in explicit_paths:
         path = _explicit_path(project_root, value)
@@ -389,7 +432,13 @@ def prepare_onboarding_evidence(
     total_bytes = 0
     for path in sorted(selected):
         reason, explicit = selected[path]
-        entry, excluded, data = _collect_entry(project_root, path, reason, explicit)
+        entry, excluded, data = _collect_entry(
+            project_root,
+            path,
+            reason,
+            explicit,
+            None if selected_metadata is None else selected_metadata.get(path),
+        )
         if entry is not None and data is not None:
             total_bytes += entry.size
             if total_bytes > MAX_EVIDENCE_TOTAL_BYTES:
@@ -405,7 +454,7 @@ def prepare_onboarding_evidence(
 
     included = tuple(included_items)
     excluded = tuple(excluded_items)
-    payload = _manifest_payload(included, excluded)
+    payload = _manifest_payload(included, excluded, selection_policy=selection_policy)
     digest = _evidence_digest(payload)
     manifest = _manifest_bytes(payload, digest)
 

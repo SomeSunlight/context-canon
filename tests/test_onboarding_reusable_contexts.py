@@ -59,7 +59,7 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 
@@ -67,7 +67,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertTrue(created)
             self.assertFalse(first.is_complete)
             text = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("# STEP 05 — Reusable Contexts", text)
+            self.assertIn("# STEP 07 — Reusable Contexts", text)
             self.assertNotIn("workflow-node", text)
 
             text = text.replace(
@@ -116,7 +116,7 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 

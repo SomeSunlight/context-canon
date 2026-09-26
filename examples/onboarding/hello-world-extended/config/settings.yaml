@@ -1,0 +1,4 @@
+preview:
+  enabled: true
+api:
+  path: /greeting

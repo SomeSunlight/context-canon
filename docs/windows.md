@@ -18,6 +18,14 @@ You can also inspect Microsoft Defender exclusions from PowerShell where policy 
 
 ContextCanon cannot determine which background process owns a transient Windows lock and cannot safely override a scanner or organization policy.
 
+## Errno 13 is not automatically WinError 5
+
+Windows/Python can also surface a generic `PermissionError: [Errno 13] Permission denied`. ContextCanon does **not** automatically treat that as the known transient scanner-lock case unless Windows actually reports WinError 5 / access denied.
+
+A generic Errno 13 can instead indicate a normal ACL problem or that software attempted a file operation on the wrong filesystem type. For example, Git may expose a submodule/gitlink as one directory entry; inventory must recognize that directory rather than try to open it as a file.
+
+The CLI therefore preserves the exact operation/path context for generic permission failures and reserves the scanner guidance below for the actual WinError-5/access-denied shape.
+
 ## When `WinError 5` still appears
 
 ContextCanon retries the bounded atomic operations that are known to suffer short-lived locks. If Windows still denies the operation, the CLI reports the original operation/error together with this scanner guidance instead of exposing a Python traceback.

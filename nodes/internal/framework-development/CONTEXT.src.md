@@ -1,5 +1,5 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.2.0-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.7-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
@@ -51,6 +51,10 @@ OVERRIDE IMPORTED RULE
 - **Keep compiler stages separated:** Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.
   Why: Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth.
   <!-- ctx:rule id="CCI-005" -->
+
+- **Bind semantic reasoning to an explicit task context:** Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.
+  Why: Semantic intelligence is most reliable when ContextCanon supplies the smallest sufficient world and resumes deterministic control at a strict result boundary; this also makes the same task viable across hosted and smaller local models without coupling canonical behavior to a provider.
+  <!-- ctx:rule id="CCI-012" -->
 
 ### Onboarding trust
 
@@ -137,7 +141,7 @@ Optional:
 When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:
 
 Required:
-- Resource: `docs/onboarding-reference.md`
+- Resource: `docs/onboarding-design.md`
 <!-- ctx:topic id="CCI-TOPIC-ONBOARDING" -->
 
 ### Source and official formats
