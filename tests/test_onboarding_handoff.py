@@ -20,6 +20,7 @@ from contextcanon.onboarding_handoff import (
 )
 from contextcanon.onboarding_reset import reset_onboarding
 from contextcanon.onboarding_workspace import (
+    PLACEMENT_PROPOSAL_NAME,
     STRUCTURE_INSTRUCTION_NAME,
     STRUCTURE_PROPOSAL_NAME,
     open_onboarding_workspace,
@@ -45,6 +46,10 @@ class OnboardingHandoffTests(unittest.TestCase):
         write_utf8(
             workspace.structure_instruction_path,
             "# Structure task\nReturn one JSON object.\n",
+        )
+        write_utf8(
+            workspace.placement_instruction_path,
+            "# Placement task\nReturn one JSON object.\n",
         )
         return repo, prepared, workspace
 
@@ -135,6 +140,115 @@ class OnboardingHandoffTests(unittest.TestCase):
         self.assertEqual(imported.result_path.read_text(encoding="utf-8"), expected)
         self.assertEqual(workspace.structure_proposal_path.read_text(encoding="utf-8"), expected)
         self.assertEqual(imported.canonical_result_path, workspace.structure_proposal_path)
+
+
+    def test_step8_handoff_is_isolated_selective_and_deterministic(self):
+        _, prepared, workspace = self.make_run()
+        workspace.structure_proposal_path.write_text('{"old":"structure proposal"}\n', encoding="utf-8")
+        workspace.structure_path.write_text("# Human accepted structure\n", encoding="utf-8")
+
+        first = build_semantic_handoff(
+            prepared.snapshot_root,
+            workspace.root,
+            step=8,
+            evidence_paths=["docs/guide.md"],
+        )
+        first_zip_sha = hashlib.sha256(first.zip_path.read_bytes()).hexdigest()
+
+        self.assertTrue((first.root / "docs" / "guide.md").is_file())
+        self.assertFalse((first.root / "data" / "table.csv").exists())
+        self.assertFalse((first.root / "evidence").exists())
+        self.assertFalse((first.root / workspace.structure_proposal_path.name).exists())
+        self.assertFalse((first.root / workspace.structure_path.name).exists())
+        self.assertFalse((first.root / "handoffs" / "STEP-04-structure").exists())
+
+        manifest = json.loads(first.manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["step"], 8)
+        self.assertEqual(manifest["canonical_result_name"], PLACEMENT_PROPOSAL_NAME)
+        self.assertEqual([entry["path"] for entry in manifest["evidence"]], ["docs/guide.md"])
+
+        (first.root / ".vscode").mkdir()
+        (first.root / ".vscode" / "settings.json").write_text("{}\n", encoding="utf-8")
+        second = build_semantic_handoff(
+            prepared.snapshot_root,
+            workspace.root,
+            step=8,
+            evidence_paths=["docs/guide.md"],
+        )
+        second_zip_sha = hashlib.sha256(second.zip_path.read_bytes()).hexdigest()
+
+        self.assertFalse(second.created)
+        self.assertEqual(first.handoff_digest, second.handoff_digest)
+        self.assertEqual(first_zip_sha, second_zip_sha)
+        with zipfile.ZipFile(second.zip_path) as archive:
+            names = archive.namelist()
+        self.assertIn("STEP-08-placement/docs/guide.md", names)
+        self.assertFalse(any("/.vscode/" in name for name in names))
+        self.assertNotIn(
+            f"STEP-08-placement/{HANDOFF_CONTROL_DIR}/{HANDOFF_RESULT_NAME}",
+            names,
+        )
+
+    def test_step8_preserves_result_and_changed_inputs_require_explicit_refresh(self):
+        _, prepared, workspace = self.make_run()
+        handoff = build_semantic_handoff(prepared.snapshot_root, workspace.root, step=8)
+        handoff.result_path.write_text('{"schema":"old-placement"}\n', encoding="utf-8")
+
+        repeated = build_semantic_handoff(prepared.snapshot_root, workspace.root, step=8)
+        self.assertEqual(
+            repeated.result_path.read_text(encoding="utf-8"),
+            '{"schema":"old-placement"}\n',
+        )
+
+        write_utf8(workspace.placement_instruction_path, "# Changed placement task\nReturn JSON.\n")
+        with self.assertRaisesRegex(ContextCanonError, "inputs changed but RESULT.json already exists"):
+            build_semantic_handoff(prepared.snapshot_root, workspace.root, step=8)
+
+        refreshed = build_semantic_handoff(
+            prepared.snapshot_root,
+            workspace.root,
+            step=8,
+            refresh=True,
+        )
+        self.assertTrue(refreshed.created)
+        self.assertFalse(refreshed.result_path.exists())
+
+    def test_step8_import_is_mechanical_and_targets_placement_proposal(self):
+        _, prepared, workspace = self.make_run()
+        build_semantic_handoff(prepared.snapshot_root, workspace.root, step=8)
+        external = Path(tempfile.mkdtemp()) / "placement-answer.json"
+        external.write_text('{"z":8,"not":"validated placement"}\n', encoding="utf-8")
+
+        imported = import_semantic_handoff_result(
+            prepared.snapshot_root,
+            workspace.root,
+            step=8,
+            result_path=external,
+        )
+
+        expected = '{"z":8,"not":"validated placement"}\n'
+        self.assertEqual(imported.result_path.read_text(encoding="utf-8"), expected)
+        self.assertEqual(workspace.placement_proposal_path.read_text(encoding="utf-8"), expected)
+        self.assertEqual(imported.canonical_result_path, workspace.placement_proposal_path)
+
+    def test_reset_from_step8_removes_only_step8_handoff_in_custom_workspace(self):
+        repo, prepared, _ = self.make_run()
+        custom_root = repo / "custom-onboarding"
+        workspace = open_onboarding_workspace(prepared.snapshot_root, custom_root, create=True)
+        write_utf8(workspace.structure_instruction_path, "# Structure task\nReturn JSON.\n")
+        write_utf8(workspace.placement_instruction_path, "# Placement task\nReturn JSON.\n")
+        step4 = build_semantic_handoff(prepared.snapshot_root, workspace.root, step=4)
+        step8 = build_semantic_handoff(prepared.snapshot_root, workspace.root, step=8)
+
+        result = reset_onboarding(repo, from_step=8, workspace_root=custom_root)
+
+        self.assertTrue(step4.root.is_dir())
+        self.assertTrue(step4.zip_path.is_file())
+        self.assertFalse(step8.root.exists())
+        self.assertFalse(step8.zip_path.exists())
+        self.assertIn("handoffs/STEP-08-placement/", result["workspace_files_removed"])
+        self.assertIn("handoffs/STEP-08-placement.zip", result["workspace_files_removed"])
+        self.assertNotIn("handoffs/STEP-04-structure/", result["workspace_files_removed"])
 
     def test_reset_from_step4_removes_disposable_handoff_and_zip(self):
         repo, prepared, workspace = self.make_run()
