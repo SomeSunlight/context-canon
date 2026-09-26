@@ -10,6 +10,21 @@ Follow-up Issues #39–#43 record the next owner-test findings but are not an ac
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
 
+
+## Active development block: Development Workflow providers — Issue #63
+
+Purpose: separate the reusable Development Workflow contract from its concrete GitHub infrastructure without introducing new abstract vocabulary into normal LLM work, and establish the smallest provider seam needed before draft PR #54 resumes owner testing.
+
+- [x] Keep Development Workflow as the reusable contract using familiar Issue/branch/Pull Request/review/checks/merge vocabulary; remove only assumptions that unnecessarily bind those concepts to github.com.
+- [x] Add a GitHub provider Node that composes Development Workflow and binds the contract to ordinary github.com infrastructure.
+- [x] Add a GitHub Local provider Node that composes Development Workflow and defines the minimal local GitHub-compatible surface, with runtime/tooling details behind progressive disclosure.
+- [x] Keep this block library-local: no github.local runtime, no broad root README rewrite, no Framework Development migration, and no onboarding-semantic changes from draft PR #54.
+- [x] Add focused deterministic composition/build coverage, regenerate affected packages, run the complete deterministic suite and `contextcanon check --all .`, then prepare a review PR. Do not merge without explicit project-owner approval.
+
+Integration boundary: draft PR #54 on `agent/onboarding-inventory` remains frozen during this block. After Issue #63 is accepted into `main`, merge that new `main` into PR #54 and rerun its complete exact-head onboarding gate before owner acceptance.
+
+Checkpoint: draft PR #64 now contains only the minimal provider seam. Development Workflow semantics remain byte-identical; GitHub and GitHub Local compose the existing `0.3.0-draft` package without Foundation, and GitHub Local keeps runtime/MCP details behind a provider Topic while requiring visible `issues/` documentation. The first CI run passed all unit/repository tests and failed only on expected generated drift; compiler-generated provider packages were then committed. Exact product head `e7e9158036c692d59f1b84b4f3039df2a66c10f2` passed the complete repository workflow including zero generated drift. This PLAN closure commit must receive the same exact-head gate before review; PR #64 remains draft and unmerged pending explicit project-owner approval.
+
 ## Active development block: fresh first-adoption root materialization — Issue #30
 
 Purpose: restore genuine from-scratch structure-first onboarding without weakening the collision and identity protections added for repeated onboarding.
