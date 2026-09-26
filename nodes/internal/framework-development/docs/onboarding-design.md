@@ -51,13 +51,39 @@ The future interpretation stage is deliberately shown before shelf/placement rea
 
 The reasoning model is replaceable. It proposes structure or placement only inside an exact task/Evidence boundary. Deterministic code owns identity, hashes, validation, state transitions and publication. The project owner owns architecture and acceptance.
 
-The task/Evidence boundary is also a **filesystem boundary** implemented by ContextCanon itself. Every external-LLM step receives a fresh disposable **Semantic Handoff Workspace**. Current registry entries are STEP 04 structure and STEP 08 placement; future interpretation or other reasoning steps reuse the same harness instead of inventing model-specific integrations.
+The task/Evidence boundary is also a **filesystem boundary** implemented by ContextCanon itself. Every external-LLM step receives a fresh disposable **Semantic Handoff Workspace**. Current registry entries are STEP 04 structure and STEP 08 placement; the registry owns the task identity, instruction/result names and next deterministic validator. Future interpretation or other reasoning steps extend that same contract instead of adding step-specific branches or model-specific integrations.
 
-A handoff materializes exact frozen Evidence directly at its repository-relative paths and adds only `.contextcanon-handoff/` with a one-task PLAN, exact generated instruction, deterministic manifest and optional RESULT.json. ContextCanon also creates a deterministic ZIP containing the same inputs and excluding RESULT.json. An IDE/agent opens only that directory; an approved external model may receive the ZIP. The model never needs the live repository, `.context/`, the human onboarding PLAN, or permission to execute ContextCanon.
+A handoff materializes its **deterministically selected subset of frozen Evidence** directly at repository-relative paths and adds only `.contextcanon-handoff/` with a one-task PLAN, exact generated instruction, deterministic manifest and optional RESULT.json. STEP 04 and STEP 08 currently select the complete frozen Evidence snapshot because both tasks genuinely need the broad project picture. The builder nevertheless accepts an explicit frozen-Evidence path set so a future narrower task can bind less context without changing the handoff format. Selection may only choose bytes already present in the immutable snapshot; it is not a route back to opportunistic live-repository search.
 
-Each step gets a **different** handoff directory. Repeated Evidence bytes are preferable to carrying previous model chatter, raw proposals or abandoned intermediate reasoning into a later task. Accepted state reaches later semantic steps only after ContextCanon has deterministically incorporated it into that step's generated instruction. This is the onboarding form of Progressive Disclosure: the harness reduces both the token/search space and the number of possible actions before asking a model to reason.
+ContextCanon also creates a deterministic ZIP containing the same bound inputs and excluding RESULT.json. An IDE/agent opens only that directory; an approved external model may receive the ZIP. The model never needs the live repository, `.context/`, the human onboarding PLAN, or permission to execute ContextCanon.
+
+Each semantic task gets a **different** handoff directory. Repeated Evidence bytes are preferable to carrying previous model chatter, raw proposals or abandoned intermediate reasoning into a later task. Accepted state reaches a later semantic task only after ContextCanon has deterministically incorporated that state into the new task's instruction or other explicitly bound accepted-state input. STEP 08 therefore sees what survived the structure and reusable-Context human gates, not what the STEP-04 model happened to think along the way. This is Progressive Disclosure applied **between reasoning passes**: reduce the search space, semantic ambiguity and possible actions before asking a model to reason.
+
+The general pattern is deliberately smaller than an agent platform:
+
+```text
+canonical / frozen inputs
+        ↓
+deterministic task-specific context selection
+        ↓
+self-contained semantic handoff
+        ↓
+policy-approved model chosen by the human
+        ↓
+one strict result contract
+        ↓
+deterministic import + validation
+        ↓
+human acceptance
+        ↓
+canonical state
+```
+
+ContextCanon prepares context and deterministic boundaries; it does not schedule models, choose providers, call vendor APIs or let a successful model response advance the workflow automatically. This architecture is useful for powerful hosted models, but it also gives smaller local models a much better problem: a compact relevant world instead of an entire repository to rediscover.
 
 The handoff is a transport surface, not durable project knowledge. Import copies exactly one valid JSON object into the canonical proposal path; existing structure/placement validation remains a separate explicit command. Recreating an unchanged handoff preserves RESULT.json, while changed inputs refuse to destroy an existing result unless the operator explicitly requests `--refresh`.
+
+Future interpretation should use the same separation rigorously: **raw Evidence ≠ reviewed interpretation ≠ canonical Context**. Chat transcripts, meeting notes, prestudy material or contradictory historical records remain raw inputs; a semantic task may propose an interpretation in its own result contract; deterministic validation plus a human gate must still decide what, if anything, becomes accepted project state.
 
 The frozen Evidence identity is sacred for STEP 04–12. Once the generated PLAN carries a snapshot checkpoint, every later workspace refresh must prove that the supplied path is a prepared Evidence snapshot and that it is the **same** snapshot. A malformed or misordered CLI invocation must fail before rewriting the PLAN or its shell-native `SNAPSHOT` assignment.
 
