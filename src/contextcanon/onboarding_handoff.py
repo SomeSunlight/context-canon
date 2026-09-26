@@ -6,8 +6,9 @@ import shutil
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from typing import Iterable
 
-from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
+from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
 from .onboarding_workspace import write_utf8
 from .parser import ContextCanonError
 
@@ -27,6 +28,7 @@ class SemanticHandoffSpec:
     slug: str
     instruction_name: str
     proposal_name: str
+    validator_command: str
 
     @property
     def directory_name(self) -> str:
@@ -39,12 +41,14 @@ HANDOFF_SPECS = {
         slug="structure",
         instruction_name="STEP-04a-structure-instruction.md",
         proposal_name="STEP-04b-structure-proposal.json",
+        validator_command="structure-validate",
     ),
     8: SemanticHandoffSpec(
         step=8,
         slug="placement",
         instruction_name="STEP-08a-placement-instruction.md",
         proposal_name="STEP-08b-placement-proposal.json",
+        validator_command="placement-validate",
     ),
 }
 
@@ -69,6 +73,10 @@ def handoff_spec(step: int) -> SemanticHandoffSpec:
         raise ContextCanonError(
             f"Unsupported semantic handoff STEP {step}; supported steps: {supported}"
         ) from exc
+
+
+def semantic_handoff_steps() -> tuple[int, ...]:
+    return tuple(sorted(HANDOFF_SPECS))
 
 
 def handoff_relative_paths(step: int) -> tuple[str, str]:
@@ -134,6 +142,7 @@ Expected canonical result after operator import: `{spec.proposal_name}`
 def _manifest(
     spec: SemanticHandoffSpec,
     snapshot: EvidenceSnapshot,
+    entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
 ) -> dict[str, object]:
     evidence = [
@@ -142,7 +151,7 @@ def _manifest(
             "sha256": entry.sha256,
             "size": entry.size,
         }
-        for entry in snapshot.entries
+        for entry in entries
     ]
     return {
         "schema": HANDOFF_SCHEMA,
@@ -155,6 +164,31 @@ def _manifest(
         "canonical_result_name": spec.proposal_name,
         "evidence": evidence,
     }
+
+
+def _selected_evidence(
+    snapshot: EvidenceSnapshot,
+    evidence_paths: Iterable[str] | None,
+) -> tuple[SnapshotEvidence, ...]:
+    if evidence_paths is None:
+        return snapshot.entries
+
+    requested = tuple(evidence_paths)
+    if any(not isinstance(path, str) or not path for path in requested):
+        raise ContextCanonError("Semantic handoff Evidence selection must contain non-empty repository-relative path strings")
+    if len(set(requested)) != len(requested):
+        raise ContextCanonError("Semantic handoff Evidence selection contains duplicate paths")
+
+    by_path = snapshot.by_path
+    unknown = sorted(path for path in requested if path not in by_path)
+    if unknown:
+        raise ContextCanonError(
+            "Semantic handoff Evidence selection contains paths outside the frozen snapshot: "
+            + ", ".join(unknown)
+        )
+
+    selected = set(requested)
+    return tuple(entry for entry in snapshot.entries if entry.path in selected)
 
 
 def _read_owned_manifest(path: Path) -> dict[str, object]:
@@ -175,6 +209,7 @@ def _expected_inputs(
     root: Path,
     spec: SemanticHandoffSpec,
     snapshot: EvidenceSnapshot,
+    entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
     manifest_bytes: bytes,
 ) -> dict[Path, bytes]:
@@ -184,7 +219,7 @@ def _expected_inputs(
         root / HANDOFF_CONTROL_DIR / HANDOFF_MANIFEST_NAME: manifest_bytes,
     }
     evidence_root = snapshot.root / "evidence"
-    for entry in snapshot.entries:
+    for entry in entries:
         source = evidence_root.joinpath(*PurePosixPath(entry.path).parts)
         try:
             file_bytes = source.read_bytes()
@@ -260,6 +295,7 @@ def build_semantic_handoff(
     *,
     step: int,
     instruction_path: Path | None = None,
+    evidence_paths: Iterable[str] | None = None,
     refresh: bool = False,
 ) -> SemanticHandoff:
     spec = handoff_spec(step)
@@ -283,12 +319,13 @@ def build_semantic_handoff(
 
     root = workspace / HANDOFFS_DIR_NAME / spec.directory_name
     zip_path = workspace / HANDOFFS_DIR_NAME / f"{spec.directory_name}.zip"
-    manifest_value = _manifest(spec, snapshot, instruction_bytes)
+    entries = _selected_evidence(snapshot, evidence_paths)
+    manifest_value = _manifest(spec, snapshot, entries, instruction_bytes)
     manifest_bytes = (
         json.dumps(manifest_value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")
     handoff_digest = _sha256(_canonical_json(manifest_value))
-    expected = _expected_inputs(root, spec, snapshot, instruction_bytes, manifest_bytes)
+    expected = _expected_inputs(root, spec, snapshot, entries, instruction_bytes, manifest_bytes)
     result_path = root / HANDOFF_CONTROL_DIR / HANDOFF_RESULT_NAME
 
     created = not root.exists()
@@ -334,11 +371,13 @@ def import_semantic_handoff_result(
     *,
     step: int,
     result_path: Path | None = None,
+    evidence_paths: Iterable[str] | None = None,
 ) -> SemanticHandoff:
     handoff = build_semantic_handoff(
         snapshot_root,
         workspace_root,
         step=step,
+        evidence_paths=evidence_paths,
         refresh=False,
     )
     source = result_path.resolve() if result_path is not None else handoff.result_path
