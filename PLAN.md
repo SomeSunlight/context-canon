@@ -10,6 +10,19 @@ Follow-up Issues #39–#43 record the next owner-test findings but are not an ac
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
 
+
+## Accepted prerequisite: Development Workflow providers — Issue #63
+
+Purpose: separate the reusable Development Workflow contract from its concrete GitHub infrastructure without introducing new abstract vocabulary into normal LLM work.
+
+- [x] Keep Development Workflow as the reusable Issue/branch/Pull Request/review/checks/merge contract.
+- [x] Add GitHub and GitHub Local provider Nodes that compose the unchanged Development Workflow Source.
+- [x] Keep the executable `github.local` runtime outside ContextCanon and its operational details behind progressive disclosure.
+- [x] Keep local Issues visible as project documentation under `issues/`.
+- [x] Verify the provider Nodes deterministically with zero generated drift.
+
+Checkpoint: PR #64 was owner-reviewed and squash-merged to `main` as `ee6f21203edb26ebec9eda25c45b00fefc660e83`. Development Workflow semantics remain byte-identical; the new GitHub and GitHub Local provider Nodes are now the accepted reusable infrastructure bindings. PR #54 resumes from this accepted provider baseline without expanding its onboarding scope.
+
 ## Active development block: fresh first-adoption root materialization — Issue #30
 
 Purpose: restore genuine from-scratch structure-first onboarding without weakening the collision and identity protections added for repeated onboarding.
