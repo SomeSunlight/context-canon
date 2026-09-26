@@ -114,12 +114,14 @@ Generate the placement task:
 contextcanon onboard placement-instruction .context/onboarding/<evidence-digest>
 ```
 
-STEP 08 creates a separate `handoffs/STEP-08-placement/` workspace and ZIP. Never reuse the STEP-04 agent workspace.
+STEP 08 creates a separate `handoffs/STEP-08-placement/` workspace and ZIP. Never reuse the STEP-04 agent workspace. The handoff binds its input set from the frozen snapshot manifest; files an IDE later adds inside the directory are not semantic inputs and are not added to regenerated ZIPs.
 
 ```text
 contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 8
 contextcanon onboard placement-validate .context/onboarding/<evidence-digest>
 ```
+
+If onboarding uses a non-default visible workspace, pass the same `--workspace PATH` to instruction, handoff/import, validation and reset commands. The STEP-specific handoff stays below that workspace; it never falls back to the default directory silently.
 
 After import, `STEP-08b-placement-proposal.json` is the canonical machine proposal:
 
