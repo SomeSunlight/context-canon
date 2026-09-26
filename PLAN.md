@@ -690,3 +690,22 @@ Purpose: apply ContextCanon's own perfect-context principle to every external re
 
 Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 owner-test candidate. The corrected head passes the complete deterministic suite (297 tests), self-hosted build/check with zero generated drift, and diff hygiene. It is ready for the next corporate-project STEP-04 owner run. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: STEP-08 semantic-handoff hardening — Issue #62
+
+Fast-run status — ACTIVE
+
+Scope: harden the already-implemented 0.9.5 semantic handoff for the real STEP-08 placement owner run, add only the smallest generic task-input selection seam, document the broader deterministic semantic-task harness boundary, and finish at a new exact-head owner-test candidate on draft PR #54.
+
+Deferred ceremony: batch related tests/docs/context/version work before the final full self-hosted/CI gate; keep focused verification and recovery checkpoints inside the block.
+
+Exit: this block closes when the STEP-08 owner-test candidate is exact-head green and the owner has the few concrete commands needed for the real “place the books” run.
+
+Purpose: prove and slightly generalize the existing Issue #61 implementation instead of rebuilding it.
+
+- [ ] Audit STEP 04 and STEP 08 against the owner handoff contract; record only real gaps.
+- [ ] Add the smallest registry/builder seam that lets a semantic task deterministically select a subset of frozen Evidence while preserving the current full-Evidence behavior for STEP 04/08.
+- [ ] Add focused STEP-08 and custom-workspace regressions for deterministic ZIP/input binding, RESULT preservation/refresh, import-vs-validation separation, isolation from STEP-04 artifacts, and reset cleanup.
+- [ ] Document Progressive Disclosure between semantic tasks, accepted-state-only transfer, future interpretation/inventory-triage reuse, and the boundary that ContextCanon prepares context/contracts but does not orchestrate providers/models.
+- [ ] Advance the owner-test patch version to 0.9.6 and update durable current-state/PR wording.
+- [ ] Regenerate self-hosted Context output and pass the complete deterministic suite, build/check with zero drift, diff hygiene, and an exact-head PR workflow. Keep PR #54 draft/unmerged.
+
