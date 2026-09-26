@@ -18,7 +18,9 @@ from .onboarding_handoff import (
     HANDOFF_PLAN_NAME,
     build_semantic_handoff,
     handoff_relative_paths,
+    handoff_spec,
     import_semantic_handoff_result,
+    semantic_handoff_steps,
 )
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
@@ -578,7 +580,7 @@ def main(argv: list[str] | None = None) -> int:
         help="prepare or refresh one isolated semantic LLM workspace and deterministic ZIP",
     )
     onboard_handoff.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
-    onboard_handoff.add_argument("--step", type=int, choices=(4, 8), required=True, help="semantic onboarding step")
+    onboard_handoff.add_argument("--step", type=int, choices=semantic_handoff_steps(), required=True, help="semantic onboarding step")
     onboard_handoff.add_argument(
         "--refresh",
         action="store_true",
@@ -591,7 +593,7 @@ def main(argv: list[str] | None = None) -> int:
         help="copy one semantic handoff JSON result into the canonical onboarding proposal path",
     )
     onboard_handoff_import.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
-    onboard_handoff_import.add_argument("--step", type=int, choices=(4, 8), required=True, help="semantic onboarding step")
+    onboard_handoff_import.add_argument("--step", type=int, choices=semantic_handoff_steps(), required=True, help="semantic onboarding step")
     onboard_handoff_import.add_argument(
         "result",
         nargs="?",
@@ -1053,7 +1055,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print(f"imported semantic handoff STEP {args.step:02d} result")
                 print(f"Canonical proposal: {handoff.canonical_result_path}")
-                next_command = "structure-validate" if args.step == 4 else "placement-validate"
+                next_command = handoff_spec(args.step).validator_command
                 print(f"Next: contextcanon onboard {next_command} {_snapshot_cli(snapshot)}")
                 return 0
 
