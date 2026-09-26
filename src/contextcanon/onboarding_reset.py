@@ -39,7 +39,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
-from .onboarding_handoff import handoff_relative_paths
+from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
 from .outputs import expected_outputs
 from .parser import ContextCanonError, find_repo_root
@@ -67,7 +67,7 @@ _ARTIFACT_STEPS = {
 }
 _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGACY_ARTIFACT_NAMES.items()}
 _LEGACY_STEPS.update({"STEP-08-placement": 10, "STEP-08-source-edits": 10})
-for _handoff_step in (4, 8):
+for _handoff_step in semantic_handoff_steps():
     _handoff_dir, _handoff_zip = handoff_relative_paths(_handoff_step)
     _ARTIFACT_STEPS[_handoff_dir] = _handoff_step
     _ARTIFACT_STEPS[_handoff_zip] = _handoff_step
