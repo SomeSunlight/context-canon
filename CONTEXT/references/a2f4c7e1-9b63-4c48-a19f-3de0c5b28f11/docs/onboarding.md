@@ -207,7 +207,9 @@ contextcanon-onboarding/
 └── STEP-04a-structure-instruction.md
 ```
 
-Semantic LLM workspaces are deliberately **disposable transport surfaces**, not another knowledge store. Every external reasoning step receives a fresh handoff assembled only from immutable Evidence plus that step's deterministic instruction. Earlier raw LLM proposals are not fed to later models. This keeps context narrow for strong hosted agents and especially for smaller local models.
+Semantic LLM workspaces are deliberately **disposable transport surfaces**, not another knowledge store. Every external reasoning step receives a fresh handoff assembled only from immutable Evidence plus that step's deterministic instruction and accepted state required for the task. Earlier raw LLM proposals are not fed to later models. This keeps context narrow for strong hosted agents and especially for smaller local models.
+
+STEP 04 and STEP 08 currently receive the complete frozen Evidence set because both need the broad project picture. That is a task policy, not a permanent limitation of the handoff contract: future narrower semantic tasks may bind only a deterministic subset of the same frozen snapshot. Repeating immutable bytes across isolated handoffs is intentional; semantic isolation is more important than speculative provider/file-cache savings.
 
 `contextcanon-onboarding/PLAN.md` is the operator console for the in-progress onboarding. It contains the twelve numbered steps, with each step's explanation, checkbox, exact copy/paste command, and artifact guidance in one place, plus the external-LLM handoffs, human gates, reset commands, and latest ContextCanon-validated checkpoint. When returning after a pause, start there rather than reconstructing the command sequence from memory. `README.md` explains the workspace and points back to the PLAN.
 

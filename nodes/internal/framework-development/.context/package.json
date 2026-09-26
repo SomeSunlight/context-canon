@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "a5d31d3c344e1a92f41a678a3131e2253ac2e3df013f3b0190839d0f9c761f30",
-    "package": "19f5d6e21a6b7a9c279f484309c6fc60c3030b58e5f2f436c6dd8b711c70d6be"
+    "normalized": "1178f9994672122b6ad2e4c1a3b80c813e59b267f2329c41db6fdd7c8c45b26e",
+    "package": "09876d3deb63ec617df037f53a8cd90ad42d7992d74ec195ef2e4d95314a2920"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "7a2aea711ae704d4962e49c46a6ddf069a7fea074bb9264456934b7f130d13c5",
-      "size": 18478
+      "sha256": "f99657fe674da926218e5dead55073b9bdfed09e684c6d87e5afcce3b6dbc620",
+      "size": 18830
     },
     {
       "path": "CONTEXT/README.md",
@@ -43,8 +43,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
-      "sha256": "57c7a5e544a894d3a7450990236ff0a235c502b8f968c580e1a0c12235e5a0cc",
-      "size": 21279
+      "sha256": "6d4c8099415580bc00058a651431d9fe1e3dffad16c46380ef8c99a449bef2a0",
+      "size": 22642
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
@@ -58,8 +58,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md",
-      "sha256": "7da3783ce6e78637cbe29fbb2cb67abef4652a89fdf3663747614410273cd96d",
-      "size": 25246
+      "sha256": "1a3f1b2d1dde050867175e05c6c3d9652a0f23fe3bb11d7a4ba89b7241a55385",
+      "size": 27257
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
@@ -128,7 +128,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.6-draft"
+    "version": "0.3.7-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -402,6 +402,16 @@
       "statement": "Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.",
       "title": "Keep compiler stages separated",
       "why": "Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth."
+    },
+    {
+      "group": "Compiler architecture",
+      "id": "CCI-012",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.",
+      "title": "Bind semantic reasoning to an explicit task context",
+      "why": "Semantic intelligence is most reliable when ContextCanon supplies the smallest sufficient world and resumes deterministic control at a strict result boundary; this also makes the same task viable across hosted and smaller local models without coupling canonical behavior to a provider."
     },
     {
       "group": "Onboarding trust",

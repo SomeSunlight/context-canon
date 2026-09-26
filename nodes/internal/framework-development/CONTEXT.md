@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.6-draft`
+**Context version:** `0.3.7-draft`
 
 **Resulting imported Contexts:**
 
@@ -164,6 +164,10 @@ Prefer deterministic mechanisms whenever behavior can be specified and computed 
 #### `CCI-005` — Keep compiler stages separated
 
 Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.
+
+#### `CCI-012` — Bind semantic reasoning to an explicit task context
+
+Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.
 
 ### Onboarding trust
 
