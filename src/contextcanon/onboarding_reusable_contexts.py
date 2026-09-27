@@ -315,6 +315,8 @@ def render_reusable_contexts(
         "",
         "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
         "",
+        "> **Important:** every editing/copy instruction in this file refers to the **raw Markdown text**, not to the rendered preview.",
+        "",
         "> **Edit only** the two areas marked ✏️ below and the `Decision` line. Everything else is instruction or generated help and will be rewritten when you rerun this step.",
         "",
         "## Catalog locations",
@@ -340,7 +342,9 @@ def render_reusable_contexts(
             "",
             "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
             "",
-            "At the bottom of this file, both generated choice lists mark each exact reusable fragment with **Copy:**. Copy only the monospace fragment after **Copy:** — not the list dash, the word `Copy:`, or the reusable package digest. Join one left fragment and one right fragment with `←`, then add a real `Why:` on the next line.",
+            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, then put `Why: ...` on the next line. Indentation is optional.",
+            "",
+            "There is deliberately **no Markdown formatting syntax to preserve** in an Assignment: no list dash, no bold markers and no backticks.",
             "",
             "Assignment syntax: **read-only help — do not edit here.**",
             "",
@@ -354,17 +358,19 @@ def render_reusable_contexts(
             f"Decision: `{decision}`",
             "",
             ASSIGNMENTS_START,
+            "```text",
         ]
     )
     for assignment in assignments:
         lines.extend(
             [
-                f"- **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)" + "  ",
-                f"  Why: {assignment.why}",
+                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version})",
+                f"Why: {assignment.why}",
             ]
         )
     lines.extend(
         [
+            "```",
             ASSIGNMENTS_END,
             "",
             "> **END EDITABLE reusable-Context Assignments.**",
@@ -379,7 +385,7 @@ def render_reusable_contexts(
         ]
     )
     for node in structure.nodes:
-        lines.append(f"- **Copy:** ``**{node.name}** (`{node.path}`)``")
+        lines.append(f"- Copy: {node.name} ({node.path})")
     lines.extend(
         [
             GENERATED_PROJECT_END,
@@ -394,7 +400,7 @@ def render_reusable_contexts(
     if packages:
         for package in packages:
             lines.append(
-                f"- **Copy:** ``**{package.metadata.name}** (`{package.metadata.version}`)`` — exact package `{package.package_digest}`"
+                f"- Copy: {package.metadata.name} ({package.metadata.version}) — exact package {package.package_digest}"
             )
     elif locations:
         lines.append("No verified reusable Context Nodes found.")
@@ -404,7 +410,7 @@ def render_reusable_contexts(
         [
             GENERATED_CATALOG_END,
             "",
-            "Package identities are review information. ContextCanon resolves and remembers them automatically; never paste IDs or digests into Assignments. There is deliberately no Markdown formatting syntax to preserve in an Assignment.",
+            "Package identities are review information. ContextCanon resolves and remembers them automatically; never paste IDs or digests into Assignments.",
             "",
         ]
     )
@@ -816,6 +822,8 @@ def render_reusable_contexts(
         "",
         "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
         "",
+        "> **Important:** every editing/copy instruction in this file refers to the **raw Markdown text**, not to the rendered preview.",
+        "",
         "> **Edit only** the two areas marked ✏️ below and the `Decision` line. Everything else is instruction or generated help and will be rewritten when you rerun this step.",
         "",
         "## Catalog locations",
@@ -841,13 +849,15 @@ def render_reusable_contexts(
             "",
             "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
             "",
-            "At the bottom of this file, both generated choice lists mark each exact reusable fragment with **Copy:**. Copy only the monospace fragment after **Copy:** — not the list dash, the word `Copy:`, or the reusable package digest. Join one left fragment and one right fragment with `←`, then add a real `Why:` on the next line.",
+            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, then put `Why: ...` on the next line. Indentation is optional.",
+            "",
+            "There is deliberately **no Markdown formatting syntax to preserve** in an Assignment: no list dash, no bold markers and no backticks.",
             "",
             "Assignment syntax: **read-only help — do not edit here.**",
             "",
             "```text",
-            "- <project Copy fragment> ← <reusable Context Copy fragment>",
-            "  Why: <why this reusable Context belongs here>",
+            "<project name> (<project path>) ← <reusable Context name> (<version>)",
+            "Why: <why this reusable Context belongs here>",
             "```",
             "",
             "> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**",
@@ -855,17 +865,19 @@ def render_reusable_contexts(
             f"Decision: `{decision}`",
             "",
             ASSIGNMENTS_START,
+            "```text",
         ]
     )
     for assignment in assignments:
         lines.extend(
             [
-                f"- **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)" + "  ",
-                f"  Why: {assignment.why}",
+                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version})",
+                f"Why: {assignment.why}",
             ]
         )
     lines.extend(
         [
+            "```",
             ASSIGNMENTS_END,
             "",
             "> **END EDITABLE reusable-Context Assignments.**",
@@ -874,20 +886,20 @@ def render_reusable_contexts(
             "",
             "## Available project Context Nodes — generated",
             "",
-            "Choose the project shelf that should receive reusable Context. **Copy only the monospace fragment after Copy:**",
+            "Raw Markdown: copy everything after `Copy:` to the end of the line.",
             "",
             GENERATED_PROJECT_START,
         ]
     )
     for node in structure.nodes:
-        lines.append(f"- **Copy:** ``**{node.name}** (`{node.path}`)``")
+        lines.append(f"- Copy: {node.name} ({node.path})")
     lines.extend(
         [
             GENERATED_PROJECT_END,
             "",
             "## Available reusable Context Nodes — generated",
             "",
-            "Choose the reusable Context that should apply. **Copy only the monospace fragment after Copy:** The exact package digest stays visible after it for review, but is **not** part of the Assignment.",
+            "Raw Markdown: copy everything after `Copy:` up to but not including ` — exact package`. The digest remains visible for review only.",
             "",
             GENERATED_CATALOG_START,
         ]
@@ -895,7 +907,7 @@ def render_reusable_contexts(
     if packages:
         for package in packages:
             lines.append(
-                f"- **Copy:** ``**{package.metadata.name}** (`{package.metadata.version}`)`` — exact package `{package.package_digest}`"
+                f"- Copy: {package.metadata.name} ({package.metadata.version}) — exact package {package.package_digest}"
             )
     elif locations:
         lines.append("No verified reusable Context Nodes found.")
