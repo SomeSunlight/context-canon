@@ -23,7 +23,7 @@ class OnboardingPlanStepsTests(unittest.TestCase):
                 completed={1, 2, 3, 4, 5, 6},
             )
             self.assertIn("### STEP 07 — Reusable Contexts", text)
-            self.assertIn("Configure reusable external Context Nodes", text)
+            self.assertIn("already-curated reusable Context should apply here", text)
             self.assertIn("contextcanon onboard reusable-contexts", text)
             self.assertIn("### STEP 08 — Placement proposal", text)
             self.assertIn("STEP-08a-placement-instruction.md", text)
