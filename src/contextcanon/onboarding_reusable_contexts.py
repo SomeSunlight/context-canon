@@ -209,7 +209,7 @@ def _parse_assignments(
         if not line or line in {"```", "```text"}:
             index += 1
             continue
-        match = _PLAIN_ASSIGN_RE.fullmatch(line) or _ASSIGN_RE.fullmatch(line)
+        match = _ASSIGN_RE.fullmatch(line) or _PLAIN_ASSIGN_RE.fullmatch(line)
         if match is None:
             raise _error(
                 f"Cannot parse Assignment line {line!r}. Expected raw text like "
