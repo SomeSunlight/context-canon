@@ -33,6 +33,509 @@ _ASSIGN_RE = re.compile(
     r'^- \*\*(?P<target>.+?)\*\* \(`(?P<path>[^`]+)`\) ← '
     r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)$'
 )
+_PLAIN_ASSIGN_RE = re.compile(
+    r'^(?:- )?(?P<target>.+) \\((?P<path>.+)\\) ← '
+    r'(?P<source>.+) \\((?P<version>.+)\\)
+
+@dataclass(frozen=True)
+class ReusableContextAssignment:
+    target_node_key: str
+    target_name: str
+    target_path: str
+    source_node_id: str
+    source_name: str
+    source_version: str
+    source_normalized_digest: str
+    source_package_digest: str
+    why: str
+
+    @property
+    def owner_spec(self) -> str:
+        return f"{self.target_node_key}={self.source_node_id}"
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "target_node_key": self.target_node_key,
+            "target_name": self.target_name,
+            "target_path": self.target_path,
+            "source_node_id": self.source_node_id,
+            "source_name": self.source_name,
+            "source_version": self.source_version,
+            "source_normalized_digest": self.source_normalized_digest,
+            "source_package_digest": self.source_package_digest,
+            "why": self.why,
+        }
+
+
+@dataclass(frozen=True)
+class ReusableContextsPlan:
+    evidence_digest: str
+    structure_digest: str
+    decision: str
+    catalog_locations: tuple[str, ...]
+    catalog_roots: tuple[Path, ...]
+    catalog_packages: tuple[CompiledPackage, ...]
+    assignments: tuple[ReusableContextAssignment, ...]
+    review_digest: str
+
+    @property
+    def is_complete(self) -> bool:
+        return self.decision == "accept"
+
+    @property
+    def catalog_package_inputs(self) -> tuple[str, ...]:
+        return tuple(str(path) for path in self.catalog_roots)
+
+    @property
+    def owner_source_specs(self) -> tuple[str, ...]:
+        return tuple(assignment.owner_spec for assignment in self.assignments)
+
+    @property
+    def owner_source_whys(self) -> dict[str, str]:
+        return {assignment.owner_spec: assignment.why for assignment in self.assignments}
+
+
+def _error(message: str) -> ContextCanonError:
+    return ContextCanonError(f"Reusable Context setup: {message}")
+
+
+def _between(text: str, start: str, end: str, label: str) -> str:
+    if text.count(start) != 1 or text.count(end) != 1:
+        raise _error(f"malformed {label} markers")
+    a = text.index(start) + len(start)
+    b = text.index(end, a)
+    return text[a:b]
+
+
+def _catalog_locations(text: str) -> tuple[str, ...]:
+    body = _between(text, CATALOG_START, CATALOG_END, "Catalog locations")
+    values: list[str] = []
+    for raw in body.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+
+        # Human input is intentionally forgiving. A pasted path is the semantic
+        # value; Markdown bullet/code/quote wrappers are only presentation.
+        if line.startswith("- "):
+            line = line[2:].strip()
+        if len(line) >= 2 and (line[0], line[-1]) in {
+            ("`", "`"),
+            ('"', '"'),
+            ("'", "'"),
+        }:
+            line = line[1:-1].strip()
+
+        if not line:
+            raise _error("Catalog location cannot be empty")
+        if line.startswith("<!--"):
+            raise _error("Catalog locations must contain paths, not machine markers")
+        if line not in values:
+            values.append(line)
+    return tuple(values)
+
+def _decision(text: str) -> str:
+    matches = re.findall(r"(?m)^Decision: `([^`]+)`$", text)
+    if len(matches) != 1 or matches[0] not in {"pending", "accept"}:
+        raise _error("Decision must appear exactly once and be `pending` or `accept`")
+    return matches[0]
+
+
+def _candidate_manifest_paths(location: Path) -> list[Path]:
+    if (location / ".context" / "package.json").is_file():
+        return [location / ".context" / "package.json"]
+    if not location.is_dir():
+        raise _error(f"Catalog location does not exist or is not a directory: {location}")
+    result: list[Path] = []
+    for manifest in location.rglob("package.json"):
+        if manifest.parent.name != ".context":
+            continue
+        rel_parts = manifest.relative_to(location).parts
+        # Ignore accepted/candidate package caches inside another Node.
+        if "sources" in rel_parts and ".context" in rel_parts:
+            continue
+        if "candidates" in rel_parts and ".context" in rel_parts:
+            continue
+        result.append(manifest)
+    return sorted(result)
+
+
+def discover_catalog(locations: tuple[str, ...]) -> tuple[tuple[Path, ...], tuple[CompiledPackage, ...]]:
+    by_id: dict[str, tuple[Path, CompiledPackage]] = {}
+    for raw in locations:
+        location = Path(raw).expanduser().resolve()
+        manifests = _candidate_manifest_paths(location)
+        if not manifests:
+            raise _error(
+                f"Catalog location contains no compiled Context package: {location}. "
+                "Build/publish the reusable Node first or choose a directory containing compiled Nodes."
+            )
+        for manifest in manifests:
+            root = manifest.parent.parent
+            package = load_package(root)
+            previous = by_id.get(package.metadata.id)
+            if previous is not None:
+                if previous[1].package_digest != package.package_digest:
+                    raise _error(
+                        f"Catalog contains more than one package version for {package.metadata.name} "
+                        f"({package.metadata.id}); narrow the Catalog location before accepting the run"
+                    )
+                continue
+            by_id[package.metadata.id] = (root, package)
+    ordered = sorted(
+        by_id.values(),
+        key=lambda item: (item[1].metadata.name.casefold(), item[1].metadata.version, item[1].metadata.id),
+    )
+    return tuple(item[0] for item in ordered), tuple(item[1] for item in ordered)
+
+
+def _parse_assignments(
+    text: str,
+    structure: HumanStructurePlan,
+    packages: tuple[CompiledPackage, ...],
+) -> tuple[ReusableContextAssignment, ...]:
+    body = _between(text, ASSIGNMENTS_START, ASSIGNMENTS_END, "Assignments")
+    target_by_label = {(node.name, node.path): node for node in structure.nodes}
+    package_by_label: dict[tuple[str, str], list[CompiledPackage]] = {}
+    for package in packages:
+        package_by_label.setdefault((package.metadata.name, package.metadata.version), []).append(package)
+
+    lines = body.splitlines()
+    result: list[ReusableContextAssignment] = []
+    seen: set[tuple[str, str]] = set()
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        if not line or line in {"\`\`\`", "\`\`\`text"}:
+            index += 1
+            continue
+        match = _PLAIN_ASSIGN_RE.fullmatch(line) or _ASSIGN_RE.fullmatch(line)
+        if match is None:
+            raise _error(
+                f"Cannot parse Assignment line {line!r}. Expected raw text like "
+                "'<project name> (<path>) ← <reusable Context name> (<version>)'. "
+                "Do not add Markdown bold markers or backticks; a leading list dash is optional."
+            )
+        target = target_by_label.get((match.group("target"), match.group("path")))
+        if target is None:
+            raise _error(
+                f"Assignment target is not an accepted project Context Node: "
+                f"{match.group('target')} ({match.group('path')})"
+            )
+        candidates = package_by_label.get((match.group("source"), match.group("version")), [])
+        if not candidates:
+            raise _error(
+                f"Assignment Source is not present in the current Catalog: "
+                f"{match.group('source')} {match.group('version')}"
+            )
+        if len(candidates) != 1:
+            raise _error(
+                f"Catalog label is ambiguous for {match.group('source')} {match.group('version')}; "
+                "narrow the Catalog location"
+            )
+        index += 1
+        if index >= len(lines):
+            raise _error(f"Assignment {line!r} is missing its next-line 'Why: ...' rationale")
+        why_line = lines[index].strip()
+        if not why_line.startswith("Why:"):
+            raise _error(f"Expected 'Why: ...' on the line after Assignment {line!r}; indentation is optional")
+        why = why_line[4:].strip()
+        if not why or why == "-":
+            raise _error("Every reusable Context assignment needs a real Why rationale")
+        package = candidates[0]
+        identity = (target.key, package.metadata.id)
+        if identity in seen:
+            raise _error(f"Duplicate reusable Context assignment for {target.name} and {package.metadata.name}")
+        seen.add(identity)
+        result.append(
+            ReusableContextAssignment(
+                target_node_key=target.key,
+                target_name=target.name,
+                target_path=target.path,
+                source_node_id=package.metadata.id,
+                source_name=package.metadata.name,
+                source_version=package.metadata.version,
+                source_normalized_digest=package.normalized_digest,
+                source_package_digest=package.package_digest,
+                why=why,
+            )
+        )
+        index += 1
+    return tuple(result)
+
+
+def _normalized_payload(
+    evidence_digest: str,
+    structure_digest: str,
+    decision: str,
+    locations: tuple[str, ...],
+    roots: tuple[Path, ...],
+    packages: tuple[CompiledPackage, ...],
+    assignments: tuple[ReusableContextAssignment, ...],
+) -> dict[str, object]:
+    return {
+        "schema": REUSABLE_CONTEXTS_STATE_SCHEMA,
+        "evidence_digest": evidence_digest,
+        "structure_digest": structure_digest,
+        "decision": decision,
+        "catalog_locations": list(locations),
+        "catalog_packages": [
+            {
+                "path": str(root),
+                "id": package.metadata.id,
+                "name": package.metadata.name,
+                "version": package.metadata.version,
+                "normalized_digest": package.normalized_digest,
+                "package_digest": package.package_digest,
+            }
+            for root, package in zip(roots, packages)
+        ],
+        "assignments": [assignment.to_dict() for assignment in assignments],
+    }
+
+
+def _digest(payload: dict[str, object]) -> str:
+    data = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(data).hexdigest()
+
+
+def render_reusable_contexts(
+    evidence_digest: str,
+    structure: HumanStructurePlan,
+    decision: str,
+    locations: tuple[str, ...],
+    packages: tuple[CompiledPackage, ...],
+    assignments: tuple[ReusableContextAssignment, ...],
+) -> str:
+    lines = [
+        "# STEP 07 — Reusable Contexts",
+        f'<!-- contextcanon-reusable-contexts schema="{REUSABLE_CONTEXTS_SCHEMA}" evidence="{evidence_digest}" structure="{structure.structure_digest}" -->',
+        "",
+        "Your project now has its own Context shelves. This step asks one simple question: **should any already-curated reusable Context also apply here?** For example, a shared Development Workflow or GitHub Local Context can be attached where it belongs instead of copying those rules into this project by hand.",
+        "",
+        "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
+        "",
+        "> **Edit only** the two areas marked ✏️ below and the `Decision` line. Everything else is instruction or generated help and will be rewritten when you rerun this step.",
+        "",
+        "## Catalog locations",
+        "",
+        "First tell ContextCanon where it may look for reusable Context Nodes. Add one directory per line. A location may itself be one compiled Context Node or a directory containing several Nodes.",
+        "",
+        "Paste a path normally. Markdown bullets, backticks, or quotes are optional input conveniences; ContextCanon rewrites accepted input into one canonical Markdown form on the next run.",
+        "",
+        r"Example path: `C:\Users\you\PycharmProjects\context-canon\nodes\library`",
+        "",
+        "> ✏️ **EDIT HERE — Catalog locations start below.**",
+        "",
+        CATALOG_START,
+    ]
+    lines.extend(f"- `{value}`" for value in locations)
+    lines.extend(
+        [
+            CATALOG_END,
+            "",
+            "> **END EDITABLE Catalog locations.**",
+            "",
+            "## Assignments",
+            "",
+            "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
+            "",
+            "At the bottom of this file, both generated choice lists mark each exact reusable fragment with **Copy:**. Copy only the monospace fragment after **Copy:** — not the list dash, the word `Copy:`, or the reusable package digest. Join one left fragment and one right fragment with `←`, then add a real `Why:` on the next line.",
+            "",
+            "Assignment syntax: **read-only help — do not edit here.**",
+            "",
+            "```text",
+            "<project name> (<project path>) ← <reusable Context name> (<version>)",
+            "Why: <why this reusable Context belongs here>",
+            "```",
+            "",
+            "> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**",
+            "",
+            f"Decision: `{decision}`",
+            "",
+            ASSIGNMENTS_START,
+        ]
+    )
+    for assignment in assignments:
+        lines.extend(
+            [
+                f"- **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)" + "  ",
+                f"  Why: {assignment.why}",
+            ]
+        )
+    lines.extend(
+        [
+            ASSIGNMENTS_END,
+            "",
+            "> **END EDITABLE reusable-Context Assignments.**",
+            "",
+            "Set `Decision` to `accept` when the Catalog and assignments describe the reusable Context you really want this project to inherit. An empty assignment list is valid when none applies.",
+            "",
+            "## Available project Context Nodes — generated",
+            "",
+            "Raw Markdown: copy everything after \`Copy:\` to the end of the line.",
+            "",
+            GENERATED_PROJECT_START,
+        ]
+    )
+    for node in structure.nodes:
+        lines.append(f"- **Copy:** ``**{node.name}** (`{node.path}`)``")
+    lines.extend(
+        [
+            GENERATED_PROJECT_END,
+            "",
+            "## Available reusable Context Nodes — generated",
+            "",
+            "Raw Markdown: copy everything after \`Copy:\` up to but not including \` — exact package\`. The digest remains visible for review only.",
+            "",
+            GENERATED_CATALOG_START,
+        ]
+    )
+    if packages:
+        for package in packages:
+            lines.append(
+                f"- **Copy:** ``**{package.metadata.name}** (`{package.metadata.version}`)`` — exact package `{package.package_digest}`"
+            )
+    elif locations:
+        lines.append("No verified reusable Context Nodes found.")
+    else:
+        lines.append("No Catalog locations yet. Add one or more above and run this step again.")
+    lines.extend(
+        [
+            GENERATED_CATALOG_END,
+            "",
+            "Package identities are review information. ContextCanon resolves and remembers them automatically; never paste IDs or digests into Assignments. There is deliberately no Markdown formatting syntax to preserve in an Assignment.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+def _initial_text(evidence_digest: str, structure: HumanStructurePlan) -> str:
+    return render_reusable_contexts(evidence_digest, structure, "pending", (), (), ())
+
+
+def _parse_bound_text(path: Path, evidence_digest: str, structure: HumanStructurePlan) -> tuple[str, tuple[str, ...]]:
+    text = path.read_text(encoding="utf-8")
+    header = _HEADER_RE.search(text)
+    if header is None:
+        raise _error(f"{path} is missing its ContextCanon binding header")
+    if header.group("schema") != REUSABLE_CONTEXTS_SCHEMA:
+        raise _error(f"unsupported schema {header.group('schema')!r}")
+    if header.group("evidence") != evidence_digest:
+        raise _error("Evidence digest differs from this onboarding snapshot")
+    if header.group("structure") != structure.structure_digest:
+        raise _error(
+            "Accepted project Context structure changed; recreate/review STEP-07-reusable-contexts.md against the new structure"
+        )
+    return text, _catalog_locations(text)
+
+
+def refresh_reusable_contexts(
+    path: Path,
+    snapshot_root: Path,
+    evidence_digest: str,
+    structure: HumanStructurePlan,
+) -> tuple[ReusableContextsPlan, bool]:
+    path = path.resolve()
+    created = False
+    if not path.exists():
+        write_utf8(path, _initial_text(evidence_digest, structure))
+        created = True
+    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    decision = _decision(text)
+    roots, packages = discover_catalog(locations) if locations else ((), ())
+    assignments = _parse_assignments(text, structure, packages)
+    canonical = render_reusable_contexts(
+        evidence_digest,
+        structure,
+        decision,
+        locations,
+        packages,
+        assignments,
+    )
+    write_utf8(path, canonical)
+    payload = _normalized_payload(
+        evidence_digest,
+        structure.structure_digest,
+        decision,
+        locations,
+        roots,
+        packages,
+        assignments,
+    )
+    review_digest = _digest(payload)
+    payload["review_digest"] = review_digest
+    payload["human_file_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    write_utf8(
+        snapshot_root.resolve() / REUSABLE_CONTEXTS_STATE_NAME,
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    return ReusableContextsPlan(
+        evidence_digest,
+        structure.structure_digest,
+        decision,
+        locations,
+        roots,
+        packages,
+        assignments,
+        review_digest,
+    ), created
+
+
+def load_accepted_reusable_contexts(
+    path: Path,
+    snapshot_root: Path,
+    evidence_digest: str,
+    structure: HumanStructurePlan,
+) -> ReusableContextsPlan:
+    state_path = snapshot_root.resolve() / REUSABLE_CONTEXTS_STATE_NAME
+    if not state_path.is_file():
+        raise _error("STEP 07 has not been validated yet; run `contextcanon onboard reusable-contexts` first")
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _error(f"machine state is unreadable: {state_path}") from exc
+    if state.get("schema") != REUSABLE_CONTEXTS_STATE_SCHEMA:
+        raise _error("unsupported reusable Context machine state")
+    if state.get("evidence_digest") != evidence_digest or state.get("structure_digest") != structure.structure_digest:
+        raise _error("reusable Context machine state does not match this Evidence/Structure")
+    if state.get("decision") != "accept":
+        raise _error("STEP 07 is still pending; set Decision to `accept` and rerun the step")
+    if not path.is_file():
+        raise _error(f"missing human reusable Context review: {path}")
+    current_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+    if current_sha != state.get("human_file_sha256"):
+        raise _error("STEP-07-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
+
+    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    roots, packages = discover_catalog(locations) if locations else ((), ())
+    assignments = _parse_assignments(text, structure, packages)
+    payload = _normalized_payload(
+        evidence_digest,
+        structure.structure_digest,
+        "accept",
+        locations,
+        roots,
+        packages,
+        assignments,
+    )
+    review_digest = _digest(payload)
+    if review_digest != state.get("review_digest"):
+        raise _error(
+            "Reusable Context Catalog/package identity changed after STEP 07 acceptance; rerun the step and review the change"
+        )
+    return ReusableContextsPlan(
+        evidence_digest,
+        structure.structure_digest,
+        "accept",
+        locations,
+        roots,
+        packages,
+        assignments,
+        review_digest,
+    )
+
+)
 
 
 @dataclass(frozen=True)
