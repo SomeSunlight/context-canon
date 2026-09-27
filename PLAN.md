@@ -728,12 +728,13 @@ Checkpoint: Issue #62 is implemented on draft PR #54 as the ContextCanon 0.9.6 o
 
 Purpose: keep the proven reusable-Context and semantic-handoff mechanics unchanged while making the first real STEP 07/08 operator experience understandable without prior ContextCanon knowledge.
 
-- [ ] Add a compact first-time-user journey to the generated onboarding PLAN so the remaining steps explain what the operator is building, not only which commands exist.
-- [ ] Rewrite STEP 07 motivation around the user choice: optionally reuse already-curated Context and attach it only to the project Nodes where it applies.
-- [ ] Make STEP 07 editing boundaries and Assignment construction copy-safe in both source and rendered Markdown; keep exact package digests visible as review information without making them look copyable.
-- [ ] Keep Assignment Why visibly on its own rendered line and make generated project/reusable choices identify the exact copy fragment unambiguously.
-- [ ] Make STEP 04/08 operator guidance explicitly start a fresh isolated LLM/agent environment and use only `.contextcanon-handoff/PLAN.md` as the model entry point; do not instruct the model to execute the generated STEP instruction directly.
-- [ ] Add focused regressions, advance the owner-test patch version to 0.9.7, update durable state/changelog wording, regenerate as needed, and pass the complete exact-head PR gate. Keep PR #54 Draft/unmerged.
+- [x] Add a compact first-time-user journey to the generated onboarding PLAN so the remaining steps explain what the operator is building, not only which commands exist.
+- [x] Rewrite STEP 07 motivation around the user choice: optionally reuse already-curated Context and attach it only to the project Nodes where it applies.
+- [x] Make STEP 07 editing boundaries and Assignment construction copy-safe in both source and rendered Markdown; keep exact package digests visible as review information without making them look copyable.
+- [x] Keep Assignment Why visibly on its own rendered line and make generated project/reusable choices identify the exact copy fragment unambiguously.
+- [x] Make STEP 04/08 operator guidance explicitly start a fresh isolated LLM/agent environment and use only `.contextcanon-handoff/PLAN.md` as the model entry point; do not instruct the model to execute the generated STEP instruction directly.
+- [x] Add focused regressions, advance the owner-test patch version to 0.9.7, update durable state/changelog wording, regenerate as needed, and pass the complete exact-head PR gate. Keep PR #54 Draft/unmerged.
 
 The user-facing metaphor is intentional but bounded: project knowledge starts as a pile of books; accepted Context Nodes are shelves; STEP 07 may bring in trusted reusable shelves/rules; STEP 08 asks a reasoning LLM to propose where the frozen books belong. Human review and deterministic validation still control every accepted change.
 
+Checkpoint: Issue #65 is implemented on draft PR #54 as the ContextCanon 0.9.7 owner-test candidate. STEP 07/08 semantics remain unchanged: the operator PLAN now explains the books/shelves journey and the reason for reusable Context reuse; STEP-07 exposes explicit copy-only fragments while keeping exact package digests review-visible, canonical Assignments render Why on its own line, and editable regions are strongly delimited. STEP 04/08 now require a fresh isolated agent environment and make `.contextcanon-handoff/PLAN.md` the single model entry point rather than the generated STEP instruction. Implementation head `9b846fa17eeb86c34607dce7d60ff8cad317b1b8` passed all 303 deterministic tests plus `contextcanon check --all .` with zero generated drift. This closure checkpoint must receive the same exact-head gate before owner use. PR #54 remains Draft and must not be merged without explicit project-owner approval.
