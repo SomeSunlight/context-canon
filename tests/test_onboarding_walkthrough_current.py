@@ -29,11 +29,13 @@ class OnboardingWalkthroughCurrentTests(unittest.TestCase):
         self.assertIn("handoffs/STEP-08-placement/", text)
         self.assertIn(".contextcanon-handoff/PLAN.md", text)
         self.assertIn("contextcanon onboard handoff-import", text)
-        self.assertIn("## 10. Review and revalidate `STEP-10-placement.md`", text)
+        self.assertIn("## 10. Review the split placement cockpit", text)
+        self.assertIn("STEP-10-placement/", text)
+        self.assertIn("STEP-10-source-edits/", text)
         self.assertIn("STEP-11-placement-preview.md", text)
         self.assertIn("STEP-12-placement-followup.md", text)
         self.assertIn("PLAN is orchestration only", text)
-        current = text.split("## Legacy single-pass first adoption", 1)[0]
+        current = text.split("## Legacy compatibility path", 1)[0]
         self.assertNotIn("--owner-source", current)
         self.assertNotIn("--catalog-package", current)
         self.assertNotIn("STEP-07-placement.md", current)
