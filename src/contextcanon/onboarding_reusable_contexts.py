@@ -206,7 +206,7 @@ def _parse_assignments(
     index = 0
     while index < len(lines):
         line = lines[index].strip()
-        if not line or line in {"\`\`\`", "\`\`\`text"}:
+        if not line or line in {"```", "```text"}:
             index += 1
             continue
         match = _PLAIN_ASSIGN_RE.fullmatch(line) or _ASSIGN_RE.fullmatch(line)
@@ -379,7 +379,7 @@ def render_reusable_contexts(
             "",
             "## Available project Context Nodes — generated",
             "",
-            "Raw Markdown: copy everything after \`Copy:\` to the end of the line.",
+            "Raw Markdown: copy everything after `Copy:` to the end of the line.",
             "",
             GENERATED_PROJECT_START,
         ]
@@ -392,7 +392,7 @@ def render_reusable_contexts(
             "",
             "## Available reusable Context Nodes — generated",
             "",
-            "Raw Markdown: copy everything after \`Copy:\` up to but not including \` — exact package\`. The digest remains visible for review only.",
+            "Raw Markdown: copy everything after `Copy:` up to but not including ` — exact package`. The digest remains visible for review only.",
             "",
             GENERATED_CATALOG_START,
         ]
