@@ -12,11 +12,11 @@ Historical plan/checkpoint sections below retain the status wording that was tru
 
 Purpose: make first-contact documentation describe the product that now exists, without turning README into a second canonical technical specification.
 
-- [ ] Reconcile PLAN/STATE/CHANGELOG to the accepted 0.9.9 baseline.
-- [ ] Refresh the root README around progressive disclosure, current onboarding, and the proven Separation of Concerns between ContextCanon, Development Workflow, provider and agent/harness.
-- [ ] Add GitHub and GitHub Local to the actual reusable-Node map/layout and explain provider composition without inventing a new ContextCanon interface primitive.
-- [ ] Remove stale project-status/version claims and route detail to the canonical/deeper documents that own it.
-- [ ] Keep #41 explanatory views and #42 reusable repository-documentation philosophy explicitly out of scope.
+- [x] Reconcile PLAN/STATE/CHANGELOG to the accepted 0.9.9 baseline.
+- [x] Refresh the root README around progressive disclosure, current onboarding, and the proven Separation of Concerns between ContextCanon, Development Workflow, provider and agent/harness.
+- [x] Add GitHub and GitHub Local to the actual reusable-Node map/layout and explain provider composition without inventing a new ContextCanon interface primitive.
+- [x] Remove stale project-status/version claims and route detail to the canonical/deeper documents that own it.
+- [x] Keep #41 explanatory views and #42 reusable repository-documentation philosophy explicitly out of scope.
 - [ ] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
 
 
