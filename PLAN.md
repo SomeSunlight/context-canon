@@ -724,3 +724,16 @@ Purpose: prove and slightly generalize the existing Issue #61 implementation ins
 
 Checkpoint: Issue #62 is implemented on draft PR #54 as the ContextCanon 0.9.6 owner-test candidate. STEP 08 remains the same isolated handoff mechanism introduced by #61; this block hardens it, removes remaining step-specific registry branches, and adds the smallest frozen-Evidence selection seam for future semantic tasks. Run #1098 proved 301 deterministic tests plus zero self-hosted drift on the completed implementation tree. This closing state/plan/changelog commit is the final candidate and must itself pass the PR exact-head workflow before owner use. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: first-time STEP 07/08 guidance — Issue #65
+
+Purpose: keep the proven reusable-Context and semantic-handoff mechanics unchanged while making the first real STEP 07/08 operator experience understandable without prior ContextCanon knowledge.
+
+- [ ] Add a compact first-time-user journey to the generated onboarding PLAN so the remaining steps explain what the operator is building, not only which commands exist.
+- [ ] Rewrite STEP 07 motivation around the user choice: optionally reuse already-curated Context and attach it only to the project Nodes where it applies.
+- [ ] Make STEP 07 editing boundaries and Assignment construction copy-safe in both source and rendered Markdown; keep exact package digests visible as review information without making them look copyable.
+- [ ] Keep Assignment Why visibly on its own rendered line and make generated project/reusable choices identify the exact copy fragment unambiguously.
+- [ ] Make STEP 04/08 operator guidance explicitly start a fresh isolated LLM/agent environment and use only `.contextcanon-handoff/PLAN.md` as the model entry point; do not instruct the model to execute the generated STEP instruction directly.
+- [ ] Add focused regressions, advance the owner-test patch version to 0.9.7, update durable state/changelog wording, regenerate as needed, and pass the complete exact-head PR gate. Keep PR #54 Draft/unmerged.
+
+The user-facing metaphor is intentional but bounded: project knowledge starts as a pile of books; accepted Context Nodes are shelves; STEP 07 may bring in trusted reusable shelves/rules; STEP 08 asks a reasoning LLM to propose where the frozen books belong. Human review and deterministic validation still control every accepted change.
+
