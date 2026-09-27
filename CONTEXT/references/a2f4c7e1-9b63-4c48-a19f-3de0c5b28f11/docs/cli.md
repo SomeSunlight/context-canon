@@ -54,11 +54,15 @@ This compares two compiled snapshots of the same Node using stable Context ident
 
 ## Onboard a project
 
+Start a first adoption with:
+
 ```text
-contextcanon onboard ...
+contextcanon onboard init .
 ```
 
-Onboarding has its own reviewed multi-step workflow. Start with [Onboard an existing project](onboarding.md) rather than reconstructing it from CLI help.
+Then follow the generated `contextcanon-onboarding/PLAN.md`.
+
+For the onboarding command map — especially **go back / restart** with `contextcanon onboard reset . --from <STEP>` — use the dedicated **[Onboarding CLI reference](onboarding-cli.md)**. The conceptual walkthrough remains in **[Onboard an existing project](onboarding.md)**.
 
 ## Lower-level Source commands
 

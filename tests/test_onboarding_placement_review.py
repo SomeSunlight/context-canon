@@ -93,13 +93,13 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertIn("## Evidence", finding)
         self.assertIn("### Evidence 1", finding)
         self.assertNotIn("Source edit decision:", finding)
-        self.assertIn("../STEP-08-source-edits/", finding)
+        self.assertIn("../STEP-10-source-edits/", finding)
 
         self.assertTrue(edit.startswith("# E-001 — P-001 —"))
         self.assertIn("concrete transformation", edit)
         self.assertIn("may be accepted only when every linked promoted P finding is accepted", edit)
         self.assertIn("- Source edit decision: `pending`", edit)
-        self.assertIn("../STEP-08-placement/", edit)
+        self.assertIn("../STEP-10-placement/", edit)
         self.assertIn("## Before — frozen source", edit)
         self.assertIn("## After — editable replacement", edit)
         self.assertIn('cc:source-after id="E-001":start', edit)
@@ -271,7 +271,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
         index = workspace.placement_path.read_text(encoding="utf-8")
         workspace.placement_path.write_text(index.replace("split-v2", "split-v1", 1), encoding="utf-8")
-        with self.assertRaisesRegex(ContextCanonError, "not migrated|Reset from STEP 08"):
+        with self.assertRaisesRegex(ContextCanonError, "not migrated|Reset from STEP 10"):
             create_or_load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
     def test_legacy_monolith_can_still_enter_current_review_layout(self):
@@ -313,7 +313,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
         self.assertEqual(len(list(placement_review_directory(workspace.placement_path).glob("*.md"))), 40)
         self.assertEqual(len(list(placement_source_edit_directory(workspace.placement_path).glob("*.md"))), 0)
         index = workspace.placement_path.read_text(encoding="utf-8")
-        self.assertEqual(index.count("STEP-08-placement/P-"), 40)
+        self.assertEqual(index.count("STEP-10-placement/P-"), 40)
         self.assertNotIn("## Evidence", index)
         self.assertLess(len(index.splitlines()), 150)
 

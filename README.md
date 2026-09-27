@@ -29,134 +29,76 @@ The answers still belong to each project, but the way they are organized no long
 
 ## Bring an existing project aboard
 
-The onboarding workflow starts with the material your project already has — README, CONTRIBUTING, architecture and development documentation, selected configuration, existing agent instructions, and other likely context carriers — and turns that material into a **reviewed Context structure before it tries to rewrite or relocate individual knowledge**.
+### 1. Install the CLI
 
-The larger `ai-workstation` experiment exposed an important ordering rule: **design the shelves before placing the books.** A strong reasoning LLM can reconstruct a surprisingly useful coarse project model from frozen evidence, but the project owner must own that model because future architecture and intended module boundaries cannot be inferred safely from repository archaeology alone.
+ContextCanon is meant to be a standalone command-line tool, independent of the Python environment of the project you are onboarding. The recommended installation uses [uv](https://docs.astral.sh/uv/).
 
-The current structure-first experiment therefore uses two semantic passes:
+Install uv once:
 
-```text
-[ContextCanon · deterministic] freeze exact project evidence
-        ↓
-[ContextCanon · deterministic] generate structure-discovery assignment
-        ↓
-[Reasoning LLM · semantic] propose coarse Node tree + non-Node knowledge bodies
-        ↓
-[ContextCanon + Human] validate and edit structure.md
-        ↓
-[ContextCanon · deterministic] preview/materialize only missing Node skeletons
-        ↓
-[ContextCanon · deterministic] generate placement assignment bound to that structure
-        ↓
-[Reasoning LLM · semantic] propose where existing knowledge belongs
-        ↓
-[ContextCanon + Human] validate and inspect placement.md
-        ↓
-[later, only after review] publish/move/reference/map accepted knowledge safely
-```
-
-The LLM proposes semantics; it does not publish project truth. The project owner may rename, re-parent, remove, or add Nodes in the human-editable `structure.md`. The second pass is then forbidden from redesigning that hierarchy: it places knowledge into the accepted structure, preserves good original wording where possible, and marks wording as `exact`, `lightly-edited`, or `synthesized`.
-
-> [!IMPORTANT]
-> Onboarding is a difficult semantic review. Use a **strong reasoning-capable model**, not merely the fastest or cheapest general model available. ContextCanon can validate that returned JSON is well formed, bound to the accepted structure, and honestly points to frozen evidence; it cannot validate that a weak model made good architectural distinctions.
-
-That does not conflict with ContextCanon's goal of making smaller/local models useful for normal project work. Once the context has been organized, those models benefit from receiving less but better-targeted information. The occasional context-structuring or restructuring step is where stronger reasoning has unusually high leverage.
-
-### Structure-first experimental run
-
-With the ContextCanon CLI available, start in the root of the Git repository you want to onboard:
-
-```text
-contextcanon onboard prepare .
-```
-
-The command prints the path of a frozen evidence snapshot under:
-
-```text
-.context/onboarding/<evidence-digest>/
-```
-
-The snapshot is an immutable review anchor, not a lock on the live repository. It lets different semantic instructions or human review iterations operate on **the same exact project bytes** until you deliberately choose a new evidence basis.
-
-Store the printed snapshot path once instead of repeatedly typing the long digest. Use the assignment form for your shell:
+**Windows**
 
 ```powershell
-$SNAPSHOT = '.context/onboarding/<evidence-digest>'
+winget install --id=astral-sh.uv -e
 ```
+
+**Linux / macOS**
 
 ```sh
-SNAPSHOT='.context/onboarding/<evidence-digest>'
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-```bat
-set SNAPSHOT=.context\onboarding\<evidence-digest>
-```
-
-The commands below use `$SNAPSHOT` in PowerShell, bash and zsh; in `cmd.exe`, use `%SNAPSHOT%` instead. As soon as ContextCanon creates `contextcanon-onboarding/PLAN.md`, that file becomes the run-specific copy/paste console and shows the shell-native variable and exact commands again.
-
-Generate the first semantic assignment:
+Then install ContextCanon directly from GitHub:
 
 ```text
-contextcanon onboard structure-instruction $SNAPSHOT
+uv tool install git+https://github.com/SomeSunlight/context-canon.git
+uv tool update-shell
+contextcanon --version
 ```
 
-ContextCanon writes important working files itself as UTF-8 into the visible:
+ContextCanon requires Python 3.11 or newer; uv can obtain a compatible managed Python automatically when needed. If the shell has just been updated, open a new terminal before retrying `contextcanon --version`.
+
+### 2. Let ContextCanon create the runbook
+
+Open the Git repository you want to onboard and run:
+
+```text
+contextcanon onboard init .
+```
+
+This creates:
 
 ```text
 contextcanon-onboarding/
+├── README.md
+├── PLAN.md
+└── STEP-02-inventory-guide.md
 ```
 
-This avoids shell-redirection/codepage surprises and keeps editable review artifacts out of both the repository root and the machine-oriented `.context/` tree.
+**Now open `contextcanon-onboarding/PLAN.md` and continue there.** From this point on, the generated PLAN is the operator console for the concrete onboarding run: it tells you what to do next, gives the exact commands, and records the validated checkpoint so you can resume later without remembering this README or an old chat.
 
-Give `contextcanon-onboarding/structure-instruction.md` to a strong reasoning model together with read access to the frozen snapshot's `evidence/` directory. Save the returned JSON as:
+The onboarding itself deliberately separates deterministic mechanics from semantic judgment:
 
 ```text
-contextcanon-onboarding/structure-proposal.json
+tidy project material
+        ↓
+review deterministic file inventory
+        ↓
+freeze exact reviewed Evidence
+        ↓
+reasoning LLM proposes semantic shelves
+        ↓
+human accepts/edits the structure
+        ↓
+reasoning LLM proposes placement
+        ↓
+human reviews
+        ↓
+preview + explicit publication
 ```
 
-Validate and render the editable hierarchy:
+The LLM proposes semantics; it does not publish project truth. For the two semantic passes, use a strong reasoning-capable model. ContextCanon validates provenance and structure, but the project owner remains responsible for architecture and acceptance.
 
-```text
-contextcanon onboard structure-validate $SNAPSHOT
-contextcanon onboard structure-review   $SNAPSHOT
-```
-
-Now review and edit `contextcanon-onboarding/structure.md`. Indentation defines the primary human hierarchy. Existing proposal Nodes retain review-local keys; future/reserved Nodes can be added explicitly when the evidence and project owner justify them.
-
-Before creating any missing Nodes:
-
-```text
-contextcanon onboard structure-preview $SNAPSHOT
-```
-
-The preview protects existing Context Nodes by stable identity and shows exactly which missing skeletons would be created. When the coarse structure is satisfactory, explicit materialization creates only those missing skeletons:
-
-```text
-contextcanon onboard structure-materialize $SNAPSHOT
-```
-
-Existing Nodes and ordinary project files are not rewritten by this step.
-
-The second semantic pass is then generated from the **same frozen Evidence plus the exact edited structure digest**:
-
-```text
-contextcanon onboard placement-instruction $SNAPSHOT
-```
-
-Reusable immutable Source packages may be supplied explicitly with repeated `--catalog-package` arguments. The model compares generic-looking local guidance with those exact packages rather than inventing duplicate reusable rules.
-
-Save the returned JSON as `contextcanon-onboarding/placement-proposal.json`, then:
-
-```text
-contextcanon onboard placement-validate $SNAPSHOT
-contextcanon onboard placement-review   $SNAPSHOT
-```
-
-`placement.md` shows each source excerpt beside its proposed destination, operation and canonical wording. The current experiment deliberately stops there: destructive cleanup or publication of relocated knowledge is designed only after the real placement result has been reviewed.
-
-The older single-pass first-adoption `instruction → validate → review → accept` path remains available while this larger experiment is being validated; it is not silently reinterpreted as the new two-pass contract.
-
-For the user walkthrough and technical trust boundaries, read **[Onboard an existing project](docs/onboarding.md)**.
+For the conceptual walkthrough, see **[Onboard an existing project](docs/onboarding.md)**. For a stable command map — especially reset/restart — see **[Onboarding CLI](docs/onboarding-cli.md)**. During an actual run, follow the generated `contextcanon-onboarding/PLAN.md`.
 
 ## Maintain an onboarded project
 
@@ -363,7 +305,8 @@ The constraint stays the same: adding knowledge must not imply eagerly loading i
 
 If the five-second idea above is enough, the best next reads are:
 
-- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough and current structure-first experiment.
+- [Onboard an existing project](docs/onboarding.md) — first-user walkthrough for delivery triage, shelf design and placement.
+- [Onboarding CLI](docs/onboarding-cli.md) — onboarding command map, including reset/restart from any STEP 01–12.
 - [Maintain an existing ContextCanon project](docs/maintenance.md) — Source updates, downstream propagation review, build, and check.
 - [CLI quick reference](docs/cli.md) — compact command map for normal operation.
 - [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable planning, review, merge-gate and baseline-closure workflow.

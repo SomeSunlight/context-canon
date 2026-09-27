@@ -28,11 +28,19 @@ def _looks_like_windows_lock(message: str) -> bool:
 
 
 def _windows_permission_error(exc: PermissionError) -> str:
-    code = "WinError 5 / access denied" if getattr(exc, "winerror", None) == 5 else "Windows access denied"
+    winerror = getattr(exc, "winerror", None)
     path = f" Path: {exc.filename}." if getattr(exc, "filename", None) else ""
+    if winerror == 5:
+        return (
+            f"Windows filesystem operation failed with WinError 5 / access denied.{path} Original error: {exc}\n"
+            f"{_WINDOWS_LOCK_GUIDANCE}"
+        )
+    errno = getattr(exc, "errno", None)
+    code = f"errno {errno}" if errno is not None else "permission denied"
     return (
-        f"Windows filesystem operation failed with {code}.{path} Original error: {exc}\n"
-        f"{_WINDOWS_LOCK_GUIDANCE}"
+        f"Windows filesystem operation failed with permission denied ({code}).{path} Original error: {exc}\n"
+        "This is not being classified as the known transient WinError 5/scanner-lock case. "
+        "Check whether the reported path is the expected filesystem type and whether normal Windows ACLs allow the operation."
     )
 
 

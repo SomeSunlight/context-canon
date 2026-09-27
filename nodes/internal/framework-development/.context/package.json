@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "aade01bab3a9cad870813f3f1736b223e0d6c145cba599a535d7d90f1d3811ad",
-    "package": "72ca921c8cbbe7115c6e82139e68c44006ee0813bce5ad62e87c823db7d151b2"
+    "normalized": "1178f9994672122b6ad2e4c1a3b80c813e59b267f2329c41db6fdd7c8c45b26e",
+    "package": "09876d3deb63ec617df037f53a8cd90ad42d7992d74ec195ef2e4d95314a2920"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "2368e7009723a0f3f8ead32b87f8fe86904ed6233a8042f1b32b491c5e2b051c",
-      "size": 18484
+      "sha256": "f99657fe674da926218e5dead55073b9bdfed09e684c6d87e5afcce3b6dbc620",
+      "size": 18830
     },
     {
       "path": "CONTEXT/README.md",
@@ -43,8 +43,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
-      "sha256": "57c7a5e544a894d3a7450990236ff0a235c502b8f968c580e1a0c12235e5a0cc",
-      "size": 21279
+      "sha256": "6d4c8099415580bc00058a651431d9fe1e3dffad16c46380ef8c99a449bef2a0",
+      "size": 22642
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
@@ -57,9 +57,9 @@
       "size": 5003
     },
     {
-      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md",
-      "sha256": "0ccbab6d59e0d44b857cc9675af30c753e14aa22b282f3fdf134a85f0b387f03",
-      "size": 41000
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md",
+      "sha256": "1a3f1b2d1dde050867175e05c6c3d9652a0f23fe3bb11d7a4ba89b7241a55385",
+      "size": 27257
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
@@ -128,7 +128,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.2.0-draft"
+    "version": "0.3.7-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -404,6 +404,16 @@
       "why": "Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth."
     },
     {
+      "group": "Compiler architecture",
+      "id": "CCI-012",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.",
+      "title": "Bind semantic reasoning to an explicit task context",
+      "why": "Semantic intelligence is most reliable when ContextCanon supplies the smallest sufficient world and resumes deterministic control at a strict result boundary; this also makes the same task viable across hosted and smaller local models without coupling canonical behavior to a provider."
+    },
+    {
       "group": "Onboarding trust",
       "id": "CCI-006",
       "modifications": [],
@@ -657,7 +667,7 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"
         }
       ],
       "title": "Reviewed project onboarding"

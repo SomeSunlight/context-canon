@@ -15,6 +15,7 @@ from .onboarding_workspace import (
     CHECKPOINT_END,
     CHECKPOINT_START,
     DEFAULT_WORKSPACE_NAME,
+    INVENTORY_NAME,
     LEGACY_ARTIFACT_NAMES,
     PLACEMENT_AUDIT_NAME,
     REUSABLE_CONTEXTS_NAME,
@@ -31,10 +32,14 @@ from .onboarding_workspace import (
     STRUCTURE_PROPOSAL_NAME,
     STRUCTURE_REVIEW_NAME,
     WORKSPACE_MARKER,
+    open_inventory_workspace,
     open_onboarding_workspace,
+    remove_onboarding_gitignore,
+    reset_inventory_workspace_plan,
     update_workspace_checkpoint,
     write_utf8,
 )
+from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
 from .outputs import expected_outputs
 from .parser import ContextCanonError, find_repo_root
@@ -42,23 +47,30 @@ from .parser import ContextCanonError, find_repo_root
 
 RESET_JOURNAL_NAME = "onboarding-reset-journal.json"
 RESET_JOURNAL_SCHEMA = "contextcanon/onboarding-reset-journal/v1"
+INVENTORY_STATE_NAME = "inventory-state.json"
+INVENTORY_ACCEPTANCE_NAME = "inventory-acceptance.json"
 
 _ARTIFACT_STEPS = {
-    STRUCTURE_INSTRUCTION_NAME: 2,
-    STRUCTURE_PROPOSAL_NAME: 2,
-    STRUCTURE_REVIEW_NAME: 3,
-    STRUCTURE_PREVIEW_NAME: 4,
-    REUSABLE_CONTEXTS_NAME: 5,
-    PLACEMENT_INSTRUCTION_NAME: 6,
-    PLACEMENT_PROPOSAL_NAME: 6,
-    PLACEMENT_REVIEW_NAME: 8,
-    PLACEMENT_REVIEW_DIR_NAME: 8,
-    PLACEMENT_SOURCE_EDIT_DIR_NAME: 8,
-    PLACEMENT_AUDIT_NAME: 8,
-    PLACEMENT_PREVIEW_NAME: 9,
-    PLACEMENT_FOLLOWUP_NAME: 10,
+    STRUCTURE_INSTRUCTION_NAME: 4,
+    STRUCTURE_PROPOSAL_NAME: 4,
+    STRUCTURE_REVIEW_NAME: 5,
+    STRUCTURE_PREVIEW_NAME: 6,
+    REUSABLE_CONTEXTS_NAME: 7,
+    PLACEMENT_INSTRUCTION_NAME: 8,
+    PLACEMENT_PROPOSAL_NAME: 8,
+    PLACEMENT_REVIEW_NAME: 10,
+    PLACEMENT_REVIEW_DIR_NAME: 10,
+    PLACEMENT_SOURCE_EDIT_DIR_NAME: 10,
+    PLACEMENT_AUDIT_NAME: 10,
+    PLACEMENT_PREVIEW_NAME: 11,
+    PLACEMENT_FOLLOWUP_NAME: 12,
 }
 _LEGACY_STEPS = {legacy: _ARTIFACT_STEPS[numbered] for legacy, numbered in LEGACY_ARTIFACT_NAMES.items()}
+_LEGACY_STEPS.update({"STEP-08-placement": 10, "STEP-08-source-edits": 10})
+for _handoff_step in semantic_handoff_steps():
+    _handoff_dir, _handoff_zip = handoff_relative_paths(_handoff_step)
+    _ARTIFACT_STEPS[_handoff_dir] = _handoff_step
+    _ARTIFACT_STEPS[_handoff_zip] = _handoff_step
 
 _SKELETON_RE = re.compile(
     r'^# .+ — Local Context Source\n'
@@ -200,7 +212,7 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
     if result != 0:
         return result
     after = _managed_state(project, extra_paths)
-    step = 4 if argv[1] == "structure-materialize" else 10
+    step = 6 if argv[1] == "structure-materialize" else 12
     record_transition(snapshot, project, step=step, command=list(argv), before=before, after=after)
     return result
 
@@ -321,12 +333,12 @@ def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
         if step < from_step:
             continue
         path = workspace_root / name
-        if name in {PLACEMENT_REVIEW_DIR_NAME, PLACEMENT_SOURCE_EDIT_DIR_NAME} and path.is_dir() and not path.is_symlink():
+        if path.is_dir() and not path.is_symlink():
             shutil.rmtree(path)
-            removed.append(path.name + "/")
+            removed.append(name.rstrip("/") + "/")
         elif path.is_file() or path.is_symlink():
             path.unlink()
-            removed.append(path.name)
+            removed.append(name)
     return sorted(set(removed))
 
 
@@ -335,22 +347,68 @@ def _rewrite_plan_after_reset(workspace_root: Path, snapshot_root: Path, from_st
     # from the reset stage. Keep this compatibility hook intentionally empty.
     return None
 
-def reset_onboarding(
-    snapshot_root: Path,
+def _machine_root(project: Path) -> Path:
+    return project / ".context" / "onboarding"
+
+
+def _snapshot_from_acceptance(project: Path) -> Path | None:
+    acceptance = _machine_root(project) / INVENTORY_ACCEPTANCE_NAME
+    if not acceptance.is_file():
+        return None
+    try:
+        payload = json.loads(acceptance.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _error(f"inventory acceptance is unreadable: {acceptance}") from exc
+    digest = payload.get("evidence_digest") if isinstance(payload, dict) else None
+    if not isinstance(digest, str) or not digest:
+        raise _error(f"inventory acceptance has no evidence_digest: {acceptance}")
+    candidate = _machine_root(project) / digest
+    return candidate if candidate.is_dir() else None
+
+
+def _discover_snapshot(project: Path) -> Path | None:
+    accepted = _snapshot_from_acceptance(project)
+    if accepted is not None:
+        return accepted
+    root = _machine_root(project)
+    if not root.is_dir():
+        return None
+    candidates = sorted(
+        path for path in root.iterdir()
+        if path.is_dir() and (path / "manifest.json").is_file()
+    )
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
+def _resolve_reset_target(
+    target: Path,
     *,
     from_step: int,
-    workspace_root: Path | None = None,
-    project_root: Path | None = None,
-) -> dict[str, object]:
-    if from_step < 2 or from_step > 10:
-        raise _error("--from must be a numbered onboarding step from 2 through 10; frozen Evidence is intentionally preserved")
-    snapshot = snapshot_root.resolve()
-    project = (project_root or find_repo_root(snapshot)).resolve()
-    workspace_state = open_onboarding_workspace(
-        snapshot,
-        workspace_root,
-        create=True,
-    )
+    project_root: Path | None,
+) -> tuple[Path, Path | None]:
+    resolved = target.resolve()
+    project = (project_root.resolve() if project_root is not None else find_repo_root(resolved)).resolve()
+    explicit_snapshot = resolved if (resolved / "manifest.json").is_file() else None
+    snapshot = explicit_snapshot or _discover_snapshot(project)
+    if from_step >= 4 and snapshot is None:
+        raise _error(
+            "could not determine the frozen Evidence snapshot for this project; "
+            "pass the snapshot path explicitly or reset from STEP 01-03"
+        )
+    return project, snapshot
+
+
+def _reset_semantic(
+    snapshot: Path,
+    project: Path,
+    *,
+    from_step: int,
+    workspace_root: Path | None,
+    refresh_plan: bool = True,
+) -> tuple[list[int], list[str], list[str]]:
+    workspace_state = open_onboarding_workspace(snapshot, workspace_root, create=True)
     workspace = workspace_state.root
 
     selected_steps, project_files = _restore_journal(snapshot, project, from_step)
@@ -368,36 +426,189 @@ def reset_onboarding(
         if acceptance_rel is None or acceptance_rel not in project_files:
             acceptance.unlink(missing_ok=True)
 
-    update_workspace_checkpoint(
-        workspace_state,
-        snapshot,
-        stage=f"reset before step {from_step}",
-        next_action=f"Restart at numbered step {from_step} using the exact command in this PLAN.",
-    )
-    _rewrite_plan_after_reset(workspace, snapshot, from_step)
+    if refresh_plan:
+        update_workspace_checkpoint(
+            workspace_state,
+            snapshot,
+            stage=f"reset before step {from_step}",
+            next_action=f"Restart at numbered step {from_step} using the exact command in this PLAN.",
+        )
+        _rewrite_plan_after_reset(workspace, snapshot, from_step)
+    return selected_steps, sorted(set(project_files + legacy_files)), workspace_files
+
+
+def _remove_owned_workspace(workspace: Path) -> list[str]:
+    if not workspace.exists():
+        return []
+    if workspace.is_symlink() or not workspace.is_dir():
+        raise _error(f"refusing to remove non-directory onboarding workspace: {workspace}")
+    readme = workspace / "README.md"
+    try:
+        owned = WORKSPACE_MARKER in readme.read_text(encoding="utf-8")
+    except (FileNotFoundError, UnicodeDecodeError):
+        owned = False
+    if not owned:
+        raise _error(f"refusing to remove unowned workspace: {workspace}")
+    removed = [workspace.name + "/"]
+    shutil.rmtree(workspace)
+    return removed
+
+
+def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[str]:
+    root = _machine_root(project)
+    if not root.exists():
+        return []
+    removed: list[str] = []
+    if keep_inventory_state:
+        for path in list(root.iterdir()):
+            if path.name == INVENTORY_STATE_NAME:
+                continue
+            if path.is_dir() and not path.is_symlink():
+                shutil.rmtree(path)
+                removed.append(path.name + "/")
+            else:
+                path.unlink(missing_ok=True)
+                removed.append(path.name)
+        return sorted(removed)
+    shutil.rmtree(root)
+    parent = root.parent
+    try:
+        parent.rmdir()
+    except OSError:
+        pass
+    return [".context/onboarding/"]
+
+
+def _reset_preflight(
+    project: Path,
+    snapshot: Path | None,
+    *,
+    from_step: int,
+    workspace_root: Path | None,
+) -> dict[str, object]:
+    workspace = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    selected_steps: list[int] = []
+    project_files: list[str] = []
+    workspace_files: list[str] = []
+
+    if snapshot is not None:
+        selected_steps, project_files, semantic_workspace = _reset_semantic(
+            snapshot,
+            project,
+            from_step=4,
+            workspace_root=workspace,
+            refresh_plan=False,
+        )
+        workspace_files.extend(semantic_workspace)
+
+    if from_step == 1:
+        workspace_files.extend(_remove_owned_workspace(workspace))
+        machine_removed = _clear_machine_state(project, keep_inventory_state=False)
+        gitignore_removed = remove_onboarding_gitignore(project)
+        return {
+            "from_step": 1,
+            "journal_records_reversed": len(selected_steps),
+            "project_files_restored_or_removed": project_files,
+            "workspace_files_removed": sorted(set(workspace_files)),
+            "machine_state_removed": machine_removed,
+            "evidence_preserved": False,
+            "gitignore_block_removed": gitignore_removed,
+            "next_action": "Run 'contextcanon onboard init .' to start again from STEP 01.",
+        }
+
+    workspace_state = open_inventory_workspace(project, workspace)
+    if from_step == 2:
+        csv = workspace_state.inventory_path
+        if csv.is_file() or csv.is_symlink():
+            csv.unlink()
+            workspace_files.append(INVENTORY_NAME)
+        machine_removed = _clear_machine_state(project, keep_inventory_state=False)
+        reset_inventory_workspace_plan(project, workspace, completed_steps=(1,))
+        next_action = "Restart at STEP 02 with 'contextcanon onboard inventory .'."
+    else:
+        if not workspace_state.inventory_path.is_file():
+            raise _error(
+                f"cannot reset to STEP 03 because the reviewed inventory is missing: {workspace_state.inventory_path}; "
+                "use '--from 2' instead"
+            )
+        machine_removed = _clear_machine_state(project, keep_inventory_state=True)
+        reset_inventory_workspace_plan(project, workspace, completed_steps=(1, 2))
+        next_action = (
+            "Restart at STEP 03 with 'contextcanon onboard prepare . --inventory "
+            f"{DEFAULT_WORKSPACE_NAME}/{INVENTORY_NAME}'."
+        )
+
     return {
         "from_step": from_step,
         "journal_records_reversed": len(selected_steps),
-        "project_files_restored_or_removed": sorted(set(project_files + legacy_files)),
-        "workspace_files_removed": workspace_files,
-        "evidence_preserved": True,
+        "project_files_restored_or_removed": project_files,
+        "workspace_files_removed": sorted(set(workspace_files)),
+        "machine_state_removed": machine_removed,
+        "evidence_preserved": False,
+        "gitignore_block_removed": False,
+        "next_action": next_action,
     }
 
+
+def reset_onboarding(
+    target: Path,
+    *,
+    from_step: int,
+    workspace_root: Path | None = None,
+    project_root: Path | None = None,
+) -> dict[str, object]:
+    if from_step < 1 or from_step > 12:
+        raise _error("--from must be an onboarding step from 1 through 12")
+    project, snapshot = _resolve_reset_target(
+        target,
+        from_step=from_step,
+        project_root=project_root,
+    )
+    if from_step <= 3:
+        return _reset_preflight(
+            project,
+            snapshot,
+            from_step=from_step,
+            workspace_root=workspace_root,
+        )
+
+    assert snapshot is not None
+    selected_steps, project_files, workspace_files = _reset_semantic(
+        snapshot,
+        project,
+        from_step=from_step,
+        workspace_root=workspace_root,
+    )
+    return {
+        "from_step": from_step,
+        "journal_records_reversed": len(selected_steps),
+        "project_files_restored_or_removed": project_files,
+        "workspace_files_removed": workspace_files,
+        "machine_state_removed": [],
+        "evidence_preserved": True,
+        "gitignore_block_removed": False,
+        "next_action": f"Restart at numbered STEP {from_step} using the exact command in the generated PLAN.",
+    }
 
 def add_reset_parser(onboard_sub) -> None:
     command = onboard_sub.add_parser(
         "reset",
         help="reset ContextCanon onboarding artifacts/project mutations from one numbered step onward",
     )
-    command.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
-    command.add_argument("--from", dest="from_step", type=int, required=True, metavar="STEP")
+    command.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Git repository root (recommended) or an explicit prepared Evidence snapshot",
+    )
+    command.add_argument("--from", dest="from_step", type=int, required=True, choices=range(1, 13), metavar="STEP")
     command.add_argument("--workspace", metavar="PATH")
     command.add_argument("--project", metavar="PATH")
 
 
 def handle_reset_args(args) -> dict[str, object]:
     return reset_onboarding(
-        Path(args.snapshot),
+        Path(args.target),
         from_step=args.from_step,
         workspace_root=Path(args.workspace) if args.workspace else None,
         project_root=Path(args.project) if args.project else None,

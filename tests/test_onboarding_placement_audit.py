@@ -64,7 +64,7 @@ class PlacementSourceAuditTests(unittest.TestCase):
         self.assertIn("##### P-001 — Repository is the installation specification", audit)
         self.assertIn("Finding decision: `accept`", audit)
         self.assertIn("Destination: `N-001` — **AI Workstation** (`.`)", audit)
-        self.assertIn("STEP-08-source-edits/E-001-", audit)
+        self.assertIn("STEP-10-source-edits/E-001-", audit)
         self.assertNotIn("#source-edit-e-001", audit)
 
     def test_rejected_source_edit_shows_unchanged_effective_after_and_candidate(self):

@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.2.0-draft`
+**Context version:** `0.3.7-draft`
 
 **Resulting imported Contexts:**
 
@@ -165,6 +165,10 @@ Prefer deterministic mechanisms whenever behavior can be specified and computed 
 
 Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.
 
+#### `CCI-012` — Bind semantic reasoning to an explicit task context
+
+Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.
+
 ### Onboarding trust
 
 #### `CCI-006` — Keep new Node identity independent from Evidence identity
@@ -290,7 +294,7 @@ When changing onboarding inventory, evidence capture, semantic classification, p
 
 **Required**
 
-- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-reference.md)
+- [`CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md`](CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md)
 
 ### Source and official formats
 

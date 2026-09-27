@@ -80,7 +80,7 @@ def render_placement_source_audit(
     review: OnboardingPlacementReview,
     snapshot_root: Path,
     *,
-    review_filename: str = "STEP-08-placement.md",
+    review_filename: str = "STEP-10-placement.md",
 ) -> str:
     if review.evidence_digest != proposal.evidence_digest:
         raise ContextCanonError("Source audit review Evidence digest does not match placement proposal")
@@ -98,7 +98,7 @@ def render_placement_source_audit(
     lines = [
         "# ContextCanon source transformation audit",
         "",
-        f"> **Generated, read-only view.** Use `{review_filename}` as the STEP-08 index and edit its linked P/E review files, not this audit. Rerunning `contextcanon onboard placement-review ...` validates the human gate and regenerates this audit from that exact parsed review.",
+        f"> **Generated, read-only view.** Use `{review_filename}` as the STEP-10 index and edit its linked P/E review files, not this audit. Rerunning `contextcanon onboard placement-review ...` validates the human gate and regenerates this audit from that exact parsed review.",
         "",
         "This view answers one question per source range: **if this text is shortened or replaced, where does every linked piece of maintained meaning land?** It is grouped by original source file rather than destination Node so semantic-loss review does not require chasing scattered findings.",
         "",
@@ -128,7 +128,7 @@ def render_placement_source_audit(
             proposal_item = next((item for item in proposal.items if item.id == owner_item_id), None)
             if proposal_item is None:
                 raise ContextCanonError(f"Source audit edit {edit.proposal_id} references missing proposal item {owner_item_id}")
-            control_target = f"STEP-08-source-edits/{placement_source_edit_filename(edit)}"
+            control_target = f"STEP-10-source-edits/{placement_source_edit_filename(edit)}"
             lines.extend([
                 f"### {edit.proposal_id} — lines {edit.start_line}-{edit.end_line}",
                 "",

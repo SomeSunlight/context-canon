@@ -56,12 +56,18 @@ class WorkspaceCheckpointTests(unittest.TestCase):
         self.assertIn("still has pending decisions", first)
         self.assertNotIn("C:/catalog/workflow", first)
         self.assertIn("placement-preview", first)
-        self.assertIn("### STEP 05 — Reusable Contexts", first)
-        self.assertIn("### STEP 07 — Placement validate", first)
-        self.assertIn("### STEP 08 — Placement review", first)
-        self.assertIn("### STEP 05 — Reusable Contexts\n- [x] **Done**", first)
-        self.assertIn("### STEP 07 — Placement validate\n- [x] **Done**", first)
-        self.assertIn("### STEP 08 — Placement review\n- [ ] **Done**", first)
+        self.assertIn("inventory → shelves → optional reusable Context → LLM sorting proposal", first)
+        self.assertIn("already-curated reusable Context should apply here", first)
+        self.assertIn("pile of books", first)
+        self.assertIn("fresh LLM/agent environment", first)
+        self.assertIn("Do **not** ask it to execute `STEP-08a-placement-instruction.md` directly", first)
+        self.assertIn("Tell the model only: `Follow .contextcanon-handoff/PLAN.md`", first)
+        self.assertIn("### STEP 07 — Reusable Contexts", first)
+        self.assertIn("### STEP 09 — Placement validate", first)
+        self.assertIn("### STEP 10 — Placement review", first)
+        self.assertIn("### STEP 07 — Reusable Contexts\n- [x] **Done**", first)
+        self.assertIn("### STEP 09 — Placement validate\n- [x] **Done**", first)
+        self.assertIn("### STEP 10 — Placement review\n- [ ] **Done**", first)
 
         update_workspace_checkpoint(
             workspace,
@@ -80,7 +86,7 @@ class WorkspaceCheckpointTests(unittest.TestCase):
         self.assertIn("placement published", second)
         self.assertIn("6" * 64, second)
         self.assertIn("placement-followup.md", second)
-        self.assertIn("### STEP 10 — Publish placement\n- [x] **Done**", second)
+        self.assertIn("### STEP 12 — Publish placement\n- [x] **Done**", second)
 
     def test_existing_owned_workspace_gains_plan_without_recreating_human_review_files(self):
         repo = Path(tempfile.mkdtemp())

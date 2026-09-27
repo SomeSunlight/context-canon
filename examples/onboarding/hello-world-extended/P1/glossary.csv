@@ -1,0 +1,4 @@
+term,meaning
+Greeting,Rendered user-facing hello message
+Parameter,Named configurable value owned by P1
+Sub-product,Feature family built on P1

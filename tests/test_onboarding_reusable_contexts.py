@@ -59,7 +59,7 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 
@@ -67,7 +67,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertTrue(created)
             self.assertFalse(first.is_complete)
             text = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("# STEP 05 — Reusable Contexts", text)
+            self.assertIn("# STEP 07 — Reusable Contexts", text)
             self.assertNotIn("workflow-node", text)
 
             text = text.replace(
@@ -76,18 +76,24 @@ class ReusableContextsTests(unittest.TestCase):
             )
             text = text.replace("Decision: `pending`", "Decision: `accept`")
             assignment = (
-                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)\n"
-                "  Why: Shared development workflow applies to the whole project.\n"
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "Why: Shared development workflow applies to the whole project.\n"
             )
             text = text.replace(
-                ASSIGNMENTS_START + "\n" + ASSIGNMENTS_END,
-                ASSIGNMENTS_START + "\n" + assignment + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n```text\n" + assignment + "```\n" + ASSIGNMENTS_END,
             )
             workspace_file.write_text(text, encoding="utf-8")
 
             second, created = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
             self.assertFalse(created)
             self.assertTrue(second.is_complete)
+            canonical_after_accept = workspace_file.read_text(encoding="utf-8")
+            self.assertIn(
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "Why: Shared development workflow applies to the whole project.",
+                canonical_after_accept,
+            )
             self.assertEqual(second.owner_source_specs, ("N-001=workflow-node",))
             self.assertEqual(
                 second.owner_source_whys["N-001=workflow-node"],
@@ -97,6 +103,37 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(len(accepted.catalog_packages), 1)
             state = json.loads((snapshot / "reusable-contexts.json").read_text(encoding="utf-8"))
             self.assertEqual(state["assignments"][0]["source_node_id"], "workflow-node")
+
+    def test_legacy_markdown_assignment_remains_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog = self._catalog(root)
+
+            refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            text = workspace_file.read_text(encoding="utf-8")
+            text = text.replace(
+                CATALOG_START + "\n" + CATALOG_END,
+                CATALOG_START + f"\n- `{catalog}`\n" + CATALOG_END,
+            )
+            legacy = (
+                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)\n"
+                "  Why: Legacy authored syntax remains valid.\n"
+            )
+            text = text.replace(
+                ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n" + legacy + ASSIGNMENTS_END,
+            )
+            workspace_file.write_text(text, encoding="utf-8")
+
+            plan, _ = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            self.assertEqual(plan.owner_source_specs, ("N-001=workflow-node",))
+            canonical = workspace_file.read_text(encoding="utf-8")
+            self.assertIn("AI Workstation (.) ← Development Workflow (0.2.0-draft)", canonical)
+            self.assertNotIn("- **AI Workstation**", canonical)
 
     def test_catalog_locations_accept_plain_windows_path_and_common_wrappers(self) -> None:
         windows_path = r"C:\Users\u239230\PycharmProjects\context-canon\nodes\library"
@@ -116,17 +153,18 @@ class ReusableContextsTests(unittest.TestCase):
             root = Path(tmp)
             snapshot = root / ("a" * 64)
             snapshot.mkdir()
-            workspace_file = root / "STEP-05-reusable-contexts.md"
+            workspace_file = root / "STEP-07-reusable-contexts.md"
             structure = self._structure()
             catalog = self._catalog(root)
 
             refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
             text = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("> ✏️ Editable Catalog locations start below.", text)
-            self.assertIn("> End editable Catalog locations.", text)
-            self.assertIn("> ✏️ Editable reusable-Context assignment controls start below.", text)
-            self.assertIn("> End editable reusable-Context assignment controls.", text)
-            self.assertIn(r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
+            self.assertIn("> ✏️ **EDIT HERE — Catalog locations start below.**", text)
+            self.assertIn("> **END EDITABLE Catalog locations.**", text)
+            self.assertIn("> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**", text)
+            self.assertIn("> **END EDITABLE reusable-Context Assignments.**", text)
+            self.assertIn("Edit only", text)
+            self.assertIn(r"Example path: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
 
             text = text.replace(
                 CATALOG_START + "\n" + CATALOG_END,
@@ -140,13 +178,14 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertIn(f"- `{catalog}`", canonical)
             self.assertIn("Assignment syntax:", canonical)
             self.assertNotIn("## Copy-ready Assignment lines — generated", canonical)
-            self.assertIn("Example first line using entries from this project", canonical)
+            self.assertNotIn("Example first line using entries from this project", canonical)
+            self.assertIn("- Copy: AI Workstation (.)", canonical)
             self.assertIn(
-                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
+                "- Copy: Development Workflow (0.2.0-draft) — exact package",
                 canonical,
             )
-            self.assertIn("Use one desired entry as the left-hand side of `←`.", canonical)
-            self.assertIn("Use one desired name/version entry as the right-hand side of `←`.", canonical)
+            self.assertIn("raw Markdown text", canonical)
+            self.assertIn("up to but not including", canonical)
 
 
     def test_assignment_help_scales_linearly_without_cartesian_product(self) -> None:
@@ -179,11 +218,12 @@ class ReusableContextsTests(unittest.TestCase):
         rendered = render_reusable_contexts("a" * 64, structure, "pending", ("catalog",), packages, ())
         assignment_like = [line for line in rendered.splitlines() if line.startswith("- **") and " ← " in line]
 
-        self.assertEqual(len(assignment_like), 2)  # one grammar line + one current-project syntax example
+        self.assertEqual(len(assignment_like), 0)  # generated choice lists never look like authored Assignments
         self.assertIn("Project Node 19", rendered)
         self.assertIn("Reusable Node 39", rendered)
         self.assertNotIn("Copy-ready Assignment lines", rendered)
         self.assertLess(len(rendered.splitlines()), 140)
+        self.assertIn("copy everything after `Copy:`", rendered)
 
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:

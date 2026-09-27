@@ -374,6 +374,8 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertTrue(workspace.placement_instruction_path.is_file())
         self.assertIn(str(workspace.placement_proposal_path), stdout.getvalue())
+        self.assertTrue((workspace.root / "handoffs" / "STEP-08-placement").is_dir())
+        self.assertTrue((workspace.root / "handoffs" / "STEP-08-placement.zip").is_file())
 
         workspace.placement_proposal_path.write_text(
             json.dumps(self.placement_dict(prepared, workspace, readme, architecture, package), indent=2),

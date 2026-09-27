@@ -415,11 +415,6 @@ def load_onboarding_structure_proposal(proposal_path: Path, snapshot_root: Path)
             path = _safe_relative_path(raw_path, f"knowledge_bodies[{index}].paths[{path_index}]")
             if path not in snapshot.by_path:
                 raise _error(f"knowledge body path is not in evidence snapshot: {path}")
-            if not path.lower().endswith(".md"):
-                raise _error(
-                    f"knowledge body path {path!r} is not supported in this experiment; "
-                    "non-Node document policy currently supports Markdown only"
-                )
             paths.append(path)
         if len(set(paths)) != len(paths):
             raise _error(f"knowledge_bodies[{index}].paths contains duplicates")
@@ -581,7 +576,7 @@ def render_structure_markdown(proposal: OnboardingStructureProposal, snapshot: E
             "",
             "## Fixed Markdown",
             "",
-            "Ordinary project-documentation Markdown is mutable by default. Paths proposed as `authoritative-reference` or `imported-corpus` are preselected below as fixed candidates; review this list directly and keep only Markdown that must remain fixed/authoritative. The later placement pass may reference or map fixed Markdown but must not plan destructive cleanup of it.",
+            "Ordinary project-documentation Markdown is mutable by default. Markdown paths proposed as `authoritative-reference` or `imported-corpus` are preselected below as fixed candidates; review this list directly and keep only Markdown that must remain fixed/authoritative. Structured/non-Markdown knowledge bodies such as CSV or JSON remain valid first-class bodies but are never source-edit targets. The later placement pass may reference or map them without converting them to Markdown.",
             "",
             _FIXED_MARKDOWN_START,
         ]
@@ -665,6 +660,8 @@ def _default_fixed_markdown(proposal: OnboardingStructureProposal) -> tuple[str,
         if body.kind not in {"authoritative-reference", "imported-corpus"}:
             continue
         for path in body.paths:
+            if not path.lower().endswith(".md"):
+                continue
             if path not in seen:
                 seen.add(path)
                 result.append(path)
@@ -672,7 +669,12 @@ def _default_fixed_markdown(proposal: OnboardingStructureProposal) -> tuple[str,
 
 
 def _knowledge_body_markdown(proposal: OnboardingStructureProposal) -> set[str]:
-    return {path for body in proposal.knowledge_bodies for path in body.paths}
+    return {
+        path
+        for body in proposal.knowledge_bodies
+        for path in body.paths
+        if path.lower().endswith(".md")
+    }
 
 
 def _human_key(name: str, path: str, parent_key: str | None, lifecycle: str) -> str:
