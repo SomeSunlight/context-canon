@@ -133,7 +133,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertIn("> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**", text)
             self.assertIn("> **END EDITABLE reusable-Context Assignments.**", text)
             self.assertIn("Edit only", text)
-            self.assertIn(r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
+            self.assertIn(r"Example path: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
 
             text = text.replace(
                 CATALOG_START + "\n" + CATALOG_END,
