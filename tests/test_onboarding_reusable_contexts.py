@@ -88,6 +88,12 @@ class ReusableContextsTests(unittest.TestCase):
             second, created = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
             self.assertFalse(created)
             self.assertTrue(second.is_complete)
+            canonical_after_accept = workspace_file.read_text(encoding="utf-8")
+            self.assertIn(
+                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)  \n"
+                "  Why: Shared development workflow applies to the whole project.",
+                canonical_after_accept,
+            )
             self.assertEqual(second.owner_source_specs, ("N-001=workflow-node",))
             self.assertEqual(
                 second.owner_source_whys["N-001=workflow-node"],
@@ -122,10 +128,11 @@ class ReusableContextsTests(unittest.TestCase):
 
             refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
             text = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("> ✏️ Editable Catalog locations start below.", text)
-            self.assertIn("> End editable Catalog locations.", text)
-            self.assertIn("> ✏️ Editable reusable-Context assignment controls start below.", text)
-            self.assertIn("> End editable reusable-Context assignment controls.", text)
+            self.assertIn("> ✏️ **EDIT HERE — Catalog locations start below.**", text)
+            self.assertIn("> **END EDITABLE Catalog locations.**", text)
+            self.assertIn("> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**", text)
+            self.assertIn("> **END EDITABLE reusable-Context Assignments.**", text)
+            self.assertIn("Edit only", text)
             self.assertIn(r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`", text)
 
             text = text.replace(
@@ -140,13 +147,14 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertIn(f"- `{catalog}`", canonical)
             self.assertIn("Assignment syntax:", canonical)
             self.assertNotIn("## Copy-ready Assignment lines — generated", canonical)
-            self.assertIn("Example first line using entries from this project", canonical)
+            self.assertNotIn("Example first line using entries from this project", canonical)
+            self.assertIn('- **Copy:** ``**AI Workstation** (`.`)``', canonical)
             self.assertIn(
-                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)",
+                '- **Copy:** ``**Development Workflow** (`0.2.0-draft`)`` — exact package',
                 canonical,
             )
-            self.assertIn("Use one desired entry as the left-hand side of `←`.", canonical)
-            self.assertIn("Use one desired name/version entry as the right-hand side of `←`.", canonical)
+            self.assertIn("not the list dash", canonical)
+            self.assertIn("digest stays visible", canonical)
 
 
     def test_assignment_help_scales_linearly_without_cartesian_product(self) -> None:
@@ -179,11 +187,12 @@ class ReusableContextsTests(unittest.TestCase):
         rendered = render_reusable_contexts("a" * 64, structure, "pending", ("catalog",), packages, ())
         assignment_like = [line for line in rendered.splitlines() if line.startswith("- **") and " ← " in line]
 
-        self.assertEqual(len(assignment_like), 2)  # one grammar line + one current-project syntax example
+        self.assertEqual(len(assignment_like), 0)  # generated choice lists never look like authored Assignments
         self.assertIn("Project Node 19", rendered)
         self.assertIn("Reusable Node 39", rendered)
         self.assertNotIn("Copy-ready Assignment lines", rendered)
         self.assertLess(len(rendered.splitlines()), 140)
+        self.assertIn("Copy only the monospace fragment", rendered)
 
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:
