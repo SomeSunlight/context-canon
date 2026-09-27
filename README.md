@@ -309,7 +309,7 @@ These category names are conventions of this repository. ContextCanon does not r
 
 Reusable Sources are not live includes from another Git repository. A consumer accepts an exact immutable Source package and can build offline from its own accepted state.
 
-Compiler 0.6 separates candidate discovery from accepted inheritance:
+The compiler separates candidate discovery from accepted inheritance:
 
 ```text
 source fetch  → candidate only
