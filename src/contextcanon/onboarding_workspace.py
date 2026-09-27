@@ -291,6 +291,12 @@ def _workspace_plan() -> str:
 
 This is the **operator console** for the current onboarding. Work from top to bottom. The first three steps are deliberately useful on their own: for a small document/architecture project you can stop after the reviewed Evidence snapshot and continue semantic onboarding later.
 
+## What you are building
+
+Your existing project knowledge starts as a pile of books. ContextCanon first inventories and freezes the books worth reasoning about, then you design the semantic shelves they should live on. You may reuse already-curated Context where it fits. A reasoning LLM then proposes where the frozen knowledge belongs; you review that proposal before ContextCanon previews and publishes anything.
+
+In short: **inventory → shelves → optional reusable Context → LLM sorting proposal → human review → preview → publish**. The model proposes; you and deterministic ContextCanon gates decide what becomes project truth.
+
 ## Need to go back?
 
 You do not need a Git rollback or a fresh clone. From the Git repository root, reset the onboarding from any numbered step and then continue from that step:
@@ -356,7 +362,7 @@ The checkpoint is the **last state ContextCanon validated**, not a file watcher.
 
 Each external reasoning pass gets its **own disposable ContextCanon-prepared project**. Frozen Evidence is copied into that project at the original repository-relative paths; the only extra directory is `.contextcanon-handoff/`, which contains the one-task PLAN, exact instruction and deterministic manifest.
 
-Open only that handoff directory in an IDE agent, or upload the matching ZIP where policy permits. Tell the model only: **follow `.contextcanon-handoff/PLAN.md`**. It may write only `.contextcanon-handoff/RESULT.json`. Earlier LLM proposals/reviews are never carried into a later handoff unless their owner-accepted meaning has already been deterministically incorporated into that later instruction.
+Start a **fresh** IDE-agent/LLM environment with only that handoff directory as its project, or upload only the matching ZIP where policy permits. Do not reuse the live-project agent session. Tell the model only: **follow `.contextcanon-handoff/PLAN.md`**. The generated STEP instruction is an input owned by that PLAN, not a separate operator prompt. The model may write only `.contextcanon-handoff/RESULT.json`. Earlier LLM proposals/reviews are never carried into a later handoff unless their owner-accepted meaning has already been deterministically incorporated into that later instruction.
 - **Human placement gate:** use `{PLACEMENT_REVIEW_NAME}` as the index and review its linked finding/source-edit sheets.
 """
 
@@ -523,7 +529,7 @@ def _exact_commands(
         "",
         "A reasoning LLM proposes the project's semantic Context Node structure — the responsibility shelves, not merely the existing directory tree.",
         "",
-        f"Generate `{STRUCTURE_INSTRUCTION_NAME}`:",
+        f"Generate `{STRUCTURE_INSTRUCTION_NAME}`. This file is packaged into the isolated handoff; it is **not** the prompt you give the model directly:",
         "",
         "```text",
         cmd("structure-instruction"),
@@ -536,7 +542,7 @@ def _exact_commands(
         f"{structure_handoff_label}.zip",
         "```",
         "",
-        "Open **only** that directory as the agent project, or upload the ZIP. Tell the model: `Follow .contextcanon-handoff/PLAN.md`. When it has produced RESULT.json, import it and validate as two explicit steps:",
+        "Start a **fresh LLM/agent environment** whose project root is **only** that handoff directory, or upload only the ZIP. Do not reuse the live-project agent session. Tell the model only: `Follow .contextcanon-handoff/PLAN.md`. Do **not** ask it to execute the generated STEP instruction directly; the handoff PLAN supplies that instruction plus the output contract. When it has written RESULT.json, import it and validate as two explicit steps:",
         "",
         "```text",
         render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "4", *workspace_args]),
@@ -569,7 +575,7 @@ def _exact_commands(
         "### STEP 07 — Reusable Contexts",
         f"- [{mark(7)}] **Done**",
         "",
-        "Configure reusable external Context Nodes, sparse assignments and their Why rationale.",
+        "Your project shelves now exist. If an already-curated reusable Context should apply here — for example a Development Workflow or GitHub Local — attach it now instead of copying its rules by hand. The generated STEP-07 guide shows what is available and lets you choose exactly where each reusable Context applies.",
         "",
         "```text",
         cmd("reusable-contexts"),
@@ -580,9 +586,9 @@ def _exact_commands(
         "### STEP 08 — Placement proposal",
         f"- [{mark(8)}] **Done**",
         "",
-        "A reasoning LLM places frozen project knowledge onto the accepted own/reusable Context shelves.",
+        "The shelves are ready, but the frozen project knowledge is still a pile of books. A reasoning LLM now proposes where each piece belongs, what should become canonical Context, and what should remain a reference or follow-up. Nothing is published here; deterministic validation and your later review still decide what is accepted.",
         "",
-        f"Generate `{PLACEMENT_INSTRUCTION_NAME}`:",
+        f"Generate `{PLACEMENT_INSTRUCTION_NAME}`. This file is packaged into the isolated handoff; it is **not** the prompt you give the model directly:",
         "",
         "```text",
         cmd("placement-instruction"),
@@ -595,7 +601,7 @@ def _exact_commands(
         f"{placement_handoff_label}.zip",
         "```",
         "",
-        "Open/upload only that handoff and tell the model: `Follow .contextcanon-handoff/PLAN.md`. Then import the result explicitly:",
+        "Start a **fresh LLM/agent environment** whose project root is **only** that handoff directory, or upload only the ZIP. Do not reuse the live-project or STEP-04 agent session. Tell the model only: `Follow .contextcanon-handoff/PLAN.md`. Do **not** ask it to execute `STEP-08a-placement-instruction.md` directly; the handoff PLAN is the entry point and tells the model how to use the packaged instruction and where to write RESULT.json. Then import the result explicitly:",
         "",
         "```text",
         render(["contextcanon", "onboard", "handoff-import", snapshot, "--step", "8", *workspace_args]),
