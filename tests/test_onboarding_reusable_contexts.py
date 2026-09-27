@@ -76,12 +76,12 @@ class ReusableContextsTests(unittest.TestCase):
             )
             text = text.replace("Decision: `pending`", "Decision: `accept`")
             assignment = (
-                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)\n"
-                "  Why: Shared development workflow applies to the whole project.\n"
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "Why: Shared development workflow applies to the whole project.\n"
             )
             text = text.replace(
-                ASSIGNMENTS_START + "\n" + ASSIGNMENTS_END,
-                ASSIGNMENTS_START + "\n" + assignment + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n```text\n" + assignment + "```\n" + ASSIGNMENTS_END,
             )
             workspace_file.write_text(text, encoding="utf-8")
 
@@ -90,8 +90,8 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertTrue(second.is_complete)
             canonical_after_accept = workspace_file.read_text(encoding="utf-8")
             self.assertIn(
-                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)  \n"
-                "  Why: Shared development workflow applies to the whole project.",
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "Why: Shared development workflow applies to the whole project.",
                 canonical_after_accept,
             )
             self.assertEqual(second.owner_source_specs, ("N-001=workflow-node",))
@@ -103,6 +103,37 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(len(accepted.catalog_packages), 1)
             state = json.loads((snapshot / "reusable-contexts.json").read_text(encoding="utf-8"))
             self.assertEqual(state["assignments"][0]["source_node_id"], "workflow-node")
+
+    def test_legacy_markdown_assignment_remains_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog = self._catalog(root)
+
+            refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            text = workspace_file.read_text(encoding="utf-8")
+            text = text.replace(
+                CATALOG_START + "\n" + CATALOG_END,
+                CATALOG_START + f"\n- `{catalog}`\n" + CATALOG_END,
+            )
+            legacy = (
+                "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)\n"
+                "  Why: Legacy authored syntax remains valid.\n"
+            )
+            text = text.replace(
+                ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n" + legacy + ASSIGNMENTS_END,
+            )
+            workspace_file.write_text(text, encoding="utf-8")
+
+            plan, _ = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            self.assertEqual(plan.owner_source_specs, ("N-001=workflow-node",))
+            canonical = workspace_file.read_text(encoding="utf-8")
+            self.assertIn("AI Workstation (.) ← Development Workflow (0.2.0-draft)", canonical)
+            self.assertNotIn("- **AI Workstation**", canonical)
 
     def test_catalog_locations_accept_plain_windows_path_and_common_wrappers(self) -> None:
         windows_path = r"C:\Users\u239230\PycharmProjects\context-canon\nodes\library"
@@ -148,13 +179,13 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertIn("Assignment syntax:", canonical)
             self.assertNotIn("## Copy-ready Assignment lines — generated", canonical)
             self.assertNotIn("Example first line using entries from this project", canonical)
-            self.assertIn('- **Copy:** ``**AI Workstation** (`.`)``', canonical)
+            self.assertIn("- Copy: AI Workstation (.)", canonical)
             self.assertIn(
-                '- **Copy:** ``**Development Workflow** (`0.2.0-draft`)`` — exact package',
+                "- Copy: Development Workflow (0.2.0-draft) — exact package",
                 canonical,
             )
-            self.assertIn("not the list dash", canonical)
-            self.assertIn("digest stays visible", canonical)
+            self.assertIn("raw Markdown text", canonical)
+            self.assertIn("up to but not including", canonical)
 
 
     def test_assignment_help_scales_linearly_without_cartesian_product(self) -> None:
