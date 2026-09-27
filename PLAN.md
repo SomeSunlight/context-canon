@@ -758,10 +758,10 @@ Checkpoint: ContextCanon 0.9.8 is the corrected STEP-07 owner-test candidate. Im
 
 Purpose: keep Topic Resource closure strict for repository-local dependencies while treating self-contained Markdown `data:` URIs as inline content rather than nonexistent local files.
 
-- [ ] Ignore Markdown link/image targets beginning with `data:` in local resource discovery.
-- [ ] Add a focused regression proving inline data images are ignored while genuine local linked resources remain in closure.
-- [ ] Keep the original Markdown Resource unchanged; no placement/review semantics or source-edit behavior changes.
-- [ ] Advance the owner-test patch version to 0.9.9, update durable state/changelog wording, and pass the complete exact-head deterministic/zero-drift gate. Keep PR #54 Draft/unmerged.
+- [x] Ignore Markdown link/image targets beginning with `data:` in local resource discovery.
+- [x] Add a focused regression proving inline data images are ignored while genuine local linked resources remain in closure.
+- [x] Keep the original Markdown Resource unchanged; no placement/review semantics or source-edit behavior changes.
+- [ ] Advance the owner-test patch version to 0.9.9 and update durable state/changelog wording; then pass the complete exact-head deterministic/zero-drift gate. Keep PR #54 Draft/unmerged.
 
 Owner-test trigger: STEP 09 `placement-preview` on a Confluence/Chrome-exported Topic Resource failed with `missing resource: data:image/svg+xml;base64,...`. The frozen Resource itself exists and is valid; only its inline SVG target was misclassified as a local file dependency.
 
