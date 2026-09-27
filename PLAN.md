@@ -12,12 +12,14 @@ Historical plan/checkpoint sections below retain the status wording that was tru
 
 Purpose: make first-contact documentation describe the product that now exists, without turning README into a second canonical technical specification.
 
+Checkpoint: Draft PR #68 now contains only accepted-baseline/documentation reconciliation plus the compiler-owned Gateway package refresh caused by changing its onboarding Topic Resource. Exact implementation head `1fef492fd9fe1c2c4ab909d54e9a208b3709cde4` passed all 304 deterministic tests and `contextcanon check --all .` with zero generated drift. This closure commit must receive the same exact-head gate before owner review. PR #68 remains Draft/unmerged.
+
 - [x] Reconcile PLAN/STATE/CHANGELOG to the accepted 0.9.9 baseline.
 - [x] Refresh the root README around progressive disclosure, current onboarding, and the proven Separation of Concerns between ContextCanon, Development Workflow, provider and agent/harness.
 - [x] Add GitHub and GitHub Local to the actual reusable-Node map/layout and explain provider composition without inventing a new ContextCanon interface primitive.
 - [x] Remove stale project-status/version claims and route detail to the canonical/deeper documents that own it.
 - [x] Keep #41 explanatory views and #42 reusable repository-documentation philosophy explicitly out of scope.
-- [ ] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
+- [x] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
 
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
