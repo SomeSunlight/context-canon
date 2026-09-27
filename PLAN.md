@@ -738,3 +738,19 @@ Purpose: keep the proven reusable-Context and semantic-handoff mechanics unchang
 The user-facing metaphor is intentional but bounded: project knowledge starts as a pile of books; accepted Context Nodes are shelves; STEP 07 may bring in trusted reusable shelves/rules; STEP 08 asks a reasoning LLM to propose where the frozen books belong. Human review and deterministic validation still control every accepted change.
 
 Checkpoint: Issue #65 is implemented on draft PR #54 as the ContextCanon 0.9.7 owner-test candidate. STEP 07/08 semantics remain unchanged: the operator PLAN now explains the books/shelves journey and the reason for reusable Context reuse; STEP-07 exposes explicit copy-only fragments while keeping exact package digests review-visible, canonical Assignments render Why on its own line, and editable regions are strongly delimited. STEP 04/08 now require a fresh isolated agent environment and make `.contextcanon-handoff/PLAN.md` the single model entry point rather than the generated STEP instruction. Implementation head `9b846fa17eeb86c34607dce7d60ff8cad317b1b8` passed all 303 deterministic tests plus `contextcanon check --all .` with zero generated drift. This closure checkpoint must receive the same exact-head gate before owner use. PR #54 remains Draft and must not be merged without explicit project-owner approval.
+
+### Owner-test correction: plain raw-text STEP 07 Assignments — Issue #65
+
+The first live 0.9.7 STEP-07 edit proved that the copy guidance still mixed raw Markdown with rendered Markdown. A semantically correct Assignment such as `P1 (.) ← GitHub Local (0.1.0-draft)` was rejected because the parser still expected presentation markers such as a list dash, bold markers and backticks.
+
+- [x] Make the plain raw-text Assignment the canonical syntax: `<project> (<path>) ← <reusable Context> (<version>)`, followed by `Why: ...`.
+- [x] Define all copy instructions explicitly against raw Markdown: project fragment after `Copy:` to line end; reusable fragment after `Copy:` up to but not including ` — exact package`.
+- [x] Render the editable Assignment area as a text block so raw and rendered views preserve the same two-line structure.
+- [x] Keep the previous Markdown-heavy Assignment syntax accepted for existing onboarding files, but canonicalize accepted content back to the plain form.
+- [x] Make parse failures echo the offending line and expected plain shape instead of reporting only an abstract incomplete-Assignment error.
+- [x] Add regression coverage for the plain syntax, canonical round-trip, legacy compatibility and linear generated help.
+- [x] Advance the owner-test package version to 0.9.8 and update durable state/changelog wording.
+- [ ] Run the complete exact-head deterministic suite and zero-drift gate on the closing 0.9.8 checkpoint. Keep PR #54 Draft/unmerged.
+
+Pre-checkpoint evidence: implementation head `e44add7fb4cdeb99a21c3c1681786100d4123c48` passed all 304 deterministic tests and `contextcanon check --all .` with zero generated drift before the 0.9.8 version/state checkpoint.
+
