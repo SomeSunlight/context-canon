@@ -223,7 +223,7 @@ class ReusableContextsTests(unittest.TestCase):
         self.assertIn("Reusable Node 39", rendered)
         self.assertNotIn("Copy-ready Assignment lines", rendered)
         self.assertLess(len(rendered.splitlines()), 140)
-        self.assertIn("Copy only the monospace fragment", rendered)
+        self.assertIn("copy everything after `Copy:`", rendered)
 
 
     def test_accepted_assignment_is_explicit_placement_reasoning_input(self) -> None:
