@@ -750,7 +750,7 @@ The first live 0.9.7 STEP-07 edit proved that the copy guidance still mixed raw 
 - [x] Make parse failures echo the offending line and expected plain shape instead of reporting only an abstract incomplete-Assignment error.
 - [x] Add regression coverage for the plain syntax, canonical round-trip, legacy compatibility and linear generated help.
 - [x] Advance the owner-test package version to 0.9.8 and update durable state/changelog wording.
-- [ ] Run the complete exact-head deterministic suite and zero-drift gate on the closing 0.9.8 checkpoint. Keep PR #54 Draft/unmerged.
+- [x] Run the complete exact-head deterministic suite and zero-drift gate on the closing 0.9.8 checkpoint. Keep PR #54 Draft/unmerged.
 
-Pre-checkpoint evidence: implementation head `e44add7fb4cdeb99a21c3c1681786100d4123c48` passed all 304 deterministic tests and `contextcanon check --all .` with zero generated drift before the 0.9.8 version/state checkpoint.
+Checkpoint: ContextCanon 0.9.8 is the corrected STEP-07 owner-test candidate. Implementation head `e44add7fb4cdeb99a21c3c1681786100d4123c48` proved the plain/raw Assignment behavior with 304 deterministic tests and zero generated drift. Version/state checkpoint head `6fc4818e2f3b62c8b79c64770e9d16dc993bb46b` then passed the same complete gate. This PLAN/STATE closure must itself receive the exact-head workflow before owner use. PR #54 remains Draft and must not be merged without explicit project-owner approval.
 
