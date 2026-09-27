@@ -210,9 +210,8 @@ def _parse_assignments(
         match = _ASSIGN_RE.fullmatch(line)
         if match is None:
             raise _error(
-                "Assignment first line is incomplete. Build it from one entry under "
-                "'Available project Context Nodes — generated' and one entry under "
-                "'Available reusable Context Nodes — generated' using the shown Assignment syntax, "
+                "Assignment first line is incomplete. Copy one project fragment and one reusable-Context "
+                "fragment from the generated choice lists, join them with the shown ← Assignment syntax, "
                 "then add an indented 'Why:' line"
             )
         target = target_by_label.get((match.group("target"), match.group("path")))
@@ -306,25 +305,25 @@ def render_reusable_contexts(
     packages: tuple[CompiledPackage, ...],
     assignments: tuple[ReusableContextAssignment, ...],
 ) -> str:
-    root_node = next((node for node in structure.nodes if node.path == "."), structure.nodes[0] if structure.nodes else None)
-    example_package = packages[0] if packages else None
     lines = [
         "# STEP 07 — Reusable Contexts",
         f'<!-- contextcanon-reusable-contexts schema="{REUSABLE_CONTEXTS_SCHEMA}" evidence="{evidence_digest}" structure="{structure.structure_digest}" -->',
         "",
-        "This step says **which reusable Context Nodes are available and where they apply in this project**. It happens after the project's own Context Node structure is accepted and before the placement LLM distributes project knowledge.",
+        "Your project now has its own Context shelves. This step asks one simple question: **should any already-curated reusable Context also apply here?** For example, a shared Development Workflow or GitHub Local Context can be attached where it belongs instead of copying those rules into this project by hand.",
         "",
-        "Edit only the Catalog locations, the sparse Assignments, and `Decision`. ContextCanon owns IDs, package digests and the generated lists. Run the same `contextcanon onboard reusable-contexts ...` command again after every edit.",
+        "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
+        "",
+        "> **Edit only** the two areas marked ✏️ below and the `Decision` line. Everything else is instruction or generated help and will be rewritten when you rerun this step.",
         "",
         "## Catalog locations",
         "",
-        "Add one directory containing reusable compiled Context Nodes per line. A location may itself be one Context Node or a directory containing several Nodes.",
+        "First tell ContextCanon where it may look for reusable Context Nodes. Add one directory per line. A location may itself be one compiled Context Node or a directory containing several Nodes.",
         "",
         "Paste a path normally. Markdown bullets, backticks, or quotes are optional input conveniences; ContextCanon rewrites accepted input into one canonical Markdown form on the next run.",
         "",
-        r"Example: `C:\Users\you\PycharmProjects\context-canon\nodes\library`",
+        r"Example path: `C:\Users\you\PycharmProjects\context-canon\nodes\library`",
         "",
-        "> ✏️ Editable Catalog locations start below.",
+        "> ✏️ **EDIT HERE — Catalog locations start below.**",
         "",
         CATALOG_START,
     ]
@@ -333,35 +332,22 @@ def render_reusable_contexts(
         [
             CATALOG_END,
             "",
-            "> End editable Catalog locations.",
+            "> **END EDITABLE Catalog locations.**",
             "",
             "## Assignments",
             "",
-            "Keep only relationships that should actually exist. Build each first line from one project Context Node and one reusable Context Node from the two generated choice lists below, put them around the `←` exactly as shown, then add an indented `Why:` line. Replace the `-` placeholder with a real durable rationale. The list stays sparse; the helper never generates every possible pairing.",
+            "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
             "",
-            "Assignment syntax:",
+            "At the bottom of this file, both generated choice lists mark each exact reusable fragment with **Copy:**. Copy only the monospace fragment after **Copy:** — not the list dash, the word `Copy:`, or the reusable package digest. Join one left fragment and one right fragment with `←`, then add a real `Why:` on the next line.",
+            "",
+            "Assignment syntax — **read-only help, do not edit here:**",
             "",
             "```text",
-            "- **<project Context Node>** (`<project path>`) ← **<reusable Context Node>** (`<version>`)",
-            "  Why: -",
+            "- <project Copy fragment> ← <reusable Context Copy fragment>",
+            "  Why: <why this reusable Context belongs here>",
             "```",
-        ]
-    )
-    if root_node is not None and example_package is not None:
-        lines.extend(
-            [
-                "",
-                "Example first line using entries from this project (syntax only, not a recommendation):",
-                "",
-                "```text",
-                f"- **{root_node.name}** (`{root_node.path}`) ← **{example_package.metadata.name}** (`{example_package.metadata.version}`)",
-                "```",
-            ]
-        )
-    lines.extend(
-        [
             "",
-            "> ✏️ Editable reusable-Context assignment controls start below.",
+            "> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**",
             "",
             f"Decision: `{decision}`",
             "",
@@ -371,7 +357,7 @@ def render_reusable_contexts(
     for assignment in assignments:
         lines.extend(
             [
-                f"- **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)",
+                f"- **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)" + "  ",
                 f"  Why: {assignment.why}",
             ]
         )
@@ -379,26 +365,26 @@ def render_reusable_contexts(
         [
             ASSIGNMENTS_END,
             "",
-            "> End editable reusable-Context assignment controls.",
+            "> **END EDITABLE reusable-Context Assignments.**",
             "",
-            "Set `Decision` to `accept` when the Catalog and assignments are the intended reusable-context composition for this onboarding. An empty assignment list is valid when no reusable Context applies.",
+            "Set `Decision` to `accept` when the Catalog and assignments describe the reusable Context you really want this project to inherit. An empty assignment list is valid when none applies.",
             "",
             "## Available project Context Nodes — generated",
             "",
-            "Use one desired entry as the left-hand side of `←`.",
+            "Choose the project shelf that should receive reusable Context. **Copy only the monospace fragment after Copy:**",
             "",
             GENERATED_PROJECT_START,
         ]
     )
     for node in structure.nodes:
-        lines.append(f"- **{node.name}** (`{node.path}`)")
+        lines.append(f"- **Copy:** ``**{node.name}** (`{node.path}`)``")
     lines.extend(
         [
             GENERATED_PROJECT_END,
             "",
             "## Available reusable Context Nodes — generated",
             "",
-            "Use one desired name/version entry as the right-hand side of `←`.",
+            "Choose the reusable Context that should apply. **Copy only the monospace fragment after Copy:** The exact package digest stays visible after it for review, but is **not** part of the Assignment.",
             "",
             GENERATED_CATALOG_START,
         ]
@@ -406,7 +392,7 @@ def render_reusable_contexts(
     if packages:
         for package in packages:
             lines.append(
-                f"- **{package.metadata.name}** (`{package.metadata.version}`) — exact package `{package.package_digest}`"
+                f"- **Copy:** ``**{package.metadata.name}** (`{package.metadata.version}`)`` — exact package `{package.package_digest}`"
             )
     elif locations:
         lines.append("No verified reusable Context Nodes found.")
@@ -416,12 +402,11 @@ def render_reusable_contexts(
         [
             GENERATED_CATALOG_END,
             "",
-            "The generated package identities are review information. Do not copy their IDs or digests into Assignments; ContextCanon resolves and remembers them for subsequent steps.",
+            "Package identities are review information. ContextCanon resolves and remembers them automatically; never paste IDs or digests into Assignments.",
             "",
         ]
     )
     return "\n".join(lines)
-
 
 def _initial_text(evidence_digest: str, structure: HumanStructurePlan) -> str:
     return render_reusable_contexts(evidence_digest, structure, "pending", (), (), ())
