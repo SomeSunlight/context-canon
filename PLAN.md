@@ -754,3 +754,14 @@ The first live 0.9.7 STEP-07 edit proved that the copy guidance still mixed raw 
 
 Checkpoint: ContextCanon 0.9.8 is the corrected STEP-07 owner-test candidate. Implementation head `e44add7fb4cdeb99a21c3c1681786100d4123c48` proved the plain/raw Assignment behavior with 304 deterministic tests and zero generated drift. Version/state checkpoint head `6fc4818e2f3b62c8b79c64770e9d16dc993bb46b` then passed the same complete gate. This PLAN/STATE closure must itself receive the exact-head workflow before owner use. PR #54 remains Draft and must not be merged without explicit project-owner approval.
 
+## Owner walkthrough follow-up: inline data URI Resource closure — Issue #66
+
+Purpose: keep Topic Resource closure strict for repository-local dependencies while treating self-contained Markdown `data:` URIs as inline content rather than nonexistent local files.
+
+- [ ] Ignore Markdown link/image targets beginning with `data:` in local resource discovery.
+- [ ] Add a focused regression proving inline data images are ignored while genuine local linked resources remain in closure.
+- [ ] Keep the original Markdown Resource unchanged; no placement/review semantics or source-edit behavior changes.
+- [ ] Advance the owner-test patch version to 0.9.9, update durable state/changelog wording, and pass the complete exact-head deterministic/zero-drift gate. Keep PR #54 Draft/unmerged.
+
+Owner-test trigger: STEP 09 `placement-preview` on a Confluence/Chrome-exported Topic Resource failed with `missing resource: data:image/svg+xml;base64,...`. The frozen Resource itself exists and is valid; only its inline SVG target was misclassified as a local file dependency.
+
