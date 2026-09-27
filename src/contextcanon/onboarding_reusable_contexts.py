@@ -34,9 +34,9 @@ _ASSIGN_RE = re.compile(
     r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)$'
 )
 _PLAIN_ASSIGN_RE = re.compile(
-    r'^(?:- )?(?P<target>.+) \\((?P<path>.+)\\) ← '
-    r'(?P<source>.+) \\((?P<version>.+)\\)
-
+    r'^(?:- )?(?P<target>.+) \((?P<path>.+)\) ← '
+    r'(?P<source>.+) \((?P<version>.+)\)$'
+)
 @dataclass(frozen=True)
 class ReusableContextAssignment:
     target_node_key: str
