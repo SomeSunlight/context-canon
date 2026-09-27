@@ -358,22 +358,18 @@ This is a human-owned configuration/review surface, not part of the PLAN. It has
 2. **Assignments** — only the reusable relationships that should actually exist; there is deliberately no project-node × catalog-node matrix;
 3. **Why** — the durable reason that each reusable Context applies at that project Node.
 
-A typical edit looks like:
+A typical edit uses deliberately plain raw text:
 
-```markdown
-## Catalog locations — editable
+```text
+Decision: accept
 
-- `C:\Users\me\PycharmProjects\context-canon\nodes\library`
-
-## Assignments — editable
-
-Decision: `accept`
-
-- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)
-  Why: Shared development workflow applies to the whole project.
+My Project (.) ← GitHub Local (0.1.0-draft)
+Why: This project uses the local GitHub-compatible development workflow.
 ```
 
-Run the **same command again** after editing. ContextCanon scans the Catalog locations, fully verifies compiled packages, renders the available project/reusable Nodes for reference, resolves the human-readable assignment to stable IDs and exact package digests, and stores the validated machine state. You should not type Source UUIDs or package digests into the assignment.
+The generated project/reusable choice lists contain `Copy:` lines. Editing instructions always refer to the **raw Markdown text**, not to the rendered preview: copy the project fragment after `Copy:` to line end; for a reusable Context, copy after `Copy:` up to but not including ` — exact package`. There is no Markdown formatting syntax to preserve in an Assignment.
+
+Run the **same command again** after editing. ContextCanon scans the Catalog locations, fully verifies compiled packages, resolves the human-readable assignment to stable IDs and exact package digests, canonicalizes the accepted plain form, and stores the validated machine state. You should not type Source UUIDs or package digests into the assignment.
 
 An empty assignment list is valid: a project may simply have no reusable Contexts. Set `Decision` to `accept` only when the Catalog and sparse relationships are what you intend.
 
@@ -446,7 +442,7 @@ contextcanon onboard placement-validate \
 
 ContextCanon checks the proposal against the frozen Evidence, accepted project structure, and exact reusable Context packages from STEP 07. STEP 09 is validation-only and intentionally has no separate artifact.
 
-## 10. Review and revalidate `STEP-10-placement.md`
+## 10. Review the split placement cockpit
 
 Create/load the human review:
 
@@ -455,13 +451,27 @@ contextcanon onboard placement-review \
   .context/onboarding/<evidence-digest>
 ```
 
-`STEP-10-placement.md` is the **human-owned placement decision file**, not merely a rendered report. Each project finding is destination-first: destination, decision, kind/action, maintained meaning, proposal rationale, and exact Evidence excerpts.
+`STEP-10-placement.md` is the compact **index/status surface**. The detailed review is deliberately split so a large project does not become one unmanageable Markdown document:
 
-The owner may edit destination, decision, title, supported kind/action semantics, maintained wording, and review note directly in Markdown. ContextCanon allocates stable authoring identity once and preserves it across reloads.
+```text
+contextcanon-onboarding/
+├── STEP-10-placement.md
+├── STEP-10-placement/
+│   ├── P-001-....md
+│   ├── P-002-....md
+│   └── ...
+└── STEP-10-source-edits/
+    ├── E-001-....md
+    └── ...
+```
 
-Reusable Context assignments already accepted in Step 7 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in STEP 07, that proposal remains an explicit human decision rather than being silently adopted.
+Each **P sheet** reviews one semantic finding: destination, decision, kind/action, maintained meaning, proposal rationale, and exact frozen Evidence excerpts. Each **E sheet** reviews one concrete transformation of an original mutable Markdown source range. P and E are linked but intentionally separate: accepting where meaning belongs does not silently approve rewriting its old source.
 
-Every successful placement-review validation regenerates read-only `STEP-10a-source-audit.md`, grouping source-before/source-after transformations by original file/range so semantic loss is easy to inspect.
+The owner may edit supported destination/decision/kind/title/maintained wording and review notes directly in the P sheets. Source replacement text and its decision live only in the linked E sheet. ContextCanon allocates stable authoring identity once and preserves it across revalidation.
+
+Reusable Context assignments already accepted in Step 7 are **not another selection matrix here**. They appear only as compact traceability. If frozen Evidence suggests a genuinely new reusable relationship that was not established in STEP 07, that remains an explicit human decision rather than being silently adopted.
+
+Rerun the same `placement-review` command after edits. It validates every split sheet, refreshes the index, and regenerates read-only `STEP-10a-source-audit.md` so source-before/source-after transformations can be inspected by original file/range.
 
 ## 11. Preview exact publication before mutation
 
@@ -509,6 +519,10 @@ contextcanon-onboarding/
 ├── STEP-08a-placement-instruction.md
 ├── STEP-08b-placement-proposal.json
 ├── STEP-10-placement.md
+├── STEP-10-placement/
+│   └── P-*.md
+├── STEP-10-source-edits/
+│   └── E-*.md
 ├── STEP-10a-source-audit.md
 ├── STEP-11-placement-preview.md
 └── STEP-12-placement-followup.md
@@ -516,18 +530,18 @@ contextcanon-onboarding/
 
 The visible workspace has a ContextCanon ownership marker. If a directory with the same name already exists without that marker, ContextCanon refuses to take it over; use `--workspace <path>` instead.
 
-## Legacy single-pass first adoption
+## Legacy compatibility path
 
-The accepted `main` baseline still contains the earlier single-pass first-adoption workflow:
+The codebase still contains the earlier single-pass first-adoption workflow:
 
 ```text
 prepare → instruction → external LLM → proposal.json
 → validate → review → explicit onboard accept
 ```
 
-That path established important trust boundaries: immutable Evidence, exact proposal provenance, human decisions, exact Source package binding, staged compilation, rollback-safe first publication, and refusal to overwrite an existing `CONTEXT.src.md`.
+That path established several trust boundaries that the current structure-first workflow still relies on: immutable Evidence, exact proposal provenance, human decisions, exact Source package binding, staged compilation, rollback-safe publication, and refusal to overwrite an existing `CONTEXT.src.md`.
 
-PR #12 does **not** silently reinterpret those accepted artifacts. The structure-first path is a separate experiment layered on the same frozen-Evidence foundation. Once the larger real-project flow is accepted, the documentation/API can be consolidated deliberately instead of pretending the old and new semantic contracts are the same thing.
+The twelve-step operator flow above is the current first-adoption path. Legacy compatibility remains implementation history/compatibility surface; new users should not choose between two onboarding methodologies.
 
 ## Why the explicit stages exist
 
@@ -555,6 +569,6 @@ Deterministic mechanisms handle identity, integrity, reproducibility, and state 
 
 This page is the first-user walkthrough. Framework developers can inspect the internal [onboarding design and trust contract](../nodes/internal/framework-development/docs/onboarding-design.md). It explains compiler/schema boundaries, provenance rules, compatibility behavior, and why the deterministic/semantic stages are separated; it is **not** the operator CLI reference.
 
-The structure-first/reusable-context/placement contracts were validated through the real `ai-workstation` onboarding line. The internal design document preserves those trust boundaries and compatibility decisions; this twelve-step walkthrough remains the current human-facing first-adoption flow.
+The structure-first/reusable-context/placement contracts were first stress-tested through the real `ai-workstation` onboarding line and then completed end-to-end on a confidential non-GitHub corporate project, including GitHub Local as a reusable provider. The internal design document preserves the trust boundaries and compatibility decisions; this twelve-step walkthrough is the current human-facing first-adoption flow.
 
 State and Plan are local first-class Node authoring: accepted placement findings of those kinds are written to `## Local State` and `## Local Plan` in the destination `CONTEXT.src.md` and therefore appear in generated `CONTEXT.md`. They are intentionally not inherited through reusable Sources; current project situation and future project work stay local to the Node that owns them.
