@@ -340,7 +340,7 @@ def render_reusable_contexts(
             "",
             "At the bottom of this file, both generated choice lists mark each exact reusable fragment with **Copy:**. Copy only the monospace fragment after **Copy:** — not the list dash, the word `Copy:`, or the reusable package digest. Join one left fragment and one right fragment with `←`, then add a real `Why:` on the next line.",
             "",
-            "Assignment syntax — **read-only help, do not edit here:**",
+            "Assignment syntax: **read-only help — do not edit here.**",
             "",
             "```text",
             "- <project Copy fragment> ← <reusable Context Copy fragment>",
