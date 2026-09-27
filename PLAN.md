@@ -2,13 +2,22 @@
 
 ## Accepted baseline
 
-The current accepted `main` product baseline is ContextCanon **0.8.0** from PR #31, squash-merged as `d285ae09795994239a802ce50342404fadd482b7`.
+The current accepted `main` product baseline is ContextCanon **0.9.9** from PR #54, owner-approved and squash-merged as `efa5946dac2ed4933ad250539f6a2836a39db7ca`.
 
-PR #31 completed Issues #30 and #32–#38 after the full real `Llama_Dispatcher` owner onboarding reached reviewed publication. No framework review PR is currently active.
+PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 
-Follow-up Issues #39–#43 record the next owner-test findings but are not an active development block.
+Historical plan/checkpoint sections below retain the status wording that was true when written; references to earlier PRs as draft/unmerged are historical.
 
-Historical plan/checkpoint sections below retain the status wording that was true when written; references to PR #13, PR #18 or PR #31 as draft/unmerged are historical.
+## Active development block: accepted 0.9.9 documentation reconciliation — Issue #67
+
+Purpose: make first-contact documentation describe the product that now exists, without turning README into a second canonical technical specification.
+
+- [ ] Reconcile PLAN/STATE/CHANGELOG to the accepted 0.9.9 baseline.
+- [ ] Refresh the root README around progressive disclosure, current onboarding, and the proven Separation of Concerns between ContextCanon, Development Workflow, provider and agent/harness.
+- [ ] Add GitHub and GitHub Local to the actual reusable-Node map/layout and explain provider composition without inventing a new ContextCanon interface primitive.
+- [ ] Remove stale project-status/version claims and route detail to the canonical/deeper documents that own it.
+- [ ] Keep #41 explanatory views and #42 reusable repository-documentation philosophy explicitly out of scope.
+- [ ] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
 
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
