@@ -116,7 +116,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         (root / ".git").mkdir()
         (root / "docs").mkdir()
-        (root / "docs/authoring.md").write_text("# Authoring\n\n[Details](details.md)\n", encoding="utf-8")
+        (root / "docs/authoring.md").write_text(\n            "# Authoring\\n\\n[Details](details.md)\\n"\n            '![Comments](data:image/svg+xml;base64,PHN2Zy8+ "Kommentare anzeigen")\\n',\n            encoding="utf-8",\n        )
         (root / "docs/details.md").write_text("# Details\n", encoding="utf-8")
         (root / "docs/architecture.md").write_text("# Architecture\n", encoding="utf-8")
         (root / "STATE.md").write_text("# State\n", encoding="utf-8")
