@@ -55,6 +55,15 @@ from .onboarding_workspace import open_inventory_workspace, open_onboarding_work
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .parser import ContextCanonError, find_repo_root, parse_node
+from .resources import (
+    collect_resource_records,
+    move_resource,
+    reconcile_resource,
+    register_resources,
+    resource_records_json,
+    resource_status_json,
+    status_resources,
+)
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
@@ -890,6 +899,51 @@ def main(argv: list[str] | None = None) -> int:
     parent_propagate.add_argument("--all", action="store_true", help="broaden review scope to every semantic Parent edge in the repository")
     parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
 
+    resource_parser = sub.add_parser(
+        "resource",
+        help="inspect, register, move, and reconcile stable Topic Resources",
+    )
+    resource_sub = resource_parser.add_subparsers(dest="resource_command", required=True)
+
+    resource_list = resource_sub.add_parser(
+        "list",
+        help="list direct Topic Resources with stable IDs, paths, owning Nodes, and Topic uses",
+    )
+    resource_list.add_argument("path", nargs="?", default=".", help="path inside the Git repository")
+    resource_list.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
+
+    resource_register = resource_sub.add_parser(
+        "register",
+        help="explicitly add stable IDs to path-only Topic Resources in the repository",
+    )
+    resource_register.add_argument("path", nargs="?", default=".", help="path inside the Git repository")
+
+    resource_status = resource_sub.add_parser(
+        "status",
+        help="show Resource changes and exact-hash rename candidates without mutating anything",
+    )
+    resource_status.add_argument("path", nargs="?", default=".", help="path inside the Git repository")
+    resource_status.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
+
+    for move_name in ("move", "mv"):
+        resource_move = resource_sub.add_parser(
+            move_name,
+            help="move one existing Resource and update every affected ContextCanon locator atomically",
+        )
+        resource_move.add_argument("old", help="current Resource path, relative to the current directory or absolute")
+        resource_move.add_argument("new", help="new Resource path, relative to the current directory or absolute")
+
+    resource_reconcile = resource_sub.add_parser(
+        "reconcile",
+        help="interactively reconcile externally moved Resources using exact previous bytes",
+    )
+    resource_reconcile.add_argument("path", nargs="?", default=".", help="path inside the Git repository")
+    resource_reconcile.add_argument(
+        "--yes",
+        action="store_true",
+        help="accept every unambiguous exact-hash move without interactive confirmation",
+    )
+
     source_parser = sub.add_parser("source", help="discover, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
     source_list = source_sub.add_parser("list", help="list Sources by human name, stable ID and discovery configuration")
@@ -1483,6 +1537,191 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Normalized digest: {acceptance.normalized_digest}")
             print(f"Package digest: {acceptance.package_digest}")
             print(f"Acceptance record: {acceptance.acceptance_path}")
+            return 0
+
+        if args.command == "resource":
+            if args.resource_command in {"move", "mv"}:
+                cwd = Path.cwd().resolve()
+                repo_root = find_repo_root(cwd)
+                old_path = Path(args.old)
+                new_path = Path(args.new)
+                if not old_path.is_absolute():
+                    old_path = cwd / old_path
+                if not new_path.is_absolute():
+                    new_path = cwd / new_path
+                result = move_resource(repo_root, old_path, new_path)
+                print(
+                    f"moved Resource {result.old_path.relative_to(repo_root).as_posix()} -> "
+                    f"{result.new_path.relative_to(repo_root).as_posix()}"
+                )
+                print("Stable Resource IDs: " + ", ".join(result.resource_ids))
+                print(f"Updated Context Nodes: {len(result.updated_nodes)}")
+                print("ContextCanon Resource locators were updated atomically; arbitrary project Markdown links were not rewritten.")
+                print("Next: contextcanon build --all .")
+                print("Then: contextcanon check --all .")
+                return 0
+
+            probe = Path(args.path).resolve()
+            repo_root = probe if (probe / ".git").exists() else find_repo_root(probe)
+            node_roots = discover_nodes(repo_root)
+
+            if args.resource_command == "list":
+                records = collect_resource_records(repo_root, node_roots)
+                if args.json:
+                    print(resource_records_json(repo_root, records), end="")
+                    return 0
+                if not records:
+                    print("No direct Topic Resources are defined in this repository.")
+                    return 0
+                for record in records:
+                    resource_id = record.resource_id or "<unregistered>"
+                    path = record.path.relative_to(repo_root).as_posix()
+                    topics = ", ".join(
+                        f"{use.topic_id} ({use.intent})" for use in record.uses
+                    )
+                    print(f"{resource_id} | {record.node_name} | {path} | used by {topics}")
+                if any(record.resource_id is None for record in records):
+                    print("")
+                    print("Unregistered Resources remain path-identified. Migrate explicitly with:")
+                    print("  contextcanon resource register")
+                return 0
+
+            if args.resource_command == "register":
+                total = 0
+                for node_root in node_roots:
+                    result = register_resources(node_root)
+                    if result.added:
+                        label = node_root.relative_to(repo_root).as_posix() or "."
+                        print(f"registered {result.added} Resource(s) in {label}")
+                        for resource_id in result.resource_ids:
+                            print(f"  + {resource_id}")
+                        total += result.added
+                if total == 0:
+                    print("All direct Topic Resources already have stable IDs.")
+                else:
+                    print(f"Registered {total} Resource identity/identities.")
+                    print("Next: contextcanon build --all .")
+                    print("Then: contextcanon check --all .")
+                return 0
+
+            statuses = status_resources(repo_root, node_roots)
+            if args.resource_command == "status":
+                if args.json:
+                    print(resource_status_json(repo_root, statuses), end="")
+                    return 0
+                if not statuses:
+                    print("No direct Topic Resources are defined in this repository.")
+                    return 0
+                symbols = {
+                    "clean": " ",
+                    "unregistered": "U",
+                    "unbuilt": "A",
+                    "missing-unbuilt": "!",
+                    "modified": "M",
+                    "moved": "R",
+                    "moved-modified": "RM",
+                    "candidate": "R?",
+                    "candidate-closure-changed": "!",
+                    "ambiguous": "?",
+                    "missing": "D",
+                }
+                for status in statuses:
+                    resource_id = status.record.resource_id or "<unregistered>"
+                    symbol = symbols.get(status.state, "?")
+                    if status.state == "candidate" and status.candidates:
+                        candidate = status.candidates[0]
+                        metrics = f"sha256={candidate.sha256[:12]} bytes={candidate.size}"
+                        if candidate.lines is not None:
+                            metrics += f" lines={candidate.lines}"
+                        print(
+                            f"{symbol:>2} {resource_id} | {status.repo_path} -> {candidate.repo_path} "
+                            f"| exact 100% | {metrics}"
+                        )
+                    elif status.state == "ambiguous":
+                        print(
+                            f"{symbol:>2} {resource_id} | {status.repo_path} | "
+                            f"{len(status.candidates)} exact candidates (human choice required)"
+                        )
+                        for candidate in status.candidates:
+                            print(f"     - {candidate.repo_path}")
+                    elif status.state == "candidate-closure-changed" and status.candidates:
+                        print(
+                            f"{symbol:>2} {resource_id} | {status.repo_path} -> {status.candidates[0].repo_path} "
+                            "| exact bytes but relative Markdown closure changed"
+                        )
+                    elif status.state in {"moved", "moved-modified"}:
+                        print(
+                            f"{symbol:>2} {resource_id} | {status.baseline_repo_path} -> {status.repo_path} "
+                            f"| {status.state}"
+                        )
+                    else:
+                        print(f"{symbol:>2} {resource_id} | {status.repo_path} | {status.state}")
+                if any(status.state == "candidate" for status in statuses):
+                    print("")
+                    print("Resolve unambiguous external renames interactively with:")
+                    print("  contextcanon resource reconcile")
+                if any(status.state == "unregistered" for status in statuses):
+                    print("")
+                    print("Register stable IDs before using move/reconcile:")
+                    print("  contextcanon resource register")
+                return 0
+
+            # resource reconcile
+            grouped: dict[Path, list[object]] = {}
+            for status in statuses:
+                if status.state == "candidate" and len(status.candidates) == 1:
+                    grouped.setdefault(status.record.path.resolve(), []).append(status)
+
+            reconciled = 0
+            for old_path, group in sorted(grouped.items(), key=lambda item: item[0].as_posix()):
+                candidate_paths = {status.candidates[0].path.resolve() for status in group}
+                if len(candidate_paths) != 1:
+                    print(
+                        f"skip {old_path.relative_to(repo_root).as_posix()}: semantic owners disagree on the exact candidate"
+                    )
+                    continue
+                new_path = next(iter(candidate_paths))
+                resource_ids = sorted(
+                    {
+                        status.record.resource_id
+                        for status in group
+                        if status.record.resource_id is not None
+                    }
+                )
+                print("")
+                print(
+                    f"External Resource rename candidate: "
+                    f"{old_path.relative_to(repo_root).as_posix()} -> "
+                    f"{new_path.relative_to(repo_root).as_posix()}"
+                )
+                print("Stable Resource IDs: " + ", ".join(resource_ids))
+                print("Match: exact SHA-256 / 100% byte identity")
+                candidate = group[0].candidates[0]
+                metrics = f"Bytes: {candidate.size}"
+                if candidate.lines is not None:
+                    metrics += f" | Lines: {candidate.lines}"
+                print(metrics)
+                if not args.yes and not _confirm("Preserve these Resource identities and update all ContextCanon locators?"):
+                    print("Skipped.")
+                    continue
+                result = reconcile_resource(repo_root, old_path, new_path)
+                print(f"Reconciled {len(result.resource_ids)} Resource identity/identities across {len(result.updated_nodes)} Context Node(s).")
+                reconciled += 1
+
+            blocked = [status for status in statuses if status.state in {"ambiguous", "candidate-closure-changed", "missing"}]
+            if blocked:
+                print("")
+                print("Unresolved Resource paths:")
+                for status in blocked:
+                    print(f"  - {status.record.resource_id}: {status.repo_path} ({status.state})")
+                print("No identity was transferred for unresolved paths.")
+
+            if reconciled:
+                print("")
+                print("Next: contextcanon build --all .")
+                print("Then: contextcanon check --all .")
+            elif not blocked:
+                print("No external Resource renames require reconciliation.")
             return 0
 
         if args.command == "config":
