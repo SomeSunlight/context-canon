@@ -4,6 +4,8 @@ All notable ContextCanon changes will be documented here.
 
 ## Unreleased
 
+ContextCanon **0.9.9** is the accepted `main` baseline after the complete owner-reviewed onboarding of a real confidential corporate project. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to that accepted baseline.
+
 ### Fixed
 
 - ContextCanon 0.9.9 owner-test candidate: Markdown Topic Resource closure now ignores inline `data:` URIs (for example Confluence/Chrome-exported base64 SVG images) instead of treating them as missing repository-local files. The original Resource remains unchanged; genuine local Markdown links still participate in deterministic closure/materialization.

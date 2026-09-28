@@ -81,22 +81,24 @@ The onboarding itself deliberately separates deterministic mechanics from semant
 ```text
 tidy project material
         ↓
-review deterministic file inventory
+inventory + human triage
         ↓
 freeze exact reviewed Evidence
         ↓
-reasoning LLM proposes semantic shelves
+fresh isolated reasoning handoff → shelf proposal
         ↓
 human accepts/edits the structure
         ↓
-reasoning LLM proposes placement
+optionally compose reusable Context
         ↓
-human reviews
+fresh isolated reasoning handoff → book-placement proposal
+        ↓
+human reviews semantic placement + source transformations
         ↓
 preview + explicit publication
 ```
 
-The LLM proposes semantics; it does not publish project truth. For the two semantic passes, use a strong reasoning-capable model. ContextCanon validates provenance and structure, but the project owner remains responsible for architecture and acceptance.
+The LLM proposes semantics; it does not publish project truth. Each semantic pass gets a fresh **Semantic Handoff Workspace** containing only the task instruction, the exact frozen Evidence, and accepted state required for that pass. ContextCanon regains control for deterministic validation; the project owner remains responsible for architecture and acceptance. For onboarding, use a strong reasoning-capable model even if ordinary later tasks can run on smaller/local models.
 
 For the conceptual walkthrough, see **[Onboard an existing project](docs/onboarding.md)**. For a stable command map — especially reset/restart — see **[Onboarding CLI](docs/onboarding-cli.md)**. During an actual run, follow the generated `contextcanon-onboarding/PLAN.md`.
 
@@ -111,6 +113,21 @@ inspect / update  →  review downstream propagation when needed  →  build  �
 Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**. It explains Source versus Parent from the user's point of view, the three-question propagation review, and when to fix upstream versus use a justified local Override/Remove. Use the **[CLI quick reference](docs/cli.md)** as the compact command map; exact flags remain available through `contextcanon <command> --help`.
 
 `contextcanon propagate` reviews only semantic descendants of the selected Context Node. `--all` deliberately broadens the review scope to every Parent graph in the repository; it is not blanket approval.
+
+## Four concerns that should not be tangled together
+
+ContextCanon deliberately does **not** try to be the agent, the development process and the forge at the same time.
+
+| Concern | Answers | Examples |
+| --- | --- | --- |
+| **ContextCanon** | What applies here, and where should I go deeper for this task? | Context Nodes, Sources, Topics, State, Plan |
+| **Development Workflow** | How does a change move from reason to accepted baseline? | Issue → branch → Pull Request → review → checks → merge |
+| **Workflow provider** | Which infrastructure implements those familiar development objects? | GitHub, GitHub Local |
+| **Agent / harness** | Which model or tool actually performs the work? | Copilot, Goose, Hermes, ChatGPT, other IDE/CLI agents |
+
+The separation is practical rather than theoretical. A project can change agent without rewriting its Context. It can use GitHub or a local GitHub-compatible provider without inventing a second workflow language for the model. And ContextCanon remains useful for projects that do not use the Development Workflow at all.
+
+**Abstraction stays below normal model context.** The reusable Development Workflow keeps the familiar words Issue, branch, Pull Request, review, checks and merge. A concrete provider composes that workflow and makes those words operational. ContextCanon does not introduce an `implements` keyword or a parallel abstract vocabulary just to express this relationship.
 
 ## One simple physical rule: a Node has its own directory
 
@@ -167,30 +184,39 @@ This repository does not explain ContextCanon from outside and then switch it on
 
 **The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then uses three Topics to route only the tasks that need more depth: onboarding an existing project, maintaining an onboarded project, and developing ContextCanon itself.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then routes only tasks that need more depth.
 
 ```text
-                         ┌─ Topic ──> onboarding guide
-ContextCanon Gateway ───┼─ Topic ──> maintenance + CLI guide
+                         ┌─ Topic ──> onboarding / maintenance docs
+ContextCanon Gateway ───┤
                          └─ Topic ──> ContextCanon Framework Development
                                            ▲              ▲
                                            │ Source       │ Source
                               ContextCanon Foundation     │
                                                    Development Workflow
+
+Reusable workflow providers:
+                         Development Workflow
+                                  ▲
+                                  │ Source
+                           ┌──────┴──────┐
+                         GitHub      GitHub Local
 ```
 
-That gives this repository **four real Nodes with four different jobs**:
+That gives this repository **six real Nodes with different jobs**:
 
-- **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry. It demonstrates always-read orientation plus progressive disclosure to deeper task-specific material.
-- **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — the reusable baseline for ContextCanon-specific authoring and governance conventions.
-- **[Development Workflow](nodes/library/development-workflow/CONTEXT.src.md)** — a reusable, Foundation-independent workflow for recoverable planning, proportional verification, explicit project-owner review, merge gates and post-merge baseline closure. It moved from `internal/` to `library/` with the **same stable Node ID** after `ai-workstation` proved its cross-project value.
-- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the ContextCanon-specific delta needed to design and implement the framework itself.
+- **[ContextCanon Gateway](CONTEXT.md)** — the compact repository entry and progressive-disclosure router.
+- **[ContextCanon Foundation](nodes/library/foundation/CONTEXT.md)** — reusable ContextCanon authoring/composition/governance conventions.
+- **[Development Workflow](nodes/library/development-workflow/CONTEXT.src.md)** — the reusable Issue/branch/Pull Request/review/checks/merge lifecycle, independent of a concrete forge.
+- **[GitHub](nodes/library/github/CONTEXT.md)** — the concrete provider for ordinary github.com development infrastructure.
+- **[GitHub Local](nodes/library/github-local/CONTEXT.md)** — the concrete provider for a local GitHub-compatible development surface; the executable `github.local` runtime is intentionally a separate future project.
+- **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the ContextCanon-specific delta needed to design and implement this framework.
 
-The Gateway arrows are **navigation**: Gateway does not inherit the onboarding guide or Framework Development as governance; Topics send relevant tasks there. The two upward arrows are **composition**: Framework Development accepts Foundation and Development Workflow as independent Sources and then adds a local delta.
+The Gateway arrows are **navigation**: Topics send a relevant task to deeper material without inheriting all of it. The upward arrows are **composition**: one Node accepts another Node as a Source.
 
-Reusable Nodes do **not** automatically inherit Foundation merely because they live in the library. A library Node composes Foundation only when its own semantics actually depend on Foundation. Independent reusable concerns remain independent Sources so consumers can choose them separately instead of removing unwanted transitive governance later.
+The provider diagram uses “workflow/provider” as a familiar software analogy, not as extra ContextCanon grammar. GitHub and GitHub Local are ordinary reusable Nodes that compose Development Workflow. Likewise, reusable Nodes do **not** automatically inherit Foundation merely because they live in the library; every Source relationship is an explicit semantic product decision.
 
-Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent "almost no context" cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
+Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent “almost no context” cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
 ## ContextCanon is also for humans
 
@@ -207,6 +233,8 @@ The same structure that saves model tokens makes a project easier to inspect:
 The framework deliberately uses constrained Markdown for human authoring and a boring machine representation underneath. Humans should not have to read YAML to understand the project; machines should not have to infer structure that can be represented exactly.
 
 Across repositories, that consistency becomes a lightweight architectural interface: the domain changes, but the orientation workflow does not.
+
+A project README has a different job from canonical Context. It is a **human first-contact projection**: summarize the project, explain why it exists, and route readers to the maintained detail. It should not become a second copy of every Rule, architecture invariant or volatile State. ContextCanon therefore works perfectly well when a project starts with no README at all; canonical Nodes can be established first and human-facing orientation can be written from that structure later. Automatic README projection is not currently a ContextCanon feature — keeping that boundary explicit is preferable to pretending generated prose is already authoritative.
 
 ## Repository layout
 
@@ -242,7 +270,14 @@ context-canon/
     │   │   ├── docs/
     │   │   ├── CONTEXT/
     │   │   └── .context/
-    │   └── development-workflow/
+    │   ├── development-workflow/
+    │   │   ├── README.md
+    │   │   ├── CONTEXT.src.md
+    │   │   └── docs/
+    │   ├── github/
+    │   │   ├── README.md
+    │   │   └── CONTEXT.src.md
+    │   └── github-local/
     │       ├── README.md
     │       ├── CONTEXT.src.md
     │       └── docs/
@@ -274,7 +309,7 @@ These category names are conventions of this repository. ContextCanon does not r
 
 Reusable Sources are not live includes from another Git repository. A consumer accepts an exact immutable Source package and can build offline from its own accepted state.
 
-Compiler 0.6 separates candidate discovery from accepted inheritance:
+The compiler separates candidate discovery from accepted inheritance:
 
 ```text
 source fetch  → candidate only
@@ -309,7 +344,9 @@ If the five-second idea above is enough, the best next reads are:
 - [Onboarding CLI](docs/onboarding-cli.md) — onboarding command map, including reset/restart from any STEP 01–12.
 - [Maintain an existing ContextCanon project](docs/maintenance.md) — Source updates, downstream propagation review, build, and check.
 - [CLI quick reference](docs/cli.md) — compact command map for normal operation.
-- [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable planning, review, merge-gate and baseline-closure workflow.
+- [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable Issue/branch/Pull Request/review/checks/merge lifecycle independent of a concrete forge.
+- [GitHub](nodes/library/github/CONTEXT.md) — concrete provider for the Development Workflow on github.com.
+- [GitHub Local](nodes/library/github-local/CONTEXT.md) — local GitHub-compatible provider Context for restricted/private development.
 - [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
 - [Context composition](nodes/library/foundation/docs/composition.md) — Sources, local deltas, conflicts and updates.
 - [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
@@ -333,8 +370,10 @@ ContextCanon is not an implementation of ICM. It focuses on composable Context N
 
 ## Project status
 
-The current project-owner accepted `main` baseline is PR #18, squash-merged as `2fb8368b15a7ef93a46012e0a0583bb795e174fe`. The public CLI/package version is **0.7.3** and the deterministic compiler version is **0.6.0**.
+The current project-owner accepted `main` baseline is **ContextCanon 0.9.9**, from PR #54, squash-merged as `efa5946dac2ed4933ad250539f6a2836a39db7ca`.
 
-This baseline includes explicit zero/one/many semantic Parents, immutable reviewed Parent/Source snapshots, central Source discovery configuration, explicit machine Node names, package-version discipline, and the human-scale `source update` / `propagate` maintenance flow. The final workflow was validated end-to-end on the real `ai-workstation` consumer, including all eight Parent/Child reviews, rebuild/check across nine Nodes, Windows interruption/resume, and idempotent rerun.
+That baseline is the first one validated through a complete real confidential **non-GitHub corporate-project onboarding**: reviewed inventory and immutable Evidence, structure-first shelf design, reusable Context selection including GitHub Local, isolated Semantic Handoffs for structure and placement, split human P/E review, deterministic preview and explicit publication. The final owner-test fixes simplified STEP-07 Assignments to plain raw text and made Markdown Topic Resource closure tolerate self-contained `data:` images from real-world Confluence/Chrome exports.
 
-All Issues #14–#27 completed by PR #18 are closed. See [STATE.md](STATE.md) for the accepted current situation and [PLAN.md](PLAN.md) for intentionally deferred or future work.
+The important conclusion is not that onboarding has become “finished”. It is that the current separation has survived a substantially different real project: deterministic ContextCanon mechanics around bounded semantic LLM work, with human architecture/acceptance gates between them.
+
+See [STATE.md](STATE.md) for the accepted current situation, [PLAN.md](PLAN.md) for the active development block, and [CHANGELOG.md](CHANGELOG.md) for the incremental owner-test history.
