@@ -24,16 +24,18 @@ Checkpoint: PR #68 was owner-reviewed and squash-merged to `main` as `68d5246eaf
 
 ## Active development block: Fast Track terminology — Issue #69
 
-**Fast Track status — ACTIVE**
+**Fast Track status — CLOSED**
 
 Purpose: standardize the owner-approved accelerated development mode on the memorable name **Fast Track**, without changing authority, review, or merge-gate semantics.
 
-- [ ] Rename the reusable Development Workflow rule and explanatory documentation.
-- [ ] Refresh every affected generated Context package and dependent local Source pin.
-- [ ] Verify the repository contains only **Fast Track** terminology and passes the complete deterministic/zero-drift gate.
-- [ ] Close the Fast Track checkpoint and prepare one review PR. Do not merge without explicit project-owner approval.
+- [x] Rename the reusable Development Workflow rule and explanatory documentation.
+- [x] Refresh every affected generated Context package and dependent local Source pin.
+- [x] Verify the repository contains only **Fast Track** terminology and passes the complete deterministic/zero-drift gate.
+- [x] Close the Fast Track checkpoint and prepare one review PR. Do not merge without explicit project-owner approval.
 
 Exit: terminology is consistently **Fast Track** everywhere and the exact PR head is green.
+
+Checkpoint: the reusable Development Workflow is now `0.3.1-draft`; Framework Development, GitHub and GitHub Local consume that version, generated packages were rebuilt by ContextCanon itself, all 304 deterministic tests passed, `contextcanon check --all .` reported zero drift, and a repository-wide sweep found no remaining previous mode label. The temporary refresh workflow was removed before review.
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
 
