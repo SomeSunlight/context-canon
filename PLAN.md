@@ -2,7 +2,7 @@
 
 ## Accepted baseline
 
-The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #71, owner-approved and squash-merged as `04ffc00f3b7c30d797cc567dcd3dcb97147f9a39`.
+The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #73, owner-approved and squash-merged as `4a1622685ba4bc6956b90f36cd13b8df473954ff`.
 
 PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 
@@ -39,7 +39,7 @@ Checkpoint: the reusable Development Workflow is now `0.3.1-draft`; Framework De
 
 PR #71 was owner-reviewed and squash-merged to `main` as `04ffc00f3b7c30d797cc567dcd3dcb97147f9a39`.
 
-## Active development block: pre-Evidence rename/move warning — Issue #72
+## Accepted block: pre-Evidence rename/move warning — Issue #72
 
 Purpose: make the onboarding path boundary unmistakable before immutable Evidence is frozen, as the first independently mergeable stage of umbrella Issue #70.
 
@@ -50,7 +50,30 @@ Purpose: make the onboarding path boundary unmistakable before immutable Evidenc
 
 Boundary: this block changes onboarding guidance only. Stable Resource identity, `resource list/status/move/reconcile`, move detection and digest semantics remain in #70 for later stages after this PR is merged.
 
-Checkpoint: draft PR #73 implements only the pre-Evidence rename/move warning. Its first exact-head PR workflow passed 305 deterministic tests and `contextcanon check --all .` with zero generated drift. This closure checkpoint must receive the same exact-head gate before merge. #70 remains open for the later normal-operation Resource identity/move work.
+Checkpoint: PR #73 was owner-reviewed and squash-merged to `main` as `4a1622685ba4bc6956b90f36cd13b8df473954ff`. The onboarding warning is accepted; umbrella Issue #70 now proceeds to normal-operation Resource identity/move semantics.
+
+## Active Fast Track: stable Topic Resource identity and reviewed moves — Issue #70
+
+**Fast Track status — ACTIVE**
+
+Purpose: make direct Topic Resources first-class identified Context entities whose semantic identity survives deliberate path changes, then expose a Git-like maintenance workflow for inspecting and reconciling moves.
+
+Reference owner test: rename a file that was accidentally stored as `.md` although it is actually CSV, then use Resource status/reconcile to preserve its semantic identity while correcting its filename.
+
+- [ ] Add explicit stable IDs to direct Topic Resource targets while keeping path-only source backward-compatible and migration explicit.
+- [ ] Define package/normalized-digest semantics so an explicitly confirmed pure move preserves Resource semantic identity while exact package layout still changes.
+- [ ] Add deterministic Resource registration/migration for existing path-only projects; normal build/check must not silently author IDs.
+- [ ] Add `contextcanon resource list`, `status`, `move` (plus `mv` alias if clean), and interactive `reconcile`; keep `check` non-interactive.
+- [ ] Start move candidate detection with exact hashes, report ambiguous duplicates, compare relative Markdown closure, and reject unsupported cross-Node rehome cases conservatively.
+- [ ] Make one physical file referenced by several Nodes safe: discover all affected ContextCanon references and update them atomically or refuse partial mutation.
+- [ ] Present confirmed Resource moves as moves in compiled/package diff rather than delete+add where stable identity is available.
+- [ ] Group the Resource maintenance commands separately in `docs/cli.md` and explain the normal rename/reconcile workflow in maintenance/source-format docs.
+- [ ] Add focused regression coverage including the `.md` → `.csv` owner scenario, backward compatibility, ambiguous candidates, closure changes, multi-Node references, and noninteractive check behavior.
+- [ ] Regenerate self-hosted Context packages and pass the complete exact-head deterministic/zero-drift gate; leave the review PR unmerged until explicit owner approval.
+
+Boundary: onboarding rename reconciliation remains deliberately unsupported after Evidence freeze; the accepted #73 warning is the onboarding policy. This block is normal-operation Context maintenance only.
+
+Exit: a user can inspect registered Resources, rename/move them explicitly or reconcile an external rename interactively, keep stable Resource identity, understand downstream/package effects, and verify the result deterministically.
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
 
