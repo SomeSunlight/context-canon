@@ -761,7 +761,7 @@ def move_resource(repo_root: Path, old_path: Path, new_path: Path) -> MoveResult
     if unregistered:
         raise ContextCanonError(
             "Resource move requires stable IDs for every affected ContextCanon reference; "
-            "run 'contextcanon resource register --all .' first"
+            "run 'contextcanon resource register' first"
         )
     _validate_same_physical_node(repo_root, old_path, new_path)
 
