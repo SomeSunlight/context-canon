@@ -924,6 +924,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     resource_status.add_argument("path", nargs="?", default=".", help="path inside the Git repository")
     resource_status.add_argument("--json", action="store_true", help="emit deterministic machine-readable JSON")
+    resource_status.add_argument("--all", action="store_true", help="include clean Resources in human output")
 
     for move_name in ("move", "mv"):
         resource_move = resource_sub.add_parser(
@@ -1630,7 +1631,12 @@ def main(argv: list[str] | None = None) -> int:
                     "ambiguous": "?",
                     "missing": "D",
                 }
-                for status in statuses:
+                visible_statuses = statuses if args.all else tuple(status for status in statuses if status.state != "clean")
+                if not visible_statuses:
+                    registered = sum(status.record.resource_id is not None for status in statuses)
+                    print(f"Resources clean ({registered} registered Resource(s)).")
+                    return 0
+                for status in visible_statuses:
                     resource_id = status.record.resource_id or "<unregistered>"
                     symbol = symbols.get(status.state, "?")
                     if status.state == "candidate" and status.candidates:
