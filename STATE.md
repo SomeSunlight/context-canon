@@ -1,8 +1,8 @@
 # Current State
 
-The accepted `main` product baseline is ContextCanon **0.9.9** from PR #54, owner-approved and squash-merged as:
+The accepted `main` product baseline is ContextCanon **0.9.9** after PR #68, owner-approved and squash-merged as:
 
-`efa5946dac2ed4933ad250539f6a2836a39db7ca`
+`68d5246eafb5f3d61787e9ea46a33bf50b93a2d2`
 
 PR #54 is no longer an owner-test candidate. Its onboarding line is accepted after a complete real confidential non-GitHub corporate-project onboarding. That run exercised reviewed inventory, immutable Evidence, structure-first shelf design, reusable Context selection including GitHub Local, isolated Semantic Handoff placement, split P/E review, deterministic preview/publication, plain raw-text STEP-07 Assignments, and resilient Topic Resource closure for inline `data:` content. Issues #55–#60 hardened installation, inventory/recovery UX, embedded Git handling, immutable Evidence identity, structured-data parity, and isolated semantic-agent guidance. Issue #61 turned that guidance into a deterministic model-neutral Semantic Handoff Workspace harness for STEP 04 structure and STEP 08 placement. Issue #62 then hardened the real STEP-08 owner path and generalized only the task boundary: the registry now owns the next validator, CLI/reset derive supported semantic steps from that registry, and the builder can bind a deterministic subset of the same immutable Evidence snapshot for future narrower tasks while current STEP 04/08 continue to use the full snapshot. STEP-08 regressions prove deterministic ZIP/input binding, exclusion of STEP-04/IDE artifacts, RESULT preservation/explicit refresh, mechanical import before separate validation, and custom-workspace reset behavior. The architecture now records this as Progressive Disclosure between semantic reasoning passes: ContextCanon supplies the bounded task world, a human starts the approved model, and deterministic validation/human acceptance regain control afterward. The 0.9.7 owner-test candidate keeps the 0.9.6 semantic-handoff mechanics intact while repairing first-time STEP 07/08 guidance: the operator PLAN now motivates the remaining journey, reusable Context selection exposes unambiguous copy fragments and rendered Why lines, and semantic handoffs name the fresh isolated environment plus `.contextcanon-handoff/PLAN.md` as the only model entry point. Its completed implementation head passed the complete deterministic suite (303 tests) and self-hosted build/check with zero generated drift. The subsequent live STEP-07 run exposed one remaining usability defect in that same surface: the parser still required Markdown presentation syntax even though the operator guidance presented copy fragments through rendered Markdown. ContextCanon 0.9.8 removes that accidental coupling. Assignments are now plain raw text, the old Markdown form remains accepted for compatibility, and both the raw-text implementation head and subsequent 0.9.8 version/state checkpoint passed 304 deterministic tests plus zero generated drift. The next STEP-09 owner run exposed an independent compiler robustness bug in a Confluence/Chrome-exported Markdown Topic Resource: an inline `data:image/...` target was mistaken for a repository-local file during Resource closure. ContextCanon 0.9.9 treats `data:` targets as self-contained inline content while continuing to follow real local links.
 
@@ -166,9 +166,9 @@ Open semantic questions discovered during onboarding are now first-class local p
 
 The Step-07 cockpit now visibly marks editable controls, destination content and Source After replacement regions with `✏️ EDITABLE` labels that survive ordinary rendered Markdown views. Review-only optional source cleanup is explicitly independent from finding acceptance: leaving an H-edit at `reject` keeps the source byte range unchanged while the promoted finding may still be accepted. Automatically invented H-fallbacks are deliberately withheld for Markdown retained as Topic/Resource and for CHANGELOG/patch history.
 
-## Active fast-run boundary
+## Active Fast Track boundary
 
-The current project-owner testing sequence is explicitly recorded as **Fast-run status — ACTIVE** in PLAN. Its scope is the live `ai-workstation` onboarding corrections through the next coherent owner-review candidate. Fast-run reduces repeated intermediate ceremony but does not alter authority: PR #13 remains draft/unmerged, unknown failures still require investigation, and final owner review plus exact-head merge verification remain mandatory. The reusable Development Workflow now requires both the ACTIVE scope/exit checkpoint and a later CLOSED checkpoint when ordinary cadence resumes.
+The current project-owner testing sequence is explicitly recorded as **Fast Track status — ACTIVE** in PLAN. Its scope is the live `ai-workstation` onboarding corrections through the next coherent owner-review candidate. Fast Track reduces repeated intermediate ceremony but does not alter authority: PR #13 remains draft/unmerged, unknown failures still require investigation, and final owner review plus exact-head merge verification remain mandatory. The reusable Development Workflow now requires both the ACTIVE scope/exit checkpoint and a later CLOSED checkpoint when ordinary cadence resumes.
 
 ## Latest Source-edit blank-separator validation correction
 
@@ -188,19 +188,19 @@ Normal authoring also has an ergonomics gap: the executable source format curren
 
 Most importantly, post-publication inspection sharpened the semantic-parent requirement. The owner-accepted hierarchy from onboarding Step 03 should become an explicit accepted composition relationship rather than remain only onboarding structure metadata. This should not be implicit filesystem inheritance. The reviewed parent relationship should pin an accepted Parent package into the Child, letting the Child keep its previous effective context until a Parent update is reviewed and accepted. Existing compiler behavior already composes inherited Rules transitively, but Topics are explicitly local-only today; the next architecture block must define inherited Topic/resource package semantics and render the complete effective Rules + Topics in every Node's `CONTEXT.md`.
 
-The known legacy in-flight owner-Source recovery defect remains deferred. The first real published `ai-workstation` run may therefore lack the intended Development Workflow Source. The fast-run stays ACTIVE while the owner inspects the published Nodes and the project transitions to a new chat; PR #13 remains draft/unmerged and requires explicit owner approval before any merge gate.
+The known legacy in-flight owner-Source recovery defect remains deferred. The first real published `ai-workstation` run may therefore lack the intended Development Workflow Source. The Fast Track stays ACTIVE while the owner inspects the published Nodes and the project transitions to a new chat; PR #13 remains draft/unmerged and requires explicit owner approval before any merge gate.
 
 ## Latest Block R1 review-surface checkpoint
 
 The first post-publish UX slice is complete. Step 03 now marks the editable semantic Node tree with quiet visible cues instead of relying only on hidden comments. Step 07 is self-contained about Decision, Destination, Kind, derived Action, Wording and Review-note semantics, and its editable regions use lower-noise visual boundaries.
 
-`Action` is no longer an independent human control in placement review. The renderer shows it as derived from `Kind`, and the parser deterministically reconstructs the only valid Kind→Action mapping. Stable review semantics and the existing placement proposal contract are unchanged. The remaining Block R work — source-file-first transformation audit, ordinary post-onboarding authoring ergonomics, semantic parent composition/Topic inheritance and Source-update UX — remains pending. Fast-run stays active and PR #13 remains draft/unmerged.
+`Action` is no longer an independent human control in placement review. The renderer shows it as derived from `Kind`, and the parser deterministically reconstructs the only valid Kind→Action mapping. Stable review semantics and the existing placement proposal contract are unchanged. The remaining Block R work — source-file-first transformation audit, ordinary post-onboarding authoring ergonomics, semantic parent composition/Topic inheritance and Source-update UX — remains pending. Fast Track stays active and PR #13 remains draft/unmerged.
 
 ## Latest Block R2 normal-authoring checkpoint
 
 Normal ContextCanon-native project work no longer requires authors to invent hidden Rule/Topic IDs. `contextcanon author rule` and `contextcanon author topic` write the same ordinary `CONTEXT.src.md` syntax humans already maintain, allocate one stable `RULE-...` / `TOPIC-...` identity, validate the resulting Node, and leave build/check explicit. There is no secondary authoring database.
 
-The reusable Source-format guidance now records the minimal post-onboarding loop: read effective `CONTEXT.md`, edit `CONTEXT.src.md` and natural Resources, use the authoring commands for new identified elements, build, check, and review Source candidates explicitly before acceptance. The remaining Block R work is the source-file-first transformation audit plus the larger semantic-parent/Topic-inheritance and Source-update UX blocks. Fast-run remains active; PR #13 remains draft and unmerged.
+The reusable Source-format guidance now records the minimal post-onboarding loop: read effective `CONTEXT.md`, edit `CONTEXT.src.md` and natural Resources, use the authoring commands for new identified elements, build, check, and review Source candidates explicitly before acceptance. The remaining Block R work is the source-file-first transformation audit plus the larger semantic-parent/Topic-inheritance and Source-update UX blocks. Fast Track remains active; PR #13 remains draft and unmerged.
 
 ## Latest Block R3 source-transformation-audit checkpoint
 
@@ -208,7 +208,7 @@ The remaining post-publish review-UX gap is closed without creating a second hum
 
 The audit reverses the review axis from destination-first to source-first. Source edits are grouped by original file and exact frozen range; each shows exact Before, the decision-dependent effective After (or unchanged source for rejection), any non-applied candidate replacement, and every linked P-finding with its current decision, destination Node, Kind/derived Action and reviewed destination content. This makes zero-semantic-loss review possible from one source transformation without hunting across unrelated finding sections.
 
-Blocks R1-R3 now close the immediate production review/authoring UX findings. The next substantial Block R work is semantic parent composition: persisting the owner-accepted Step-03 hierarchy as explicit accepted package relationships, extending inheritance to Topics/resources, and rendering complete effective context. Source-update discovery UX remains a later adjacent slice. Fast-run remains active; PR #13 remains draft and unmerged.
+Blocks R1-R3 now close the immediate production review/authoring UX findings. The next substantial Block R work is semantic parent composition: persisting the owner-accepted Step-03 hierarchy as explicit accepted package relationships, extending inheritance to Topics/resources, and rendering complete effective context. Source-update discovery UX remains a later adjacent slice. Fast Track remains active; PR #13 remains draft and unmerged.
 
 ## Latest Block R4a effective-Topic package checkpoint
 
@@ -216,7 +216,7 @@ Topics are now effective transitive package semantics rather than local-only pre
 
 Inherited Resource trees use `CONTEXT/references/<origin-node-id>/...` (with deterministic hashing only for path-unsafe IDs). This makes the collision rule structural and Source-order-free: the same stable origin path with identical bytes deduplicates through diamonds; different bytes at that path fail compilation/review. Pinned external Source packages can now provide Topics and Resources entirely offline. Official `CONTEXT.md` renders inherited Topics grouped by origin alongside local Topics; inherited Context-Node navigation shows the stable target identity when no consumer-local link can safely be promised.
 
-This deliberately precedes the Parent relationship itself. The next Block R slice can now model an accepted semantic Parent as a distinct exact package edge while reusing the already-general Rule/Topic composition machinery. Fast-run remains active; PR #13 remains draft and unmerged.
+This deliberately precedes the Parent relationship itself. The next Block R slice can now model an accepted semantic Parent as a distinct exact package edge while reusing the already-general Rule/Topic composition machinery. Fast Track remains active; PR #13 remains draft and unmerged.
 
 ## Latest Block R5 step-1 semantic-Parent checkpoint
 
@@ -224,7 +224,7 @@ ContextCanon now has an explicit `## Parent` authoring relationship. Parent is a
 
 The compiler composes the accepted Parent package through the same Rule/Topic/Resource conflict machinery as Sources, while the normalized semantic digest records the Parent role separately. Existing packages without Parent metadata remain valid because the optional Parent semantic field is absent when no Parent exists. Normal builds load the Parent only from the Child's local immutable package store and never dereference the Parent locator.
 
-R5 step 2 is next: persist the owner-accepted Step-03 hierarchy during onboarding publication and install the exact resulting Parent package into each Child. PR #13 remains draft and unmerged; fast-run remains active.
+R5 step 2 is next: persist the owner-accepted Step-03 hierarchy during onboarding publication and install the exact resulting Parent package into each Child. PR #13 remains draft and unmerged; Fast Track remains active.
 
 ## Latest Block R5 step-2 onboarding-Parent publication checkpoint
 
@@ -232,7 +232,7 @@ Structure-first placement publication now preserves the owner-accepted Step-03 h
 
 Publication writes the reviewed source/document deltas transactionally, installs direct reusable Source packages, then walks the semantic Parent chain from roots to leaves. Each final Parent artifact is installed into the Child's local immutable `.context/sources/<package-digest>/` store before the Child is compiled. Acceptance records preserve the Parent edge and exact package identity; rerunning the same reviewed publication is idempotent.
 
-R5 step 3 is next: give Parent updates the same non-live candidate/review/accept safety as reusable Source updates. PR #13 remains draft and unmerged; fast-run remains active.
+R5 step 3 is next: give Parent updates the same non-live candidate/review/accept safety as reusable Source updates. PR #13 remains draft and unmerged; Fast Track remains active.
 
 ## Latest Block R5 step 3 Parent-update checkpoint
 
@@ -256,7 +256,7 @@ Reusable Source review/accept is now bound to the exact Git candidate provenance
 
 ## Latest Block R complete first-production-use checkpoint
 
-Block R is complete and the owner-approved fast-run is CLOSED. ContextCanon now has human-readable onboarding review surfaces, simple normal Rule/Topic authoring, source-first migration audit, transitive package-safe Topics/Resources, explicit immutable semantic Parent chains with safe update/migration/recovery, and a complete reusable-Source fetch/review/accept loop whose normal builds remain offline on accepted packages. The next useful validation is the real published `ai-workstation` tree: migrate its reviewed Step-03 hierarchy to Parent pins and exercise work from a subsystem Node. PR #13 remains draft/unmerged pending explicit owner approval.
+Block R is complete and the owner-approved Fast Track is CLOSED. ContextCanon now has human-readable onboarding review surfaces, simple normal Rule/Topic authoring, source-first migration audit, transitive package-safe Topics/Resources, explicit immutable semantic Parent chains with safe update/migration/recovery, and a complete reusable-Source fetch/review/accept loop whose normal builds remain offline on accepted packages. The next useful validation is the real published `ai-workstation` tree: migrate its reviewed Step-03 hierarchy to Parent pins and exercise work from a subsystem Node. PR #13 remains draft/unmerged pending explicit owner approval.
 
 ## Latest Block S real machine-state resource determinism checkpoint
 
