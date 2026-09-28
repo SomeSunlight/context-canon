@@ -6,6 +6,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from contextcanon.authoring import add_topic
@@ -269,6 +270,56 @@ Optional:
             ["table-a.csv", "table-b.csv"],
         )
         self.assertIn("table.md", (repo / "CONTEXT.src.md").read_text(encoding="utf-8"))
+
+    def test_interactive_reconcile_resolves_ambiguous_exact_candidates_by_human_choice(self) -> None:
+        repo = self.make_single_resource_repo()
+        write_outputs(Compiler(repo).compile(repo))
+        content = (repo / "table.md").read_bytes()
+        (repo / "table.md").unlink()
+        (repo / "table-a.csv").write_bytes(content)
+        (repo / "table-b.csv").write_bytes(content)
+
+        stdout = io.StringIO()
+        with mock.patch("builtins.input", side_effect=["2", "y"]), contextlib.redirect_stdout(stdout):
+            code = main(["resource", "reconcile", str(repo)])
+
+        self.assertEqual(code, 0)
+        rendered = stdout.getvalue()
+        self.assertIn("Ambiguous external Resource rename", rendered)
+        self.assertIn("1. table-a.csv", rendered)
+        self.assertIn("2. table-b.csv", rendered)
+        self.assertIn("Reconciled", rendered)
+        target = parse_node(repo).topics[0].targets[0]
+        self.assertEqual(target.locator, "table-b.csv")
+        self.assertEqual(target.resource_id, "RESOURCE-TABLE")
+
+    def test_yes_mode_never_guesses_between_ambiguous_candidates(self) -> None:
+        repo = self.make_single_resource_repo()
+        write_outputs(Compiler(repo).compile(repo))
+        content = (repo / "table.md").read_bytes()
+        (repo / "table.md").unlink()
+        (repo / "table-a.csv").write_bytes(content)
+        (repo / "table-b.csv").write_bytes(content)
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(["resource", "reconcile", str(repo), "--yes"])
+
+        self.assertEqual(code, 0)
+        self.assertIn("require a human choice", stdout.getvalue())
+        self.assertEqual(parse_node(repo).topics[0].targets[0].locator, "table.md")
+
+    def test_move_reports_inbound_project_markdown_links_without_rewriting_them(self) -> None:
+        repo = self.make_single_resource_repo()
+        (repo / "README.md").write_text(
+            "# Demo\n\nSee [the table](table.md).\n",
+            encoding="utf-8",
+        )
+
+        result = move_resource(repo, repo / "table.md", repo / "table.csv")
+
+        self.assertEqual(result.inbound_markdown_links, ("README.md -> table.md",))
+        self.assertIn("(table.md)", (repo / "README.md").read_text(encoding="utf-8"))
 
     def test_relative_markdown_closure_change_blocks_external_move(self) -> None:
         repo = self.make_single_resource_repo(
