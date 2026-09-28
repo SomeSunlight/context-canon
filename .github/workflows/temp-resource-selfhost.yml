@@ -47,4 +47,4 @@ jobs:
             git push
           fi
 
-# retrigger after Source pin alignment
+# retrigger final self-host regeneration
