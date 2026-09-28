@@ -498,15 +498,27 @@ def _render_rules(items: list[PlacementReviewItem]) -> str:
     return "\n".join(lines).rstrip()
 
 
+def _onboarding_resource_id(node_id: str, topic_id: str, ordinal: int) -> str:
+    payload = f"{node_id}\0{topic_id}\0{ordinal}".encode("utf-8")
+    return "RESOURCE-" + hashlib.sha256(payload).hexdigest()[:12].upper()
+
+
 def _render_topics(items: list[PlacementReviewItem], project_root: Path, node_root: Path) -> str:
     lines: list[str] = []
+    node_id = parse_node(node_root, project_root).metadata.id
+    resource_ids: dict[str, str] = {}
     for item in items:
         title = _safe_line(item.title, f"item {item.proposal_id} title")
         condition = _safe_line(item.payload["condition"], f"item {item.proposal_id} condition")
         lines.extend([f"### {title}", "", condition, "", "Required:"])
-        for path in item.payload["resource_paths"]:
+        for ordinal, path in enumerate(item.payload["resource_paths"]):
             locator = _relative_resource(project_root, node_root, str(path))
+            resource_id = resource_ids.get(locator)
+            if resource_id is None:
+                resource_id = _onboarding_resource_id(node_id, item.authoring_id, ordinal)
+                resource_ids[locator] = resource_id
             lines.append(f"- Resource: `{locator}`")
+            lines.append(f'  <!-- ctx:resource id="{resource_id}" -->')
         lines.extend(["", f'<!-- ctx:topic id="{item.authoring_id}" -->', ""])
     return "\n".join(lines).rstrip()
 
