@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "1d5ed0f68aa429ec009e3064c2adc2ade6c6ede4a3be001dce4d558e67910ad4",
-    "package": "2902c13d3075ea2e38149e995cf9f9396e4a2e111a9bdfb1cebc5e472a168ebb"
+    "normalized": "6e9ddec369d6c4d66c0eba23e6250585e4fb273ee68338f5f3deef68abae4226",
+    "package": "cb6ea670792cf9b43c6586b4444d80747716b38ab19cc703b7a3f62cfc100319"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "67525eb87d5bd999502e42e26ee44ef4235bb0ae0a13058462819141d405e405",
+      "sha256": "0b163b98eb4a42484b5717486031407b545d6b756ec76b07f9d76d6437fa8c36",
       "size": 3283
     },
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
-      "sha256": "0fe51e6e3ca80bc2d29acb4e0fa1603206cabf8e0f690e5828cecaeb14f57e30",
-      "size": 7191
+      "sha256": "d0938dd5d2515faece40239dffe30d169a896657c0062de5b82ff610d8c6ab0b",
+      "size": 7226
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
@@ -56,7 +56,7 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.10-draft"
+    "version": "0.3.11-draft"
   },
   "parents": [],
   "removed_rules": [],

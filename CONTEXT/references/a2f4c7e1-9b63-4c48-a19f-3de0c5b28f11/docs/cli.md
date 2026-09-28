@@ -42,7 +42,7 @@ Direct Topic Resources have stable identities independent of their current repos
 | Goal | Command | What it does |
 | --- | --- | --- |
 | List Resources | `contextcanon resource list` | Shows stable Resource ID, current path, owning Context Node, and the Topics that use it. |
-| Inspect changes | `contextcanon resource status` | Compares registered Resources with the last built package and reports modifications, missing paths, moves, and exact-hash rename candidates without changing anything. |
+| Inspect changes | `contextcanon resource status` | Git-like view of Resource deviations from the last built package: modifications, missing paths, moves, and exact-hash rename candidates. Clean Resources are hidden by default; add `--all` to show them. |
 | Register an older project | `contextcanon resource register` | Explicitly adds stable IDs to legacy path-only direct Topic Resources. Normal `build`/`check` never performs this migration silently. |
 | Move a Resource explicitly | `contextcanon resource move OLD NEW` | Moves the physical file and updates every affected ContextCanon Resource locator atomically while preserving stable Resource IDs. `resource mv` is an alias. |
 | Reconcile external renames | `contextcanon resource reconcile` | Reviews files already renamed by an IDE, file manager, or Git operation and asks before preserving their Resource identities at the new paths. |
