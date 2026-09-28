@@ -8,6 +8,7 @@ from .model import NodeMetadata, ParentRef, ParsedNode, Rule, RuleChange, Source
 NODE_COMMENT_RE = re.compile(r'<!--\s*ctx:node\s+(?P<attrs>.*?)\s*-->')
 RULE_COMMENT_RE = re.compile(r'<!--\s*ctx:rule\s+(?P<attrs>.*?)\s*-->')
 TOPIC_COMMENT_RE = re.compile(r'<!--\s*ctx:topic\s+(?P<attrs>.*?)\s*-->')
+RESOURCE_COMMENT_RE = re.compile(r'<!--\s*ctx:resource\s+(?P<attrs>.*?)\s*-->')
 SOURCE_COMMENT_RE = re.compile(r'<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->')
 PARENT_COMMENT_RE = re.compile(r'<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->')
 CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
@@ -94,6 +95,7 @@ def parse_node(
     sources = _parse_sources(lines, sections.get("Sources"), source_path)
     rules = _parse_rules(lines, _section_range(sections, source_path, "Local Rules", "Rules"), source_path, metadata)
     topics = _parse_topics(lines, _section_range(sections, source_path, "Local Topics", "Topics"), source_path, metadata)
+    _validate_resource_identities(topics, source_path)
     changes = _parse_changes(lines, sections.get("Changes"), source_path)
 
     _ensure_unique([rule.id for rule in rules], f"{source_path}: duplicate Rule ID")
@@ -413,7 +415,7 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
         condition_lines: list[str] = []
         targets: list[TopicTarget] = []
         intent = None
-        for raw in block:
+        for offset, raw in enumerate(block):
             stripped = raw.strip()
             if not stripped or stripped.startswith("<!--"):
                 continue
@@ -428,7 +430,29 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
                 if intent is None:
                     raise ContextCanonError(f"{source_path}: Topic target appears before Required:/Optional:")
                 kind = "resource" if target_match.group("label") == "Resource" else "context-node"
-                targets.append(TopicTarget(kind, target_match.group("path"), intent))
+                resource_id = None
+                if kind == "resource":
+                    for following in block[offset + 1:]:
+                        following_stripped = following.strip()
+                        if not following_stripped:
+                            continue
+                        comment = RESOURCE_COMMENT_RE.search(following)
+                        if comment:
+                            resource_attrs = _attrs(comment.group("attrs"))
+                            resource_id = resource_attrs.get("id")
+                            if not resource_id:
+                                raise ContextCanonError(
+                                    f"{source_path}:{topic_start+offset+2}: ctx:resource needs a stable id"
+                                )
+                        break
+                targets.append(
+                    TopicTarget(
+                        kind=kind,
+                        locator=target_match.group("path"),
+                        intent=intent,
+                        resource_id=resource_id,
+                    )
+                )
                 continue
             if intent is None:
                 condition_lines.append(stripped)
@@ -441,6 +465,28 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
         result.append(Topic(attrs["id"], title, " ".join(condition_lines), tuple(targets), metadata.id, metadata.name))
     return result
 
+
+def _validate_resource_identities(topics: list[Topic], source_path: Path) -> None:
+    by_id: dict[str, str] = {}
+    by_locator: dict[str, str] = {}
+    for topic in topics:
+        for target in topic.targets:
+            if target.kind != "resource" or target.resource_id is None:
+                continue
+            previous_locator = by_id.get(target.resource_id)
+            if previous_locator is not None and previous_locator != target.locator:
+                raise ContextCanonError(
+                    f"{source_path}: Resource ID {target.resource_id} is attached to both "
+                    f"{previous_locator!r} and {target.locator!r}"
+                )
+            previous_id = by_locator.get(target.locator)
+            if previous_id is not None and previous_id != target.resource_id:
+                raise ContextCanonError(
+                    f"{source_path}: Resource {target.locator!r} has multiple stable IDs "
+                    f"({previous_id} and {target.resource_id})"
+                )
+            by_id[target.resource_id] = target.locator
+            by_locator[target.locator] = target.resource_id
 
 def _ensure_unique(values: list[str], prefix: str) -> None:
     seen: set[str] = set()
