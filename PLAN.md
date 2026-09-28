@@ -54,7 +54,7 @@ Checkpoint: PR #73 was owner-reviewed and squash-merged to `main` as `4a1622685b
 
 ## Active Fast Track: stable Topic Resource identity and reviewed moves — Issue #70
 
-**Fast Track status — ACTIVE**
+**Fast Track status — CLOSED**
 
 Purpose: make direct Topic Resources first-class identified Context entities whose semantic identity survives deliberate path changes, then expose a Git-like maintenance workflow for inspecting and reconciling moves.
 
@@ -69,11 +69,11 @@ Reference owner test: rename a file that was accidentally stored as `.md` althou
 - [x] Present confirmed Resource moves as moves in compiled/package diff rather than delete+add where stable identity is available.
 - [x] Group the Resource maintenance commands separately in `docs/cli.md` and explain the normal rename/reconcile workflow in maintenance/source-format docs.
 - [x] Add focused regression coverage including the `.md` → `.csv` owner scenario, backward compatibility, ambiguous candidates, closure changes, multi-Node references, and noninteractive check behavior.
-- [ ] Regenerate self-hosted Context packages and pass the complete exact-head deterministic/zero-drift gate; leave the review PR unmerged until explicit owner approval.
+- [x] Regenerate self-hosted Context packages and pass the complete exact-head deterministic/zero-drift gate; leave the review PR unmerged until explicit owner approval.
 
 Boundary: onboarding rename reconciliation remains deliberately unsupported after Evidence freeze; the accepted #73 warning is the onboarding policy. This block is normal-operation Context maintenance only.
 
-Checkpoint: the Resource model is implemented on draft PR #74 as the ContextCanon 0.10.0 owner-test candidate. ContextCanon has migrated its own 23 direct Topic Resources to stable IDs and self-hosted package schema v2 successfully. The vertical suite covers the owner's `.md` → `.csv` external rename, explicit move, interactive ambiguous candidate selection, `--yes` ambiguity refusal, Markdown closure protection, inbound-link reporting, multi-Node references, legacy path-only compatibility, and noninteractive `check`. The final repository regeneration/exact-head gate remains before owner review.
+Checkpoint: the Resource model is implemented on PR #74 as the ContextCanon 0.10.0 owner-test candidate. ContextCanon migrated its own 23 direct Topic Resources to stable IDs and package schema v2, then self-hosted the complete result. The final pre-closure run passed 322 deterministic tests, `resource status` reported all 23 registered Resources clean, and `contextcanon check --all .` passed with zero generated drift. The vertical suite covers the owner's `.md` → `.csv` external rename, explicit move, interactive ambiguous candidate selection, `--yes` ambiguity refusal, Markdown closure protection, inbound-link reporting, multi-Node references, legacy path-only compatibility, and noninteractive `check`. Temporary self-host workflows are removed. This closure commit must receive the same exact-head PR gate before owner testing/merge review.
 
 Exit: a user can inspect registered Resources, rename/move them explicitly or reconcile an external rename interactively, keep stable Resource identity, understand downstream/package effects, and verify the result deterministically.
 
