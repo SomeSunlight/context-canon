@@ -98,7 +98,7 @@ The deterministic core now handles:
 - Source identity/version validation and dependency-cycle detection for local compilation;
 - transitive Rule composition, Remove/Override, provenance, dangling diagnostics, and diamond conflicts;
 - transitive Topic composition with stable origin identity, package-safe Context-Node target identity, and deterministic diamond conflict handling;
-- Required/Optional Topics and origin-namespaced materialized Resource closure across Source package boundaries;
+- Required/Optional Topics, stable direct Resource IDs, and origin-namespaced materialized Resource closure across Source package boundaries;
 - canonical semantic normalization and exact package digests;
 - deterministic Node and package diff;
 - versioned `.context/package.json` manifests containing the complete compiled state required by descendants;
@@ -204,6 +204,21 @@ These rules are identical whether the contributing Source was locally compiled o
 Entries cover Node metadata, direct Source dependencies, local Changes, effective active/removed Rules, Topics, and materialized Resources. An active-to-removed Rule remains one state transition for the same stable identity.
 
 Human and JSON output are projections of the same deterministic model. The JSON schema remains `contextcanon/diff/v0`.
+
+## Stable Resource identity and moves
+
+A direct Topic Resource has two separate facts:
+
+- stable semantic identity: `<origin-node-id>#<resource-id>`;
+- current location: its authored Resource locator and resulting package path.
+
+Package schema `contextcanon/package/v2` carries the optional `resource_id` on Topic targets. The loader remains backward-compatible with v1/v0 path-only packages. For an identified Resource, canonical Topic semantics bind the Resource ID rather than the current locator; the exact package still records the current materialized path and bytes.
+
+This is what makes an explicitly confirmed pure rename a Resource **move** instead of a Topic delete/add. The exact package layout changes, so `package_digest` changes. Normal Node version discipline still applies; because Node version is itself semantic release identity, an automatic patch bump may also advance the final Node `normalized_digest` even when the Resource meaning itself stayed the same.
+
+Legacy path-only sources are never rewritten by compilation. `contextcanon resource register` is the explicit migration boundary. `resource status` is read-only; `resource move` performs an explicit physical move plus atomic ContextCanon locator updates; `resource reconcile` handles a move already made outside ContextCanon and requires human confirmation for the exact candidate.
+
+Candidate discovery starts with deterministic exact-byte matching. Equal hashes establish byte identity, not semantic identity: duplicate identical files may exist, so ambiguous matches remain unresolved. Markdown candidates additionally compare resolved relative-link closure before identity may be preserved. Cross-Node physical rehoming is deliberately stronger than an ordinary rename and is refused by the first move implementation.
 
 ## Materialization closure
 
