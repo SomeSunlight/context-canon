@@ -4,7 +4,7 @@ All notable ContextCanon changes will be documented here.
 
 ## Unreleased
 
-ContextCanon **0.9.9** is the accepted `main` baseline after the complete owner-reviewed onboarding of a real confidential corporate project. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to that accepted baseline.
+ContextCanon **0.10.0** is the current review candidate. It builds on the accepted 0.9.9 onboarding baseline and adds first-class stable Topic Resource identity plus reviewed rename/move maintenance. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to the accepted onboarding baseline.
 
 ### Fixed
 
