@@ -219,6 +219,23 @@ Optional:
         self.assertEqual(before.normalized_digest, after.normalized_digest)
         self.assertNotEqual(before.package_digest, after.package_digest)
 
+    def test_resource_status_is_compact_when_clean_but_all_can_list_entries(self) -> None:
+        repo = self.make_single_resource_repo()
+        write_outputs(Compiler(repo).compile(repo))
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(["resource", "status", str(repo)])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue().strip(), "Resources clean (1 registered Resource(s)).")
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(["resource", "status", str(repo), "--all"])
+        self.assertEqual(code, 0)
+        self.assertIn("RESOURCE-TABLE", stdout.getvalue())
+        self.assertIn("| clean", stdout.getvalue())
+
     def test_owner_md_to_csv_external_rename_status_and_reconcile(self) -> None:
         repo = self.make_single_resource_repo()
         write_outputs(Compiler(repo).compile(repo))
