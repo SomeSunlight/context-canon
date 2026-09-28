@@ -8,12 +8,12 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.7-draft`
+**Context version:** `0.3.8-draft`
 
 **Resulting imported Contexts:**
 
 - **ContextCanon Foundation** — `0.2.0-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
-- **Development Workflow** — `0.3.0-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.1-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
 
 ## How to use this context
 
@@ -129,9 +129,9 @@ When Markdown is also parsed, compiled, extracted, or otherwise given machine-si
 
 For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
 
-#### `CCW-009` — Use owner-approved fast-run blocks without weakening the final gate
+#### `CCW-009` — Use owner-approved Fast Track blocks without weakening the final gate
 
-When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.
+When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the Fast Track as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the Fast Track ends, record that closure before returning to ordinary review cadence.
 
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 

@@ -79,27 +79,27 @@ If a change introduces new deterministic behavior, test that behavior before rel
 
 The important distinction is that **review-ready and merge-ready are different states**. A successful merge is followed by one small closure step because the merge itself creates facts that a pre-merge candidate cannot truthfully record.
 
-### Owner-approved fast-run blocks
+### Owner-approved Fast Track blocks
 
 Sometimes the project owner has already reviewed the product direction and explicitly delegates a coherent implementation phase without wanting to approve every intermediate block. In that case, keep the recovery map and meaningful focused checks, but do not manufacture repeated PR handoffs, full CI cycles, generated-output refreshes, or status-polish commits merely because normal review would have happened between those blocks.
 
-Fast-run changes **cadence, not authority**: the work still stays on a review branch, PLAN remains current enough to resume after interruption, unknown failures are investigated, and the resulting coherent candidate still requires project-owner review followed by the ordinary exact-head merge gate.
+Fast Track changes **cadence, not authority**: the work still stays on a review branch, PLAN remains current enough to resume after interruption, unknown failures are investigated, and the resulting coherent candidate still requires project-owner review followed by the ordinary exact-head merge gate.
 
 Make the boundary visible in PLAN rather than leaving the mode implicit in chat history. A compact form is enough:
 
 ```text
-Fast-run status — ACTIVE
+Fast Track status — ACTIVE
 Scope: <delegated coherent work>
 Deferred ceremony: <what is intentionally batched>
 Exit: <owner ends it or named coherent review boundary>
 
 ... work/checkpoints ...
 
-Fast-run status — CLOSED
+Fast Track status — CLOSED
 Result/checkpoint: <where normal cadence resumes>
 ```
 
-Do not invent a historical start time after the fact. If a fast-run is already under way when this convention is adopted, record that it is active now, its current scope, and its exit condition. The important property is recoverable mode state, not timestamp theatre.
+Do not invent a historical start time after the fact. If a Fast Track is already under way when this convention is adopted, record that it is active now, its current scope, and its exit condition. The important property is recoverable mode state, not timestamp theatre.
 
 ## 4. What automated verification proves and what it does not
 

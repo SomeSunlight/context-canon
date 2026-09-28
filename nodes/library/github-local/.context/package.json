@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "2971680e1c812d07cb66136ff93a53226157c1014f07d7fb7fc9718bf1a49898",
-    "package": "9c8b5f7423456e44e35ad6b9045054eb55c425d32ecca47a2c24f19df95a40ce"
+    "normalized": "0c6673da53824dcad8b78cadd9a816733605394520b2e1c3995088e5748cc2dd",
+    "package": "40259ff59845acf01b42d90529fa67e2681eecc27b26ea2082efb13c40cac55e"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "28d870e4bc1128c2d77033193512b4797745872961557bc7b4ef98a110f34965",
-      "size": 7172
+      "sha256": "ef084eac2b52d5ff8938634ac06b1d66d6656bdb656f6473de6514a3d58f8c88",
+      "size": 7178
     },
     {
       "path": "CONTEXT/README.md",
@@ -23,24 +23,24 @@
     },
     {
       "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
-      "sha256": "0f1d4fd50389971c92268b6f06809d2533908b3694e27239267647725165303d",
-      "size": 9660
+      "sha256": "21ac62e2449effee4c2172ba02438c2f5093c9dc7e0235684fcb78801b851060",
+      "size": 9670
     }
   ],
   "imports": [
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "0ca4b977665a971dcb068c22342d6d7904e5f03a078a6c58b66fe5af3328be79",
-      "package_digest": "6b2694121e5c69ed772e9b9fde7e15e71f97444a13b2f1f808190e4f7eabe0cb",
-      "version": "0.3.0-draft",
+      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
+      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
+      "version": "0.3.1-draft",
       "why": null
     }
   ],
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.0-draft"
+    "version": "0.1.1-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -121,9 +121,9 @@
       "modifications": [],
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "origin_node_name": "Development Workflow",
-      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the fast-run as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the fast-run ends, record that closure before returning to ordinary review cadence.",
-      "title": "Use owner-approved fast-run blocks without weakening the final gate",
-      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker fast-run from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the Fast Track as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the Fast Track ends, record that closure before returning to ordinary review cadence.",
+      "title": "Use owner-approved Fast Track blocks without weakening the final gate",
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker Fast Track from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
     },
     {
       "group": "Proportional verification",
@@ -201,9 +201,9 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "0ca4b977665a971dcb068c22342d6d7904e5f03a078a6c58b66fe5af3328be79",
-      "package_digest": "6b2694121e5c69ed772e9b9fde7e15e71f97444a13b2f1f808190e4f7eabe0cb",
-      "version": "0.3.0-draft",
+      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
+      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
+      "version": "0.3.1-draft",
       "why": null
     }
   ],

@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "63b92022-db1a-4875-be99-017726cbfce7"
   name: "GitHub Local"
-  version: "0.1.0-draft"
+  version: "0.1.1-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,18 +18,18 @@ parents: []
 sources:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.0-draft"
+    version: "0.3.1-draft"
     locator: "../development-workflow/"
-    normalized_digest: "0ca4b977665a971dcb068c22342d6d7904e5f03a078a6c58b66fe5af3328be79"
-    package_digest: "6b2694121e5c69ed772e9b9fde7e15e71f97444a13b2f1f808190e4f7eabe0cb"
+    normalized_digest: "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31"
+    package_digest: "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
 
 # Effective imported Context origins, flattened through accepted Parent/Source packages.
 imports:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.0-draft"
-    normalized_digest: "0ca4b977665a971dcb068c22342d6d7904e5f03a078a6c58b66fe5af3328be79"
-    package_digest: "6b2694121e5c69ed772e9b9fde7e15e71f97444a13b2f1f808190e4f7eabe0cb"
+    version: "0.3.1-draft"
+    normalized_digest: "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31"
+    package_digest: "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -53,7 +53,7 @@ official:
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
-    - {"id": "CCW-009", "title": "Use owner-approved fast-run blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-011", "title": "Expand change scope explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -87,5 +87,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "2971680e1c812d07cb66136ff93a53226157c1014f07d7fb7fc9718bf1a49898"
-  package_digest: "9c8b5f7423456e44e35ad6b9045054eb55c425d32ecca47a2c24f19df95a40ce"
+  normalized_digest: "0c6673da53824dcad8b78cadd9a816733605394520b2e1c3995088e5748cc2dd"
+  package_digest: "40259ff59845acf01b42d90529fa67e2681eecc27b26ea2082efb13c40cac55e"

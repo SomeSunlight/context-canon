@@ -2,17 +2,17 @@
 
 ## Accepted baseline
 
-The current accepted `main` product baseline is ContextCanon **0.9.9** from PR #54, owner-approved and squash-merged as `efa5946dac2ed4933ad250539f6a2836a39db7ca`.
+The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #68, owner-approved and squash-merged as `68d5246eafb5f3d61787e9ea46a33bf50b93a2d2`.
 
 PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 
 Historical plan/checkpoint sections below retain the status wording that was true when written; references to earlier PRs as draft/unmerged are historical.
 
-## Active development block: accepted 0.9.9 documentation reconciliation — Issue #67
+## Accepted block: accepted 0.9.9 documentation reconciliation — Issue #67
 
 Purpose: make first-contact documentation describe the product that now exists, without turning README into a second canonical technical specification.
 
-Checkpoint: Draft PR #68 now contains only accepted-baseline/documentation reconciliation plus the compiler-owned Gateway package refresh caused by changing its onboarding Topic Resource. Exact implementation head `1fef492fd9fe1c2c4ab909d54e9a208b3709cde4` passed all 304 deterministic tests and `contextcanon check --all .` with zero generated drift. This closure commit must receive the same exact-head gate before owner review. PR #68 remains Draft/unmerged.
+Checkpoint: PR #68 was owner-reviewed and squash-merged to `main` as `68d5246eafb5f3d61787e9ea46a33bf50b93a2d2`. The accepted 0.9.9 documentation now matches the product baseline.
 
 - [x] Reconcile PLAN/STATE/CHANGELOG to the accepted 0.9.9 baseline.
 - [x] Refresh the root README around progressive disclosure, current onboarding, and the proven Separation of Concerns between ContextCanon, Development Workflow, provider and agent/harness.
@@ -21,6 +21,21 @@ Checkpoint: Draft PR #68 now contains only accepted-baseline/documentation recon
 - [x] Keep #41 explanatory views and #42 reusable repository-documentation philosophy explicitly out of scope.
 - [x] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
 
+
+## Active development block: Fast Track terminology — Issue #69
+
+**Fast Track status — CLOSED**
+
+Purpose: standardize the owner-approved accelerated development mode on the memorable name **Fast Track**, without changing authority, review, or merge-gate semantics.
+
+- [x] Rename the reusable Development Workflow rule and explanatory documentation.
+- [x] Refresh every affected generated Context package and dependent local Source pin.
+- [x] Verify the repository contains only **Fast Track** terminology and passes the complete deterministic/zero-drift gate.
+- [x] Close the Fast Track checkpoint and prepare one review PR. Do not merge without explicit project-owner approval.
+
+Exit: terminology is consistently **Fast Track** everywhere and the exact PR head is green.
+
+Checkpoint: the reusable Development Workflow is now `0.3.1-draft`; Framework Development, GitHub and GitHub Local consume that version, generated packages were rebuilt by ContextCanon itself, all 304 deterministic tests passed, `contextcanon check --all .` reported zero drift, and a repository-wide sweep found no remaining previous mode label. The temporary refresh workflow was removed before review.
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
 
@@ -275,15 +290,15 @@ Purpose: correct the next live `ai-workstation` Step-7 review failure. The secon
 
 Placement summary/cockpit checkpoint: the placement instruction now requires a real A′ summary plus the Context link, explicitly rejects pointer-only Source After prose at still-useful human surfaces, keeps volatile compatibility out of stable Overview, and treats Overview/State/Plan findings as one bullet-sized fact each. STEP-07 hides self-referential linked-finding noise and exposes a deterministic review-only Source edit when a promoted finding has an unambiguous mutable Markdown range but the LLM omitted cleanup; that fallback defaults to reject and therefore cannot mutate the project unless the owner edits and accepts it. Focused regressions cover the instruction and human fallback round-trip; full suite/build/check/diff-check are green before cleanup.
 
-#### Fast-run status — CLOSED
+#### Fast Track status — CLOSED
 
-The project owner has explicitly delegated the current live `ai-workstation` correction sequence as an owner-approved fast-run. This boundary is now recorded durably instead of living only in conversation.
+The project owner has explicitly delegated the current live `ai-workstation` correction sequence as an owner-approved Fast Track. This boundary is now recorded durably instead of living only in conversation.
 
 - **Scope:** corrections discovered while vertically reviewing the real onboarding placement, through the next coherent owner-review candidate.
 - **Closed at Block R completion:** R1-R6 now form that coherent owner-review candidate. Further framework changes return to ordinary review cadence; the next useful activity is real owner testing/migration of the published `ai-workstation` tree.
 - **Reduced intermediate ceremony:** repeated PR-description polish, full CI and generated-output refresh may be deferred between small related corrections; focused verification and recovery checkpoints remain required.
-- **Exit condition:** the project owner explicitly ends the fast-run, or the current placement line reaches a coherent owner-review candidate. At exit, record **Fast-run status — CLOSED** in PLAN before returning to ordinary review cadence.
-- **Authority is unchanged:** fast-run changes cadence only. PR #13 remains review-only and must not be merged without explicit owner approval and the normal exact-head merge gate.
+- **Exit condition:** the project owner explicitly ends the Fast Track, or the current placement line reaches a coherent owner-review candidate. At exit, record **Fast Track status — CLOSED** in PLAN before returning to ordinary review cadence.
+- **Authority is unchanged:** Fast Track changes cadence only. PR #13 remains review-only and must not be merged without explicit owner approval and the normal exact-head merge gate.
 
 The exact historical instant at which this already-running cadence began is intentionally not invented retroactively; this checkpoint makes the active boundary explicit from here forward.
 
@@ -297,10 +312,10 @@ Purpose: incorporate the next real `ai-workstation` placement-review findings wi
 - [x] Keep review-only H-fallback cleanup away from retained Topic/Resource documents and release-history/patch documents.
 - [x] Make optional source cleanup explicitly independent from accepting the promoted finding, and add visible rendered Markdown markers around every human-editable control/content region.
 - [x] Clarify historical evidence for volatile State: when only changelog/history supports a value, say `last documented` or leave it unresolved rather than presenting it as proven current state.
-- [x] Record the bounded fast-run start/scope/exit contract in the reusable Development Workflow while leaving this currently active fast-run open.
+- [x] Record the bounded Fast Track start/scope/exit contract in the reusable Development Workflow while leaving this currently active Fast Track open.
 - [x] Add focused regressions, run the complete deterministic suite, rebuild/check generated ContextCanon output, and leave PR #13 draft/unmerged for continued owner testing.
 
-Placement semantic-integrity checkpoint: the second semantic pass now audits every proposed Source After transformation for zero semantic loss against its exact frozen range; splitting volatile detail out of Overview requires destination State findings to cite that same mixed source. Unresolved findings are destination-bearing promoted open questions and publish into local Node State instead of disappearing into follow-up. The review-only H-fallback no longer offers cleanup for retained Topic/Resource documents or release-history/patch documents, optional cleanup explicitly says it is independent from accepting the finding, and rendered Markdown shows visible ✏️ boundaries around editable controls/content. The Development Workflow now requires an explicit fast-run ACTIVE scope/exit boundary and later CLOSED checkpoint; the current owner-approved fast-run remains ACTIVE. Focused placement regressions, the complete deterministic suite, full build/check and diff hygiene passed before this checkpoint.
+Placement semantic-integrity checkpoint: the second semantic pass now audits every proposed Source After transformation for zero semantic loss against its exact frozen range; splitting volatile detail out of Overview requires destination State findings to cite that same mixed source. Unresolved findings are destination-bearing promoted open questions and publish into local Node State instead of disappearing into follow-up. The review-only H-fallback no longer offers cleanup for retained Topic/Resource documents or release-history/patch documents, optional cleanup explicitly says it is independent from accepting the finding, and rendered Markdown shows visible ✏️ boundaries around editable controls/content. The Development Workflow now requires an explicit Fast Track ACTIVE scope/exit boundary and later CLOSED checkpoint; the current owner-approved Fast Track remains ACTIVE. Focused placement regressions, the complete deterministic suite, full build/check and diff hygiene passed before this checkpoint.
 
 ### Later documentation follow-up
 
@@ -340,7 +355,7 @@ The supplied real `ai-workstation` machine state proved the stronger legacy case
 
 Purpose: turn the first real `ai-workstation` onboarding result into a pleasant daily ContextCanon system: clear review surfaces, simple normal authoring, a real semantic Parent chain, and safe reusable-Source updates.
 
-**Status: COMPLETE — R1-R6 first-production-use work complete. Fast-run CLOSED.**
+**Status: COMPLETE — R1-R6 first-production-use work complete. Fast Track CLOSED.**
 
 **How to read this block:** `R1`, `R2`, ... are goals. Work them from top to bottom. Inside each goal, the numbered checkboxes are the implementation order. The next unchecked checkbox is the next work. No hidden `R4a/R4b` numbering is required to understand the plan.
 
@@ -593,24 +608,24 @@ The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR
 Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
 
 
-## Active fast-run: reviewed onboarding inventory — Issue #53
+## Active Fast Track: reviewed onboarding inventory — Issue #53
 
 Purpose: add a human-reviewed file inventory before Evidence freezing so first adoption no longer depends on hidden README/docs-oriented selection heuristics, while keeping this implementation slice small enough for immediate use on a document-only architecture project.
 
-**Fast-run status — CLOSED**
+**Fast Track status — CLOSED**
 
 - **Owner-approved scope:** Steps 1–3 only as a coherent first slice: pre-onboarding cleanup guidance; deterministic inventory CSV from one or more repository directories; explicit CSV review/acceptance as the input to frozen Evidence.
 - **Deterministic defaults:** familiar files may receive configurable rule-based initial classification, but the CSV remains the human-owned decision surface.
 - **Change detection:** rerunning inventory must surface new, changed and missing files instead of silently reusing an old list.
 - **Shared example:** add a committed Hello World Extended project that exercises document, structured-data, source-code, raw/ambiguous record, ignored/generated and later-added-file cases and is usable both by tests and owner discussion.
 - **Deferred:** LLM inventory triage, interpretation, chat/meeting onboarding, structured semantic diffs, resource move/rename support, and larger-repository scaling optimizations.
-- **Exit condition:** focused inventory regressions, complete deterministic suite, self-build/check and diff hygiene pass on one coherent draft-PR head; then mark this fast-run CLOSED and return to owner review. No merge without explicit owner approval.
+- **Exit condition:** focused inventory regressions, complete deterministic suite, self-build/check and diff hygiene pass on one coherent draft-PR head; then mark this Fast Track CLOSED and return to owner review. No merge without explicit owner approval.
 
 - [x] 1. Add the preflight/inventory data model, CSV review surface and deterministic default rules.
 - [x] 2. Make accepted inventory drive Evidence freezing and reject stale/new/missing unreviewed repository files.
 - [x] 3. Integrate Steps 1–3 into the onboarding operator PLAN and preserve compatibility for the existing onboarding path.
 - [x] 4. Add the Hello World Extended shared fixture and focused regression coverage.
-- [x] 5. Run the complete verification gate, close the fast-run checkpoint and prepare the draft PR for owner testing.
+- [x] 5. Run the complete verification gate, close the Fast Track checkpoint and prepare the draft PR for owner testing.
 
 Checkpoint: reviewed onboarding inventory is implemented on draft PR #54 as ContextCanon 0.9.0. The final product head passes 275 deterministic tests, `contextcanon build --all .`, `contextcanon check --all .`, and diff hygiene with zero generated drift. STEP 01–03 are ready for the shared Hello World Extended owner walkthrough; LLM inventory triage and interpretation remain deliberately deferred. PR #54 remains draft and must not be merged without explicit project-owner approval.
 
@@ -716,7 +731,7 @@ Checkpoint: Issue #61 is implemented on draft PR #54 as the ContextCanon 0.9.5 o
 
 ## Owner walkthrough follow-up: STEP-08 semantic-handoff hardening — Issue #62
 
-Fast-run status — COMPLETE
+Fast Track status — COMPLETE
 
 Scope: harden the already-implemented 0.9.5 semantic handoff for the real STEP-08 placement owner run, add only the smallest generic task-input selection seam, document the broader deterministic semantic-task harness boundary, and finish at a new exact-head owner-test candidate on draft PR #54.
 
