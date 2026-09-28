@@ -46,9 +46,11 @@ Purpose: make the onboarding path boundary unmistakable before immutable Evidenc
 - [x] Add a conspicuous rendered warning to generated STEP 01 telling the operator to finish file/directory renames and moves before STEP 03.
 - [x] Explain that a later rename/move requires returning to STEP 03, refreshing inventory, freezing new Evidence and recreating dependent later onboarding work.
 - [x] Add focused regression coverage for the warning placement and recovery wording.
-- [ ] Run the complete deterministic/zero-drift PR gate and prepare the standalone review PR. Do not implement Resource identity/move mechanics in this block.
+- [x] Run the complete deterministic/zero-drift PR gate and prepare the standalone review PR. Do not implement Resource identity/move mechanics in this block.
 
 Boundary: this block changes onboarding guidance only. Stable Resource identity, `resource list/status/move/reconcile`, move detection and digest semantics remain in #70 for later stages after this PR is merged.
+
+Checkpoint: draft PR #73 implements only the pre-Evidence rename/move warning. Its first exact-head PR workflow passed 305 deterministic tests and `contextcanon check --all .` with zero generated drift. This closure checkpoint must receive the same exact-head gate before merge. #70 remains open for the later normal-operation Resource identity/move work.
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
 
