@@ -100,6 +100,7 @@ class TopicTarget:
     intent: TargetIntent
     target_node_id: str | None = None
     target_node_name: str | None = None
+    resource_id: str | None = None
 
 
 @dataclass(frozen=True)
