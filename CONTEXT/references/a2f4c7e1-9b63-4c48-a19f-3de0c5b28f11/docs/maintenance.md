@@ -97,7 +97,7 @@ If you want ContextCanon to perform the move:
 contextcanon resource move docs/old-name.md docs/new-name.csv
 ```
 
-ContextCanon moves the file and updates all ContextCanon Topic Resource locators that point to that same physical file. It preserves each owning Node's stable Resource identity. Arbitrary project-owned Markdown links are not blindly rewritten.
+ContextCanon moves the file and updates all ContextCanon Topic Resource locators that point to that same physical file. It preserves each owning Node's stable Resource identity. Arbitrary project-owned Markdown links are not blindly rewritten. If ContextCanon finds Markdown links that still point to the old Resource path, the move/reconcile result lists them explicitly for manual review.
 
 If the file was already renamed in an IDE, file manager, or by Git, inspect the repository first:
 
@@ -111,7 +111,7 @@ A unique byte-identical candidate is displayed as an unconfirmed rename. Then ru
 contextcanon resource reconcile
 ```
 
-The review shows the old and proposed new path, stable Resource IDs, exact hash match, byte count, and line count for UTF-8 text. ContextCanon asks before changing authoring state. Multiple identical candidates remain unresolved rather than being paired automatically.
+The review shows the old and proposed new path, stable Resource IDs, exact hash match, byte count, and line count for UTF-8 text. ContextCanon asks before changing authoring state. Multiple identical candidates remain ambiguous in `status`; interactive `reconcile` offers them as a numbered human choice. Non-interactive `--yes` deliberately skips them rather than guessing.
 
 Markdown needs one extra safety check: moving an unchanged Markdown file can change what relative links such as `images/diagram.svg` mean. ContextCanon therefore compares the resolved package closure before and after the candidate move. A changed closure is not accepted as a simple rename.
 
