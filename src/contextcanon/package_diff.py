@@ -35,7 +35,7 @@ def diff_packages(before: CompiledPackage, after: CompiledPackage) -> ContextDif
     entries.extend(_diff_maps("change", _change_snapshot(before), _change_snapshot(after)))
     entries.extend(_diff_maps("rule", _rule_snapshot(before), _rule_snapshot(after)))
     entries.extend(_diff_maps("topic", _topic_snapshot(before), _topic_snapshot(after)))
-    entries.extend(_diff_maps("resource", _resource_snapshot(before), _resource_snapshot(after)))
+    entries.extend(_diff_resource_maps(_resource_snapshot(before), _resource_snapshot(after)))
     entries.sort(key=lambda entry: (_CATEGORY_ORDER[entry.category], entry.identity, entry.change))
 
     return ContextDiff(
@@ -71,6 +71,29 @@ def _diff_maps(
             )
             result.append(DiffEntry(category, "modified", identity, old, new, changed_fields))
     return result
+
+
+def _diff_resource_maps(
+    before: dict[str, dict[str, Any]],
+    after: dict[str, dict[str, Any]],
+) -> list[DiffEntry]:
+    result = _diff_maps("resource", before, after)
+    rewritten: list[DiffEntry] = []
+    for entry in result:
+        if entry.change == "modified" and entry.changed_fields == ("path",):
+            rewritten.append(
+                DiffEntry(
+                    entry.category,
+                    "moved",
+                    entry.identity,
+                    entry.before,
+                    entry.after,
+                    entry.changed_fields,
+                )
+            )
+        else:
+            rewritten.append(entry)
+    return rewritten
 
 
 def _node_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
@@ -155,20 +178,58 @@ def _topic_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for topic in package.topics:
         item = asdict(topic)
+        targets: list[dict[str, Any]] = []
+        for target in item["targets"]:
+            normalized = dict(target)
+            if normalized["kind"] == "resource" and normalized.get("resource_id"):
+                normalized.pop("locator", None)
+            targets.append(normalized)
         item["targets"] = sorted(
-            item["targets"],
-            key=lambda target: (target["intent"], target["kind"], target["locator"]),
+            targets,
+            key=lambda target: (
+                target["intent"],
+                target["kind"],
+                target.get("resource_id") or "",
+                target.get("locator") or "",
+            ),
         )
         result[f"{topic.origin_node_id}#{topic.id}"] = item
     return result
 
 
 def _resource_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
-    return {
-        file.path: {
+    files = {file.path: file for file in package.files}
+    result: dict[str, dict[str, Any]] = {}
+    direct_paths: set[str] = set()
+    for topic in package.topics:
+        for target in topic.targets:
+            if target.kind != "resource":
+                continue
+            file = files.get(target.locator)
+            if file is None:
+                continue
+            direct_paths.add(target.locator)
+            if target.resource_id:
+                identity = f"{topic.origin_node_id}#{target.resource_id}"
+                item = {
+                    "path": target.locator,
+                    "sha256": file.sha256,
+                    "size": file.size,
+                }
+            else:
+                identity = target.locator
+                item = {"sha256": file.sha256, "size": file.size}
+            previous = result.get(identity)
+            if previous is not None and previous != item:
+                raise ContextCanonError(f"Conflicting Resource snapshot for {identity}")
+            result[identity] = item
+
+    for file in package.files:
+        if not file.path.startswith("CONTEXT/") or file.path in direct_paths:
+            continue
+        result[file.path] = {
             "sha256": file.sha256,
             "size": file.size,
         }
-        for file in package.files
-        if file.path.startswith("CONTEXT/")
-    }
+    return result
+
