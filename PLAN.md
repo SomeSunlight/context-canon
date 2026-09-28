@@ -60,18 +60,20 @@ Purpose: make direct Topic Resources first-class identified Context entities who
 
 Reference owner test: rename a file that was accidentally stored as `.md` although it is actually CSV, then use Resource status/reconcile to preserve its semantic identity while correcting its filename.
 
-- [ ] Add explicit stable IDs to direct Topic Resource targets while keeping path-only source backward-compatible and migration explicit.
-- [ ] Define package/normalized-digest semantics so an explicitly confirmed pure move preserves Resource semantic identity while exact package layout still changes.
-- [ ] Add deterministic Resource registration/migration for existing path-only projects; normal build/check must not silently author IDs.
-- [ ] Add `contextcanon resource list`, `status`, `move` (plus `mv` alias if clean), and interactive `reconcile`; keep `check` non-interactive.
-- [ ] Start move candidate detection with exact hashes, report ambiguous duplicates, compare relative Markdown closure, and reject unsupported cross-Node rehome cases conservatively.
-- [ ] Make one physical file referenced by several Nodes safe: discover all affected ContextCanon references and update them atomically or refuse partial mutation.
-- [ ] Present confirmed Resource moves as moves in compiled/package diff rather than delete+add where stable identity is available.
-- [ ] Group the Resource maintenance commands separately in `docs/cli.md` and explain the normal rename/reconcile workflow in maintenance/source-format docs.
-- [ ] Add focused regression coverage including the `.md` → `.csv` owner scenario, backward compatibility, ambiguous candidates, closure changes, multi-Node references, and noninteractive check behavior.
+- [x] Add explicit stable IDs to direct Topic Resource targets while keeping path-only source backward-compatible and migration explicit.
+- [x] Define package/normalized-digest semantics so an explicitly confirmed pure move preserves Resource semantic identity while exact package layout still changes.
+- [x] Add deterministic Resource registration/migration for existing path-only projects; normal build/check must not silently author IDs.
+- [x] Add `contextcanon resource list`, `status`, `move` (plus `mv` alias if clean), and interactive `reconcile`; keep `check` non-interactive.
+- [x] Start move candidate detection with exact hashes, report ambiguous duplicates, compare relative Markdown closure, and reject unsupported cross-Node rehome cases conservatively.
+- [x] Make one physical file referenced by several Nodes safe: discover all affected ContextCanon references and update them atomically or refuse partial mutation.
+- [x] Present confirmed Resource moves as moves in compiled/package diff rather than delete+add where stable identity is available.
+- [x] Group the Resource maintenance commands separately in `docs/cli.md` and explain the normal rename/reconcile workflow in maintenance/source-format docs.
+- [x] Add focused regression coverage including the `.md` → `.csv` owner scenario, backward compatibility, ambiguous candidates, closure changes, multi-Node references, and noninteractive check behavior.
 - [ ] Regenerate self-hosted Context packages and pass the complete exact-head deterministic/zero-drift gate; leave the review PR unmerged until explicit owner approval.
 
 Boundary: onboarding rename reconciliation remains deliberately unsupported after Evidence freeze; the accepted #73 warning is the onboarding policy. This block is normal-operation Context maintenance only.
+
+Checkpoint: the Resource model is implemented on draft PR #74 as the ContextCanon 0.10.0 owner-test candidate. ContextCanon has migrated its own 23 direct Topic Resources to stable IDs and self-hosted package schema v2 successfully. The vertical suite covers the owner's `.md` → `.csv` external rename, explicit move, interactive ambiguous candidate selection, `--yes` ambiguity refusal, Markdown closure protection, inbound-link reporting, multi-Node references, legacy path-only compatibility, and noninteractive `check`. The final repository regeneration/exact-head gate remains before owner review.
 
 Exit: a user can inspect registered Resources, rename/move them explicitly or reconcile an external rename interactively, keep stable Resource identity, understand downstream/package effects, and verify the result deterministically.
 
