@@ -93,6 +93,7 @@ class MoveResult:
     new_path: Path
     updated_nodes: tuple[Path, ...]
     resource_ids: tuple[str, ...]
+    inbound_markdown_links: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -614,6 +615,33 @@ def status_resources(repo_root: Path, node_roots: Iterable[Path]) -> tuple[Resou
     return tuple(result)
 
 
+def _inbound_markdown_links(repo_root: Path, target_path: Path) -> tuple[str, ...]:
+    """Return project-authored Markdown files whose local links resolve to target_path.
+
+    These links are reported, never rewritten. Generated ContextCanon Markdown
+    is excluded because build owns that surface.
+    """
+
+    target = target_path.resolve()
+    owned = _compiler_owned_paths(repo_root)
+    hits: list[str] = []
+    for rel in _git_repository_paths(repo_root):
+        if not rel.lower().endswith(".md"):
+            continue
+        path = (repo_root / rel).resolve()
+        if not path.is_file() or path.is_symlink() or _is_compiler_owned(path, owned):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for locator in local_markdown_targets(text):
+            linked = (path.parent / locator).resolve()
+            if linked == target:
+                hits.append(f"{rel} -> {locator}")
+    return tuple(sorted(set(hits)))
+
+
 def _containing_node(repo_root: Path, path: Path) -> Path | None:
     resolved = path.resolve()
     candidates: list[Path] = []
@@ -746,6 +774,7 @@ def move_resource(repo_root: Path, old_path: Path, new_path: Path) -> MoveResult
             f"Before: {list(before)}; after: {list(after)}"
         )
 
+    inbound_links = _inbound_markdown_links(repo_root, old_path)
     staged_nodes = tuple(sorted({use.node_root.resolve() for use in uses}, key=lambda item: item.as_posix()))
     staged_sources: dict[Path, tuple[str, str]] = {}
     for node_root in staged_nodes:
@@ -773,6 +802,7 @@ def move_resource(repo_root: Path, old_path: Path, new_path: Path) -> MoveResult
         new_path=new_path,
         updated_nodes=staged_nodes,
         resource_ids=tuple(sorted({use.resource_id for use in uses if use.resource_id is not None})),
+        inbound_markdown_links=inbound_links,
     )
 
 
@@ -833,12 +863,14 @@ def reconcile_resource(
                 f"before={list(baseline.dependencies)}, after={list(after)}"
             )
 
+    inbound_links = _inbound_markdown_links(repo_root, old_path)
     updated_nodes = _apply_locator_rewrite(repo_root, old_path, new_path, uses)
     return MoveResult(
         old_path=old_path,
         new_path=new_path,
         updated_nodes=updated_nodes,
         resource_ids=tuple(sorted({use.resource_id for use in uses if use.resource_id is not None})),
+        inbound_markdown_links=inbound_links,
     )
 
 
