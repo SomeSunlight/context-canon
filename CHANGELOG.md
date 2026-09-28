@@ -23,6 +23,10 @@ ContextCanon **0.9.9** is the accepted `main` baseline after the complete owner-
 
 ### Added
 
+- Stable identities for direct Topic Resources, independent of their current filesystem path.
+- Git-like Resource maintenance commands: `resource list`, `resource status`, explicit `resource move`/`mv`, and interactive `resource reconcile`.
+- Explicit `resource register` migration for legacy path-only Resource authoring; build/check remain non-mutating.
+- Resource-move diff semantics plus exact-hash candidate review, ambiguity handling, relative Markdown closure protection, and conservative cross-Node rehome refusal.
 - Reviewed onboarding preflight with `onboard init`, a generated PLAN-first operator flow, human-editable inventory CSV + local field guide, repeatable new/changed/missing/unchanged detection, deterministic defaults, same-basename Markdown transcription for opaque office/PDF material, default source-code omission with explicit opt-in rules, Speedyboarding input, and explicit `source` / `interpret` / `lookup` / `ignore` handling before immutable Evidence freeze.
 
 - Initial public ContextCanon specification.
