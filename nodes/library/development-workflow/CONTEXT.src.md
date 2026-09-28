@@ -75,4 +75,5 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 
 Required:
 - Resource: `docs/change-workflow.md`
+  <!-- ctx:resource id="RESOURCE-AF854839DFA0" -->
 <!-- ctx:topic id="CCW-TOPIC-CHANGE-WORKFLOW" -->

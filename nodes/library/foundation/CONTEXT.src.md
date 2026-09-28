@@ -93,8 +93,11 @@ When editing ContextCanon source, IDs, generated views, package resources, or To
 
 Required:
 - Resource: `docs/source-format.md`
+  <!-- ctx:resource id="RESOURCE-75BB443F9641" -->
 - Resource: `docs/official-context.md`
+  <!-- ctx:resource id="RESOURCE-0490D1539162" -->
 - Resource: `docs/topics.md`
+  <!-- ctx:resource id="RESOURCE-37704BB906AD" -->
 <!-- ctx:topic id="CC-TOPIC-AUTHORING" -->
 
 ### Context composition
@@ -103,6 +106,7 @@ When adding Sources or changing inherited Rules:
 
 Required:
 - Resource: `docs/composition.md`
+  <!-- ctx:resource id="RESOURCE-484FEC35A542" -->
 <!-- ctx:topic id="CC-TOPIC-COMPOSITION" -->
 
 ### Harness adapters
@@ -111,4 +115,5 @@ When adding or changing a harness-specific entry file:
 
 Required:
 - Resource: `docs/harnesses.md`
+  <!-- ctx:resource id="RESOURCE-438E892D9E41" -->
 <!-- ctx:topic id="CC-TOPIC-HARNESSES" -->

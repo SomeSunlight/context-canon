@@ -8,12 +8,12 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.8-draft`
+**Context version:** `0.3.9-draft`
 
 **Resulting imported Contexts:**
 
-- **ContextCanon Foundation** — `0.2.0-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
-- **Development Workflow** — `0.3.1-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+- **ContextCanon Foundation** — `0.2.1-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
+- **Development Workflow** — `0.3.2-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
 
 ## How to use this context
 

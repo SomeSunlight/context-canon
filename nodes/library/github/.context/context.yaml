@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc"
   name: "GitHub"
-  version: "0.1.1-draft"
+  version: "0.1.2-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,18 +18,18 @@ parents: []
 sources:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.1-draft"
+    version: "0.3.2-draft"
     locator: "../development-workflow/"
-    normalized_digest: "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31"
-    package_digest: "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
+    normalized_digest: "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574"
+    package_digest: "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793"
 
 # Effective imported Context origins, flattened through accepted Parent/Source packages.
 imports:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.1-draft"
-    normalized_digest: "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31"
-    package_digest: "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
+    version: "0.3.2-draft"
+    normalized_digest: "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574"
+    package_digest: "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -75,5 +75,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "57abf0e768d56a26c4936d158002718fddb537ecee3f71b95ed8e648d0a71407"
-  package_digest: "1b037ce6f4aecf253412cf9d535fcade4299118e580ccadab771379796b60cca"
+  normalized_digest: "3cfad9b2a2f4712662ff365d12fd587ed19e5768898d778c017ea444bc007ccc"
+  package_digest: "b9e9fb3a637a0db2f365279666b9a9bca39741cce131a0a55f74ec9c2f0149c3"

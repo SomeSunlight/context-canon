@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.8-draft"
+  version: "0.3.9-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -83,5 +83,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "1d7c3b7f2a4a414213672bbb5e252278e81426b0b38179211c54c1dec93f83d3"
-  package_digest: "0219ae233a7f34216a8c7ddebd792f20fe30feb13f7e5bbab4791e4dc7287b62"
+  normalized_digest: "c8e8dd0706be5c6e9a03d70eb3c2c5a02495b1bc3bae81a80cc54852a4344770"
+  package_digest: "21252c1e96122818abe7862f614ad934fe1e5e9454275e115a5c5c567e939763"

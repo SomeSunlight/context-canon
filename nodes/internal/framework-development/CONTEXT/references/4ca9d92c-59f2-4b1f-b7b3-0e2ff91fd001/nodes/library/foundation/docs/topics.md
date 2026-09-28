@@ -22,9 +22,11 @@ When changing logging, diagnostics, structured events, rotation, or troubleshoot
 
 Required:
 - Resource: `docs/logging-contract.md`
+  <!-- ctx:resource id="RESOURCE-LOGGING-CONTRACT" -->
 
 Optional:
 - Resource: `docs/logging-history.md`
+  <!-- ctx:resource id="RESOURCE-LOGGING-HISTORY" -->
 ```
 
 A Gateway can navigate to another Node without composing it:
@@ -59,6 +61,16 @@ A Topic is a structured way to integrate additional information into the working
 
 This is one of ContextCanon's larger opportunities: the same transparent mechanism can bring many kinds of project knowledge into an agent's context without making all of it permanently resident in the prompt.
 
+## Resource identity and location
+
+A direct Resource target has stable identity independent of its current path. The `ctx:resource` ID is scoped by its origin Context Node; the path beside it says where that Resource currently lives.
+
+This distinction matters during ordinary maintenance. Renaming `reports/table.md` to `reports/table.csv` can preserve the same Resource identity after explicit review even though the package path changes. ContextCanon does not infer that semantic continuity merely from a filename or hash: `resource status` establishes deterministic facts and `resource reconcile` asks a human to confirm an externally performed move.
+
+A physical file may be used as a direct Resource by several Context Nodes. Each Node owns its own Resource identity. A physical move therefore has to discover and update all affected ContextCanon locators together rather than updating one Node and leaving another dangling.
+
+Transitive files reached from a Markdown Resource are different. They are exact materialization dependencies, not automatically first-class Resource identities. Their resolved closure is still safety-critical: a byte-identical Markdown move is refused as a simple rename if relative links would resolve to a different closure.
+
 ## Source location and published location
 
 Authors should keep information where it naturally belongs. A security document may remain `SECURITY.md`; architecture documentation may remain under `docs/`; a glossary may live beside the domain model.
@@ -73,6 +85,6 @@ The compiler preserves Topic definitions deterministically. A harness or agent m
 
 Once a Topic applies, however, Required versus Optional and Resource versus Context Node are explicit. The harness should not invent its own meaning for those targets.
 
-## Current limitation
+## Package composition
 
-The compiler composes inherited Rules but keeps Topic navigation local to the consuming Node. Topic inheritance across Source package boundaries is deliberately deferred until external package location and materialization behavior is exercised end to end.
+Effective Topics and their Resource closures compose across accepted Source and Parent package boundaries. Stable origin Node identity keeps inherited Resource identities scoped correctly while generated package paths keep exact materialized bytes inspectable.

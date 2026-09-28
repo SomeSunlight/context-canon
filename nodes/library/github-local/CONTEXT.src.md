@@ -34,4 +34,5 @@ When installing, configuring, integrating, troubleshooting, or extending the loc
 
 Required:
 - Resource: `docs/provider.md`
+  <!-- ctx:resource id="RESOURCE-CEFEEDC80FA7" -->
 <!-- ctx:topic id="GHL-TOPIC-PROVIDER" -->

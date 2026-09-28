@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
   name: "Development Workflow"
-  version: "0.3.1-draft"
+  version: "0.3.2-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -75,5 +75,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31"
-  package_digest: "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
+  normalized_digest: "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574"
+  package_digest: "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793"
