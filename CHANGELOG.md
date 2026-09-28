@@ -8,6 +8,7 @@ ContextCanon **0.9.9** is the accepted `main` baseline after the complete owner-
 
 ### Fixed
 
+- Onboarding STEP 01 now warns operators to finish file and directory renames/moves before STEP 03 freezes immutable Evidence; later path changes require refreshed inventory, a new Evidence snapshot, and recreation of dependent onboarding work.
 - Renamed the owner-approved accelerated development mode to **Fast Track** throughout the reusable Development Workflow and project documentation; workflow semantics are unchanged.
 - ContextCanon 0.9.9 owner-test candidate: Markdown Topic Resource closure now ignores inline `data:` URIs (for example Confluence/Chrome-exported base64 SVG images) instead of treating them as missing repository-local files. The original Resource remains unchanged; genuine local Markdown links still participate in deterministic closure/materialization.
 - ContextCanon 0.9.8 owner-test candidate: STEP 07 reusable-Context Assignments now use plain raw text instead of Markdown formatting syntax. The canonical form is `<project> (<path>) ← <reusable Context> (<version>)` followed by `Why: ...`; generated `Copy:` lines are defined explicitly in raw-Markdown terms, exact package digests stay review-visible but outside the copied fragment, the editable Assignment area renders as a text block, legacy Markdown-heavy Assignments remain accepted, and parse errors now echo the offending line plus the expected shape.
