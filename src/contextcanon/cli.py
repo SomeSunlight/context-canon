@@ -1579,13 +1579,21 @@ def main(argv: list[str] | None = None) -> int:
                 if not records:
                     print("No direct Topic Resources are defined in this repository.")
                     return 0
+                print("Each row reads: Context Node -> Resource path; the last column shows the Topics in that Node that depend on it.")
+                print("")
+                print("| Resource ID | Context Node using Resource | Resource path | Topic dependency |")
+                print("| --- | --- | --- | --- |")
                 for record in records:
                     resource_id = record.resource_id or "<unregistered>"
                     path = record.path.relative_to(repo_root).as_posix()
-                    topics = ", ".join(
-                        f"{use.topic_id} ({use.intent})" for use in record.uses
+                    topic_dependencies = "; ".join(
+                        f"Topic \`{use.topic_id}\` — {use.topic_title} ({use.intent})"
+                        for use in record.uses
                     )
-                    print(f"{resource_id} | {record.node_name} | {path} | used by {topics}")
+                    resource_cell = f"\`{resource_id}\`" if record.resource_id else "<unregistered>"
+                    print(
+                        f"| {resource_cell} | {record.node_name} | \`{path}\` | {topic_dependencies} |"
+                    )
                 if any(record.resource_id is None for record in records):
                     print("")
                     print("Unregistered Resources remain path-identified. Migrate explicitly with:")
