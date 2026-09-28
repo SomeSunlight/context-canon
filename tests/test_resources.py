@@ -219,6 +219,30 @@ Optional:
         self.assertEqual(before.normalized_digest, after.normalized_digest)
         self.assertNotEqual(before.package_digest, after.package_digest)
 
+    def test_resource_list_renders_labeled_markdown_table_with_topic_context(self) -> None:
+        repo = self.make_single_resource_repo()
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(["resource", "list", str(repo)])
+
+        self.assertEqual(code, 0)
+        rendered = stdout.getvalue()
+        self.assertIn(
+            "| Resource ID | Context Node using Resource | Resource path | Topic dependency |",
+            rendered,
+        )
+        self.assertIn("| --- | --- | --- | --- |", rendered)
+        self.assertIn(
+            "| `RESOURCE-TABLE` | Demo | `table.md` | "
+            "Topic `TOPIC-TABLE` — Table (required) |",
+            rendered,
+        )
+        self.assertIn(
+            "Context Node -> Resource path; the last column shows the Topics",
+            rendered,
+        )
+
     def test_resource_status_is_compact_when_clean_but_all_can_list_entries(self) -> None:
         repo = self.make_single_resource_repo()
         write_outputs(Compiler(repo).compile(repo))
