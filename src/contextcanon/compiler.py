@@ -663,7 +663,7 @@ class Compiler:
             if resource_id is not None:
                 raise ContextCanonError(
                     f"{node_name} Topic {topic_id}: registered Resource {resource_id} is missing at {locator!r}; "
-                    "run 'contextcanon resource status --all .' and reconcile the move explicitly"
+                    "run 'contextcanon resource status' and reconcile the move explicitly"
                 )
             raise ContextCanonError(
                 f"{node_name} Topic {topic_id}: missing resource: {locator}"
