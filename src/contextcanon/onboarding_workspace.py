@@ -317,6 +317,10 @@ For the exact reset options, run `contextcanon onboard reset --help`.
 
 Before ContextCanon starts creating durable references, use this cheapest moment to remove obvious duplicates, settle accidental `final-final` document versions, and move clearly misplaced files. This is guidance, not a machine gate.
 
+> [!WARNING]
+> **Finish renaming and moving project material now.**
+> STEP 03 freezes repository-relative paths into immutable Evidence. If you rename or move files or directories after that point, do not continue against the old Evidence basis: reset from STEP 03, rerun the inventory, freeze a new Evidence snapshot, and recreate dependent later onboarding work.
+
 ### STEP 02 — Review file inventory
 - [ ] **Done**
 

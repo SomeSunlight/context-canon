@@ -8,6 +8,21 @@ from contextcanon.onboarding_workspace import _exact_commands, open_onboarding_w
 
 
 class OnboardingPlanStepsTests(unittest.TestCase):
+    def test_prefreeze_plan_warns_to_finish_moves_before_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            workspace = open_onboarding_workspace(root, create=True)
+            text = workspace.plan_path.read_text(encoding="utf-8")
+
+            self.assertIn("> [!WARNING]", text)
+            self.assertIn("**Finish renaming and moving project material now.**", text)
+            self.assertIn("STEP 03 freezes repository-relative paths into immutable Evidence", text)
+            self.assertIn("reset from STEP 03", text)
+            self.assertIn("rerun the inventory", text)
+            self.assertIn("freeze a new Evidence snapshot", text)
+            self.assertLess(text.index("> [!WARNING]"), text.index("### STEP 02 — Review file inventory"))
+
     def test_plan_keeps_checkbox_explanation_and_command_together(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
