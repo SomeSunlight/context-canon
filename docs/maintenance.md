@@ -87,6 +87,45 @@ contextcanon parent accept [<parent-node-id>] --node <child>
 
 A Child that accepts a newer Parent may itself become a changed Parent for deeper Children. Propagation therefore walks top-down, but each Child keeps its own last accepted snapshot until its turn is reviewed.
 
+## Rename or move a Topic Resource
+
+A direct Topic Resource has a stable Resource ID in `CONTEXT.src.md`. Its filesystem path is its **current location**, not its semantic identity. This lets ordinary repository cleanup remain explicit instead of turning every rename into a delete/add of Context meaning.
+
+If you want ContextCanon to perform the move:
+
+```text
+contextcanon resource move docs/old-name.md docs/new-name.csv
+```
+
+ContextCanon moves the file and updates all ContextCanon Topic Resource locators that point to that same physical file. It preserves each owning Node's stable Resource identity. Arbitrary project-owned Markdown links are not blindly rewritten.
+
+If the file was already renamed in an IDE, file manager, or by Git, inspect the repository first:
+
+```text
+contextcanon resource status
+```
+
+A unique byte-identical candidate is displayed as an unconfirmed rename. Then run:
+
+```text
+contextcanon resource reconcile
+```
+
+The review shows the old and proposed new path, stable Resource IDs, exact hash match, byte count, and line count for UTF-8 text. ContextCanon asks before changing authoring state. Multiple identical candidates remain unresolved rather than being paired automatically.
+
+Markdown needs one extra safety check: moving an unchanged Markdown file can change what relative links such as `images/diagram.svg` mean. ContextCanon therefore compares the resolved package closure before and after the candidate move. A changed closure is not accepted as a simple rename.
+
+Moving a Resource across a Context Node's physical ownership boundary is also not treated as a routine rename. That is a stronger semantic **rehome** operation and is deliberately refused by the first move implementation.
+
+After an accepted move/reconciliation, render and verify normally:
+
+```text
+contextcanon build --all .
+contextcanon check --all .
+```
+
+The exact package layout changes and therefore the package identity changes. ContextCanon's normal version discipline still applies, as do the existing Parent propagation and Source update/review mechanisms for consumers of the changed package.
+
 ## Render and verify
 
 After the intended updates and propagation reviews are accepted:
