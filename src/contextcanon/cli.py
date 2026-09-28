@@ -1587,12 +1587,13 @@ def main(argv: list[str] | None = None) -> int:
                     resource_id = record.resource_id or "<unregistered>"
                     path = record.path.relative_to(repo_root).as_posix()
                     topic_dependencies = "; ".join(
-                        f"Topic \`{use.topic_id}\` — {use.topic_title} ({use.intent})"
+                        f"Topic `{use.topic_id}` — {use.topic_title.replace('|', '\\|')} ({use.intent})"
                         for use in record.uses
                     )
-                    resource_cell = f"\`{resource_id}\`" if record.resource_id else "<unregistered>"
+                    resource_cell = f"`{resource_id}`" if record.resource_id else "<unregistered>"
+                    node_cell = record.node_name.replace("|", "\\|")
                     print(
-                        f"| {resource_cell} | {record.node_name} | \`{path}\` | {topic_dependencies} |"
+                        f"| {resource_cell} | {node_cell} | `{path}` | {topic_dependencies} |"
                     )
                 if any(record.resource_id is None for record in records):
                     print("")
