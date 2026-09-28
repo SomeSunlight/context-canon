@@ -3,8 +3,8 @@
 
 ## Sources
 
-- [Development Workflow](../development-workflow/) — `0.3.0-draft`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.0-draft" -->
+- [Development Workflow](../development-workflow/) — `0.3.1-draft`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.1-draft" -->
 
 ## Local Overview
 
