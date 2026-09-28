@@ -26,11 +26,11 @@ Checkpoint: PR #68 was owner-reviewed and squash-merged to `main` as `68d5246eaf
 
 **Fast Track status — ACTIVE**
 
-Purpose: rename the owner-approved accelerated development mode from the hard-to-recall `fast-run` wording to **Fast Track**, without changing authority, review, or merge-gate semantics.
+Purpose: standardize the owner-approved accelerated development mode on the memorable name **Fast Track**, without changing authority, review, or merge-gate semantics.
 
 - [ ] Rename the reusable Development Workflow rule and explanatory documentation.
 - [ ] Refresh every affected generated Context package and dependent local Source pin.
-- [ ] Verify the repository contains no remaining `fast-run` terminology and passes the complete deterministic/zero-drift gate.
+- [ ] Verify the repository contains only **Fast Track** terminology and passes the complete deterministic/zero-drift gate.
 - [ ] Close the Fast Track checkpoint and prepare one review PR. Do not merge without explicit project-owner approval.
 
 Exit: terminology is consistently **Fast Track** everywhere and the exact PR head is green.
