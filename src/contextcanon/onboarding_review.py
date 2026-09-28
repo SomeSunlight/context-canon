@@ -611,6 +611,11 @@ def _rollback_first_adoption(
         pass
 
 
+def _onboarding_resource_id(node_id: str, topic_id: str, ordinal: int) -> str:
+    payload = f"{node_id}\0{topic_id}\0{ordinal}".encode("utf-8")
+    return "RESOURCE-" + hashlib.sha256(payload).hexdigest()[:12].upper()
+
+
 def _render_context_source(
     node: ReviewNode,
     accepted_items: list[ProposalItem],
@@ -666,13 +671,20 @@ def _render_context_source(
     topics = [item for item in accepted_items if item.kind == "topic-resource"]
     if topics:
         lines.extend(["## Local Topics", ""])
+        resource_ids: dict[str, str] = {}
         for item in topics:
             title = _publishable(item.title, f"item {item.id} title")
             condition = _publishable(str(item.payload["condition"]), f"item {item.id} condition")
             _publishable(item.id, f"item {item.id} canonical Topic ID")
             lines.extend([f"### {title}", "", condition, "", "Required:"])
-            for path in item.payload["resource_paths"]:
-                lines.append(f"- Resource: `{path}`")
+            for ordinal, path in enumerate(item.payload["resource_paths"]):
+                locator = str(path)
+                resource_id = resource_ids.get(locator)
+                if resource_id is None:
+                    resource_id = _onboarding_resource_id(node.id, item.id, ordinal)
+                    resource_ids[locator] = resource_id
+                lines.append(f"- Resource: `{locator}`")
+                lines.append(f'  <!-- ctx:resource id="{resource_id}" -->')
             lines.extend(["", f'<!-- ctx:topic id="{item.id}" -->', ""])
 
     return "\n".join(lines).rstrip() + "\n"
