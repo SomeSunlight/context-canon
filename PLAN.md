@@ -2,7 +2,7 @@
 
 ## Accepted baseline
 
-The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #68, owner-approved and squash-merged as `68d5246eafb5f3d61787e9ea46a33bf50b93a2d2`.
+The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #71, owner-approved and squash-merged as `04ffc00f3b7c30d797cc567dcd3dcb97147f9a39`.
 
 PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 
@@ -22,7 +22,7 @@ Checkpoint: PR #68 was owner-reviewed and squash-merged to `main` as `68d5246eaf
 - [x] Run the complete exact-head deterministic suite and zero-drift gate; prepare a review PR and do not merge without explicit project-owner approval.
 
 
-## Active development block: Fast Track terminology — Issue #69
+## Accepted block: Fast Track terminology — Issue #69
 
 **Fast Track status — CLOSED**
 
@@ -36,6 +36,19 @@ Purpose: standardize the owner-approved accelerated development mode on the memo
 Exit: terminology is consistently **Fast Track** everywhere and the exact PR head is green.
 
 Checkpoint: the reusable Development Workflow is now `0.3.1-draft`; Framework Development, GitHub and GitHub Local consume that version, generated packages were rebuilt by ContextCanon itself, all 304 deterministic tests passed, `contextcanon check --all .` reported zero drift, and a repository-wide sweep found no remaining previous mode label. The temporary refresh workflow was removed before review.
+
+PR #71 was owner-reviewed and squash-merged to `main` as `04ffc00f3b7c30d797cc567dcd3dcb97147f9a39`.
+
+## Active development block: pre-Evidence rename/move warning — Issue #72
+
+Purpose: make the onboarding path boundary unmistakable before immutable Evidence is frozen, as the first independently mergeable stage of umbrella Issue #70.
+
+- [x] Add a conspicuous rendered warning to generated STEP 01 telling the operator to finish file/directory renames and moves before STEP 03.
+- [x] Explain that a later rename/move requires returning to STEP 03, refreshing inventory, freezing new Evidence and recreating dependent later onboarding work.
+- [x] Add focused regression coverage for the warning placement and recovery wording.
+- [ ] Run the complete deterministic/zero-drift PR gate and prepare the standalone review PR. Do not implement Resource identity/move mechanics in this block.
+
+Boundary: this block changes onboarding guidance only. Stable Resource identity, `resource list/status/move/reconcile`, move detection and digest semantics remain in #70 for later stages after this PR is merged.
 
 ## Accepted prerequisite: Development Workflow providers — Issue #63
 
