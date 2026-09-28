@@ -159,7 +159,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         )
         self.assertEqual(len(node.normalized_digest), 64)
         self.assertEqual(len(node.package_digest), 64)
-        self.assertIn('"schema": "contextcanon/package/v1"', node.package_manifest)
+        self.assertIn('"schema": "contextcanon/package/v2"', node.package_manifest)
         self.assertIn("How to use this context", node.official_markdown)
         self.assertIn("Apply all Rules below to every task in this Node.", node.official_markdown)
         self.assertIn("Rules from Demo Foundation", node.official_markdown)
