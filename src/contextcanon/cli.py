@@ -1586,10 +1586,13 @@ def main(argv: list[str] | None = None) -> int:
                 for record in records:
                     resource_id = record.resource_id or "<unregistered>"
                     path = record.path.relative_to(repo_root).as_posix()
-                    topic_dependencies = "; ".join(
-                        f"Topic `{use.topic_id}` — {use.topic_title.replace('|', '\\|')} ({use.intent})"
-                        for use in record.uses
-                    )
+                    topic_dependency_items: list[str] = []
+                    for use in record.uses:
+                        title_cell = use.topic_title.replace("|", "\\|")
+                        topic_dependency_items.append(
+                            f"Topic `{use.topic_id}` — {title_cell} ({use.intent})"
+                        )
+                    topic_dependencies = "; ".join(topic_dependency_items)
                     resource_cell = f"`{resource_id}`" if record.resource_id else "<unregistered>"
                     node_cell = record.node_name.replace("|", "\\|")
                     print(
