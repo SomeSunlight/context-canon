@@ -58,7 +58,7 @@ contextcanon build --all .
 contextcanon check --all .
 ```
 
-`status` starts conservatively with exact SHA-256 matches. A unique byte-identical candidate is shown as an unconfirmed rename; multiple identical candidates remain ambiguous. `reconcile` never transfers identity merely because hashes match: the human confirms semantic continuity. For Markdown Resources, ContextCanon also compares the resolved relative-link closure and refuses a simple move when the same bytes would now pull in different local dependencies.
+`status` starts conservatively with exact SHA-256 matches. A unique byte-identical candidate is shown as an unconfirmed rename; multiple identical candidates remain visibly ambiguous. Interactive `reconcile` presents those exact candidates as a numbered human choice, while `--yes` deliberately skips ambiguity rather than guessing. `reconcile` never transfers identity merely because hashes match: the human confirms semantic continuity. For Markdown Resources, ContextCanon also compares the resolved relative-link closure and refuses a simple move when the same bytes would now pull in different local dependencies.
 
 For an older ContextCanon project that still has path-only Resources, migrate once:
 
@@ -67,6 +67,8 @@ contextcanon resource register
 contextcanon build --all .
 contextcanon check --all .
 ```
+
+Moves also report project-authored Markdown links that still resolve to the old path. ContextCanon never rewrites that prose automatically; the operator reviews those links separately.
 
 `contextcanon check` remains non-interactive. If a registered Resource is missing, it reports the problem and points to the Resource status/reconcile workflow rather than guessing or rewriting authoring state.
 
