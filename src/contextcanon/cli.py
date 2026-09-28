@@ -1557,6 +1557,11 @@ def main(argv: list[str] | None = None) -> int:
                 print("Stable Resource IDs: " + ", ".join(result.resource_ids))
                 print(f"Updated Context Nodes: {len(result.updated_nodes)}")
                 print("ContextCanon Resource locators were updated atomically; arbitrary project Markdown links were not rewritten.")
+                if result.inbound_markdown_links:
+                    print("Warning: project Markdown still links to the old Resource path:")
+                    for link in result.inbound_markdown_links:
+                        print(f"  - {link}")
+                    print("Review those links manually; ContextCanon does not rewrite project-owned prose.")
                 print("Next: contextcanon build --all .")
                 print("Then: contextcanon check --all .")
                 return 0
@@ -1669,18 +1674,60 @@ def main(argv: list[str] | None = None) -> int:
             # resource reconcile
             grouped: dict[Path, list[object]] = {}
             for status in statuses:
-                if status.state == "candidate" and len(status.candidates) == 1:
+                if status.state in {"candidate", "ambiguous"} and status.candidates:
                     grouped.setdefault(status.record.path.resolve(), []).append(status)
 
             reconciled = 0
+            attempted_old_paths: set[Path] = set()
             for old_path, group in sorted(grouped.items(), key=lambda item: item[0].as_posix()):
-                candidate_paths = {status.candidates[0].path.resolve() for status in group}
-                if len(candidate_paths) != 1:
+                attempted_old_paths.add(old_path)
+                candidate_sets = [
+                    {candidate.path.resolve() for candidate in status.candidates}
+                    for status in group
+                ]
+                common_candidates = set.intersection(*candidate_sets) if candidate_sets else set()
+                if not common_candidates:
                     print(
-                        f"skip {old_path.relative_to(repo_root).as_posix()}: semantic owners disagree on the exact candidate"
+                        f"skip {old_path.relative_to(repo_root).as_posix()}: semantic owners disagree on exact candidates"
                     )
                     continue
-                new_path = next(iter(candidate_paths))
+
+                choices = sorted(common_candidates, key=lambda item: item.as_posix())
+                new_path: Path | None = None
+                if len(choices) == 1:
+                    new_path = choices[0]
+                elif args.yes:
+                    print(
+                        f"skip {old_path.relative_to(repo_root).as_posix()}: "
+                        f"{len(choices)} exact candidates require a human choice"
+                    )
+                    continue
+                else:
+                    print("")
+                    print(
+                        f"Ambiguous external Resource rename: "
+                        f"{old_path.relative_to(repo_root).as_posix()}"
+                    )
+                    print("Exact byte-identical candidates:")
+                    for index, candidate_path in enumerate(choices, start=1):
+                        print(f"  {index}. {candidate_path.relative_to(repo_root).as_posix()}")
+                    while True:
+                        answer = input("Choose candidate number, or press Enter to skip: ").strip()
+                        if not answer:
+                            print("Skipped.")
+                            break
+                        try:
+                            selected = int(answer)
+                        except ValueError:
+                            print("Enter one of the shown numbers, or press Enter to skip.")
+                            continue
+                        if 1 <= selected <= len(choices):
+                            new_path = choices[selected - 1]
+                            break
+                        print("Enter one of the shown numbers, or press Enter to skip.")
+                    if new_path is None:
+                        continue
+
                 resource_ids = sorted(
                     {
                         status.record.resource_id
@@ -1696,19 +1743,33 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print("Stable Resource IDs: " + ", ".join(resource_ids))
                 print("Match: exact SHA-256 / 100% byte identity")
-                candidate = group[0].candidates[0]
-                metrics = f"Bytes: {candidate.size}"
-                if candidate.lines is not None:
-                    metrics += f" | Lines: {candidate.lines}"
+                selected_candidate = next(
+                    candidate
+                    for candidate in group[0].candidates
+                    if candidate.path.resolve() == new_path
+                )
+                metrics = f"Bytes: {selected_candidate.size}"
+                if selected_candidate.lines is not None:
+                    metrics += f" | Lines: {selected_candidate.lines}"
                 print(metrics)
                 if not args.yes and not _confirm("Preserve these Resource identities and update all ContextCanon locators?"):
                     print("Skipped.")
                     continue
                 result = reconcile_resource(repo_root, old_path, new_path)
                 print(f"Reconciled {len(result.resource_ids)} Resource identity/identities across {len(result.updated_nodes)} Context Node(s).")
+                if result.inbound_markdown_links:
+                    print("Warning: project Markdown still links to the old Resource path:")
+                    for link in result.inbound_markdown_links:
+                        print(f"  - {link}")
+                    print("Review those links manually; ContextCanon does not rewrite project-owned prose.")
                 reconciled += 1
 
-            blocked = [status for status in statuses if status.state in {"ambiguous", "candidate-closure-changed", "missing"}]
+            blocked = [
+                status
+                for status in statuses
+                if status.record.path.resolve() not in attempted_old_paths
+                and status.state in {"ambiguous", "candidate-closure-changed", "missing"}
+            ]
             if blocked:
                 print("")
                 print("Unresolved Resource paths:")
@@ -1720,7 +1781,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("")
                 print("Next: contextcanon build --all .")
                 print("Then: contextcanon check --all .")
-            elif not blocked:
+            elif not blocked and not grouped:
                 print("No external Resource renames require reconciliation.")
             return 0
 
