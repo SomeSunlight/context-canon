@@ -45,3 +45,5 @@ jobs:
             git commit -m "Regenerate Context for Fast Track terminology"
             git push
           fi
+
+# retrigger after terminology sweep
