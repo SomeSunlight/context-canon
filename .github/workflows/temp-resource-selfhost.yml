@@ -46,3 +46,5 @@ jobs:
             git commit -m "Migrate self-hosted Resources to stable identity"
             git push
           fi
+
+# retrigger after Source pin alignment
