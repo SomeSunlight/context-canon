@@ -21,7 +21,8 @@ from .model import (
 )
 from .parser import ContextCanonError
 
-PACKAGE_SCHEMA = "contextcanon/package/v1"
+PACKAGE_SCHEMA = "contextcanon/package/v2"
+PREVIOUS_PACKAGE_SCHEMA = "contextcanon/package/v1"
 LEGACY_PACKAGE_SCHEMA = "contextcanon/package/v0"
 PACKAGE_MANIFEST_PATH = ".context/package.json"
 
@@ -165,7 +166,7 @@ def semantic_payload(
             item["why"],
         ),
     )
-    topic_items = [_topic_dict(topic) for topic in topics]
+    topic_items = [_semantic_topic_dict(topic) for topic in topics]
     topic_items.sort(key=lambda item: (item["origin_node_id"], item["id"]))
 
     payload: dict[str, Any] = {
@@ -292,7 +293,7 @@ def load_package(package_root: Path) -> CompiledPackage:
 
     root = _dict(raw, "manifest")
     schema = root.get("schema")
-    if schema not in {PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
+    if schema not in {PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
         raise ContextCanonError(
             f"Unsupported Context package schema in {manifest_path}: {schema!r}"
         )
@@ -390,6 +391,41 @@ def artifact_files(compiled: CompiledNode) -> dict[str, bytes]:
     }
 
 
+def _semantic_topic_dict(topic: Topic) -> dict[str, Any]:
+    """Canonical Topic payload for normalized identity.
+
+    An identified Resource is represented by its stable Resource ID rather
+    than by its current package locator. Legacy path-only Resources retain
+    their locator so existing package digests remain verifiable.
+    """
+
+    item = asdict(topic)
+    targets: list[dict[str, Any]] = []
+    for target in item["targets"]:
+        if target["kind"] == "resource" and target.get("resource_id"):
+            targets.append(
+                {
+                    "kind": target["kind"],
+                    "intent": target["intent"],
+                    "resource_id": target["resource_id"],
+                }
+            )
+        else:
+            targets.append({key: value for key, value in target.items() if value is not None})
+    item["targets"] = sorted(
+        targets,
+        key=lambda target: (
+            target["intent"],
+            target["kind"],
+            target.get("resource_id", ""),
+            target.get("locator", ""),
+            target.get("target_node_id", ""),
+            target.get("target_node_name", ""),
+        ),
+    )
+    return item
+
+
 def _topic_dict(topic: Topic) -> dict[str, Any]:
     item = asdict(topic)
     targets: list[dict[str, Any]] = []
@@ -399,6 +435,7 @@ def _topic_dict(topic: Topic) -> dict[str, Any]:
         targets,
         key=lambda target: (
             target["intent"], target["kind"], target["locator"],
+            target.get("resource_id", ""),
             target.get("target_node_id", ""), target.get("target_node_name", ""),
         ),
     )
@@ -564,18 +601,24 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
         raise ContextCanonError(f"Invalid {label}.intent: {intent!r}")
     target_node_id = item.get("target_node_id")
     target_node_name = item.get("target_node_name")
+    resource_id = item.get("resource_id")
     if target_node_id is not None and not isinstance(target_node_id, str):
         raise ContextCanonError(f"Invalid {label}.target_node_id: expected string or null")
     if target_node_name is not None and not isinstance(target_node_name, str):
         raise ContextCanonError(f"Invalid {label}.target_node_name: expected string or null")
+    if resource_id is not None and not isinstance(resource_id, str):
+        raise ContextCanonError(f"Invalid {label}.resource_id: expected string or null")
     if (target_node_id is None) != (target_node_name is None):
         raise ContextCanonError(f"Invalid {label}: target_node_id and target_node_name must appear together")
+    if kind == "context-node" and resource_id is not None:
+        raise ContextCanonError(f"Invalid {label}: Context Node targets cannot carry resource_id")
     return TopicTarget(
         kind=kind,  # type: ignore[arg-type]
         locator=_string(item.get("locator"), f"{label}.locator"),
         intent=intent,  # type: ignore[arg-type]
         target_node_id=target_node_id,
         target_node_name=target_node_name,
+        resource_id=resource_id,
     )
 
 
