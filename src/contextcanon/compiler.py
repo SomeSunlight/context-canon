@@ -415,13 +415,14 @@ class Compiler:
             seen[rule.id] = rule
 
     @staticmethod
-    def _topic_target_key(target: TopicTarget) -> tuple[str, str, str, str, str]:
+    def _topic_target_key(target: TopicTarget) -> tuple[str, str, str, str, str, str]:
         return (
             target.intent,
             target.kind,
             target.locator,
             target.target_node_id or "",
             target.target_node_name or "",
+            target.resource_id or "",
         )
 
     def _topics_equivalent(self, left: Topic, right: Topic) -> bool:
@@ -518,8 +519,15 @@ class Compiler:
             f"> Continue at [this package's Official Context]({target}).\n"
         ).encode("utf-8")
 
-    def _resource_closure(self, seed: Path, node_name: str, topic_id: str, locator: str) -> list[Path]:
-        self._validate_resource(seed, node_name, topic_id, locator)
+    def _resource_closure(
+        self,
+        seed: Path,
+        node_name: str,
+        topic_id: str,
+        locator: str,
+        resource_id: str | None = None,
+    ) -> list[Path]:
+        self._validate_resource(seed, node_name, topic_id, locator, resource_id)
         if self._is_generated_context_target(seed):
             raise ContextCanonError(
                 f"{node_name} Topic {topic_id}: generated CONTEXT.md is a Context Node target, not an authored Resource: {locator}"
@@ -564,7 +572,13 @@ class Compiler:
             for target in topic.targets:
                 if target.kind == "resource":
                     seed = (compiled.parsed.root / target.locator).resolve()
-                    closure = self._resource_closure(seed, compiled.metadata.name, topic.id, target.locator)
+                    closure = self._resource_closure(
+                        seed,
+                        compiled.metadata.name,
+                        topic.id,
+                        target.locator,
+                        target.resource_id,
+                    )
                     for source in closure:
                         rel = source.relative_to(self.repo_root).as_posix()
                         published = f"CONTEXT/references/{namespace}/{rel}"
@@ -585,6 +599,7 @@ class Compiler:
                             kind="resource",
                             locator=f"CONTEXT/references/{namespace}/{seed_rel}",
                             intent=target.intent,
+                            resource_id=target.resource_id,
                         )
                     )
                     continue
@@ -632,12 +647,24 @@ class Compiler:
             resources["CONTEXT/README.md"] = CONTEXT_FOLDER_README.encode("utf-8")
         return dict(sorted(resources.items()))
 
-    def _validate_resource(self, source: Path, node_name: str, topic_id: str, locator: str) -> None:
+    def _validate_resource(
+        self,
+        source: Path,
+        node_name: str,
+        topic_id: str,
+        locator: str,
+        resource_id: str | None = None,
+    ) -> None:
         if not self._is_within_repo(source):
             raise ContextCanonError(
                 f"{node_name} Topic {topic_id}: resource escapes repository: {locator}"
             )
         if not source.is_file():
+            if resource_id is not None:
+                raise ContextCanonError(
+                    f"{node_name} Topic {topic_id}: registered Resource {resource_id} is missing at {locator!r}; "
+                    "run 'contextcanon resource status --all .' and reconcile the move explicitly"
+                )
             raise ContextCanonError(
                 f"{node_name} Topic {topic_id}: missing resource: {locator}"
             )
