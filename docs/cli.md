@@ -35,6 +35,43 @@ The first two commands are useful for one explicit edge. `contextcanon parent pr
 
 Before accepting a Parent update, check three things: **does it still apply here, does it coexist with the Child's other imported Contexts, and is the upstream change itself correct and complete from this Child's viewpoint?** If not, fix upstream or make an explicit justified local resolution rather than relying on import order.
 
+## Maintain Topic Resources
+
+Direct Topic Resources have stable identities independent of their current repository paths. The Resource commands are deliberately grouped as one Git-like maintenance surface:
+
+| Goal | Command | What it does |
+| --- | --- | --- |
+| List Resources | `contextcanon resource list` | Shows a labeled Markdown table: Resource ID, Context Node using the Resource, Resource path, and explicit Topic dependency with Topic ID, title, and required/optional intent. |
+| Inspect changes | `contextcanon resource status` | Git-like view of Resource deviations from the last built package: modifications, missing paths, moves, and exact-hash rename candidates. Clean Resources are hidden by default; add `--all` to show them. |
+| Register an older project | `contextcanon resource register` | Explicitly adds stable IDs to legacy path-only direct Topic Resources. Normal `build`/`check` never performs this migration silently. |
+| Move a Resource explicitly | `contextcanon resource move OLD NEW` | Moves the physical file and updates every affected ContextCanon Resource locator atomically while preserving stable Resource IDs. `resource mv` is an alias. |
+| Reconcile external renames | `contextcanon resource reconcile` | Reviews files already renamed by an IDE, file manager, or Git operation and asks before preserving their Resource identities at the new paths. |
+
+These commands operate across the repository's Context Nodes by default because one physical file may be referenced by more than one Node.
+
+For an externally performed rename, the normal flow is:
+
+```text
+contextcanon resource status
+contextcanon resource reconcile
+contextcanon build --all .
+contextcanon check --all .
+```
+
+`status` starts conservatively with exact SHA-256 matches. A unique byte-identical candidate is shown as an unconfirmed rename; multiple identical candidates remain visibly ambiguous. Interactive `reconcile` presents those exact candidates as a numbered human choice, while `--yes` deliberately skips ambiguity rather than guessing. `reconcile` never transfers identity merely because hashes match: the human confirms semantic continuity. For Markdown Resources, ContextCanon also compares the resolved relative-link closure and refuses a simple move when the same bytes would now pull in different local dependencies.
+
+For an older ContextCanon project that still has path-only Resources, migrate once:
+
+```text
+contextcanon resource register
+contextcanon build --all .
+contextcanon check --all .
+```
+
+Moves also report project-authored Markdown links that still resolve to the old path. ContextCanon never rewrites that prose automatically; the operator reviews those links separately.
+
+`contextcanon check` remains non-interactive. If a registered Resource is missing, it reports the problem and points to the Resource status/reconcile workflow rather than guessing or rewriting authoring state.
+
 ## Author normal Context
 
 ```text

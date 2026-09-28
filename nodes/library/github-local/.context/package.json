@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "0c6673da53824dcad8b78cadd9a816733605394520b2e1c3995088e5748cc2dd",
-    "package": "40259ff59845acf01b42d90529fa67e2681eecc27b26ea2082efb13c40cac55e"
+    "normalized": "8b0e361645fd3468ae87f59f6b6472beb71f7f99bfe5e06a8f8d274c54ab4d4e",
+    "package": "ad138bdae4bae2bd8258b089c91ba18ce7c54fd78f2018c2d9743e8d06f5fe9e"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "ef084eac2b52d5ff8938634ac06b1d66d6656bdb656f6473de6514a3d58f8c88",
+      "sha256": "5538155321ff067c468c0b094b2f4429e18afe5a06bdd25097642b6abb8cec59",
       "size": 7178
     },
     {
@@ -31,16 +31,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
-      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
-      "version": "0.3.1-draft",
+      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
+      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
+      "version": "0.3.2-draft",
       "why": null
     }
   ],
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.1-draft"
+    "version": "0.1.2-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -196,14 +196,14 @@
       "why": "Restricted/private projects must not leak development state or acquire an accidental second workflow system."
     }
   ],
-  "schema": "contextcanon/package/v1",
+  "schema": "contextcanon/package/v2",
   "sources": [
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
-      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
-      "version": "0.3.1-draft",
+      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
+      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
+      "version": "0.3.2-draft",
       "why": null
     }
   ],
@@ -217,7 +217,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
+          "resource_id": "RESOURCE-AF854839DFA0"
         }
       ],
       "title": "Executing a development block"
@@ -231,7 +232,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/63b92022-db1a-4875-be99-017726cbfce7/nodes/library/github-local/docs/provider.md"
+          "locator": "CONTEXT/references/63b92022-db1a-4875-be99-017726cbfce7/nodes/library/github-local/docs/provider.md",
+          "resource_id": "RESOURCE-CEFEEDC80FA7"
         }
       ],
       "title": "Configure or operate GitHub Local"

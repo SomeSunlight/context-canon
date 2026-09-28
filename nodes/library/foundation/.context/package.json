@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "62a1bc6b9fffa838fbdf2b434f9fd2057de38fb6017734115ae2fb3ed56c100e",
-    "package": "7da87dcee0e716db35b62935f9980d27dd06986af93e61d4d28eb59783a58b8c"
+    "normalized": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
+    "package": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "80bfb3aa464d5257610d04bdcf2b831c858050cc1a32ef852070eeb81b1fc6bd",
+      "sha256": "ebaf5c0ad0f364cd36e11c65d10e82c825c60e625670324e5bd0dd3376fab5b4",
       "size": 4732
     },
     {
@@ -33,20 +33,20 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "c2ae75b88bd843cd9d9f27f092a3f1b085650628958771ab089b16b0eedb0132",
-      "size": 18394
+      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
+      "size": 19483
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
-      "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
-      "size": 3889
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
     }
   ],
   "imports": [],
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
-    "version": "0.2.0-draft"
+    "version": "0.2.1-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -182,7 +182,7 @@
       "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
     }
   ],
-  "schema": "contextcanon/package/v1",
+  "schema": "contextcanon/package/v2",
   "sources": [],
   "topics": [
     {
@@ -194,17 +194,20 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+          "resource_id": "RESOURCE-0490D1539162"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+          "resource_id": "RESOURCE-75BB443F9641"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
+          "resource_id": "RESOURCE-37704BB906AD"
         }
       ],
       "title": "Context authoring"
@@ -218,7 +221,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+          "resource_id": "RESOURCE-484FEC35A542"
         }
       ],
       "title": "Context composition"
@@ -232,7 +236,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
+          "resource_id": "RESOURCE-438E892D9E41"
         }
       ],
       "title": "Harness adapters"

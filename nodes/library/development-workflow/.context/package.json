@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
-    "package": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735"
+    "normalized": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
+    "package": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "8d21935554b118be595ecaa6c07ae97e5174e64a11e214df83c28aa86e479941",
+      "sha256": "71b31f231c5c991c3ff12284ce52539565412bbe2991bdf57b41e5da1ea1aca8",
       "size": 6017
     },
     {
@@ -26,7 +26,7 @@
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
-    "version": "0.3.1-draft"
+    "version": "0.3.2-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -152,7 +152,7 @@
       "why": "The merge itself creates project facts after the merge candidate was frozen. Without a post-merge checkpoint, the accepted code can be correct while recovery documentation still describes the pre-merge state."
     }
   ],
-  "schema": "contextcanon/package/v1",
+  "schema": "contextcanon/package/v2",
   "sources": [],
   "topics": [
     {
@@ -164,7 +164,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
+          "resource_id": "RESOURCE-AF854839DFA0"
         }
       ],
       "title": "Executing a development block"

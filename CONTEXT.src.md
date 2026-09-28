@@ -1,5 +1,5 @@
 # ContextCanon Gateway — Local Context Source
-<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" name="ContextCanon Gateway" version="0.3.8-draft" adapters="agents,goose" -->
+<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" name="ContextCanon Gateway" version="0.3.12-draft" adapters="agents,goose" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the repository Gateway context.**
@@ -23,7 +23,9 @@ When adopting ContextCanon in an existing repository, preparing onboarding evide
 
 Required:
 - Resource: `docs/onboarding.md`
+  <!-- ctx:resource id="RESOURCE-99512F179D85" -->
 - Resource: `docs/onboarding-cli.md`
+  <!-- ctx:resource id="RESOURCE-5F43AABB6A6C" -->
 <!-- ctx:topic id="CCG-TOPIC-ONBOARDING" -->
 
 ### Use and maintain ContextCanon
@@ -32,7 +34,9 @@ When inspecting, updating, propagating, building, checking, or learning the norm
 
 Required:
 - Resource: `docs/maintenance.md`
+  <!-- ctx:resource id="RESOURCE-4C412020705C" -->
 - Resource: `docs/cli.md`
+  <!-- ctx:resource id="RESOURCE-FF07DC187B0F" -->
 <!-- ctx:topic id="CCG-TOPIC-MAINTENANCE" -->
 
 ### ContextCanon framework development

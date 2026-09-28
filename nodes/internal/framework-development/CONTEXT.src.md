@@ -1,5 +1,5 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.8-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.9-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
@@ -34,11 +34,11 @@ OVERRIDE IMPORTED RULE
 
 ## Sources
 
-- [ContextCanon Foundation](../../library/foundation/) — `0.2.0-draft`
-  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.0-draft" -->
+- [ContextCanon Foundation](../../library/foundation/) — `0.2.1-draft`
+  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.1-draft" -->
 
-- [Development Workflow](../../library/development-workflow/) — `0.3.1-draft`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.1-draft" -->
+- [Development Workflow](../../library/development-workflow/) — `0.3.2-draft`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.2-draft" -->
 
 ## Local Rules
 
@@ -106,6 +106,7 @@ When changing, debugging, reviewing, or extending the deterministic compiler imp
 
 Required:
 - Resource: `docs/compiler.md`
+  <!-- ctx:resource id="RESOURCE-BFB23E631C95" -->
 <!-- ctx:topic id="CCI-TOPIC-COMPILER" -->
 
 ### Tests and CI
@@ -114,6 +115,7 @@ When changing or reviewing tests, GitHub Actions, repository consistency checks,
 
 Required:
 - Resource: `docs/tests-and-ci.md`
+  <!-- ctx:resource id="RESOURCE-7A8E65675C80" -->
 <!-- ctx:topic id="CCI-TOPIC-TESTS" -->
 
 ### Development workflow
@@ -130,10 +132,13 @@ When changing the compiler boundary, package model, Node structure, deterministi
 
 Required:
 - Resource: `docs/architecture.md`
+  <!-- ctx:resource id="RESOURCE-3220F65B61A9" -->
 - Resource: `docs/use-case-walkthrough.md`
+  <!-- ctx:resource id="RESOURCE-0ABD4555D3F3" -->
 
 Optional:
 - Resource: `docs/concepts.md`
+  <!-- ctx:resource id="RESOURCE-009EEDA1D1FB" -->
 <!-- ctx:topic id="CCI-TOPIC-ARCHITECTURE" -->
 
 ### Reviewed project onboarding
@@ -142,6 +147,7 @@ When changing onboarding inventory, evidence capture, semantic classification, p
 
 Required:
 - Resource: `docs/onboarding-design.md`
+  <!-- ctx:resource id="RESOURCE-59AA3A35FF8B" -->
 <!-- ctx:topic id="CCI-TOPIC-ONBOARDING" -->
 
 ### Source and official formats
@@ -150,8 +156,11 @@ When changing authoring syntax, IDs, Topics, Changes, official entry views, or m
 
 Required:
 - Resource: `../../library/foundation/docs/source-format.md`
+  <!-- ctx:resource id="RESOURCE-ACA971B8F356" -->
 - Resource: `../../library/foundation/docs/official-context.md`
+  <!-- ctx:resource id="RESOURCE-14ADEC7D5169" -->
 - Resource: `../../library/foundation/docs/topics.md`
+  <!-- ctx:resource id="RESOURCE-D817E3612085" -->
 <!-- ctx:topic id="CCI-TOPIC-FORMATS" -->
 
 ### Composition
@@ -160,7 +169,9 @@ When changing Source composition, version acceptance, conflicts, removes, overri
 
 Required:
 - Resource: `../../library/foundation/docs/composition.md`
+  <!-- ctx:resource id="RESOURCE-2097657E0CFB" -->
 - Resource: `docs/use-case-walkthrough.md`
+  <!-- ctx:resource id="RESOURCE-0ABD4555D3F3" -->
 <!-- ctx:topic id="CCI-TOPIC-COMPOSITION" -->
 
 ### Harness integration
@@ -169,6 +180,7 @@ When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:
 
 Required:
 - Resource: `../../library/foundation/docs/harnesses.md`
+  <!-- ctx:resource id="RESOURCE-7C2416533946" -->
 <!-- ctx:topic id="CCI-TOPIC-HARNESSES" -->
 
 ### State and planning
@@ -177,4 +189,5 @@ When deciding whether information belongs in current state, planning, governance
 
 Required:
 - Resource: `docs/state.md`
+  <!-- ctx:resource id="RESOURCE-B64A196201D7" -->
 <!-- ctx:topic id="CCI-TOPIC-STATE" -->

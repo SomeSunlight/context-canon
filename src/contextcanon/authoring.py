@@ -133,18 +133,46 @@ def add_topic(
     if not targets:
         raise ContextCanonError("Topic needs at least one --required-resource, --optional-resource, --required-node, or --optional-node target")
     element_id = _fresh_id("TOPIC", {topic.id for topic in parsed.topics})
+
+    existing_resource_ids: dict[str, str] = {}
+    used_resource_ids: set[str] = set()
+    for topic in parsed.topics:
+        for target in topic.targets:
+            if target.kind == "resource" and target.resource_id is not None:
+                existing_resource_ids[target.locator] = target.resource_id
+                used_resource_ids.add(target.resource_id)
+
+    allocated_resource_ids: dict[str, str] = {}
+    for locator in (*required_resources, *optional_resources):
+        value = _one_line(locator, "Resource target")
+        if value in allocated_resource_ids:
+            continue
+        resource_id = existing_resource_ids.get(value)
+        if resource_id is None:
+            resource_id = _fresh_id("RESOURCE", used_resource_ids)
+            used_resource_ids.add(resource_id)
+        allocated_resource_ids[value] = resource_id
+
+    def resource_lines(values: tuple[str, ...]) -> list[str]:
+        lines: list[str] = []
+        for raw in values:
+            value = _one_line(raw, "Resource target")
+            lines.append(f"- Resource: `{value}`")
+            lines.append(f'  <!-- ctx:resource id="{allocated_resource_ids[value]}" -->')
+        return lines
+
     source_path = node_root / "CONTEXT.src.md"
     original = source_path.read_text(encoding="utf-8")
     lines = original.splitlines()
     block = [f"### {title}", "", condition, ""]
     if required_resources or required_nodes:
         block += ["Required:"]
-        block += [f"- Resource: `{_one_line(value, 'Resource target')}`" for value in required_resources]
+        block += resource_lines(required_resources)
         block += [f"- Context Node: `{_one_line(value, 'Context Node target')}`" for value in required_nodes]
         block += [""]
     if optional_resources or optional_nodes:
         block += ["Optional:"]
-        block += [f"- Resource: `{_one_line(value, 'Resource target')}`" for value in optional_resources]
+        block += resource_lines(optional_resources)
         block += [f"- Context Node: `{_one_line(value, 'Context Node target')}`" for value in optional_nodes]
         block += [""]
     block += [f'<!-- ctx:topic id="{element_id}" -->']
@@ -156,3 +184,4 @@ def add_topic(
         _, end = bounds
         lines = _trim_insert(lines, end, block)
     return _write_validated(node_root, original, lines, "topic", element_id)
+

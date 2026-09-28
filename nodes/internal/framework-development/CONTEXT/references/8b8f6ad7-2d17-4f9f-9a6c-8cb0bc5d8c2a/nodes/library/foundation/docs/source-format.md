@@ -213,9 +213,11 @@ When changing logging, diagnostics, or structured events:
 
 Required:
 - Resource: `docs/logging-contract.md`
+  <!-- ctx:resource id="RESOURCE-LOGGING-CONTRACT" -->
 
 Optional:
 - Resource: `docs/logging-history.md`
+  <!-- ctx:resource id="RESOURCE-LOGGING-HISTORY" -->
 ```
 
 A Topic can also navigate to another Context Node without composing it:
@@ -224,6 +226,12 @@ A Topic can also navigate to another Context Node without composing it:
 Required:
 - Context Node: `nodes/internal/framework-development`
 ```
+
+A direct `Resource` target has its own stable `ctx:resource` ID. The ID belongs to the owning/origin Context Node and remains the Resource's semantic identity when its file is deliberately renamed or moved. The adjacent path is the Resource's current repository location. If the same Resource is targeted by several Topics in one Node, those targets reuse the same Resource ID.
+
+Older path-only Resource targets remain readable for compatibility. Migrate them explicitly with `contextcanon resource register`; ordinary `build` and `check` never allocate IDs or rewrite `CONTEXT.src.md` silently. New `contextcanon author topic` authoring and onboarding publication allocate Resource IDs immediately.
+
+Only the **direct Topic Resource seed** receives this semantic identity. Files reached transitively through relative Markdown links remain exact package dependencies but do not automatically become separately managed Resources.
 
 `Resource` targets are materialized into the generated `CONTEXT/` package. Compiled Resource targets use an origin-Node namespace under `CONTEXT/references/`, so effective Topics can cross Source package boundaries without unrelated repositories colliding on paths. `Context Node` targets remain navigation rather than Source composition; compiled packages carry the stable target Node identity so inherited navigation remains meaningful even when the original repository-relative link is unavailable.
 
@@ -247,7 +255,7 @@ contextcanon author rule . --group Security --title "Keep secrets out of Git" --
 contextcanon author topic . --title Logging --condition "When changing logging or diagnostics:" --required-resource docs/logging-contract.md
 ```
 
-The commands write ordinary source syntax; they do **not** create another authoring database and they do not hide publication behind a write. The resulting `CONTEXT.src.md` is immediately readable and editable by hand. ContextCanon merely allocates the stable `RULE-...` or `TOPIC-...` identity and validates that the edited Node still parses.
+The commands write ordinary source syntax; they do **not** create another authoring database and they do not hide publication behind a write. The resulting `CONTEXT.src.md` is immediately readable and editable by hand. ContextCanon merely allocates the stable `RULE-...` / `TOPIC-...` identities and stable IDs for any direct Resource targets, then validates that the edited Node still parses.
 
 The minimal daily loop is intentionally boring:
 

@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "1d7c3b7f2a4a414213672bbb5e252278e81426b0b38179211c54c1dec93f83d3",
-    "package": "0219ae233a7f34216a8c7ddebd792f20fe30feb13f7e5bbab4791e4dc7287b62"
+    "normalized": "ed9a8999b5f52266150387e6fd95c62c3f3495b72f9d902ff03a4cf38e8a5453",
+    "package": "64d4b0e26f8c0fc01b90bb314eef8084a87597c30c0e2ef9bfc02c051d8e933e"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "199d7c3584cc9b325799ee09522c5825e0e2b840bf7a2b5faff899c932489062",
-      "size": 3282
+      "sha256": "c59bd5d7f11a6833b3cd9161fff6b1fc0fd1b787eb5339b78c4f35b28e5cef0f",
+      "size": 3283
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,13 +18,13 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
-      "sha256": "cf4de2dd9a5a8be03a282d1b689441901d4e3aba103edd2edbf1f3428ab28c77",
-      "size": 4399
+      "sha256": "7d4c47edfe9c3d497d8c26855198711307c1a78cd8ce6bd30165a37570c925b4",
+      "size": 7312
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
-      "sha256": "a93b31dd829cb1adf1576b648f96cdb321c628af69647db7d880df1cef5b68ed",
-      "size": 6587
+      "sha256": "da20b9f72bd7d47c9317b5eb41b00ec7008180ccd909006422d048ad5f5e7cfa",
+      "size": 8950
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
@@ -56,12 +56,12 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.8-draft"
+    "version": "0.3.12-draft"
   },
   "parents": [],
   "removed_rules": [],
   "rules": [],
-  "schema": "contextcanon/package/v1",
+  "schema": "contextcanon/package/v2",
   "sources": [],
   "topics": [
     {
@@ -73,12 +73,14 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md"
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
+          "resource_id": "RESOURCE-5F43AABB6A6C"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
+          "resource_id": "RESOURCE-99512F179D85"
         }
       ],
       "title": "Onboard an existing project"
@@ -92,12 +94,14 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
+          "resource_id": "RESOURCE-FF07DC187B0F"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"
+          "locator": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
+          "resource_id": "RESOURCE-4C412020705C"
         }
       ],
       "title": "Use and maintain ContextCanon"

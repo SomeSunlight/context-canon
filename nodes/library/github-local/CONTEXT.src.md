@@ -1,10 +1,10 @@
 # GitHub Local — Local Context Source
-<!-- ctx:node id="63b92022-db1a-4875-be99-017726cbfce7" name="GitHub Local" version="0.1.1-draft" -->
+<!-- ctx:node id="63b92022-db1a-4875-be99-017726cbfce7" name="GitHub Local" version="0.1.2-draft" -->
 
 ## Sources
 
-- [Development Workflow](../development-workflow/) — `0.3.1-draft`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.1-draft" -->
+- [Development Workflow](../development-workflow/) — `0.3.2-draft`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.2-draft" -->
 
 ## Local Overview
 
@@ -34,4 +34,5 @@ When installing, configuring, integrating, troubleshooting, or extending the loc
 
 Required:
 - Resource: `docs/provider.md`
+  <!-- ctx:resource id="RESOURCE-CEFEEDC80FA7" -->
 <!-- ctx:topic id="GHL-TOPIC-PROVIDER" -->

@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "2fbee13f8acc90d0b43ab23eab7690f034978d9c286ee75b8ea603f25014e28d",
-    "package": "e47fdfefc64cb5a3b4d5d21ba36e71a9cd148bcec03c15842de0a3f4927b43c2"
+    "normalized": "0f969a518674e4e3f3a7179a7470383789816c8416caae20f7eaf6329b0d0fdd",
+    "package": "d5394cbd16dcf9b49761622f599a73617597a240bd1f22587a54020f2ab7ff24"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "f833343c339c4bc16f035b221def755784e633c68df360d0a430fbab41eb2377",
+      "sha256": "b90f56c0115cf54c2b28b65daae0f11e4988d83e1c4b5fa30a5b7c71dfa72e48",
       "size": 18836
     },
     {
@@ -33,23 +33,23 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "c2ae75b88bd843cd9d9f27f092a3f1b085650628958771ab089b16b0eedb0132",
-      "size": 18394
+      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
+      "size": 19483
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
-      "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
-      "size": 3889
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
-      "sha256": "6d4c8099415580bc00058a651431d9fe1e3dffad16c46380ef8c99a449bef2a0",
-      "size": 22642
+      "sha256": "996afae3bacc143c88cb4e46f4c16a17aed8a7aa3df25dd886ca0e4a1d04f7f9",
+      "size": 24087
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
-      "sha256": "da3c30765c518829839f26959a6c32f3fef23b92a2ce6b7050696374209e9ad9",
-      "size": 13308
+      "sha256": "9df72ca01c65bcaadeb35f12a15c38585b205f650bbd03f8deefb660d3db8192",
+      "size": 15139
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md",
@@ -93,13 +93,13 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md",
-      "sha256": "c2ae75b88bd843cd9d9f27f092a3f1b085650628958771ab089b16b0eedb0132",
-      "size": 18394
+      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
+      "size": 19483
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md",
-      "sha256": "accf686842dc1e8715f7ffb9b5a47ae8bbe61b940770b40ebc9565065549d800",
-      "size": 3889
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
     },
     {
       "path": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
@@ -111,24 +111,24 @@
     {
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
-      "normalized_digest": "62a1bc6b9fffa838fbdf2b434f9fd2057de38fb6017734115ae2fb3ed56c100e",
-      "package_digest": "7da87dcee0e716db35b62935f9980d27dd06986af93e61d4d28eb59783a58b8c",
-      "version": "0.2.0-draft",
+      "normalized_digest": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
+      "package_digest": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179",
+      "version": "0.2.1-draft",
       "why": null
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
-      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
-      "version": "0.3.1-draft",
+      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
+      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
+      "version": "0.3.2-draft",
       "why": null
     }
   ],
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.8-draft"
+    "version": "0.3.9-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -504,22 +504,22 @@
       "why": "Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed."
     }
   ],
-  "schema": "contextcanon/package/v1",
+  "schema": "contextcanon/package/v2",
   "sources": [
     {
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
-      "normalized_digest": "62a1bc6b9fffa838fbdf2b434f9fd2057de38fb6017734115ae2fb3ed56c100e",
-      "package_digest": "7da87dcee0e716db35b62935f9980d27dd06986af93e61d4d28eb59783a58b8c",
-      "version": "0.2.0-draft",
+      "normalized_digest": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
+      "package_digest": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179",
+      "version": "0.2.1-draft",
       "why": null
     },
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "dc5b8de1de85c200a97be5206c2a6a76fa58d8172b24fde419150109a8f79e31",
-      "package_digest": "b21804a63b707c06d7b4f74c6b00575da21dcd0826ca34a76bdb6992ba329735",
-      "version": "0.3.1-draft",
+      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
+      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
+      "version": "0.3.2-draft",
       "why": null
     }
   ],
@@ -533,17 +533,20 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+          "resource_id": "RESOURCE-0490D1539162"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+          "resource_id": "RESOURCE-75BB443F9641"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
+          "resource_id": "RESOURCE-37704BB906AD"
         }
       ],
       "title": "Context authoring"
@@ -557,7 +560,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+          "resource_id": "RESOURCE-484FEC35A542"
         }
       ],
       "title": "Context composition"
@@ -571,7 +575,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md"
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
+          "resource_id": "RESOURCE-438E892D9E41"
         }
       ],
       "title": "Harness adapters"
@@ -585,7 +590,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+          "locator": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md",
+          "resource_id": "RESOURCE-AF854839DFA0"
         }
       ],
       "title": "Executing a development block"
@@ -599,7 +605,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
+          "resource_id": "RESOURCE-BFB23E631C95"
         }
       ],
       "title": "Compiler implementation"
@@ -613,7 +620,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md",
+          "resource_id": "RESOURCE-7A8E65675C80"
         }
       ],
       "title": "Tests and CI"
@@ -643,17 +651,20 @@
         {
           "intent": "optional",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md",
+          "resource_id": "RESOURCE-009EEDA1D1FB"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
+          "resource_id": "RESOURCE-3220F65B61A9"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+          "resource_id": "RESOURCE-0ABD4555D3F3"
         }
       ],
       "title": "Framework architecture"
@@ -667,7 +678,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md",
+          "resource_id": "RESOURCE-59AA3A35FF8B"
         }
       ],
       "title": "Reviewed project onboarding"
@@ -681,17 +693,20 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md",
+          "resource_id": "RESOURCE-14ADEC7D5169"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md",
+          "resource_id": "RESOURCE-ACA971B8F356"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md",
+          "resource_id": "RESOURCE-D817E3612085"
         }
       ],
       "title": "Source and official formats"
@@ -705,12 +720,14 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+          "resource_id": "RESOURCE-0ABD4555D3F3"
         },
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md",
+          "resource_id": "RESOURCE-2097657E0CFB"
         }
       ],
       "title": "Composition"
@@ -724,7 +741,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md",
+          "resource_id": "RESOURCE-7C2416533946"
         }
       ],
       "title": "Harness integration"
@@ -738,7 +756,8 @@
         {
           "intent": "required",
           "kind": "resource",
-          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md"
+          "locator": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/state.md",
+          "resource_id": "RESOURCE-B64A196201D7"
         }
       ],
       "title": "State and planning"

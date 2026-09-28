@@ -8,7 +8,7 @@ from typing import Any, Literal
 from .model import CompiledNode
 from .parser import ContextCanonError
 
-DiffChange = Literal["added", "removed", "modified"]
+DiffChange = Literal["added", "removed", "modified", "moved"]
 
 _CATEGORY_ORDER = {
     "node": 0,
@@ -101,7 +101,7 @@ def diff_compiled(before: CompiledNode, after: CompiledNode) -> ContextDiff:
     entries.extend(_diff_maps("change", _change_snapshot(before), _change_snapshot(after)))
     entries.extend(_diff_maps("rule", _rule_snapshot(before), _rule_snapshot(after)))
     entries.extend(_diff_maps("topic", _topic_snapshot(before), _topic_snapshot(after)))
-    entries.extend(_diff_maps("resource", _resource_snapshot(before), _resource_snapshot(after)))
+    entries.extend(_diff_resource_maps(_resource_snapshot(before), _resource_snapshot(after)))
     entries.sort(key=lambda entry: (_CATEGORY_ORDER[entry.category], entry.identity, entry.change))
 
     return ContextDiff(
@@ -139,11 +139,11 @@ def _summary_parts(diff: ContextDiff) -> list[str]:
         key = (entry.category, entry.change)
         counts[key] = counts.get(key, 0) + 1
 
-    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    action = {"added": "added", "removed": "removed", "modified": "changed", "moved": "moved"}
     parts: list[str] = []
     for category in sorted(_CATEGORY_ORDER, key=_CATEGORY_ORDER.get):
         singular, plural = _CATEGORY_NOUNS[category]
-        for change in ("added", "removed", "modified"):
+        for change in ("added", "removed", "modified", "moved"):
             count = counts.get((category, change), 0)
             if count:
                 noun = singular if count == 1 else plural
@@ -168,13 +168,15 @@ def render_diff(diff: ContextDiff, *, include_technical: bool = True) -> str:
 
     if diff.entries:
         current_category = None
-        symbol = {"added": "+", "removed": "-", "modified": "~"}
+        symbol = {"added": "+", "removed": "-", "modified": "~", "moved": "R"}
         for entry in diff.entries:
             if entry.category != current_category:
                 current_category = entry.category
                 lines.extend(["", current_category.title() + "s:"])
             detail = ""
-            if entry.change == "modified" and entry.changed_fields:
+            if entry.change == "moved" and entry.before and entry.after:
+                detail = f" [{entry.before.get('path')} -> {entry.after.get('path')}]"
+            elif entry.change == "modified" and entry.changed_fields:
                 detail = " [" + ", ".join(entry.changed_fields) + "]"
             lines.append(f"  {symbol[entry.change]} {entry.identity}{detail}")
     elif diff.is_empty:
@@ -215,6 +217,29 @@ def _diff_maps(
             )
             result.append(DiffEntry(category, "modified", identity, old, new, changed_fields))
     return result
+
+
+def _diff_resource_maps(
+    before: dict[str, dict[str, Any]],
+    after: dict[str, dict[str, Any]],
+) -> list[DiffEntry]:
+    result = _diff_maps("resource", before, after)
+    rewritten: list[DiffEntry] = []
+    for entry in result:
+        if entry.change == "modified" and entry.changed_fields == ("path",):
+            rewritten.append(
+                DiffEntry(
+                    entry.category,
+                    "moved",
+                    entry.identity,
+                    entry.before,
+                    entry.after,
+                    entry.changed_fields,
+                )
+            )
+        else:
+            rewritten.append(entry)
+    return rewritten
 
 
 def _node_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
@@ -297,19 +322,60 @@ def _topic_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for topic in (*compiled.inherited_topics, *compiled.local_topics):
         item = asdict(topic)
+        targets: list[dict[str, Any]] = []
+        for target in item["targets"]:
+            normalized = dict(target)
+            if normalized["kind"] == "resource" and normalized.get("resource_id"):
+                normalized.pop("locator", None)
+            targets.append(normalized)
         item["targets"] = sorted(
-            item["targets"],
-            key=lambda target: (target["intent"], target["kind"], target["locator"]),
+            targets,
+            key=lambda target: (
+                target["intent"],
+                target["kind"],
+                target.get("resource_id") or "",
+                target.get("locator") or "",
+            ),
         )
         result[f"{topic.origin_node_id}#{topic.id}"] = item
     return result
 
 
 def _resource_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
-    return {
-        path: {
+    result: dict[str, dict[str, Any]] = {}
+    direct_paths: set[str] = set()
+    for topic in (*compiled.inherited_topics, *compiled.local_topics):
+        for target in topic.targets:
+            if target.kind != "resource":
+                continue
+            content = compiled.resources.get(target.locator)
+            if content is None:
+                continue
+            direct_paths.add(target.locator)
+            if target.resource_id:
+                identity = f"{topic.origin_node_id}#{target.resource_id}"
+                item = {
+                    "path": target.locator,
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                    "size": len(content),
+                }
+            else:
+                identity = target.locator
+                item = {
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                    "size": len(content),
+                }
+            previous = result.get(identity)
+            if previous is not None and previous != item:
+                raise ContextCanonError(f"Conflicting Resource snapshot for {identity}")
+            result[identity] = item
+
+    for path, content in compiled.resources.items():
+        if path in direct_paths:
+            continue
+        result[path] = {
             "sha256": hashlib.sha256(content).hexdigest(),
             "size": len(content),
         }
-        for path, content in compiled.resources.items()
-    }
+    return result
+

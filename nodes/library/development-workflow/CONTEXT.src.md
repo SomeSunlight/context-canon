@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.1-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.2-draft" -->
 
 ## Local Overview
 
@@ -75,4 +75,5 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 
 Required:
 - Resource: `docs/change-workflow.md`
+  <!-- ctx:resource id="RESOURCE-AF854839DFA0" -->
 <!-- ctx:topic id="CCW-TOPIC-CHANGE-WORKFLOW" -->

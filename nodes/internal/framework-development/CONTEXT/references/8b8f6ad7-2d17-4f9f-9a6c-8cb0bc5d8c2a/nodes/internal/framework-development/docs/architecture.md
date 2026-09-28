@@ -152,6 +152,18 @@ The deterministic diff preserves that distinction: it reports stable semantic en
 
 Accepted external Sources pin both digests. Semantic equality therefore does not erase the exact identity of the published human/agent package.
 
+## Resource identity is different from Resource location
+
+Direct Topic Resources follow the same identity principle as Nodes, Rules, and Topics: identity is not a filesystem path.
+
+A direct Resource is identified by its origin Node plus stable Resource ID. Its authored path records only the current location from which exact package bytes are materialized. This allows an explicitly reviewed rename to preserve semantic identity while still changing the exact package layout.
+
+ContextCanon deliberately keeps the human decision in that transition. A byte-identical file at another path is only a **candidate** for the same Resource; duplicates make automatic identity transfer unsafe. `resource status` establishes deterministic evidence, and `resource reconcile` asks the human whether semantic continuity is intended.
+
+Only direct Topic Resource seeds become first-class semantic Resources. Files reached through Markdown closure remain exact package dependencies without acquiring a separate identity-management lifecycle. Their resolution still constrains moves: relocating a Markdown seed must not silently change which relative files enter the package.
+
+Resource identities are origin-Node scoped. The same physical repository file may therefore carry different Resource IDs when intentionally exposed by several Context Nodes. A physical move must update every affected ContextCanon reference together or fail without partial mutation.
+
 ## Natural source files, generated package files
 
 Project documentation should stay with the Node that owns its meaning. In this repository, reusable authoring-format, Official Context, Topic, composition, and harness guidance is owned by ContextCanon Foundation under `nodes/library/foundation/docs/`. Framework-specific architecture, compiler, onboarding, test/CI, state, and use-case documentation is owned by Framework Development under its local `docs/` directory.
