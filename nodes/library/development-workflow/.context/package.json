@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
-    "package": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793"
+    "normalized": "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934",
+    "package": "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "71b31f231c5c991c3ff12284ce52539565412bbe2991bdf57b41e5da1ea1aca8",
-      "size": 6017
+      "sha256": "4d6f423fc6736c6b27be8e37e2239ff22af0b670deb792012c85334cb0d2068b",
+      "size": 6341
     },
     {
       "path": "CONTEXT/README.md",
@@ -26,7 +26,7 @@
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
-    "version": "0.3.2-draft"
+    "version": "0.3.3-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -120,6 +120,16 @@
       "statement": "A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.",
       "title": "Require exact-head green verification at the merge gate, not the first review gate",
       "why": "Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-013",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.",
+      "title": "Prefer editable installs for repeated owner testing",
+      "why": "This keeps the owner-test loop short and makes the tested command follow the current checkout."
     },
     {
       "group": "Human review gate",
