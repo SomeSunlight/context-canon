@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "8b0e361645fd3468ae87f59f6b6472beb71f7f99bfe5e06a8f8d274c54ab4d4e",
-    "package": "ad138bdae4bae2bd8258b089c91ba18ce7c54fd78f2018c2d9743e8d06f5fe9e"
+    "normalized": "5fd73f424b6599c6d98ab686b38015b9316d86ee0f406506d2fcc7ee8df07c6c",
+    "package": "0232b835c1023f11d51323b67ffd18549de01e18c43a6de856a7fb5a005fa163"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "5538155321ff067c468c0b094b2f4429e18afe5a06bdd25097642b6abb8cec59",
-      "size": 7178
+      "sha256": "a12723f7c0321ed51b6fe68a2e3c309cdc4ad1bccf645f9ae22d9a77ba80d9c2",
+      "size": 7502
     },
     {
       "path": "CONTEXT/README.md",
@@ -31,9 +31,9 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
-      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
-      "version": "0.3.2-draft",
+      "normalized_digest": "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934",
+      "package_digest": "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27",
+      "version": "0.3.3-draft",
       "why": null
     }
   ],
@@ -136,6 +136,16 @@
       "why": "Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate."
     },
     {
+      "group": "Proportional verification",
+      "id": "CCW-013",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.",
+      "title": "Prefer editable installs for repeated owner testing",
+      "why": "This keeps the owner-test loop short and makes the tested command follow the current checkout."
+    },
+    {
       "group": "Human review gate",
       "id": "CCW-011",
       "modifications": [],
@@ -201,9 +211,9 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
-      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
-      "version": "0.3.2-draft",
+      "normalized_digest": "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934",
+      "package_digest": "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27",
+      "version": "0.3.3-draft",
       "why": null
     }
   ],

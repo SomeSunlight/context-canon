@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.2-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.3-draft" -->
 
 ## Local Overview
 
@@ -50,6 +50,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
 - **Require exact-head green verification at the merge gate, not the first review gate:** A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
   Why: Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate.
   <!-- ctx:rule id="CCW-005" -->
+
+- **Prefer editable installs for repeated owner testing:** When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.
+  Why: This keeps the owner-test loop short and makes the tested command follow the current checkout.
+  <!-- ctx:rule id="CCW-013" -->
 
 ### Human review gate
 

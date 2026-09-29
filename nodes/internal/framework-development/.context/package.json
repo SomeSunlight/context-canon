@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "0f969a518674e4e3f3a7179a7470383789816c8416caae20f7eaf6329b0d0fdd",
-    "package": "d5394cbd16dcf9b49761622f599a73617597a240bd1f22587a54020f2ab7ff24"
+    "normalized": "8aadc04a8c787fe833f09447b42c1b66d51dabbd855e8454779f28eeb074f5d4",
+    "package": "e5e14575632ed52549735d13f45c29918a21d67239909f898533b60f17aa335c"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "b90f56c0115cf54c2b28b65daae0f11e4988d83e1c4b5fa30a5b7c71dfa72e48",
-      "size": 18836
+      "sha256": "edd1c333327c5f71ca7caee0531624dcc5feacbd1391ad088bae141c07846f60",
+      "size": 19161
     },
     {
       "path": "CONTEXT/README.md",
@@ -119,16 +119,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
-      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
-      "version": "0.3.2-draft",
+      "normalized_digest": "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934",
+      "package_digest": "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27",
+      "version": "0.3.3-draft",
       "why": null
     }
   ],
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.9-draft"
+    "version": "0.3.10-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -354,6 +354,16 @@
       "why": "Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate."
     },
     {
+      "group": "Proportional verification",
+      "id": "CCW-013",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.",
+      "title": "Prefer editable installs for repeated owner testing",
+      "why": "This keeps the owner-test loop short and makes the tested command follow the current checkout."
+    },
+    {
       "group": "Human review gate",
       "id": "CCW-011",
       "modifications": [],
@@ -517,9 +527,9 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "eb7cc44cf015ea9f0ab87e4b63966de887a3fc444e4c1ca2480b4ef2d1cb0574",
-      "package_digest": "9d725f76e61f5ec071669e23f8f45015e6e1fea036d8f6fc7b6357bd0e897793",
-      "version": "0.3.2-draft",
+      "normalized_digest": "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934",
+      "package_digest": "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27",
+      "version": "0.3.3-draft",
       "why": null
     }
   ],

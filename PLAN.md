@@ -1,5 +1,13 @@
 # Plan
 
+## Active development block: editable owner-test installs — Issue #75
+
+Purpose: keep the preferred fast owner-test loop in the reusable Development Workflow so GitHub, GitHub Local, and other consumers inherit it instead of repeating provider-specific guidance.
+
+- [x] Move the editable-install guidance into Development Workflow.
+- [x] Update direct Development Workflow Source declarations to the new source version.
+- [ ] Regenerate/accept self-hosted Context packages and run the exact-head zero-drift merge gate before merge.
+
 ## Accepted baseline
 
 The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #73, owner-approved and squash-merged as `4a1622685ba4bc6956b90f36cd13b8df473954ff`.

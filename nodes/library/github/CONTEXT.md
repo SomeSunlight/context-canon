@@ -8,11 +8,11 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** GitHub  
-**Context version:** `0.1.2-draft`
+**Context version:** `0.1.3-draft`
 
 **Resulting imported Contexts:**
 
-- **Development Workflow** — `0.3.2-draft` — direct Source — [inspect accepted carrier](../development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.3-draft` — direct Source — [inspect accepted carrier](../development-workflow/CONTEXT.md)
 
 ## Local Overview
 
@@ -67,6 +67,10 @@ When the project owner explicitly approves a coherent implementation scope and s
 #### `CCW-005` — Require exact-head green verification at the merge gate, not the first review gate
 
 A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.
+
+#### `CCW-013` — Prefer editable installs for repeated owner testing
+
+When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.
 
 ### Human review gate
 
