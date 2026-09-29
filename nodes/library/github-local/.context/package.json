@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.6.0",
   "digests": {
-    "normalized": "ae7604090284887940b6f01f059df131a66e3e4f577a3b30efe0a1208cbe22dd",
-    "package": "8efa0e8aed025ffb875f8871ac6accb50934d059dd7b8ee221f88901d81dceed"
+    "normalized": "5fd73f424b6599c6d98ab686b38015b9316d86ee0f406506d2fcc7ee8df07c6c",
+    "package": "0232b835c1023f11d51323b67ffd18549de01e18c43a6de856a7fb5a005fa163"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "e720cd95f929a56b89830ced692e137f61c5d1f66b003c2fae258b06e18420a2",
+      "sha256": "a12723f7c0321ed51b6fe68a2e3c309cdc4ad1bccf645f9ae22d9a77ba80d9c2",
       "size": 7502
     },
     {
@@ -40,7 +40,7 @@
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.3-draft"
+    "version": "0.1.2-draft"
   },
   "parents": [],
   "removed_rules": [],

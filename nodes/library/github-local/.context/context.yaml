@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "63b92022-db1a-4875-be99-017726cbfce7"
   name: "GitHub Local"
-  version: "0.1.3-draft"
+  version: "0.1.2-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -88,5 +88,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "ae7604090284887940b6f01f059df131a66e3e4f577a3b30efe0a1208cbe22dd"
-  package_digest: "8efa0e8aed025ffb875f8871ac6accb50934d059dd7b8ee221f88901d81dceed"
+  normalized_digest: "5fd73f424b6599c6d98ab686b38015b9316d86ee0f406506d2fcc7ee8df07c6c"
+  package_digest: "0232b835c1023f11d51323b67ffd18549de01e18c43a6de856a7fb5a005fa163"
