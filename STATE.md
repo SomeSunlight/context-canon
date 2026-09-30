@@ -369,3 +369,10 @@ ContextCanon now separates the stable release baseline from the exact developmen
 `contextcanon --version` now reports Git provenance when the executable is running from a Git checkout: branch/ref when available, short commit SHA, and `dirty` when the working tree differs. A detached checkout is shown explicitly as `detached@<sha>`. Installed artifacts without checkout metadata keep the plain release version.
 
 The reusable Development Workflow now carries CCW-014, so projects can keep release versions stable during review/branch work while still exposing exact VCS identity. GitHub, GitHub Local, and ContextCanon Framework Development consume Development Workflow `0.3.4-draft`. PR #80 is the unmerged review candidate.
+
+
+## Issue #82 — Semantic Handoff copies are outside live Node discovery
+
+A real `github-local` onboarding exposed that the STEP-12 reset journal took a live repository snapshot with shared `discover_nodes(project)`. Semantic Handoff workspaces intentionally reproduce frozen Evidence at original project-relative paths, so a copied root `CONTEXT.src.md` inside `handoffs/STEP-04-structure` was incorrectly discovered as a second live Node with the same stable Node ID.
+
+Shared Node discovery now excludes every subtree identified by the Semantic Handoff control directory `.contextcanon-handoff`. The rule is marker-based rather than tied to the default `contextcanon-onboarding` directory name, so custom onboarding workspace locations remain safe. Regression coverage includes both a copied root Node and a nested copied Node inside a handoff while ordinary project Nodes remain visible. PR #83 is the unmerged review candidate.
