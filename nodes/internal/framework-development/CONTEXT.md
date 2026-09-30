@@ -8,12 +8,12 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.10-draft`
+**Context version:** `0.3.11-draft`
 
 **Resulting imported Contexts:**
 
 - **ContextCanon Foundation** — `0.2.1-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
-- **Development Workflow** — `0.3.3-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.4-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
 
 ## How to use this context
 
@@ -140,6 +140,10 @@ A coherent development block may be presented for project-owner review while und
 #### `CCW-013` — Prefer editable installs for repeated owner testing
 
 When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.
+
+#### `CCW-014` — Expose development provenance without micro-bumping releases
+
+When an executable tool is tested from a changing Git checkout, keep its release version stable until a real release/version boundary, but make runtime version output identify the current VCS state with the branch/ref when available, commit identity, and dirty state. Treat the commit identity as authoritative and the branch/ref as human orientation; release artifacts without checkout metadata still report the canonical release version.
 
 ### Human review gate
 
