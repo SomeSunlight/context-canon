@@ -8,11 +8,11 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** GitHub Local  
-**Context version:** `0.1.3-draft`
+**Context version:** `0.1.4-draft`
 
 **Resulting imported Contexts:**
 
-- **Development Workflow** — `0.3.4-draft` — direct Source — [inspect accepted carrier](../development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.5-draft` — direct Source — [inspect accepted carrier](../development-workflow/CONTEXT.md)
 
 ## Local Overview
 
@@ -117,6 +117,14 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 **Required**
 
 - [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)
+
+### Implementing executable version identity
+
+When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:
+
+**Required**
+
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md)
 
 ## Local Topics
 
