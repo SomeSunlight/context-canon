@@ -369,3 +369,10 @@ ContextCanon now separates the stable release baseline from the exact developmen
 `contextcanon --version` now reports Git provenance when the executable is running from a Git checkout: branch/ref when available, short commit SHA, and `dirty` when the working tree differs. A detached checkout is shown explicitly as `detached@<sha>`. Installed artifacts without checkout metadata keep the plain release version.
 
 The reusable Development Workflow now carries CCW-014, so projects can keep release versions stable during review/branch work while still exposing exact VCS identity. GitHub, GitHub Local, and ContextCanon Framework Development consume Development Workflow `0.3.4-draft`. PR #80 is the unmerged review candidate.
+
+
+## Issue #84 — reusable Python version-provenance implementation guide
+
+Development Workflow now contains a narrow implementation Topic for CCW-014. The Resource `docs/version-provenance-python.md` documents the dependency-free pattern proven by ContextCanon itself: one release version in `pyproject.toml`, runtime Git branch/ref + short SHA + dirty state for editable/source checkouts, distribution metadata fallback for installed artifacts, argparse integration, and focused real-Git tests.
+
+The guide explicitly treats commit SHA as immutable identity and branch/ref as human orientation, and keeps a shared runtime library out of scope until multiple projects need materially richer common behavior. GitHub, GitHub Local, and Framework Development consume Development Workflow `0.3.5-draft`. PR #85 is the unmerged review candidate.

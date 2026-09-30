@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** Development Workflow  
-**Context version:** `0.3.4-draft`
+**Context version:** `0.3.5-draft`
 
 ## Local Overview
 
@@ -99,3 +99,11 @@ When planning, resuming, checkpointing, reviewing, testing, finalizing, merging,
 **Required**
 
 - [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md)
+
+### Implementing executable version identity
+
+When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:
+
+**Required**
+
+- [`CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md`](CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md)
