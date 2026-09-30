@@ -677,11 +677,38 @@ class Compiler:
             return False
 
 
+_SEMANTIC_HANDOFF_CONTROL_DIR = ".contextcanon-handoff"
+
+
+def _inside_semantic_handoff(path: Path, repo_root: Path) -> bool:
+    """Return True when path belongs to an isolated Semantic Handoff project.
+
+    Handoff workspaces deliberately contain frozen copies of project files at
+    their original relative paths, including CONTEXT.src.md. Those copies are
+    reasoning input, never live repository Context Nodes.
+    """
+
+    current = path.resolve()
+    while current != repo_root:
+        if current.name == _SEMANTIC_HANDOFF_CONTROL_DIR:
+            return True
+        if (current / _SEMANTIC_HANDOFF_CONTROL_DIR).is_dir():
+            return True
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+    return False
+
+
 def discover_nodes(repo_root: Path) -> list[Path]:
     repo_root = repo_root.resolve()
     result: list[Path] = []
     for source in repo_root.rglob("CONTEXT.src.md"):
-        if any(part in {".git", ".context", "CONTEXT"} for part in source.relative_to(repo_root).parts):
+        relative = source.relative_to(repo_root)
+        if any(part in {".git", ".context", "CONTEXT", _SEMANTIC_HANDOFF_CONTROL_DIR} for part in relative.parts):
+            continue
+        if _inside_semantic_handoff(source.parent, repo_root):
             continue
         result.append(source.parent)
     return sorted(result, key=lambda path: path.relative_to(repo_root).as_posix())
