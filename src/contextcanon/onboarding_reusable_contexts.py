@@ -3,12 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .model import CompiledPackage
 from .onboarding_structure import HumanStructurePlan
-from .package import load_package
+from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError
 from .onboarding_workspace import write_utf8
 
@@ -16,6 +18,9 @@ from .onboarding_workspace import write_utf8
 REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v0"
 REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v0"
 REUSABLE_CONTEXTS_STATE_NAME = "reusable-contexts.json"
+FROZEN_CATALOG_DIR_NAME = "reusable-context-packages"
+FROZEN_PROVENANCE_REL = ".context/onboarding-provenance.json"
+FROZEN_PROVENANCE_SCHEMA = "contextcanon/onboarding-reusable-package-provenance/v0"
 CATALOG_START = "<!-- contextcanon-reusable-catalog:start -->"
 CATALOG_END = "<!-- contextcanon-reusable-catalog:end -->"
 ASSIGNMENTS_START = "<!-- contextcanon-reusable-assignments:start -->"
@@ -187,6 +192,301 @@ def discover_catalog(locations: tuple[str, ...]) -> tuple[tuple[Path, ...], tupl
         key=lambda item: (item[1].metadata.name.casefold(), item[1].metadata.version, item[1].metadata.id),
     )
     return tuple(item[0] for item in ordered), tuple(item[1] for item in ordered)
+
+
+def _git_text(root: Path, *args: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    return completed.stdout.strip()
+
+
+def _git_bytes(root: Path, *args: str) -> bytes | None:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    return completed.stdout
+
+
+def _catalog_provenance(package_root: Path, package: CompiledPackage) -> dict[str, str]:
+    repository_text = _git_text(package_root, "rev-parse", "--show-toplevel")
+    if repository_text is None:
+        return {
+            "schema": FROZEN_PROVENANCE_SCHEMA,
+            "package_digest": package.package_digest,
+            "kind": "local",
+            "locator": str(package_root.resolve()),
+            "ref": "",
+            "node_path": ".",
+            "discovery_ref": "",
+        }
+
+    repository = Path(repository_text).resolve()
+    try:
+        node_path = package_root.resolve().relative_to(repository).as_posix() or "."
+    except ValueError as exc:
+        raise _error(f"Catalog package root is not inside its Git repository: {package_root}") from exc
+
+    status = _git_text(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
+    if status:
+        raise _error(
+            f"Catalog package {package.metadata.name} has uncommitted package-path changes; "
+            "accept reusable Context only from exact committed package bytes"
+        )
+
+    exact = _git_text(repository, "rev-parse", "HEAD") or ""
+    origin = _git_text(repository, "remote", "get-url", "origin") or ""
+    branch = _git_text(repository, "branch", "--show-current") or ""
+    if origin and re.fullmatch(r"[0-9a-f]{40}", exact):
+        return {
+            "schema": FROZEN_PROVENANCE_SCHEMA,
+            "package_digest": package.package_digest,
+            "kind": "git",
+            "locator": origin,
+            "ref": exact,
+            "node_path": node_path,
+            "discovery_ref": branch,
+        }
+
+    return {
+        "schema": FROZEN_PROVENANCE_SCHEMA,
+        "package_digest": package.package_digest,
+        "kind": "local",
+        "locator": str(repository),
+        "ref": exact,
+        "node_path": node_path,
+        "discovery_ref": "",
+    }
+
+
+def _frozen_package_root(snapshot_root: Path, package_digest: str) -> Path:
+    return snapshot_root.resolve() / FROZEN_CATALOG_DIR_NAME / package_digest
+
+
+def _write_frozen_package(
+    destination: Path,
+    package_root: Path,
+    package: CompiledPackage,
+    provenance: dict[str, str],
+) -> Path:
+    if destination.exists():
+        existing = load_package(destination)
+        if existing.package_digest != package.package_digest:
+            raise _error(f"Frozen reusable package path contains the wrong package: {destination}")
+        provenance_path = destination / FROZEN_PROVENANCE_REL
+        if not provenance_path.is_file():
+            write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        return destination
+
+    temporary = destination.with_name(destination.name + ".tmp")
+    if temporary.exists():
+        shutil.rmtree(temporary)
+    try:
+        for rel in [PACKAGE_MANIFEST_PATH, *(file.path for file in package.files)]:
+            source = package_root / Path(*PurePosixPath(rel).parts)
+            if not source.is_file():
+                raise _error(f"Catalog package file disappeared while freezing: {source}")
+            target = temporary / Path(*PurePosixPath(rel).parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+        provenance_path = temporary / FROZEN_PROVENANCE_REL
+        write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        verified = load_package(temporary)
+        if verified.package_digest != package.package_digest:
+            raise _error(
+                f"Frozen reusable package digest mismatch for {package.metadata.name}: "
+                f"expected {package.package_digest}, got {verified.package_digest}"
+            )
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary.replace(destination)
+    finally:
+        if temporary.exists():
+            shutil.rmtree(temporary, ignore_errors=True)
+    return destination
+
+
+def _freeze_catalog(
+    snapshot_root: Path,
+    roots: tuple[Path, ...],
+    packages: tuple[CompiledPackage, ...],
+) -> tuple[Path, ...]:
+    result: list[Path] = []
+    for root, package in zip(roots, packages):
+        destination = _frozen_package_root(snapshot_root, package.package_digest)
+        provenance = _catalog_provenance(root, package)
+        result.append(_write_frozen_package(destination, root, package, provenance))
+    return tuple(result)
+
+
+def _manifest_digest(raw: bytes) -> str | None:
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    digests = value.get("digests")
+    if not isinstance(digests, dict):
+        return None
+    digest = digests.get("package")
+    return digest if isinstance(digest, str) else None
+
+
+def _recover_historical_package(
+    snapshot_root: Path,
+    original_root: Path,
+    expected_digest: str,
+) -> Path | None:
+    repository_text = _git_text(original_root, "rev-parse", "--show-toplevel")
+    if repository_text is None:
+        return None
+    repository = Path(repository_text).resolve()
+    try:
+        node_path = original_root.resolve().relative_to(repository).as_posix() or "."
+    except ValueError:
+        return None
+
+    manifest_rel = (
+        PACKAGE_MANIFEST_PATH
+        if node_path == "."
+        else f"{node_path}/{PACKAGE_MANIFEST_PATH}"
+    )
+    history = _git_text(repository, "log", "--all", "--format=%H", "--", manifest_rel)
+    if not history:
+        return None
+
+    for commit in history.splitlines():
+        manifest_bytes = _git_bytes(repository, "show", f"{commit}:{manifest_rel}")
+        if manifest_bytes is None or _manifest_digest(manifest_bytes) != expected_digest:
+            continue
+        try:
+            manifest = json.loads(manifest_bytes.decode("utf-8"))
+            files = manifest.get("files", [])
+            paths = [item["path"] for item in files if isinstance(item, dict) and isinstance(item.get("path"), str)]
+        except (UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
+            continue
+
+        destination = _frozen_package_root(snapshot_root, expected_digest)
+        temporary = destination.with_name(destination.name + ".tmp")
+        if temporary.exists():
+            shutil.rmtree(temporary)
+        try:
+            manifest_target = temporary / PACKAGE_MANIFEST_PATH
+            manifest_target.parent.mkdir(parents=True, exist_ok=True)
+            manifest_target.write_bytes(manifest_bytes)
+            complete = True
+            for rel in paths:
+                git_path = rel if node_path == "." else f"{node_path}/{rel}"
+                data = _git_bytes(repository, "show", f"{commit}:{git_path}")
+                if data is None:
+                    complete = False
+                    break
+                target = temporary / Path(*PurePosixPath(rel).parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+            if not complete:
+                continue
+
+            origin = _git_text(repository, "remote", "get-url", "origin") or ""
+            provenance = {
+                "schema": FROZEN_PROVENANCE_SCHEMA,
+                "package_digest": expected_digest,
+                "kind": "git" if origin else "local",
+                "locator": origin or str(repository),
+                "ref": commit,
+                "node_path": node_path,
+                # A legacy STEP-07 state did not preserve the symbolic discovery branch.
+                # Use the provider's default discovery channel rather than guessing from
+                # whatever feature branch happens to be checked out during recovery.
+                "discovery_ref": "",
+            }
+            provenance_path = temporary / FROZEN_PROVENANCE_REL
+            write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+            verified = load_package(temporary)
+            if verified.package_digest != expected_digest:
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if destination.exists():
+                shutil.rmtree(destination)
+            temporary.replace(destination)
+            return destination
+        finally:
+            if temporary.exists():
+                shutil.rmtree(temporary, ignore_errors=True)
+    return None
+
+
+def _accepted_catalog_from_state(
+    snapshot_root: Path,
+    state: dict[str, object],
+) -> tuple[tuple[Path, ...], tuple[CompiledPackage, ...]]:
+    rows = state.get("catalog_packages")
+    if not isinstance(rows, list):
+        raise _error("reusable Context machine state has no valid Catalog package list")
+
+    frozen_roots: list[Path] = []
+    packages: list[CompiledPackage] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise _error("reusable Context machine state has an invalid Catalog package entry")
+        original_path = row.get("path")
+        expected_digest = row.get("package_digest")
+        if not isinstance(original_path, str) or not isinstance(expected_digest, str):
+            raise _error("reusable Context machine state has an incomplete Catalog package entry")
+
+        destination = _frozen_package_root(snapshot_root, expected_digest)
+        if not destination.is_dir():
+            original_root = Path(original_path).expanduser().resolve()
+
+            # Legacy STEP-07 state recorded exact identity but not package bytes.
+            # Prefer recovery from Git history because it yields exact provenance
+            # even when the current checkout has moved on or was temporarily restored.
+            recovered = _recover_historical_package(snapshot_root, original_root, expected_digest)
+            if recovered is None:
+                current: CompiledPackage | None = None
+                try:
+                    current = load_package(original_root)
+                except ContextCanonError:
+                    current = None
+                if current is not None and current.package_digest == expected_digest:
+                    _write_frozen_package(
+                        destination,
+                        original_root,
+                        current,
+                        _catalog_provenance(original_root, current),
+                    )
+                else:
+                    raise _error(
+                        "Accepted reusable Context package bytes are not frozen and the exact historical package "
+                        f"cannot be recovered: {row.get('name', row.get('id', expected_digest))} "
+                        f"{row.get('version', '')} ({expected_digest}). "
+                        "Provide the exact historical package checkout or restart reusable-Context review; "
+                        "do not substitute the newer live Catalog package."
+                    )
+
+        package = load_package(destination)
+        if package.package_digest != expected_digest:
+            raise _error(f"Frozen reusable package digest mismatch at {destination}")
+        frozen_roots.append(destination)
+        packages.append(package)
+
+    return tuple(frozen_roots), tuple(packages)
 
 
 def _parse_assignments(
@@ -449,6 +749,27 @@ def refresh_reusable_contexts(
         created = True
     text, locations = _parse_bound_text(path, evidence_digest, structure)
     decision = _decision(text)
+
+    # Once STEP 07 is accepted and unchanged, rerunning the command is idempotent:
+    # use the already frozen exact package set rather than reopening the moving Catalog.
+    state_path = snapshot_root.resolve() / REUSABLE_CONTEXTS_STATE_NAME
+    if decision == "accept" and state_path.is_file():
+        try:
+            prior = json.loads(state_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            prior = None
+        if (
+            isinstance(prior, dict)
+            and prior.get("decision") == "accept"
+            and prior.get("human_file_sha256") == hashlib.sha256(path.read_bytes()).hexdigest()
+        ):
+            return load_accepted_reusable_contexts(
+                path,
+                snapshot_root,
+                evidence_digest,
+                structure,
+            ), created
+
     roots, packages = discover_catalog(locations) if locations else ((), ())
     assignments = _parse_assignments(text, structure, packages)
     canonical = render_reusable_contexts(
@@ -470,8 +791,17 @@ def refresh_reusable_contexts(
         assignments,
     )
     review_digest = _digest(payload)
+    effective_roots = _freeze_catalog(snapshot_root, roots, packages) if decision == "accept" else roots
     payload["review_digest"] = review_digest
     payload["human_file_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if decision == "accept":
+        payload["frozen_catalog_packages"] = [
+            {
+                "package_digest": package.package_digest,
+                "path": str(root),
+            }
+            for root, package in zip(effective_roots, packages)
+        ]
     write_utf8(
         snapshot_root.resolve() / REUSABLE_CONTEXTS_STATE_NAME,
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -481,7 +811,7 @@ def refresh_reusable_contexts(
         structure.structure_digest,
         decision,
         locations,
-        roots,
+        effective_roots,
         packages,
         assignments,
         review_digest,
@@ -514,21 +844,33 @@ def load_accepted_reusable_contexts(
         raise _error("STEP-07-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
 
     text, locations = _parse_bound_text(path, evidence_digest, structure)
-    roots, packages = discover_catalog(locations) if locations else ((), ())
+    roots, packages = _accepted_catalog_from_state(snapshot_root, state) if locations else ((), ())
     assignments = _parse_assignments(text, structure, packages)
+
+    state_rows = state.get("catalog_packages", [])
+    if not isinstance(state_rows, list):
+        raise _error("reusable Context machine state has no valid Catalog package list")
+    original_roots = tuple(
+        Path(row["path"])
+        for row in state_rows
+        if isinstance(row, dict) and isinstance(row.get("path"), str)
+    )
+    if len(original_roots) != len(packages):
+        raise _error("reusable Context machine state Catalog package count is inconsistent")
+
     payload = _normalized_payload(
         evidence_digest,
         structure.structure_digest,
         "accept",
         locations,
-        roots,
+        original_roots,
         packages,
         assignments,
     )
     review_digest = _digest(payload)
     if review_digest != state.get("review_digest"):
         raise _error(
-            "Reusable Context Catalog/package identity changed after STEP 07 acceptance; rerun the step and review the change"
+            "Frozen reusable Context package identity no longer matches the accepted STEP 07 review"
         )
     return ReusableContextsPlan(
         evidence_digest,

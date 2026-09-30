@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -54,6 +56,59 @@ class ReusableContextsTests(unittest.TestCase):
         write_outputs(compiled)
         return root / "catalog"
 
+
+    def _git_catalog(self, root: Path) -> tuple[Path, Path]:
+        catalog = root / "catalog-git"
+        node = catalog / "development-workflow"
+        node.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "-b", "main", str(catalog)], check=True)
+        subprocess.run(["git", "-C", str(catalog), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(catalog), "config", "user.name", "Test"], check=True)
+        (node / "CONTEXT.src.md").write_text(
+            "# Development Workflow — Local Context Source\n"
+            '<!-- ctx:node id="workflow-node" name="Development Workflow" version="0.2.0-draft" -->\n\n'
+            "## Local Rules\n\n"
+            "### Development\n\n"
+            "- **Review before merge:** Keep changes reviewable.\n"
+            "  Why: Humans should explicitly accept important changes.\n"
+            '  <!-- ctx:rule id="WF-001" -->\n',
+            encoding="utf-8",
+        )
+        write_outputs(Compiler(catalog).compile(node))
+        subprocess.run(["git", "-C", str(catalog), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(catalog), "commit", "-qm", "workflow 0.2.0"], check=True)
+        return catalog, node
+
+    def _accept_workflow(self, workspace_file: Path, snapshot: Path, structure: HumanStructurePlan, catalog: Path):
+        refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+        text = workspace_file.read_text(encoding="utf-8")
+        text = text.replace(
+            CATALOG_START + "\n" + CATALOG_END,
+            CATALOG_START + f"\n- `{catalog}`\n" + CATALOG_END,
+        )
+        text = text.replace("Decision: `pending`", "Decision: `accept`")
+        assignment = (
+            "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+            "Why: Shared development workflow applies to the whole project.\n"
+        )
+        text = text.replace(
+            ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+            ASSIGNMENTS_START + "\n```text\n" + assignment + "```\n" + ASSIGNMENTS_END,
+        )
+        workspace_file.write_text(text, encoding="utf-8")
+        return refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)[0]
+
+    def _advance_workflow(self, catalog: Path, node: Path) -> None:
+        source = node / "CONTEXT.src.md"
+        text = source.read_text(encoding="utf-8").replace(
+            'version="0.2.0-draft"',
+            'version="0.3.0-draft"',
+        )
+        source.write_text(text, encoding="utf-8")
+        write_outputs(Compiler(catalog).compile(node))
+        subprocess.run(["git", "-C", str(catalog), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(catalog), "commit", "-qm", "workflow 0.3.0"], check=True)
+
     def test_sparse_human_gate_discovers_catalog_and_persists_assignment(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -103,6 +158,59 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(len(accepted.catalog_packages), 1)
             state = json.loads((snapshot / "reusable-contexts.json").read_text(encoding="utf-8"))
             self.assertEqual(state["assignments"][0]["source_node_id"], "workflow-node")
+
+    def test_accepted_catalog_is_frozen_before_provider_advances(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog, node = self._git_catalog(root)
+
+            accepted = self._accept_workflow(workspace_file, snapshot, structure, catalog)
+            old_digest = accepted.catalog_packages[0].package_digest
+            frozen_root = snapshot / "reusable-context-packages" / old_digest
+            self.assertEqual(accepted.catalog_roots, (frozen_root,))
+            self.assertTrue((frozen_root / ".context/package.json").is_file())
+
+            self._advance_workflow(catalog, node)
+            loaded = load_accepted_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            rerun, created = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+
+            self.assertFalse(created)
+            self.assertEqual(loaded.catalog_packages[0].metadata.version, "0.2.0-draft")
+            self.assertEqual(loaded.catalog_packages[0].package_digest, old_digest)
+            self.assertEqual(loaded.catalog_roots, (frozen_root,))
+            self.assertEqual(rerun.catalog_packages[0].package_digest, old_digest)
+            self.assertEqual(rerun.catalog_roots, (frozen_root,))
+
+    def test_legacy_accepted_catalog_recovers_exact_package_from_git_history(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog, node = self._git_catalog(root)
+
+            accepted = self._accept_workflow(workspace_file, snapshot, structure, catalog)
+            old_digest = accepted.catalog_packages[0].package_digest
+            shutil.rmtree(snapshot / "reusable-context-packages")
+            self._advance_workflow(catalog, node)
+
+            loaded = load_accepted_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+
+            frozen_root = snapshot / "reusable-context-packages" / old_digest
+            self.assertEqual(loaded.catalog_packages[0].metadata.version, "0.2.0-draft")
+            self.assertEqual(loaded.catalog_packages[0].package_digest, old_digest)
+            self.assertEqual(loaded.catalog_roots, (frozen_root,))
+            provenance = json.loads(
+                (frozen_root / ".context/onboarding-provenance.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(provenance["package_digest"], old_digest)
+            self.assertEqual(provenance["node_path"], "development-workflow")
+            self.assertRegex(provenance["ref"], r"^[0-9a-f]{40}$")
 
     def test_legacy_markdown_assignment_remains_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
