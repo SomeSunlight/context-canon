@@ -871,3 +871,16 @@ Purpose: keep release versions stable while making the exact development checkou
 - [x] Keep PR #80 unmerged until explicit owner approval.
 
 Checkpoint: 327 deterministic tests pass and the exact generated ContextCanon output is clean on the implementation head. Development provenance is descriptive runtime identity, not a release-version bump.
+
+
+## Active Fast Track: reusable Python version-provenance guide — Issue #84
+
+**Fast Track status — ACTIVE**
+
+Purpose: let Python tools inherit one proven implementation pattern for CCW-014 without introducing a shared runtime library.
+
+- [x] Add a compact dependency-free Python reference for release version + Git provenance.
+- [x] Add a narrow Development Workflow Topic so the implementation detail is loaded only when version identity is being changed.
+- [x] Keep a shared library explicitly out of scope until materially richer cross-project behavior justifies one.
+- [ ] Regenerate affected Context packages and pass exact-head verification.
+- [ ] Keep the PR unmerged until explicit owner approval.
