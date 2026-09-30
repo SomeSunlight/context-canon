@@ -52,7 +52,10 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as raised:
             cli_main(["--version"])
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), "contextcanon 0.10.0")
+        rendered = out.getvalue().strip()
+        self.assertTrue(rendered.startswith("contextcanon 0.10.0"), rendered)
+        if " (" in rendered:
+            self.assertRegex(rendered, r"^contextcanon 0\.10\.0 \([^@]+@[0-9a-f]{7}(?:, dirty)?\)$")
 
     def test_central_yaml_can_switch_same_source_to_pure_local_discovery(self):
         project = Path(tempfile.mkdtemp())

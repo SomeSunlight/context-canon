@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .authoring import add_rule, add_topic
 from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config, upsert_git_source
-from .version import __version__
+from .version import display_version
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
@@ -519,9 +519,16 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
     return 0
 
 
+
+class _RuntimeVersionAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None) -> None:
+        parser._print_message(f"{parser.prog} {display_version()}\n", sys.stdout)
+        parser.exit()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="contextcanon", description="Deterministic ContextCanon compiler")
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument("--version", action=_RuntimeVersionAction, nargs=0)
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("build", "check"):
         command = sub.add_parser(name)

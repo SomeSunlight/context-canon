@@ -854,3 +854,20 @@ Purpose: allow an explicitly reviewed Source edit to proceed when every linked P
 - [x] Keep PR #78 unmerged until explicit owner approval.
 
 Checkpoint: exact implementation head passed the complete GitHub Actions test job, including unit/repository consistency and zero generated ContextCanon drift.
+
+
+## Accepted implementation checkpoint: development version provenance — Issue #79
+
+**Fast Track status — CLOSED**
+
+Purpose: keep release versions stable while making the exact development checkout visible to humans and agents without manual micro-bumps.
+
+- [x] Make `pyproject.toml` the single canonical release-version source.
+- [x] Report Git branch/ref, short commit SHA, and dirty state from editable development checkouts via `contextcanon --version`.
+- [x] Keep installed release artifacts without Git metadata on the plain canonical release version.
+- [x] Add focused version/provenance regressions.
+- [x] Add reusable Development Workflow rule CCW-014 and propagate Development Workflow `0.3.4-draft` to direct consumers.
+- [x] Run the deterministic test suite and generated-output gate.
+- [x] Keep PR #80 unmerged until explicit owner approval.
+
+Checkpoint: 327 deterministic tests pass and the exact generated ContextCanon output is clean on the implementation head. Development provenance is descriptive runtime identity, not a release-version bump.

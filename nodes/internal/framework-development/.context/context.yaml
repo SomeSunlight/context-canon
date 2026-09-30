@@ -9,7 +9,7 @@ compiler_version: "0.6.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.10-draft"
+  version: "0.3.11-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -24,10 +24,10 @@ sources:
     package_digest: "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.3-draft"
+    version: "0.3.4-draft"
     locator: "../../library/development-workflow/"
-    normalized_digest: "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934"
-    package_digest: "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27"
+    normalized_digest: "dab9a9c2d6aaab4e4ca27ff3ee6cf0fe4cf86303f9cf76bb479952fb10177f9b"
+    package_digest: "c3a73abcad4e2c3d327439982ac3ab1736546374b997626ff91b1270c244f732"
 
 # Effective imported Context origins, flattened through accepted Parent/Source packages.
 imports:
@@ -38,9 +38,9 @@ imports:
     package_digest: "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.3-draft"
-    normalized_digest: "030956e2c3d141f213660871e4002f9045d7102f0482916f21d47493cd0a4934"
-    package_digest: "a2593ece6b5469a385c0b50898a9305565d4d8289453d08f5278e3fd40e66d27"
+    version: "0.3.4-draft"
+    normalized_digest: "dab9a9c2d6aaab4e4ca27ff3ee6cf0fe4cf86303f9cf76bb479952fb10177f9b"
+    package_digest: "c3a73abcad4e2c3d327439982ac3ab1736546374b997626ff91b1270c244f732"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -97,6 +97,7 @@ official:
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-013", "title": "Prefer editable installs for repeated owner testing", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-014", "title": "Expose development provenance without micro-bumping releases", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-011", "title": "Expand change scope explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -262,5 +263,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "8aadc04a8c787fe833f09447b42c1b66d51dabbd855e8454779f28eeb074f5d4"
-  package_digest: "e5e14575632ed52549735d13f45c29918a21d67239909f898533b60f17aa335c"
+  normalized_digest: "567102e1948e6514cad79783e5953441af1297161fb3d04610f5d368feffa481"
+  package_digest: "8a8786e3d91dadc62f0554a489de22cf170630d633b521682b3af9df3acda24d"
