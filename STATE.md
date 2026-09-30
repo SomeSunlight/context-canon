@@ -360,3 +360,12 @@ Follow-up Issues #39–#43 are recorded for later work; no new framework develop
 Onboarding Source-edit acceptance now distinguishes **decision completion** from **promotion acceptance**. A linked P finding at `accept` or `reject` is decided; only `pending` blocks accepting the linked E edit. This lets an owner deliberately reject stale or otherwise non-canonical meaning from ContextCanon while still accepting the exact reviewed rewrite of the original mutable Markdown range.
 
 The split E review sheet explains that `reject` means “do not promote this meaning into ContextCanon”, not “this statement was never valid”. Focused regressions cover both `P=reject + E=accept` and the still-invalid `P=pending + E=accept` case. PR #78 remains unmerged pending explicit owner approval.
+
+
+## Issue #79 — runtime development provenance without release micro-bumps
+
+ContextCanon now separates the stable release baseline from the exact development checkout identity. `pyproject.toml` is the single canonical release-version source; `src/contextcanon/version.py` derives `__version__` from that source in a checkout and falls back to installed distribution metadata for release artifacts.
+
+`contextcanon --version` now reports Git provenance when the executable is running from a Git checkout: branch/ref when available, short commit SHA, and `dirty` when the working tree differs. A detached checkout is shown explicitly as `detached@<sha>`. Installed artifacts without checkout metadata keep the plain release version.
+
+The reusable Development Workflow now carries CCW-014, so projects can keep release versions stable during review/branch work while still exposing exact VCS identity. GitHub, GitHub Local, and ContextCanon Framework Development consume Development Workflow `0.3.4-draft`. PR #80 is the unmerged review candidate.
