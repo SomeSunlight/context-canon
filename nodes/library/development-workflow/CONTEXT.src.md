@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.3-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.4-draft" -->
 
 ## Local Overview
 
@@ -54,6 +54,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
 - **Prefer editable installs for repeated owner testing:** When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.
   Why: This keeps the owner-test loop short and makes the tested command follow the current checkout.
   <!-- ctx:rule id="CCW-013" -->
+
+- **Expose development provenance without micro-bumping releases:** When an executable tool is tested from a changing Git checkout, keep its release version stable until a real release/version boundary, but make runtime version output identify the current VCS state with the branch/ref when available, commit identity, and dirty state. Treat the commit identity as authoritative and the branch/ref as human orientation; release artifacts without checkout metadata still report the canonical release version.
+  Why: Humans and agents must be able to distinguish different development code behind the same release baseline without turning every branch, documentation edit, or review iteration into release-version ceremony.
+  <!-- ctx:rule id="CCW-014" -->
 
 ### Human review gate
 
