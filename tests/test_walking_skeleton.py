@@ -138,6 +138,20 @@ class WalkingSkeletonTests(unittest.TestCase):
         rel = [path.relative_to(repo).as_posix() or "." for path in discover_nodes(repo)]
         self.assertEqual(rel, [".", "nodes/internal/development", "nodes/library/foundation"])
 
+    def test_discovery_ignores_semantic_handoff_project_copies(self):
+        repo = self.make_repo()
+        handoff = repo / "custom-review" / "handoffs" / "STEP-04-structure"
+        (handoff / ".contextcanon-handoff").mkdir(parents=True)
+        (handoff / ".contextcanon-handoff" / "PLAN.md").write_text("# Handoff\n", encoding="utf-8")
+
+        (handoff / "CONTEXT.src.md").write_text(GATEWAY, encoding="utf-8")
+        nested = handoff / "nodes/library/foundation"
+        nested.mkdir(parents=True)
+        (nested / "CONTEXT.src.md").write_text(FOUNDATION, encoding="utf-8")
+
+        rel = [path.relative_to(repo).as_posix() or "." for path in discover_nodes(repo)]
+        self.assertEqual(rel, [".", "nodes/internal/development", "nodes/library/foundation"])
+
     def test_compiles_sources_rules_topics_resources_and_digests(self):
         repo = self.make_repo()
         node = Compiler(repo).compile(repo / "nodes/internal/development")

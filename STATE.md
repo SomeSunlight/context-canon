@@ -376,3 +376,10 @@ The reusable Development Workflow now carries CCW-014, so projects can keep rele
 Development Workflow now contains a narrow implementation Topic for CCW-014. The Resource `docs/version-provenance-python.md` documents the dependency-free pattern proven by ContextCanon itself: one release version in `pyproject.toml`, runtime Git branch/ref + short SHA + dirty state for editable/source checkouts, distribution metadata fallback for installed artifacts, argparse integration, and focused real-Git tests.
 
 The guide explicitly treats commit SHA as immutable identity and branch/ref as human orientation, and keeps a shared runtime library out of scope until multiple projects need materially richer common behavior. GitHub, GitHub Local, and Framework Development consume Development Workflow `0.3.5-draft`. PR #85 is the unmerged review candidate.
+
+
+## Issue #82 — Semantic Handoff copies are outside live Node discovery
+
+A real `github-local` onboarding exposed that the STEP-12 reset journal took a live repository snapshot with shared `discover_nodes(project)`. Semantic Handoff workspaces intentionally reproduce frozen Evidence at original project-relative paths, so a copied root `CONTEXT.src.md` inside `handoffs/STEP-04-structure` was incorrectly discovered as a second live Node with the same stable Node ID.
+
+Shared Node discovery now excludes every subtree identified by the Semantic Handoff control directory `.contextcanon-handoff`. The rule is marker-based rather than tied to the default `contextcanon-onboarding` directory name, so custom onboarding workspace locations remain safe. Regression coverage includes both a copied root Node and a nested copied Node inside a handoff while ordinary project Nodes remain visible. PR #83 is the unmerged review candidate.

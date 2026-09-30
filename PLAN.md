@@ -886,3 +886,18 @@ Purpose: let Python tools inherit one proven implementation pattern for CCW-014 
 - [x] Keep PR #85 unmerged until explicit owner approval.
 
 Checkpoint: the reusable Python implementation guide is part of Development Workflow 0.3.5-draft, direct consumers are updated, and generated packages are refreshed.
+
+
+## Accepted implementation checkpoint: exclude Semantic Handoff copies from live Node discovery — Issue #82
+
+**Fast Track status — CLOSED**
+
+Purpose: prevent isolated onboarding handoff projects from being mistaken for live Context Nodes in the repository.
+
+- [x] Make shared Node discovery ignore every subtree rooted at a Semantic Handoff project marker (`.contextcanon-handoff`).
+- [x] Keep ordinary live Nodes discoverable and avoid hardcoding the default onboarding workspace name.
+- [x] Add regression coverage for copied root and nested Context Nodes inside a handoff.
+- [x] Run deterministic tests and generated-output verification.
+- [x] Keep PR #83 unmerged until explicit owner approval.
+
+Checkpoint: exact-head CI is green. The fix applies at shared Node discovery, so STEP 12 journaling and other callers such as `build --all` no longer treat isolated handoff project copies as live repository Nodes.
