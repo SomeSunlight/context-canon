@@ -283,8 +283,9 @@ def _render_source_edit(
         "This E sheet reviews one **concrete transformation of the original source range**. "
         "It is separate from the P findings that decide where the maintained meaning belongs.",
         "",
-        "**Dependency:** this Source edit may be accepted only when every linked promoted P finding is accepted. "
-        "ContextCanon validates that dependency; the current linked decisions are shown below before you decide.",
+        "**Dependency:** this Source edit may be accepted once every linked promoted P finding is decided. "
+        "Both `accept` and `reject` are final P decisions; `reject` means the meaning is deliberately not promoted "
+        "into ContextCanon. Only `pending` blocks the Source edit.",
         "",
     ]
     if edit.proposal_id not in proposal_ids:

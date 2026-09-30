@@ -997,10 +997,15 @@ def _load_monolithic_placement_review(
     item_decisions = {item.proposal_id: item.decision for item in parsed_items}
     for edit in parsed_source_edits:
         if edit.decision == "accept":
-            not_accepted = [item_id for item_id in edit.linked_item_ids if item_decisions.get(item_id) != "accept"]
-            if not_accepted:
+            not_decided = [
+                item_id
+                for item_id in edit.linked_item_ids
+                if item_decisions.get(item_id) not in {"accept", "reject"}
+            ]
+            if not_decided:
                 raise _error(
-                    f"Source edit {edit.proposal_id} cannot be accepted until all linked promoted findings are accepted: {', '.join(not_accepted)}"
+                    f"Source edit {edit.proposal_id} cannot be accepted until all linked promoted findings are decided "
+                    f"(accept or reject): {', '.join(not_decided)}"
                 )
 
     packages = _package_by_id(proposal)

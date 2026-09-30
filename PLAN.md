@@ -839,3 +839,18 @@ Purpose: keep Topic Resource closure strict for repository-local dependencies wh
 
 Owner-test trigger: STEP 09 `placement-preview` on a Confluence/Chrome-exported Topic Resource failed with `missing resource: data:image/svg+xml;base64,...`. The frozen Resource itself exists and is valid; only its inline SVG target was misclassified as a local file dependency.
 
+
+
+## Accepted implementation checkpoint: decided findings may permit Source edits — Issue #77
+
+**Fast Track status — CLOSED**
+
+Purpose: allow an explicitly reviewed Source edit to proceed when every linked P finding has been decided, even when one or more findings are deliberately rejected from ContextCanon.
+
+- [x] Treat linked P decisions `accept` and `reject` as decided; only `pending` blocks E acceptance.
+- [x] Explain the distinction directly on the E review sheet.
+- [x] Add regressions for rejected-linked acceptance and pending-linked rejection.
+- [x] Run focused/full tests and the generated-output gate.
+- [x] Keep PR #78 unmerged until explicit owner approval.
+
+Checkpoint: exact implementation head passed the complete GitHub Actions test job, including unit/repository consistency and zero generated ContextCanon drift.
