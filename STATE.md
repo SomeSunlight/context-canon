@@ -354,3 +354,9 @@ PR #31 was squash-merged to `main` as `d285ae09795994239a802ce50342404fadd482b7`
 The final exact branch head `b2abfac4c996809f83ae0e96a5ddf1b05c75f20b` passed PR workflow #901 / run `35127260963`: 262 deterministic tests, generated-output verification with zero drift, and installation of `contextcanon==0.8.0`. The real `Llama_Dispatcher` onboarding completed publication with review digest `7c1712d0327fdd44759784e6c0511ed63386795ec73790e510ff895fe85de0a4` and acceptance digest `c72b6bb4b0df3d1df657407f72feaa7ea899ba7189284fd9dd7269dae4089255`.
 
 Follow-up Issues #39–#43 are recorded for later work; no new framework development block is active.
+
+## Issue #77 — decided linked findings may permit Source edits
+
+Onboarding Source-edit acceptance now distinguishes **decision completion** from **promotion acceptance**. A linked P finding at `accept` or `reject` is decided; only `pending` blocks accepting the linked E edit. This lets an owner deliberately reject stale or otherwise non-canonical meaning from ContextCanon while still accepting the exact reviewed rewrite of the original mutable Markdown range.
+
+The split E review sheet explains that `reject` means “do not promote this meaning into ContextCanon”, not “this statement was never valid”. Focused regressions cover both `P=reject + E=accept` and the still-invalid `P=pending + E=accept` case. PR #78 remains unmerged pending explicit owner approval.
