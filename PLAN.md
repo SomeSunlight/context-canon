@@ -841,14 +841,16 @@ Owner-test trigger: STEP 09 `placement-preview` on a Confluence/Chrome-exported 
 
 
 
-## Active Fast Track: decided findings may permit Source edits — Issue #77
+## Accepted implementation checkpoint: decided findings may permit Source edits — Issue #77
 
-**Fast Track status — ACTIVE**
+**Fast Track status — CLOSED**
 
 Purpose: allow an explicitly reviewed Source edit to proceed when every linked P finding has been decided, even when one or more findings are deliberately rejected from ContextCanon.
 
-- [ ] Treat linked P decisions `accept` and `reject` as decided; only `pending` blocks E acceptance.
-- [ ] Explain the distinction directly on the E review sheet.
-- [ ] Add regressions for rejected-linked acceptance and pending-linked rejection.
-- [ ] Run focused/full tests and the generated-output gate.
-- [ ] Keep the PR unmerged until explicit owner approval.
+- [x] Treat linked P decisions `accept` and `reject` as decided; only `pending` blocks E acceptance.
+- [x] Explain the distinction directly on the E review sheet.
+- [x] Add regressions for rejected-linked acceptance and pending-linked rejection.
+- [x] Run focused/full tests and the generated-output gate.
+- [x] Keep PR #78 unmerged until explicit owner approval.
+
+Checkpoint: exact implementation head passed the complete GitHub Actions test job, including unit/repository consistency and zero generated ContextCanon drift.
