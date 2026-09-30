@@ -522,7 +522,8 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
 
 class _RuntimeVersionAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None) -> None:
-        parser.exit(message=f"{parser.prog} {display_version()}\n")
+        parser._print_message(f"{parser.prog} {display_version()}\n", sys.stdout)
+        parser.exit()
 
 
 def main(argv: list[str] | None = None) -> int:
