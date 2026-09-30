@@ -97,7 +97,7 @@ class EditablePlacementReviewTests(unittest.TestCase):
 
         self.assertTrue(edit.startswith("# E-001 — P-001 —"))
         self.assertIn("concrete transformation", edit)
-        self.assertIn("may be accepted only when every linked promoted P finding is accepted", edit)
+        self.assertIn("may be accepted once every linked promoted P finding is decided", edit)
         self.assertIn("- Source edit decision: `pending`", edit)
         self.assertIn("../STEP-10-placement/", edit)
         self.assertIn("## Before — frozen source", edit)
@@ -158,22 +158,41 @@ class EditablePlacementReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ContextCanonError, "single Markdown quote frame"):
             load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
-    def test_source_edit_acceptance_dependency_is_visible_and_enforced(self):
+    def test_source_edit_acceptance_allows_rejected_linked_finding(self):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
         finding = self.finding(workspace, proposal)
         finding.write_text(
             finding.read_text(encoding="utf-8").replace("- Decision: `pending`", "- Decision: `reject`", 1),
             encoding="utf-8",
         )
-        edit = self.source_edit(workspace, review)
+
+        refreshed, created = create_or_load_placement_review(
+            workspace.placement_path, proposal, prepared.snapshot_root
+        )
+        self.assertFalse(created)
+        edit = self.source_edit(workspace, refreshed)
         rendered = edit.read_text(encoding="utf-8")
-        self.assertIn("P-001", rendered)
-        self.assertIn("decision `pending`", rendered)
+        self.assertIn("once every linked promoted P finding is decided", rendered)
+        self.assertIn("Both `accept` and `reject` are final P decisions", rendered)
+        self.assertIn("decision `reject`", rendered)
         edit.write_text(
             rendered.replace("- Source edit decision: `pending`", "- Source edit decision: `accept`", 1),
             encoding="utf-8",
         )
-        with self.assertRaisesRegex(ContextCanonError, "cannot be accepted until all linked promoted findings are accepted"):
+
+        loaded = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        self.assertEqual(loaded.items[0].decision, "reject")
+        self.assertEqual(loaded.source_edits[0].decision, "accept")
+
+    def test_source_edit_acceptance_still_blocks_pending_linked_finding(self):
+        prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
+        edit = self.source_edit(workspace, review)
+        rendered = edit.read_text(encoding="utf-8")
+        edit.write_text(
+            rendered.replace("- Source edit decision: `pending`", "- Source edit decision: `accept`", 1),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ContextCanonError, "until all linked promoted findings are decided"):
             load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
 
     def test_action_is_derived_from_kind_and_display_text_is_not_a_control(self):
