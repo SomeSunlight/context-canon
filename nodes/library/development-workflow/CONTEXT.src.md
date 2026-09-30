@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.4-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.5-draft" -->
 
 ## Local Overview
 
@@ -85,3 +85,13 @@ Required:
 - Resource: `docs/change-workflow.md`
   <!-- ctx:resource id="RESOURCE-AF854839DFA0" -->
 <!-- ctx:topic id="CCW-TOPIC-CHANGE-WORKFLOW" -->
+
+
+### Implementing executable version identity
+
+When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:
+
+Required:
+- Resource: `docs/version-provenance-python.md`
+  <!-- ctx:resource id="RESOURCE-7C6F7E4D126B" -->
+<!-- ctx:topic id="CCW-TOPIC-VERSION-PROVENANCE" -->
