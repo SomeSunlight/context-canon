@@ -17,6 +17,7 @@ from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_loca
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
+from .onboarding_reusable_contexts import FROZEN_PROVENANCE_REL, FROZEN_PROVENANCE_SCHEMA
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .parser import ContextCanonError, find_repo_root, parse_node
@@ -261,7 +262,50 @@ def _try_git(root: Path, *args: str) -> str | None:
     return completed.stdout.strip() if completed.returncode == 0 else None
 
 
+def _frozen_catalog_provenance(
+    source: PlacementReviewSource,
+    package_root: Path,
+) -> SourceGitProvenance | None:
+    path = package_root / FROZEN_PROVENANCE_REL
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise _error(f"frozen reusable Source provenance is unreadable: {path}") from exc
+    if value.get("schema") != FROZEN_PROVENANCE_SCHEMA:
+        raise _error(f"unsupported frozen reusable Source provenance: {path}")
+    if value.get("package_digest") != source.source_package_digest:
+        raise _error(f"frozen reusable Source provenance does not match {source.source_name}")
+
+    kind = value.get("kind")
+    locator = value.get("locator")
+    ref = value.get("ref")
+    node_path = value.get("node_path")
+    discovery_ref = value.get("discovery_ref")
+    if kind not in {"git", "local"} or not all(
+        isinstance(item, str) for item in (locator, ref, node_path, discovery_ref)
+    ):
+        raise _error(f"frozen reusable Source provenance is malformed: {path}")
+    return SourceGitProvenance(
+        source_node_id=source.source_node_id,
+        source_name=source.source_name,
+        source_version=source.source_version,
+        source_package_digest=source.source_package_digest,
+        origin=source.origin,
+        locator=locator,
+        ref=ref,
+        node_path=node_path,
+        package_root=package_root,
+        kind=kind,
+        discovery_ref=discovery_ref,
+    )
+
+
 def _git_provenance(source: PlacementReviewSource, package_root: Path) -> SourceGitProvenance:
+    frozen = _frozen_catalog_provenance(source, package_root)
+    if frozen is not None:
+        return frozen
     repository_text = _try_git(package_root, "rev-parse", "--show-toplevel")
     if repository_text is None:
         return SourceGitProvenance(

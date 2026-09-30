@@ -901,3 +901,21 @@ Purpose: prevent isolated onboarding handoff projects from being mistaken for li
 - [x] Keep PR #83 unmerged until explicit owner approval.
 
 Checkpoint: exact-head CI is green. The fix applies at shared Node discovery, so STEP 12 journaling and other callers such as `build --all` no longer treat isolated handoff project copies as live repository Nodes.
+
+
+## Accepted implementation checkpoint: freeze accepted reusable onboarding packages — Issue #86
+
+**Fast Track status — CLOSED**
+
+Purpose: make accepted STEP-07 reusable Context decisions independent of later provider checkout changes.
+
+- [x] Freeze every accepted reusable Catalog package by exact package digest inside the onboarding snapshot.
+- [x] Make later placement steps load only the frozen package bytes.
+- [x] Preserve provider provenance separately so final publication can still configure future Source discovery.
+- [x] Recover legacy accepted STEP-07 state from the exact historical Git package when available; otherwise fail without substituting newer bytes.
+- [x] Prove that a provider can advance after STEP 07 without invalidating later onboarding.
+- [x] Keep an unchanged accepted STEP-07 review idempotent after the provider advances.
+- [x] Run deterministic tests and generated-output verification.
+- [x] Keep PR #87 unmerged until explicit owner approval.
+
+Checkpoint: exact-head CI is green on the implementation candidate. New accepts freeze packages immediately; legacy accepted state self-recovers the exact recorded package from Git history when possible and then uses the same frozen path.
