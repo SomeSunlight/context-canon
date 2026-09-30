@@ -871,3 +871,16 @@ Purpose: keep release versions stable while making the exact development checkou
 - [x] Keep PR #80 unmerged until explicit owner approval.
 
 Checkpoint: 327 deterministic tests pass and the exact generated ContextCanon output is clean on the implementation head. Development provenance is descriptive runtime identity, not a release-version bump.
+
+
+## Active Fast Track: exclude Semantic Handoff copies from live Node discovery — Issue #82
+
+**Fast Track status — ACTIVE**
+
+Purpose: prevent isolated onboarding handoff projects from being mistaken for live Context Nodes in the repository.
+
+- [ ] Make shared Node discovery ignore every subtree rooted at a Semantic Handoff project marker (`.contextcanon-handoff`).
+- [ ] Keep ordinary live Nodes discoverable and avoid hardcoding the default onboarding workspace name.
+- [ ] Add regression coverage for copied root and nested Context Nodes inside a handoff.
+- [ ] Run deterministic tests and generated-output verification.
+- [ ] Keep the PR unmerged until explicit owner approval.
