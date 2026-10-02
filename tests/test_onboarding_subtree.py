@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
+from contextcanon.onboarding_handoff import build_semantic_handoff
 from contextcanon.onboarding_placement import PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_instruction import build_onboarding_placement_instruction
 from contextcanon.onboarding_placement_publish import build_placement_publication_preview, publish_placement_review
@@ -132,6 +133,22 @@ class OnboardingSubtreeTests(unittest.TestCase):
         self.assertEqual(placement_instruction.enclosing_parent_package.metadata.id, "node-a")
         self.assertIn("Develop in A context", placement_instruction.text)
         self.assertIn("A-FOUNDATIONS", placement_instruction.text)
+        workspace.placement_instruction_path.write_text(placement_instruction.text, encoding="utf-8")
+        handoff = build_semantic_handoff(
+            prepared.snapshot_root,
+            workspace.root,
+            step=8,
+            instruction_path=workspace.placement_instruction_path,
+        )
+        inherited_foundations = list(handoff.root.rglob("Grundlagen.md"))
+        self.assertEqual(len(inherited_foundations), 1)
+        self.assertIn(
+            "Alle Entwicklungsprojekte arbeiten im Kontext von A.",
+            inherited_foundations[0].read_text(encoding="utf-8"),
+        )
+        manifest = json.loads(handoff.manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["enclosing_parent"]["node_id"], "node-a")
+        self.assertEqual(manifest["enclosing_parent"]["package_digest"], placement_instruction.enclosing_parent_package.package_digest)
 
         structure_proposal = load_onboarding_structure_proposal(
             workspace.structure_proposal_path,
