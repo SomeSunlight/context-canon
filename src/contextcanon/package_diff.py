@@ -123,10 +123,10 @@ def _source_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
             "version": source.version,
             "normalized_digest": source.normalized_digest,
             "package_digest": source.package_digest,
+            "relationship": source.relationship or "parent",
         }
         for source in package.sources
     }
-
 
 def _change_snapshot(package: CompiledPackage) -> dict[str, dict[str, Any]]:
     return {
