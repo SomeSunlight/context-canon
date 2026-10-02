@@ -10,7 +10,13 @@ from contextcanon.compiler import Compiler
 from contextcanon.outputs import check_outputs, write_outputs
 from contextcanon.package import artifact_files, compiled_package, export_digest, load_package
 from contextcanon.parser import parse_node
-from contextcanon.sources import normalize_source_relationships, review_parent_candidate
+from contextcanon.sources import (
+    accept_source_candidate,
+    normalize_source_relationships,
+    preview_source_candidate_effect,
+    review_parent_candidate,
+    review_source_candidate,
+)
 from contextcanon.parser import ContextCanonError
 
 
@@ -239,6 +245,67 @@ class ParentReferenceTests(unittest.TestCase):
             {("p", "parent"), ("r", "reference")},
         )
         self.assertEqual({rule.id for rule in loaded.rules}, {"P-1"})
+
+    def test_reference_update_reuses_package_review_without_becoming_normative(self) -> None:
+        reference = self._node(
+            "provider",
+            "ref-node",
+            "Reference Provider",
+            version="1.0.0",
+            rule_id="REF-RULE",
+            statement="Background v1.",
+            topic_id="REF-TOPIC",
+            resource="../docs/r.md",
+        )
+        current_reference = Compiler(self.repo).compile(reference)
+
+        consumer = self._node(
+            "consumer",
+            "consumer",
+            "Consumer",
+            rule_id="LOCAL",
+            statement="Consumer rule.",
+            imports=(
+                f"- [Reference Provider](../provider/) — `1.0.0` — `relationship=reference`\n"
+                f'  <!-- ctx:source id="ref-node" version="1.0.0" '
+                f'normalized-digest="{current_reference.normalized_digest}" '
+                f'package-digest="{current_reference.package_digest}" -->'
+            ),
+        )
+        self._install(consumer, current_reference)
+        write_outputs(Compiler(self.repo).compile(consumer))
+
+        provider_source = (reference / "CONTEXT.src.md").read_text(encoding="utf-8")
+        (reference / "CONTEXT.src.md").write_text(
+            provider_source.replace('version="1.0.0"', 'version="1.1.0"', 1)
+            .replace("Background v1.", "Background v2."),
+            encoding="utf-8",
+        )
+        candidate_compiled = Compiler(self.repo).compile(reference)
+        candidate_root = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: shutil.rmtree(candidate_root, ignore_errors=True))
+        for rel, data in artifact_files(candidate_compiled).items():
+            destination = candidate_root / rel
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(data)
+
+        package_diff, receipt = review_source_candidate(consumer, "ref-node", candidate_root)
+        self.assertTrue(receipt.is_file())
+        self.assertTrue(any(entry.category == "rule" for entry in package_diff.entries))
+
+        local_effect = preview_source_candidate_effect(consumer, "ref-node", candidate_root)
+        self.assertFalse(any(entry.category == "rule" for entry in local_effect.entries))
+
+        accept_source_candidate(consumer, "ref-node", candidate_root)
+        authored = (consumer / "CONTEXT.src.md").read_text(encoding="utf-8")
+        self.assertIn("`relationship=reference`", authored)
+        self.assertIn('version="1.1.0"', authored)
+
+        accepted = Compiler(self.repo).compile(consumer)
+        self.assertEqual({rule.id for rule in accepted.effective_rules}, {"LOCAL"})
+        self.assertEqual(accepted.source_packages[0].metadata.version, "1.1.0")
+        self.assertIn("Background v2.", candidate_compiled.official_markdown)
+        self.assertNotIn("Background v2.", accepted.official_markdown)
 
     def test_reference_only_parent_change_does_not_change_export_or_propagate(self) -> None:
         reference = self._node(
