@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from .compiler import Compiler
 from .model import CompiledPackage
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
+from .package import compiled_package
 from .onboarding_instruction import MAX_INSTRUCTION_BYTES, _load_catalog, _render_evidence
 from .onboarding_proposal import load_evidence_snapshot
 from .parser import ContextCanonError
@@ -20,6 +23,47 @@ class OnboardingStructureInstruction:
     catalog_packages: tuple[CompiledPackage, ...]
     text: str
     instruction_digest: str
+
+
+def _enclosing_parent_package(snapshot_root: Path) -> CompiledPackage | None:
+    project = project_root_from_snapshot(snapshot_root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    return compiled_package(Compiler(repository).compile(parent_root))
+
+
+def _render_enclosing_parent(package: CompiledPackage | None) -> list[str]:
+    lines = ["## Enclosing accepted Context", ""]
+    if package is None:
+        lines.extend([
+            "The selected onboarding scope is not inside an existing ContextCanon Node.",
+            "",
+        ])
+        return lines
+    lines.extend([
+        f"This subtree already lives in the semantic context of **{package.metadata.name}**. Design shelves only for the subtree-specific work; do not recreate inherited project-wide concerns as new subtree Nodes merely because the frozen files mention them.",
+        f"- Node ID: `{package.metadata.id}`",
+        f"- Version: `{package.metadata.version}`",
+        f"- Package digest: `{package.package_digest}`",
+    ])
+    if package.rules:
+        lines.append("- Effective inherited Rules:")
+        for rule in package.rules:
+            lines.append(
+                f"  - `{rule.origin_node_id}#{rule.id}` — **{rule.title}**: {rule.statement}"
+            )
+    else:
+        lines.append("- Effective inherited Rules: none")
+    if package.topics:
+        lines.append("- Effective inherited Topics:")
+        for topic in package.topics:
+            lines.append(f"  - `{topic.id}` — **{topic.title}**: {topic.condition}")
+    else:
+        lines.append("- Effective inherited Topics: none")
+    lines.append("")
+    return lines
 
 
 def _render_structure_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
@@ -203,6 +247,7 @@ def build_onboarding_structure_instruction(
 ) -> OnboardingStructureInstruction:
     snapshot = load_evidence_snapshot(snapshot_root)
     packages = _load_catalog(catalog_package_roots)
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
     lines = [
         "# ContextCanon Onboarding Structure Discovery Instruction",
         "",
@@ -212,6 +257,7 @@ def build_onboarding_structure_instruction(
         "",
     ]
     lines.extend(_render_evidence(snapshot))
+    lines.extend(_render_enclosing_parent(enclosing_parent))
     lines.extend(_render_structure_catalog(packages))
     lines.extend(_render_contract())
     text = "\n".join(lines)
