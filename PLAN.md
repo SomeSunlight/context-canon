@@ -17,6 +17,8 @@ Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain s
 
 Checkpoint: Draft PR #93 contains the completed implementation and remains unmerged for owner review. The vertical A → B regression, full deterministic suite and self-hosted zero-drift gate are green; the final metadata checkpoint reruns the same exact-head CI before handoff.
 
+Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
+
 ## Active development block: editable owner-test installs — Issue #75
 
 Purpose: keep the preferred fast owner-test loop in the reusable Development Workflow so GitHub, GitHub Local, and other consumers inherit it instead of repeating provider-specific guidance.
