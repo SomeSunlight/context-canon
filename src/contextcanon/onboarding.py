@@ -157,20 +157,28 @@ class OnboardingScope:
     repository_root: Path
 
 
-def _require_git_repository_root(path: Path) -> Path:
+def resolve_onboarding_scope(path: Path) -> OnboardingScope:
     project_root = path.resolve()
     if not project_root.is_dir():
         raise ContextCanonError(f"Onboarding project is not a directory: {project_root}")
     raw = _run_git(project_root, "rev-parse", "--show-toplevel")
     try:
-        git_root = Path(raw.decode("utf-8").strip()).resolve()
+        repository_root = Path(raw.decode("utf-8").strip()).resolve()
     except UnicodeDecodeError as exc:
         raise ContextCanonError("Git repository root is not valid UTF-8") from exc
-    if not _same_path(project_root, git_root):
+    try:
+        project_root.relative_to(repository_root)
+    except ValueError as exc:
         raise ContextCanonError(
-            f"onboard prepare must target the Git repository root; repository root is {git_root}"
-        )
-    return project_root
+            f"Onboarding project is not inside its Git repository root: {project_root}"
+        ) from exc
+    return OnboardingScope(project_root, repository_root)
+
+
+def _require_git_repository_root(path: Path) -> Path:
+    """Return the selected onboarding scope root inside its Git repository."""
+
+    return resolve_onboarding_scope(path).project_root
 
 
 def _repository_paths(project_root: Path) -> list[str]:
