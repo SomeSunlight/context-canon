@@ -27,6 +27,33 @@ HANDOFF_PARENT_CONTEXT_DIR = "enclosing-parent"
 
 
 @dataclass(frozen=True)
+class HandoffParentContext:
+    node_id: str
+    name: str
+    version: str
+    normalized_digest: str
+    package_digest: str
+    files: tuple[tuple[str, bytes], ...]
+
+
+def _enclosing_parent_context(snapshot_root: Path) -> HandoffParentContext | None:
+    project = project_root_from_snapshot(snapshot_root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    compiled = Compiler(repository).compile(parent_root)
+    return HandoffParentContext(
+        node_id=compiled.metadata.id,
+        name=compiled.metadata.name,
+        version=compiled.metadata.version,
+        normalized_digest=compiled.normalized_digest,
+        package_digest=compiled.package_digest,
+        files=tuple(sorted(artifact_files(compiled).items())),
+    )
+
+
+@dataclass(frozen=True)
 class SemanticHandoffSpec:
     step: int
     slug: str
