@@ -13,6 +13,7 @@ from contextcanon.parser import parse_node
 from contextcanon.sources import (
     accept_source_candidate,
     normalize_source_relationships,
+    preview_parent_candidate_effect,
     preview_source_candidate_effect,
     review_parent_candidate,
     review_source_candidate,
@@ -306,6 +307,57 @@ class ParentReferenceTests(unittest.TestCase):
         self.assertEqual(accepted.source_packages[0].metadata.version, "1.1.0")
         self.assertIn("Background v2.", candidate_compiled.official_markdown)
         self.assertNotIn("Background v2.", accepted.official_markdown)
+
+    def test_mixed_parent_and_reference_change_exports_only_parent_effect(self) -> None:
+        reference = self._node(
+            "nodes/r",
+            "node-r",
+            "Reference R",
+            version="1.0.0",
+            rule_id="R-1",
+            statement="Reference background v1.",
+        )
+        b = self._node(
+            "nodes/b",
+            "node-b",
+            "Node B",
+            version="1.0.0",
+            rule_id="B-1",
+            statement="Normative B v1.",
+            imports=(
+                "- [Reference R](../r/) — `1.0.0` — `relationship=reference`\n"
+                '  <!-- ctx:source id="node-r" version="1.0.0" -->'
+            ),
+        )
+        compiled_b1 = Compiler(self.repo).compile(b)
+
+        child = self._node("nodes/c", "node-c", "Node C")
+        self._install(child, compiled_b1)
+        self._pinned_parent(child, b, compiled_b1)
+        write_outputs(Compiler(self.repo).compile(child))
+
+        r_text = (reference / "CONTEXT.src.md").read_text(encoding="utf-8")
+        (reference / "CONTEXT.src.md").write_text(
+            r_text.replace('version="1.0.0"', 'version="1.1.0"', 1)
+            .replace("Reference background v1.", "Reference background v2."),
+            encoding="utf-8",
+        )
+        b_text = (b / "CONTEXT.src.md").read_text(encoding="utf-8")
+        (b / "CONTEXT.src.md").write_text(
+            b_text.replace("Reference R](../r/) — `1.0.0`", "Reference R](../r/) — `1.1.0`")
+            .replace('id="node-r" version="1.0.0"', 'id="node-r" version="1.1.0"')
+            .replace("Normative B v1.", "Normative B v2."),
+            encoding="utf-8",
+        )
+
+        raw_parent_diff, _ = review_parent_candidate(child, "node-b")
+        self.assertTrue(any(entry.category == "source" for entry in raw_parent_diff.entries))
+        self.assertTrue(any(entry.category == "rule" for entry in raw_parent_diff.entries))
+
+        child_effect = preview_parent_candidate_effect(child, "node-b")
+        self.assertTrue(any(entry.category == "rule" for entry in child_effect.entries))
+        self.assertFalse(any(entry.category == "source" for entry in child_effect.entries))
+        self.assertFalse(any(entry.identity.startswith("node-r#") for entry in child_effect.entries))
 
     def test_reference_only_parent_change_does_not_change_export_or_propagate(self) -> None:
         reference = self._node(
