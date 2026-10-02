@@ -19,6 +19,8 @@ Checkpoint: Draft PR #93 contains the completed implementation and remains unmer
 
 Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
 
+Owner-test UX follow-up — Issue #96: STEP 10 placement review now reports canonical decided/pending counts for P findings, E source edits and S reusable Sources, plus one overall progress bar/status. The same review-state counts drive `complete`, so progress and publish readiness cannot disagree. This scope expansion was explicitly requested during the active owner test.
+
 ## Active development block: editable owner-test installs — Issue #75
 
 Purpose: keep the preferred fast owner-test loop in the reusable Development Workflow so GitHub, GitHub Local, and other consumers inherit it instead of repeating provider-specific guidance.
