@@ -14,6 +14,8 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 
 ### Fixed
 
+- STEP-10 split-review validation errors now identify the concrete P finding and Markdown file that failed validation, and the progress block is visually separated from the ordinary item-count line.
+- Subtree placement no longer publishes an accepted reusable Context a second time as an ordinary Source when that exact Node is already the enclosing semantic Parent; the accepted STEP-07/10 trace remains valid while publication keeps only the Parent relationship.
 - `check --all` parse failures now report the recursive scan root and explain that every ContextCanon Node below that root participates, making accidental one-directory-too-high invocation much easier to diagnose.
 - Resource rename/reconcile is now recorded as extensively owner-tested in a real project, including successful unique rename preservation and deliberate human selection among ambiguous byte-identical candidates.
 - Onboarding STEP 01 now warns operators to finish file and directory renames/moves before STEP 03 freezes immutable Evidence; later path changes require refreshed inventory, a new Evidence snapshot, and recreation of dependent onboarding work.
