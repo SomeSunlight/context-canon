@@ -148,6 +148,42 @@ class PlacementReviewSource:
 
 
 @dataclass(frozen=True)
+class ReviewDecisionProgress:
+    total: int
+    decided: int
+    pending: int
+
+
+@dataclass(frozen=True)
+class PlacementReviewProgress:
+    items: ReviewDecisionProgress
+    source_edits: ReviewDecisionProgress
+    sources: ReviewDecisionProgress
+
+    @property
+    def total(self) -> int:
+        return self.items.total + self.source_edits.total + self.sources.total
+
+    @property
+    def decided(self) -> int:
+        return self.items.decided + self.source_edits.decided + self.sources.decided
+
+    @property
+    def pending(self) -> int:
+        return self.items.pending + self.source_edits.pending + self.sources.pending
+
+    @property
+    def is_complete(self) -> bool:
+        return self.pending == 0
+
+
+def _decision_progress(values: Iterable[object]) -> ReviewDecisionProgress:
+    rows = tuple(values)
+    pending = sum(1 for value in rows if getattr(value, "decision", None) == "pending")
+    return ReviewDecisionProgress(total=len(rows), decided=len(rows) - pending, pending=pending)
+
+
+@dataclass(frozen=True)
 class OnboardingPlacementReview:
     evidence_digest: str
     structure_digest: str
@@ -158,12 +194,16 @@ class OnboardingPlacementReview:
     review_digest: str
 
     @property
-    def is_complete(self) -> bool:
-        return (
-            all(item.decision != "pending" for item in self.items)
-            and all(edit.decision != "pending" for edit in self.source_edits)
-            and all(source.decision != "pending" for source in self.sources)
+    def progress(self) -> PlacementReviewProgress:
+        return PlacementReviewProgress(
+            items=_decision_progress(self.items),
+            source_edits=_decision_progress(self.source_edits),
+            sources=_decision_progress(self.sources),
         )
+
+    @property
+    def is_complete(self) -> bool:
+        return self.progress.is_complete
 
 
 def _error(message: str) -> ContextCanonError:
