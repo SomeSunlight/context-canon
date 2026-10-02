@@ -226,6 +226,59 @@ def _git_bytes(root: Path, *args: str) -> bytes | None:
     return completed.stdout
 
 
+def _package_artifact_git_paths(
+    repository: Path,
+    package_root: Path,
+    package: CompiledPackage,
+) -> tuple[str, ...]:
+    try:
+        node_rel = package_root.resolve().relative_to(repository.resolve())
+    except ValueError as exc:
+        raise _error(f"Catalog package root is not inside its Git repository: {package_root}") from exc
+
+    prefix = PurePosixPath(node_rel.as_posix())
+    paths: list[str] = []
+    for relative in [PACKAGE_MANIFEST_PATH, *(file.path for file in package.files)]:
+        pure = PurePosixPath(relative)
+        if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+            raise _error(f"Catalog package contains unsafe artifact path: {relative}")
+        combined = pure if prefix.as_posix() == "." else prefix / pure
+        paths.append(combined.as_posix())
+    return tuple(dict.fromkeys(paths))
+
+
+def git_package_artifact_status(
+    repository: Path,
+    package_root: Path,
+    package: CompiledPackage,
+) -> bytes | None:
+    """Return Git porcelain output only for bytes that make up the frozen package.
+
+    A Context Node may physically contain other active project subtrees. Their
+    dirty working files do not make this package ambiguous; only changes to the
+    exact artifact files copied into the immutable package do.
+    """
+
+    paths = _package_artifact_git_paths(repository, package_root, package)
+    chunks: list[bytes] = []
+    for start in range(0, len(paths), 64):
+        status = _git_bytes(
+            repository,
+            "--literal-pathspecs",
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--untracked-files=all",
+            "--",
+            *paths[start : start + 64],
+        )
+        if status is None:
+            return None
+        if status:
+            chunks.append(status)
+    return b"".join(chunks)
+
+
 def _catalog_provenance(package_root: Path, package: CompiledPackage) -> dict[str, str]:
     repository_text = _git_text(package_root, "rev-parse", "--show-toplevel")
     if repository_text is None:
@@ -245,10 +298,10 @@ def _catalog_provenance(package_root: Path, package: CompiledPackage) -> dict[st
     except ValueError as exc:
         raise _error(f"Catalog package root is not inside its Git repository: {package_root}") from exc
 
-    status = _git_text(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
+    status = git_package_artifact_status(repository, package_root, package)
     if status:
         raise _error(
-            f"Catalog package {package.metadata.name} has uncommitted package-path changes; "
+            f"Catalog package {package.metadata.name} has uncommitted package artifact changes; "
             "accept reusable Context only from exact committed package bytes"
         )
 
