@@ -263,14 +263,14 @@ def _parent_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
 
 def _source_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     return {
-        source.metadata.id: {
-            "version": source.metadata.version,
-            "normalized_digest": source.normalized_digest,
-            "package_digest": source.package_digest,
+        package.metadata.id: {
+            "version": package.metadata.version,
+            "normalized_digest": package.normalized_digest,
+            "package_digest": package.package_digest,
+            "relationship": ref.relationship,
         }
-        for source in compiled.source_packages
+        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
     }
-
 
 def _change_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
     return {
