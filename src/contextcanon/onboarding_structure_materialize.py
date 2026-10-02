@@ -100,7 +100,7 @@ def _yaml_generated_identity(path: Path) -> _RecoveredNodeIdentity | None:
 def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _RecoveredNodeIdentity | None:
     candidates: list[_RecoveredNodeIdentity] = []
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is not None and manifest.get("schema") in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2"}:
+    if manifest is not None and manifest.get("schema") in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3"}:
         item = _identity(manifest.get("node"), ".context/package.json")
         if item is not None:
             candidates.append(item)
@@ -137,7 +137,7 @@ def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _Recovere
 
 def _manifest_file_hash(root: Path, rel: str) -> str | None:
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2"}:
+    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3"}:
         return None
     files = manifest.get("files")
     if not isinstance(files, list):
