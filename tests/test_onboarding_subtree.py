@@ -204,8 +204,8 @@ class OnboardingSubtreeTests(unittest.TestCase):
         self.assertEqual(parsed.parents[0].id, "node-a")
         compiled = Compiler(repo).compile(subtree)
         self.assertEqual(compiled.parent_package.metadata.id, "node-a")
-        self.assertIn("A-001", {rule.id for rule in compiled.rules})
-        self.assertIn("A-FOUNDATIONS", {topic.id for topic in compiled.topics})
+        self.assertIn("A-001", {rule.id for rule in [*compiled.inherited_rules, *compiled.local_rules]})
+        self.assertIn("A-FOUNDATIONS", {topic.id for topic in [*compiled.inherited_topics, *compiled.local_topics]})
         self.assertTrue(
             (subtree / ".context" / "sources" / compiled.parent_package.package_digest).is_dir()
         )
