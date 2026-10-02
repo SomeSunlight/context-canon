@@ -7,6 +7,7 @@ from typing import Literal
 TargetKind = Literal["resource", "context-node"]
 TargetIntent = Literal["required", "optional"]
 ChangeKind = Literal["remove", "override"]
+RelationshipKind = Literal["parent", "reference"]
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class SourceRef:
     transport_ref: str | None = None
     node_path: str | None = None
     why: str | None = None
+    relationship: RelationshipKind = "parent"
 
     @property
     def is_pinned(self) -> bool:
@@ -121,6 +123,7 @@ class PackageDependency:
     normalized_digest: str
     package_digest: str
     why: str | None = None
+    relationship: RelationshipKind | None = None
 
 
 @dataclass(frozen=True)
