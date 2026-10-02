@@ -1472,6 +1472,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Review file: {review_path}")
                     print(f"Source audit: {workspace.placement_audit_path}")
                     print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    print()
                     _print_placement_review_progress(review)
                     next_action = (
                         f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
