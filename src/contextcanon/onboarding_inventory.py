@@ -49,6 +49,7 @@ INVENTORY_KINDS = {
     "generated",
     "binary",
     "other",
+    "duplicate",
     "unknown",
 }
 INVENTORY_HANDLINGS = {"source", "interpret", "lookup", "ignore", "undecided"}
