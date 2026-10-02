@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -92,7 +93,7 @@ def _render_enclosing_parent_context(
         ])
         return lines
     package, parent_root = value
-    locator = Path(__import__("os").path.relpath(parent_root, project_root)).as_posix()
+    locator = Path(os.path.relpath(parent_root, project_root)).as_posix()
     lines.extend([
         f"The selected onboarding subtree lives inside **{package.metadata.name}**. Treat this as fixed inherited context for the subtree, not as project Evidence and not as a reusable Source suggestion.",
         f"- Parent locator: `{locator}`",
