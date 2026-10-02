@@ -16,7 +16,8 @@ from .onboarding_structure import (
 )
 from .onboarding_workspace import write_utf8
 from .outputs import write_outputs
-from .parser import ContextCanonError, find_repo_root, parse_node
+from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
+from .parser import ContextCanonError, parse_node
 
 
 @dataclass(frozen=True)
@@ -263,16 +264,16 @@ def preview_structure_materialization(
 ) -> StructureMaterializationPreview:
     proposal = load_onboarding_structure_proposal(proposal_path, snapshot_root)
     plan = load_structure_markdown(structure_path, proposal)
-    project = (project_root or find_repo_root(snapshot_root)).resolve()
-    if not (project / ".git").exists():
-        raise ContextCanonError(f"Structure materialization project root is not a Git repository: {project}")
+    project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    scope = resolve_onboarding_scope(project)
+    repository = scope.repository_root
 
     items: list[StructureMaterializationItem] = []
     for node in plan.nodes:
         root = _node_root(project, node.path)
         source = root / "CONTEXT.src.md"
         if source.is_file():
-            parsed = parse_node(root, project)
+            parsed = parse_node(root, repository)
             items.append(
                 StructureMaterializationItem(
                     key=node.key,
@@ -447,7 +448,7 @@ def materialize_structure_skeletons(preview: StructureMaterializationPreview) ->
             )
             created_sources.append(source)
 
-        compiler = Compiler(project)
+        compiler = Compiler(resolve_onboarding_scope(project).repository_root)
         for source in created_sources:
             root = source.parent
             compiled = compiler.compile(root)
