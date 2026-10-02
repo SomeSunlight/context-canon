@@ -195,6 +195,19 @@ def project_root_from_snapshot(snapshot_root: Path) -> Path:
     return resolve_onboarding_scope(root.parent.parent.parent).project_root
 
 
+def find_enclosing_context_root(project_root: Path) -> Path | None:
+    scope = resolve_onboarding_scope(project_root)
+    if scope.project_root == scope.repository_root:
+        return None
+    current = scope.project_root.parent
+    while True:
+        if (current / "CONTEXT.src.md").is_file():
+            return current
+        if current == scope.repository_root:
+            return None
+        current = current.parent
+
+
 def _repository_paths(project_root: Path) -> list[str]:
     scope = resolve_onboarding_scope(project_root)
     raw = _run_git(
