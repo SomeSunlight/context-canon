@@ -1117,7 +1117,7 @@ def _publication_order(preview: PlacementPublicationPreview) -> list[PlacementNo
             raise _error(f"publication preview Parent references missing Child {key}")
         active.add(key)
         parent_key = parent_by_child.get(key)
-        if parent_key is None:
+        if parent_key is None or parent_key == "@enclosing":
             value = 0
         else:
             if parent_key not in by_key:
