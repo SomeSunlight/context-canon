@@ -376,16 +376,14 @@ def _git_provenance(
     )
 
 def _source_provenance(
-    review: OnboardingPlacementReview,
+    sources: Iterable[PlacementReviewSource],
     proposal: OnboardingPlacementProposal,
     catalog_package_roots: Iterable[Path],
 ) -> tuple[SourceGitProvenance, ...]:
     roots = _catalog_roots(catalog_package_roots)
     package_by_id = {package.metadata.id: package for package in proposal.catalog_packages}
     result: list[SourceGitProvenance] = []
-    for source in review.sources:
-        if source.decision != "accept":
-            continue
+    for source in sources:
         package = package_by_id.get(source.source_node_id)
         root = roots.get(source.source_node_id)
         if package is None or root is None:
@@ -754,11 +752,25 @@ def _accepted_by_node(review: OnboardingPlacementReview) -> dict[str, list[Place
     return result
 
 
-def _sources_by_node(review: OnboardingPlacementReview) -> dict[str, list[PlacementReviewSource]]:
+def _accepted_ordinary_sources(
+    review: OnboardingPlacementReview,
+    *,
+    enclosing_parent_node_id: str | None = None,
+) -> tuple[PlacementReviewSource, ...]:
+    return tuple(
+        source
+        for source in review.sources
+        if source.decision == "accept"
+        and source.source_node_id != enclosing_parent_node_id
+    )
+
+
+def _sources_by_node(
+    sources: Iterable[PlacementReviewSource],
+) -> dict[str, list[PlacementReviewSource]]:
     result: dict[str, list[PlacementReviewSource]] = {}
-    for source in review.sources:
-        if source.decision == "accept":
-            result.setdefault(source.target_node_key, []).append(source)
+    for source in sources:
+        result.setdefault(source.target_node_key, []).append(source)
     return result
 
 
@@ -783,10 +795,22 @@ def build_placement_publication_preview(
     scope = resolve_onboarding_scope(project)
     repository = scope.repository_root
     documents = _expected_document_deltas(snapshot, project, review)
-    provenance = _source_provenance(review, proposal, catalog_package_roots)
+    enclosing_parent_root = find_enclosing_context_root(project)
+    enclosing_parent = (
+        Compiler(repository).compile(enclosing_parent_root)
+        if enclosing_parent_root is not None
+        else None
+    )
+    ordinary_sources = _accepted_ordinary_sources(
+        review,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+    )
+    provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
     provenance_by_id = {item.source_node_id: item for item in provenance}
     items_by_node = _accepted_by_node(review)
-    sources_by_node = _sources_by_node(review)
+    sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
     ordered_nodes = _structure_order(proposal.structure.nodes)
 
@@ -823,9 +847,7 @@ def build_placement_publication_preview(
     }
     roots = _catalog_roots(catalog_package_roots)
     package_overrides: dict[tuple[Path, str], tuple[object, dict[str, bytes]]] = {}
-    for source in review.sources:
-        if source.decision != "accept":
-            continue
+    for source in ordinary_sources:
         target = node_by_key[source.target_node_key]
         target_root = _node_root(project, target.path)
         package_root = roots.get(source.source_node_id)
@@ -836,13 +858,6 @@ def build_placement_publication_preview(
             package,
             _package_resource_bytes(package_root, package),
         )
-
-    enclosing_parent_root = find_enclosing_context_root(project)
-    enclosing_parent = (
-        Compiler(repository).compile(enclosing_parent_root)
-        if enclosing_parent_root is not None
-        else None
-    )
 
     compiled_by_key: dict[str, object] = {}
     parent_pins: list[PlacementParentPin] = []
@@ -1185,7 +1200,7 @@ def _acceptance_payload(
     source_by_id = {source.source_node_id: source for source in preview.sources}
     accepted_sources = []
     for source in review.sources:
-        if source.decision != "accept":
+        if source.decision != "accept" or source.source_node_id not in source_by_id:
             continue
         provenance = source_by_id[source.source_node_id]
         entry = {**source.to_dict(), "discovery": {**provenance.to_dict(), "kind": provenance.kind, "discovery_ref": provenance.discovery_ref}}
@@ -1350,7 +1365,12 @@ def publish_placement_review(
             if document.changed:
                 _atomic_write(document.source_path, document.after.encode("utf-8"))
 
-        accepted_sources_by_node = _sources_by_node(review)
+        ordinary_source_ids = {source.source_node_id for source in preview.sources}
+        accepted_sources_by_node = _sources_by_node(
+            source
+            for source in review.sources
+            if source.decision == "accept" and source.source_node_id in ordinary_source_ids
+        )
         provenance_by_id = {source.source_node_id: source for source in preview.sources}
         for key, sources in accepted_sources_by_node.items():
             delta = delta_by_key.get(key)
