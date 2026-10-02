@@ -156,6 +156,11 @@ class OnboardingScope:
     project_root: Path
     repository_root: Path
 
+    @property
+    def repository_prefix(self) -> str:
+        relative = self.project_root.relative_to(self.repository_root).as_posix()
+        return "" if relative == "." else relative
+
 
 def resolve_onboarding_scope(path: Path) -> OnboardingScope:
     project_root = path.resolve()
@@ -182,8 +187,18 @@ def _require_git_repository_root(path: Path) -> Path:
 
 
 def _repository_paths(project_root: Path) -> list[str]:
-    raw = _run_git(project_root, "ls-files", "--cached", "--others", "--exclude-standard", "-z")
+    scope = resolve_onboarding_scope(project_root)
+    raw = _run_git(
+        scope.repository_root,
+        "ls-files",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--full-name",
+        "-z",
+    )
     result: list[str] = []
+    prefix = scope.repository_prefix
     for item in raw.split(b"\0"):
         if not item:
             continue
@@ -194,7 +209,13 @@ def _repository_paths(project_root: Path) -> list[str]:
         pure = PurePosixPath(path)
         if pure.is_absolute() or ".." in pure.parts:
             raise ContextCanonError(f"Git returned unsafe repository path: {path}")
-        result.append(pure.as_posix())
+        normalized = pure.as_posix()
+        if prefix:
+            marker = prefix + "/"
+            if not normalized.startswith(marker):
+                continue
+            normalized = normalized[len(marker):]
+        result.append(normalized)
     return sorted(set(result))
 
 
