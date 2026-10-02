@@ -407,6 +407,8 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertIn("decided", review_output)
         self.assertIn("to go", review_output)
         self.assertIn("Status:", review_output)
+        self.assertIn(f"Source audit: {workspace.placement_audit_path}\nItems:", review_output)
+        self.assertRegex(review_output, r"complete: False\n\nSTEP 10 progress")
         self.assertTrue(workspace.placement_path.is_file())
         index_text = workspace.placement_path.read_text(encoding="utf-8")
         self.assertIn("cc:placement-review-layout: split-v2", index_text)
