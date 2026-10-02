@@ -302,7 +302,7 @@ class ParentReferenceTests(unittest.TestCase):
         self.assertIn('version="1.1.0"', authored)
 
         accepted = Compiler(self.repo).compile(consumer)
-        self.assertEqual({rule.id for rule in accepted.effective_rules}, {"LOCAL"})
+        self.assertEqual({rule.id for rule in (*accepted.inherited_rules, *accepted.local_rules)}, {"LOCAL"})
         self.assertEqual(accepted.source_packages[0].metadata.version, "1.1.0")
         self.assertIn("Background v2.", candidate_compiled.official_markdown)
         self.assertNotIn("Background v2.", accepted.official_markdown)
