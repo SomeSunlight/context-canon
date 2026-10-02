@@ -940,17 +940,26 @@ def _load_monolithic_placement_review(
         if authoring_id in authoring_ids:
             raise _error(f"placement.md contains duplicate stable authoring ID {authoring_id}")
         authoring_ids.add(authoring_id)
-        decision = _simple_value(block, "Decision")
-        if decision not in REVIEW_DECISIONS:
-            raise _error(f"item {item_id} Decision must be pending, accept, or reject")
-        kind = _simple_value(block, "Kind")
-        action = ACTION_FOR_KIND.get(kind, "")
-        destination = _destination(block, allow_none=True)
-        if destination is not None and destination not in node_keys:
-            raise _error(f"item {item_id} references unknown destination Node {destination}")
-        payload = _payload_from_block(kind, block)
-        _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
-        note = _find_line(block, "Review note: ", "Review note")
+        try:
+            decision = _simple_value(block, "Decision")
+            if decision not in REVIEW_DECISIONS:
+                raise _error(f"item {item_id} Decision must be pending, accept, or reject")
+            kind = _simple_value(block, "Kind")
+            action = ACTION_FOR_KIND.get(kind, "")
+            destination = _destination(block, allow_none=True)
+            if destination is not None and destination not in node_keys:
+                raise _error(f"item {item_id} references unknown destination Node {destination}")
+            payload = _payload_from_block(kind, block)
+            _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
+            note = _find_line(block, "Review note: ", "Review note")
+        except ContextCanonError as exc:
+            prefix = "Invalid onboarding placement review: "
+            detail = str(exc)
+            if detail.startswith(prefix):
+                detail = detail[len(prefix):]
+            if not detail.startswith(f"item {item_id}"):
+                raise _error(f"item {item_id}: {detail}") from exc
+            raise
         parsed_items.append(
             PlacementReviewItem(
                 proposal_id=item_id,
