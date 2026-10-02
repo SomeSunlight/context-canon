@@ -24,7 +24,12 @@ from .onboarding_handoff import (
 )
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
-from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from .onboarding_placement_review import (
+    OnboardingPlacementReview,
+    ReviewDecisionProgress,
+    create_or_load_placement_review,
+    load_placement_review,
+)
 from .onboarding_reusable_contexts import load_accepted_reusable_contexts, refresh_reusable_contexts
 from .onboarding_placement_publish import (
     build_placement_publication_preview,
@@ -107,6 +112,54 @@ def _catalog_labels(packages) -> tuple[str, ...]:
         f"{package.metadata.id} · {package.metadata.name} · {package.metadata.version} · {package.package_digest}"
         for package in packages
     )
+
+
+def _progress_bar(decided: int, total: int, width: int = 12) -> str:
+    if total <= 0:
+        filled = width
+    else:
+        filled = min(width, max(0, (decided * width) // total))
+    return "[" + "#" * filled + "-" * (width - filled) + "]"
+
+
+def _progress_tail(progress: ReviewDecisionProgress) -> str:
+    return "done" if progress.pending == 0 else f"{progress.pending} to go"
+
+
+def _placement_review_status(review: OnboardingPlacementReview) -> str:
+    progress = review.progress
+    if progress.pending == 0:
+        return "cleared — every STEP 10 decision is final."
+    if progress.decided == 0:
+        return "ready — every decision makes the Context sharper."
+    if progress.pending <= 5:
+        return f"final stretch — only {progress.pending} to go."
+    if progress.decided * 2 >= progress.total:
+        return f"past halfway — {progress.pending} to go."
+    return f"keep going — {progress.pending} to go, and every decision sharpens the Context."
+
+
+def _print_placement_review_progress(review: OnboardingPlacementReview) -> None:
+    progress = review.progress
+    overall_tail = "done" if progress.pending == 0 else f"{progress.pending} to go"
+    print(
+        f"STEP 10 progress {_progress_bar(progress.decided, progress.total)} "
+        f"{progress.decided}/{progress.total} decided · {overall_tail}"
+    )
+    print(
+        f"  P findings  {progress.items.decided:>3}/{progress.items.total:<3} · "
+        f"{_progress_tail(progress.items)}"
+    )
+    print(
+        f"  E edits     {progress.source_edits.decided:>3}/{progress.source_edits.total:<3} · "
+        f"{_progress_tail(progress.source_edits)}"
+    )
+    if progress.sources.total:
+        print(
+            f"  S sources   {progress.sources.decided:>3}/{progress.sources.total:<3} · "
+            f"{_progress_tail(progress.sources)}"
+        )
+    print(f"  Status: {_placement_review_status(review)}")
 
 
 def _owner_specs_for_review(
@@ -1419,6 +1472,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Review file: {review_path}")
                     print(f"Source audit: {workspace.placement_audit_path}")
                     print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    _print_placement_review_progress(review)
                     next_action = (
                         f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
