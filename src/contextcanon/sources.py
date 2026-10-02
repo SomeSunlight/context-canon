@@ -253,6 +253,11 @@ def review_source_candidate(
 
     transport_candidate = _validated_candidate_provenance(node_root, source_ref, candidate)
     _validate_candidate_composition(compiler, compiled, index, candidate)
+    # Compile the exact candidate through the real consumer view as part of
+    # structural review. This is especially important for References: their
+    # Rules bypass normative composition, but their informational Topics and
+    # Resources still need to survive the consumer's normal validation path.
+    preview_source_candidate_effect(node_root, source_id, candidate_root)
     result = diff_packages(current, candidate)
 
     source_hash = _source_hash(node_root)
