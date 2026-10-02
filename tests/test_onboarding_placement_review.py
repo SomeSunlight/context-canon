@@ -72,7 +72,8 @@ class EditablePlacementReviewTests(unittest.TestCase):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
         path = self.finding(workspace, proposal, "P-001")
         text = path.read_text(encoding="utf-8")
-        text = re.sub(r"(?m)^- Wording: `[^`]+`\\n", "", text, count=1)
+        text = text.replace("- Wording: `exact`\n", "", 1)
+        self.assertNotIn("- Wording: `exact`", text)
         path.write_text(text, encoding="utf-8")
 
         with self.assertRaises(ContextCanonError) as caught:
