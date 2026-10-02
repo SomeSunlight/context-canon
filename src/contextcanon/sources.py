@@ -26,9 +26,9 @@ _ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 _SOURCE_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _SOURCE_LINE_RE = re.compile(
-    r'^(?P<prefix>(?P<bullet>- )\\[[^]]+\\]\\((?P<path>[^)]+)\\)(?P<separator>\\s+—\\s+))'
-    r'`[^`]+`(?P<relationship>\\s+—\\s+`relationship=(?:parent|reference)`)?'
-    r'(?P<ending>\\s*(?:\\r?\\n)?)$'
+    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>[^)]+)\)(?P<separator>\s+—\s+))'
+    r'`[^`]+`(?P<relationship>\s+—\s+`relationship=(?:parent|reference)`)?'
+    r'(?P<ending>\s*(?:\r?\n)?)$'
 )
 
 
