@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import tempfile
 import unittest
@@ -90,7 +91,7 @@ class ParentReferenceTests(unittest.TestCase):
         source = (child / "CONTEXT.src.md").read_text(encoding="utf-8")
         block = (
             "## Parent Context Node\n\n"
-            f"- [{parent.metadata.name}]({parent_root.relative_to(child).as_posix()}/) — `{parent.metadata.version}`\n"
+            f"- [{parent.metadata.name}]({os.path.relpath(parent_root, child).replace(os.sep, '/')}/) — `{parent.metadata.version}`\n"
             f'  <!-- ctx:parent id="{parent.metadata.id}" version="{parent.metadata.version}" '
             f'normalized-digest="{parent.normalized_digest}" package-digest="{parent.package_digest}" -->\n\n'
         )
