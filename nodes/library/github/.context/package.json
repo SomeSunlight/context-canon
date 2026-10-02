@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "a2eccd94281c99f1dac2bad1a4379b1a5cb04cb58d52272a119f70a5563b5f65",
-    "package": "0292a626e9b4ec646623e678b0b681a4c9d14822121f161404f3bd5af35613dd"
+    "normalized": "f0db6aafef1789bc3cf007fbdc7df7a35a9f961f43119e07921aacd31799a58e",
+    "package": "ddc8aef0095ec86b253225e9ee18e766f7c9b6a8b4b77a629f442e37075d003c"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "fee339afa4bddba614ed21491fbf1d85c55b7b19484b5b221a81019dd7f0e267",
-      "size": 7660
+      "sha256": "76ee3638f0556854addac32dc32fd4cd8382c155829e5b1e5626ebbfcdf0342d",
+      "size": 7668
     },
     {
       "path": "CONTEXT/README.md",
@@ -40,7 +40,7 @@
   "node": {
     "id": "ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc",
     "name": "GitHub",
-    "version": "0.1.5-draft"
+    "version": "0.1.6-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -196,13 +196,14 @@
       "why": "The workflow should use standard GitHub semantics and tools while local code work stays local when possible."
     }
   ],
-  "schema": "contextcanon/package/v2",
+  "schema": "contextcanon/package/v3",
   "sources": [
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
       "normalized_digest": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
       "package_digest": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029",
+      "relationship": "parent",
       "version": "0.3.5-draft",
       "why": null
     }

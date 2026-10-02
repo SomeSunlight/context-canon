@@ -12,23 +12,27 @@ You normally start from the project's `CONTEXT.md`. It tells you what applies he
 
 A Context Node can combine context maintained elsewhere and add only what is special locally:
 
-- **Source** — an independent reusable context imported into this Node, such as a Development Workflow or security baseline.
-- **Parent** — an accepted higher-level project or subsystem context that this Child specializes.
-- **Local Delta** — the Child's own Overview, Rules, Topics, Resources, and explicit Overrides/Removes.
+- **Parent** — normative higher-level Context. Its Rules apply here; its Topics/Resources are available; the resulting normative Context may continue to semantic Children.
+- **Reference** — useful related Context for this Node only. Its Rules do not apply and the relationship is not inherited.
+- **Local Delta** — the Node's own Overview, Rules, Topics, Resources, and explicit Overrides/Removes against inherited Parent Rules.
 
-A useful property follows from this model: **Parents and Children can evolve independently.** A Child keeps the last Parent snapshot it accepted. The Parent can continue changing without silently changing the Child. Later, ContextCanon can compare the newer Parent with the Child's accepted snapshot and help carry the change forward.
+Parents and Children can evolve independently. A Child keeps the last Parent snapshot it accepted. The Parent can continue changing without silently changing the Child. A Reference is also immutable/pinned when accepted, but updating it affects only the direct Node's informational Context.
 
-Think of a student's notes from a lecture: the lecture material may be revised later, while the student's existing notes stay exactly as they were until the changes are reviewed and incorporated. ContextCanon keeps the previous accepted snapshot so that comparison is deterministic rather than reconstructed from memory.
+Think of a technical standard plus a bibliography: an inherited standard constrains the subsystem; a cited paper can help explain the work without becoming a rule for every descendant.
 
-## Update a reusable Source
+## Inspect and update reusable imports
 
-First see which reusable Source version this Node currently uses:
+The current Phase-1 compatibility CLI keeps reusable import maintenance under `contextcanon source ...`. The command is a package/discovery surface, **not a third semantic relationship type**.
+
+First inspect what this Node uses:
 
 ```text
 contextcanon source list
 ```
 
-Then review a newer Source by human name:
+Each entry is labeled `Parent` or `Reference`.
+
+Then review a newer immutable package by human name:
 
 ```text
 contextcanon source update "Development Workflow"
@@ -40,11 +44,23 @@ For a one-off branch, tag, or exact commit candidate:
 contextcanon source update "Development Workflow" --ref <git-ref>
 ```
 
-The guided review tells the story in this order: **what this Node uses now → what newer Source candidate was found → what changed in that Source → what would effectively change here → what to check before applying it → which Child chain needs review afterwards**. Technical digests and cache/provenance details stay below that human view.
+For a **Parent**, the guided review explains the candidate's normative local effect and, after acceptance, any downstream Parent/Child review still needed. For a **Reference**, effective Rules are unchanged by definition; acceptance updates only this Node's informational Reference Context and no propagation step follows.
 
-Before applying a Source update, use the same three quick questions as for downstream propagation: does it make sense here, is it compatible with the other imported Contexts, and is the upstream change itself correct/complete enough? ContextCanon previews the effective local result after current Overrides/Removes and other imports. A project-specific difference remains explicit; import order is never hidden precedence.
+Before accepting either package, check that the candidate itself is correct and that the relationship kind is still the right one. A package that should govern this Node is a Parent; a package that is merely useful background is a Reference.
 
-Applying the Source update changes only this direct consumer's Source snapshot. It does not silently advance Child Nodes and it does not rebuild generated Markdown yet. If Children exist, the command lists the Parent/Child chain and points to `contextcanon propagate` for the subsequent guided review.
+### Normalize legacy Sources once
+
+Older `CONTEXT.src.md` files may still use `## Sources` with no explicit relationship marker. Their historical semantics were normative, so ContextCanon reads every such legacy import as **Parent**. It never silently converts one to Reference.
+
+Make that default visible across a repository with:
+
+```text
+contextcanon source normalize --all .
+```
+
+This mechanically changes `Sources` to `Context Imports` and adds `relationship=parent` where the type was implicit. It does not make a semantic choice for the owner. Change an individual import to `relationship=reference` only when that is the intended relationship.
+
+Normalization is explicit because ordinary `build` and `check` remain non-mutating with respect to human-authored semantic source. After normalization or an intentional reclassification, rebuild and verify normally.
 
 ## Propagation is downstream review, not blind copying
 
@@ -53,12 +69,12 @@ When an accepted higher-level Context changes, dependent Children may need to mo
 For every changed edge, make this quick conceptual check before accepting it:
 
 1. **Still applicable here?** Do the incoming changes make sense for this Child, or does this Child need a justified local Override/Remove?
-2. **Compatible with the other imported Contexts?** If another Parent or Source says something incompatible, resolve the scopes explicitly. Import order is never precedence.
+2. **Compatible with the other imported Contexts?** If another Parent says something incompatible, resolve the scopes explicitly. Import order is never precedence.
 3. **Is the upstream change itself good enough?** From this Child's viewpoint, is the Parent change correct, complete, and well-scoped? If not, improve the Parent/Source instead of compensating locally for a bad reusable rule.
 
 If a question fails, the usual choices are deliberately different:
 
-- fix the Parent or Source when the reusable rule itself is wrong, incomplete, or too broad;
+- fix the Parent when the reusable rule itself is wrong, incomplete, or too broad;
 - use a local Override/Remove when the upstream rule is valid generally but intentionally does not apply here;
 - add a narrower local Rule when the apparent conflict is really missing scope or precision.
 
@@ -127,7 +143,7 @@ contextcanon build --all .
 contextcanon check --all .
 ```
 
-The exact package layout changes and therefore the package identity changes. ContextCanon's normal version discipline still applies, as do the existing Parent propagation and Source update/review mechanisms for consumers of the changed package.
+The exact package layout changes and therefore the package identity changes. ContextCanon's normal version discipline still applies, as do Parent propagation and immutable import update/review mechanisms for consumers of the changed package.
 
 ## Render and verify
 
@@ -143,8 +159,8 @@ contextcanon check --all .
 ## The normal mental model
 
 ```text
-Update      inspect and accept a newer Source or Parent snapshot
-Propagate   review whether an accepted change should advance each dependent Child
+Update      inspect and accept a newer Parent or Reference package
+Propagate   review only normative Parent changes across dependent Children
 Build       render accepted effective Context
 Check       verify that authored, accepted, and generated state agree
 ```

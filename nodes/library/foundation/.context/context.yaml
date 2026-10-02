@@ -3,21 +3,24 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.6.0"
+compiler_version: "0.7.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
   name: "ContextCanon Foundation"
-  version: "0.2.1-draft"
+  version: "0.2.2-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
 
-# Accepted reusable Source packages used by this build. Both digests are exact pins.
+# Immutable import carriers. relationship is the public semantic kind; Source remains technical provenance.
 sources: []
 
-# Effective imported Context origins, flattened through accepted Parent/Source packages.
+# Direct informational References. Their Rules are not effective and they are not exported to Children.
+references: []
+
+# Effective normative imported Context origins, flattened through Parent relationships only.
 imports: []
 
 # Elements authored in this Node's CONTEXT.src.md.
@@ -25,10 +28,10 @@ local:
   state: null
   plan: null
   rules:
-    - {"id": "CC-001", "title": "One official package", "group": "Canonical context"}
+    - {"id": "CC-001", "title": "One canonical package with an explicit export boundary", "group": "Canonical context"}
     - {"id": "CC-002", "title": "Edit source, not generated output", "group": "Canonical context"}
     - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "group": "Machine state"}
-    - {"id": "CC-004", "title": "No implicit Source precedence", "group": "Composition"}
+    - {"id": "CC-004", "title": "References stay informational", "group": "Composition"}
     - {"id": "CC-013", "title": "Parents are unordered", "group": "Composition"}
     - {"id": "CC-005", "title": "Stable identity", "group": "Identity"}
     - {"id": "CC-006", "title": "Publish IDs that children may reference", "group": "Identity"}
@@ -47,10 +50,10 @@ local:
 # Compiled effective Rule/Topic view with provenance.
 official:
   rules:
-    - {"id": "CC-001", "title": "One official package", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-001", "title": "One canonical package with an explicit export boundary", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
     - {"id": "CC-002", "title": "Edit source, not generated output", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
     - {"id": "CC-003", "title": "Keep compiler bookkeeping out of the normal workflow", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
-    - {"id": "CC-004", "title": "No implicit Source precedence", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
+    - {"id": "CC-004", "title": "References stay informational", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
     - {"id": "CC-013", "title": "Parents are unordered", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
     - {"id": "CC-005", "title": "Stable identity", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
     - {"id": "CC-006", "title": "Publish IDs that children may reference", "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001", "origin_node_name": "ContextCanon Foundation", "local": true, "overrides": []}
@@ -107,5 +110,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371"
-  package_digest: "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179"
+  normalized_digest: "13bf58550450227cd59d993a2397681daa8904858cd556312a38f986299d0f2a"
+  package_digest: "e679297caf62725130d195502385bd8c8642f51b9fb629a1e52cd13e54c3ade7"

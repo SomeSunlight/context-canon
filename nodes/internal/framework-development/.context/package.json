@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "a35df2e03b54699396ebfc6ec92156aa4395718f8781ff3b5ffa1c2ea460c0ae",
-    "package": "a725026cf32e0c66b806352b531b9aa560ab4cf36c19086be0e20170c082aaa5"
+    "normalized": "8527bbfaf386925eccb5fecdf55e37fa6d4d411f4a2f7bea02e5fc569aac4bb4",
+    "package": "904f6a61659d28fb5960e0e9a44171ca41af302e79cfa53ffc4759274f59bc58"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "539853d7f0783edd191369a6e1f89a937025d30f1254836bb043ae54477e3ec4",
-      "size": 20121
+      "sha256": "fec28c6e6a4adb2df6b5185e20f02bc59ca1d9e92245bd9255ebda9c8b43ee24",
+      "size": 20409
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
-      "size": 17026
+      "sha256": "5a61c28c67a1f5c7980b598c16e44e61c439a7b230cfff4465ad52f1709b50be",
+      "size": 17520
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
-      "sha256": "6061fc524967436d06313dec29de8074e4ae06518a7301b59842116970f62566",
-      "size": 7074
+      "sha256": "3d5f396f32508c1370099d519f7a163269c2df77b12727c7419b54a087900275",
+      "size": 7439
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
-      "size": 19483
+      "sha256": "f4798c52379cdfd8167f1650223e3ffa0ee1da4c691288e4768ef78ba749e89c",
+      "size": 21457
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -43,18 +43,18 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
-      "sha256": "996afae3bacc143c88cb4e46f4c16a17aed8a7aa3df25dd886ca0e4a1d04f7f9",
-      "size": 24087
+      "sha256": "829c18f4399b257cf2a1998f1abc2f51fc8ce5146646da560d6c4be3eb2b9ccf",
+      "size": 24570
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
-      "sha256": "9df72ca01c65bcaadeb35f12a15c38585b205f650bbd03f8deefb660d3db8192",
-      "size": 15139
+      "sha256": "3b82a5ba093189a8bda01e51aec2b05c4c3c1e0313fee86f7b5db124985cca15",
+      "size": 16194
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md",
-      "sha256": "730e9e418d49e2424f95681c1d7e11b5d77add5ee55419d74b8b82795ebc3f90",
-      "size": 5003
+      "sha256": "75473db600fea1fa6279dcfd53557ca1266f26fe21154dc2d8ae7f254b375b84",
+      "size": 5762
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/onboarding-design.md",
@@ -78,8 +78,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/composition.md",
-      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
-      "size": 17026
+      "sha256": "5a61c28c67a1f5c7980b598c16e44e61c439a7b230cfff4465ad52f1709b50be",
+      "size": 17520
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/harnesses.md",
@@ -88,13 +88,13 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/official-context.md",
-      "sha256": "6061fc524967436d06313dec29de8074e4ae06518a7301b59842116970f62566",
-      "size": 7074
+      "sha256": "3d5f396f32508c1370099d519f7a163269c2df77b12727c7419b54a087900275",
+      "size": 7439
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/source-format.md",
-      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
-      "size": 19483
+      "sha256": "f4798c52379cdfd8167f1650223e3ffa0ee1da4c691288e4768ef78ba749e89c",
+      "size": 21457
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/library/foundation/docs/topics.md",
@@ -116,9 +116,9 @@
     {
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
-      "normalized_digest": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
-      "package_digest": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179",
-      "version": "0.2.1-draft",
+      "normalized_digest": "13bf58550450227cd59d993a2397681daa8904858cd556312a38f986299d0f2a",
+      "package_digest": "e679297caf62725130d195502385bd8c8642f51b9fb629a1e52cd13e54c3ade7",
+      "version": "0.2.2-draft",
       "why": null
     },
     {
@@ -133,7 +133,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.12-draft"
+    "version": "0.3.13-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -144,9 +144,9 @@
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",
-      "statement": "The compiled Official Context Package is the single canonical context for a Node: it applies to the Node itself and is the package meaning published to child Nodes.",
-      "title": "One official package",
-      "why": "A Node must not operate under one context while publishing a different truth to descendants."
+      "statement": "The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.",
+      "title": "One canonical package with an explicit export boundary",
+      "why": "Local background information must not become inherited governance, but the local view and normative export must still come from one deterministic authenticated package."
     },
     {
       "group": "Canonical context",
@@ -174,9 +174,9 @@
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",
-      "statement": "Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.",
-      "title": "No implicit Source precedence",
-      "why": "Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain."
+      "statement": "A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.",
+      "title": "References stay informational",
+      "why": "Related information must not silently become governance merely because it uses the same immutable package infrastructure."
     },
     {
       "group": "Composition",
@@ -524,19 +524,20 @@
       "modifications": [],
       "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
       "origin_node_name": "ContextCanon Framework Development",
-      "statement": "A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.",
+      "statement": "A reusable Node in the ContextCanon Node Library uses Foundation as a Parent only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers add Foundation as another Parent when both are wanted.",
       "title": "Keep reusable Node dependencies explicit",
-      "why": "Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed."
+      "why": "Reuse should not force unrelated transitive governance on consumers; explicit Parent relationships are simpler than requiring consumers to remove a baseline that a reusable Node never needed."
     }
   ],
-  "schema": "contextcanon/package/v2",
+  "schema": "contextcanon/package/v3",
   "sources": [
     {
       "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "name": "ContextCanon Foundation",
-      "normalized_digest": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
-      "package_digest": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179",
-      "version": "0.2.1-draft",
+      "normalized_digest": "13bf58550450227cd59d993a2397681daa8904858cd556312a38f986299d0f2a",
+      "package_digest": "e679297caf62725130d195502385bd8c8642f51b9fb629a1e52cd13e54c3ade7",
+      "relationship": "parent",
+      "version": "0.2.2-draft",
       "why": null
     },
     {
@@ -544,6 +545,7 @@
       "name": "Development Workflow",
       "normalized_digest": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
       "package_digest": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029",
+      "relationship": "parent",
       "version": "0.3.5-draft",
       "why": null
     }
@@ -577,7 +579,7 @@
       "title": "Context authoring"
     },
     {
-      "condition": "When adding Sources or changing inherited Rules:",
+      "condition": "When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:",
       "id": "CC-TOPIC-COMPOSITION",
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",
@@ -752,7 +754,7 @@
       "title": "Source and official formats"
     },
     {
-      "condition": "When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:",
+      "condition": "When changing Parent/Reference relationships, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:",
       "id": "CCI-TOPIC-COMPOSITION",
       "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
       "origin_node_name": "ContextCanon Framework Development",

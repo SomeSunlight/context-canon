@@ -1,14 +1,14 @@
 {
   "changes": [],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "3e5dadca87aa96f360555a65d97ee6814a8434f29f537fffe50ec3019f1a5475",
-    "package": "58b572c07a717e17baa2c2e1382f93345380fdc5dc520a3a8227a9d70415d003"
+    "normalized": "0d6b7eff65bfe3ee6b4e15cd65ac63ee6c7cbe163f3acd5dd7e258931bf8f9c6",
+    "package": "48f6a964a77227b0edfa9faa7fc4f4a2994935d4ea8439e8608480dcb19bf748"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "04d0faa9d7659330b555e98da59f310e3baff18aca9686325d76113a8db585fd",
+      "sha256": "484acface3f8f1be336e1758325e0b0df9b7fd77b1d0888a42e859f8d1310cc4",
       "size": 3283
     },
     {
@@ -18,13 +18,13 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md",
-      "sha256": "7d4c47edfe9c3d497d8c26855198711307c1a78cd8ce6bd30165a37570c925b4",
-      "size": 7312
+      "sha256": "304109c78e82da450d3f9e0b82ba10e2b5d899c6516d120fa1e9f2112b021566",
+      "size": 8152
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
-      "sha256": "936c11a96d3059a6bdc3ccb1c6b33412c54b2958b8d731cfae3282b0f298cc7d",
-      "size": 9305
+      "sha256": "a84d89ea57aefa468c5412c4d4d41fcd6f77c7d5e5b9c2d6a606e5a7ed0d5e99",
+      "size": 9792
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
@@ -38,8 +38,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
-      "sha256": "b330151386039fd962b4c96b008588b4425f6500613660ca0ce616b3c724db92",
-      "size": 15768
+      "sha256": "d4216cc63a6474ad951011e26d5758382f52dfb1d168f2e5994b13f2325e4e47",
+      "size": 16574
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md",
@@ -48,20 +48,20 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md",
-      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
-      "size": 17026
+      "sha256": "5a61c28c67a1f5c7980b598c16e44e61c439a7b230cfff4465ad52f1709b50be",
+      "size": 17520
     }
   ],
   "imports": [],
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.13-draft"
+    "version": "0.3.14-draft"
   },
   "parents": [],
   "removed_rules": [],
   "rules": [],
-  "schema": "contextcanon/package/v2",
+  "schema": "contextcanon/package/v3",
   "sources": [],
   "topics": [
     {

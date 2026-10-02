@@ -8,11 +8,11 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** GitHub Local  
-**Context version:** `0.1.4-draft`
+**Context version:** `0.1.5-draft`
 
 **Resulting imported Contexts:**
 
-- **Development Workflow** — `0.3.5-draft` — direct Source — [inspect accepted carrier](../development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.5-draft` — direct Parent Context — [inspect accepted carrier](../development-workflow/CONTEXT.md)
 
 ## Local Overview
 
