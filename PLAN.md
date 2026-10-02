@@ -1,5 +1,20 @@
 # Plan
 
+## Active Fast Track: subtree onboarding — Issues #92 and #91
+
+Purpose: allow a later project subtree inside an already onboarded Git repository to become its own ContextCanon hierarchy without re-onboarding the whole repository, while inheriting the nearest accepted enclosing Context Node.
+
+- [ ] Separate the Git repository root from the onboarding project/scope root across init, inventory, Evidence, workspace and publication.
+- [ ] Keep inventory/Evidence paths relative to the selected subtree and allow an obvious duplicate to be classified as `duplicate / ignore` without automatic deduplication machinery.
+- [ ] Detect the nearest enclosing existing Context Node for a subtree and supply its exact effective Rules/Topics to STEP 08 placement reasoning.
+- [ ] Publish the subtree root with an exact immutable Parent pin to that enclosing Node while keeping internal subtree Parent edges unchanged.
+- [ ] Preserve repository-wide `build/check --all` and propagation behavior; add a realistic A → B subtree regression.
+- [ ] Fold in #91 by making broad `check --all` parse failures name the scan root and explain the recursive scope.
+- [ ] Record the successful extensive owner test of interactive Resource rename/reconcile, including ambiguous candidate selection.
+- [ ] Run focused tests, the complete deterministic suite, self-hosted build/check and the exact-head CI gate. Keep the review PR Draft/unmerged until explicit owner approval.
+
+Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain separate; they touch onboarding but are not required for subtree semantics.
+
 ## Active development block: editable owner-test installs — Issue #75
 
 Purpose: keep the preferred fast owner-test loop in the reusable Development Workflow so GitHub, GitHub Local, and other consumers inherit it instead of repeating provider-specific guidance.
