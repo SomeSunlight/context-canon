@@ -197,8 +197,8 @@ class ReusableContextsTests(unittest.TestCase):
             structure = self._structure()
             catalog, node = self._git_catalog(root)
 
-            with (node / "CONTEXT.md").open("a", encoding="utf-8") as handle:
-                handle.write("\nUncommitted package-byte change.\n")
+            with (node / ".context" / "package.json").open("a", encoding="utf-8") as handle:
+                handle.write("\n")
 
             with self.assertRaisesRegex(ContextCanonError, "uncommitted package artifact changes"):
                 self._accept_workflow(workspace_file, snapshot, structure, catalog)
