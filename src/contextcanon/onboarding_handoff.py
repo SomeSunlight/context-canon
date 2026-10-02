@@ -275,9 +275,10 @@ def _expected_inputs(
     entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
     manifest_bytes: bytes,
+    parent_context: HandoffParentContext | None,
 ) -> dict[Path, bytes]:
     expected = {
-        root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME: _plan(spec, snapshot).encode("utf-8"),
+        root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME: _plan(spec, snapshot, parent_context).encode("utf-8"),
         root / HANDOFF_CONTROL_DIR / HANDOFF_INSTRUCTION_NAME: instruction_bytes,
         root / HANDOFF_CONTROL_DIR / HANDOFF_MANIFEST_NAME: manifest_bytes,
     }
@@ -295,6 +296,15 @@ def _expected_inputs(
                 f"Frozen Evidence hash changed while preparing semantic handoff: {entry.path}"
             )
         expected[_safe_evidence_target(root, entry.path)] = file_bytes
+    if parent_context is not None:
+        parent_root = root / HANDOFF_CONTROL_DIR / HANDOFF_PARENT_CONTEXT_DIR
+        for relative, file_bytes in parent_context.files:
+            pure = PurePosixPath(relative)
+            if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+                raise ContextCanonError(
+                    f"Unsafe enclosing Parent package path in semantic handoff: {relative!r}"
+                )
+            expected[parent_root.joinpath(*pure.parts)] = file_bytes
     return expected
 
 
@@ -363,6 +373,7 @@ def build_semantic_handoff(
 ) -> SemanticHandoff:
     spec = handoff_spec(step)
     snapshot = load_evidence_snapshot(snapshot_root)
+    parent_context = _enclosing_parent_context(snapshot_root)
     workspace = workspace_root.resolve()
     instruction = (
         instruction_path.resolve()
@@ -383,12 +394,14 @@ def build_semantic_handoff(
     root = workspace / HANDOFFS_DIR_NAME / spec.directory_name
     zip_path = workspace / HANDOFFS_DIR_NAME / f"{spec.directory_name}.zip"
     entries = _selected_evidence(snapshot, evidence_paths)
-    manifest_value = _manifest(spec, snapshot, entries, instruction_bytes)
+    manifest_value = _manifest(spec, snapshot, entries, instruction_bytes, parent_context)
     manifest_bytes = (
         json.dumps(manifest_value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")
     handoff_digest = _sha256(_canonical_json(manifest_value))
-    expected = _expected_inputs(root, spec, snapshot, entries, instruction_bytes, manifest_bytes)
+    expected = _expected_inputs(
+        root, spec, snapshot, entries, instruction_bytes, manifest_bytes, parent_context
+    )
     result_path = root / HANDOFF_CONTROL_DIR / HANDOFF_RESULT_NAME
 
     created = not root.exists()
