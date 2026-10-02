@@ -828,12 +828,43 @@ def build_placement_publication_preview(
             _package_resource_bytes(package_root, package),
         )
 
+    enclosing_parent_root = find_enclosing_context_root(project)
+    enclosing_parent = (
+        Compiler(repository).compile(enclosing_parent_root)
+        if enclosing_parent_root is not None
+        else None
+    )
+
     compiled_by_key: dict[str, object] = {}
     parent_pins: list[PlacementParentPin] = []
     for node in ordered_nodes:
         root = _node_root(project, node.path).resolve()
         if node.parent_key is None:
-            source_overrides[root] = _replace_parent_section(source_overrides[root], "")
+            if node.path == "." and enclosing_parent is not None and enclosing_parent_root is not None:
+                body, locator = _render_enclosing_parent_body(
+                    enclosing_parent, root, enclosing_parent_root
+                )
+                source_overrides[root] = _replace_parent_section(source_overrides[root], body)
+                package_overrides[(root, enclosing_parent.package_digest)] = _compiled_package_override(
+                    enclosing_parent
+                )
+                parent_pins.append(
+                    PlacementParentPin(
+                        child_key=node.key,
+                        child_name=node.name,
+                        child_path=node.path,
+                        parent_key="@enclosing",
+                        parent_name=enclosing_parent.metadata.name,
+                        parent_path=locator,
+                        parent_node_id=enclosing_parent.metadata.id,
+                        parent_version=enclosing_parent.metadata.version,
+                        parent_normalized_digest=enclosing_parent.normalized_digest,
+                        parent_package_digest=enclosing_parent.package_digest,
+                        locator=locator,
+                    )
+                )
+            else:
+                source_overrides[root] = _replace_parent_section(source_overrides[root], "")
         else:
             parent = node_by_key[node.parent_key]
             compiled_parent = compiled_by_key.get(parent.key)
