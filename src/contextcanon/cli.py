@@ -59,6 +59,7 @@ from .onboarding_structure_materialize import (
 from .onboarding_workspace import open_inventory_workspace, open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
+from .package import compiled_package, export_digest
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .resources import (
     collect_resource_records,
@@ -69,7 +70,7 @@ from .resources import (
     resource_status_json,
     status_resources,
 )
-from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
+from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, normalize_source_relationships, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
@@ -484,10 +485,12 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print(f"Review {index}/{len(edges)} — Child: {child.metadata.name} ({child_label})")
         print("------------------------------------------------------------------------")
 
-        if current_parent.package_digest == live_parent.package_digest:
+        live_parent_package = compiled_package(live_parent)
+        if export_digest(current_parent) == export_digest(live_parent_package):
             print(
-                f"Already current: {child.metadata.name} uses "
-                f"{live_parent.metadata.name} {live_parent.metadata.version}. No action needed."
+                f"Normative Parent Context already current for {child.metadata.name}: "
+                f"{live_parent.metadata.name} has no changed export for this Child. "
+                "Reference-only or other local-only Parent changes do not propagate."
             )
             continue
 
@@ -1007,8 +1010,14 @@ def main(argv: list[str] | None = None) -> int:
 
     source_parser = sub.add_parser("source", help="discover, review, and explicitly accept immutable Source packages")
     source_sub = source_parser.add_subparsers(dest="source_command", required=True)
-    source_list = source_sub.add_parser("list", help="list Sources by human name, stable ID and discovery configuration")
+    source_list = source_sub.add_parser("list", help="list Context imports by Parent/Reference relationship, stable ID and discovery configuration")
     source_list.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
+    source_normalize = source_sub.add_parser(
+        "normalize",
+        help="make legacy implicit Source-to-Parent relationships explicit without changing semantics",
+    )
+    source_normalize.add_argument("path", nargs="?", default=".", help="Context Node or repository root (default: current directory)")
+    source_normalize.add_argument("--all", action="store_true", help="normalize every Context Node in the repository")
     source_adopt = source_sub.add_parser("adopt", help="adopt one exact local package and register its local repository centrally")
     source_adopt.add_argument("package", help="local root of the exact published Source package Node")
     source_adopt.add_argument("--node", default=".", help="consumer Context Node root (default: current directory)")
@@ -1927,12 +1936,25 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "source":
+            if args.source_command == "normalize":
+                repo_root, node_roots = _targets(Path(args.path), args.all)
+                changed = 0
+                for target in node_roots:
+                    label = target.relative_to(repo_root).as_posix() or "."
+                    if normalize_source_relationships(target):
+                        changed += 1
+                        print(f"normalized Parent/Reference relationships: {label}")
+                    else:
+                        print(f"already explicit: {label}")
+                print(f"Relationship normalization complete: {changed} Node(s) changed.")
+                return 0
+
             node_root = _node_root(Path(args.node))
             repo_root = find_repo_root(node_root)
             if args.source_command == "list":
                 parsed = parse_node(node_root, repo_root)
                 if not parsed.sources:
-                    print(f"{parsed.metadata.name}: no Sources")
+                    print(f"{parsed.metadata.name}: no Context imports")
                     return 0
                 for source, package in _source_identity_rows(node_root):
                     configured = configured_source(repo_root, source.id)
@@ -1948,7 +1970,8 @@ def main(argv: list[str] | None = None) -> int:
                             discovery = f"git {repository.location} @ {repository.ref or 'default'} :: {source_config.node_path}"
                         else:
                             discovery = f"local {repository.location} :: {source_config.node_path}"
-                    print(f"{package.metadata.name} | {source.id} | using {source.version} | {discovery}")
+                    relation = "Parent" if source.relationship == "parent" else "Reference"
+                    print(f"{relation} | {package.metadata.name} | {source.id} | using {source.version} | {discovery}")
                     if source.name != package.metadata.name:
                         print(f"  warning: consumer display label is {source.name!r}; accepted package name is {package.metadata.name!r}")
                 return 0
@@ -1982,8 +2005,9 @@ def main(argv: list[str] | None = None) -> int:
 
                 if current.package_digest == candidate.package_digest:
                     if args.source_command == "update":
-                        print(f"Source update for Node: {parsed.metadata.name}")
-                        print(f"Current local Source: {candidate.metadata.name} {candidate.metadata.version}")
+                        print(f"Context import update for Node: {parsed.metadata.name}")
+                        print(f"Relationship: {current.relationship.title()}")
+                        print(f"Current local package: {candidate.metadata.name} {candidate.metadata.version}")
                         print(f"Looked up from: {lookup}")
                         print("Result: this local Node already uses this exact Source package; no update is needed.")
                     else:
@@ -2005,9 +2029,10 @@ def main(argv: list[str] | None = None) -> int:
                 result, receipt = review_source_candidate(node_root, source_id, location)
                 local_effect = preview_source_candidate_effect(node_root, source_id, location)
 
-                print(f"Source update for Node: {parsed.metadata.name}")
+                print(f"Context import update for Node: {parsed.metadata.name}")
+                print(f"Relationship: {current.relationship.title()}")
                 print("")
-                print("Current Source:")
+                print("Current package:")
                 print(f"  {parsed.metadata.name} uses {current.name} {current.version}.")
                 print("Candidate found:")
                 print(f"  {candidate.metadata.name} {candidate.metadata.version}")
@@ -2035,16 +2060,25 @@ def main(argv: list[str] | None = None) -> int:
                     f"  Source used by {parsed.metadata.name}: {current.name} {current.version} -> "
                     f"{candidate.metadata.name} {candidate.metadata.version}"
                 )
-                print(
-                    "  Effective Context: "
-                    + _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
-                )
-                print("  This preview already includes local Overrides/Removes and other imported Contexts.")
+                if current.relationship == "reference":
+                    print("  Effective normative Rules/Topics: unchanged by definition for a Reference.")
+                    print("  Informational Reference Topics/Resources remain local to this Node; see the package diff above.")
+                else:
+                    print(
+                        "  Effective Context: "
+                        + _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
+                    )
+                    print("  This preview already includes local Overrides/Removes and other imported Contexts.")
                 print("  This Node's own version will be checked and may receive the automatic minimum patch bump.")
                 print("  Its generated CONTEXT.md will keep showing the previous Context until you rebuild later.")
 
-                downstream = _parent_edges(repo_root, node_root)
-                if downstream:
+                downstream = _parent_edges(repo_root, node_root) if current.relationship == "parent" else []
+                if current.relationship == "reference":
+                    print("")
+                    print("If you choose Y:")
+                    print("  This Reference update changes only this Node's informational Context.")
+                    print("  Reference relationships are not inherited, so no Child propagation review follows.")
+                elif downstream:
                     print("")
                     print("If you choose Y, review these Child Nodes next:")
                     print("  The Y below changes this Node only; its Children keep their current Parent Context until reviewed.")
@@ -2070,7 +2104,10 @@ def main(argv: list[str] | None = None) -> int:
                 print("")
                 print("Before choosing Y, check:")
                 print(f"  1. Do these changes make sense for {parsed.metadata.name}?")
-                print("  2. Are they compatible with this Node's other imported Contexts, or is an explicit local resolution needed?")
+                if current.relationship == "parent":
+                    print("  2. Are they compatible with this Node's other normative Parent Contexts, or is an explicit local resolution needed?")
+                else:
+                    print("  2. Is this still useful and correctly scoped as informational Reference Context?")
                 print(f"  3. Are the changes in {candidate.metadata.name} themselves correct, complete, and well-scoped? If not, fix the Source upstream.")
 
                 print("")
@@ -2099,7 +2136,12 @@ def main(argv: list[str] | None = None) -> int:
                 accepted = accept_source_candidate(node_root, source_id, location)
                 print(f'Node "{parsed.metadata.name}" now uses {accepted.metadata.name} {accepted.metadata.version} (was {current.name} {current.version}).')
                 _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
-                if downstream:
+                if current.relationship == "reference":
+                    print("The generated CONTEXT.md still shows the previous informational Reference Context.")
+                    print("Rebuild and verify from the repository root:")
+                    print("  contextcanon build --all .")
+                    print("  contextcanon check --all .")
+                elif downstream:
                     start_label = node_root.relative_to(repo_root).as_posix() or "."
                     propagate_command = "contextcanon propagate" if start_label == "." else f"contextcanon propagate {start_label}"
                     print("The generated CONTEXT.md still shows the previous Context; rebuild after the downstream reviews.")
