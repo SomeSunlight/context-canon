@@ -16,7 +16,7 @@ Package schema v3 and compiler format 0.7 make relationship kind explicit in mac
 
 Onboarding STEP 07 relationship selection is intentionally **not** part of PR #100. The existing onboarding semantics remain compatible; only package-v3 recognition was added to the existing recovery guard so Phase 1 does not break current onboarding state. Phase 2 remains a separate owner-tested follow-up after this compiler/maintenance model is accepted.
 
-PR #100 remains Draft and must not be merged without explicit project-owner approval. Final self-hosted normalization/regeneration and exact-head zero-drift CI are still the closing gate for this Fast Track.
+PR #100 remains Draft and must not be merged without explicit project-owner approval. The Phase-1 implementation gate is complete: 342/342 deterministic tests passed, the repository's three legacy Source-bearing Nodes were normalized to explicit Parent imports, the self-host rebuild passed `contextcanon check --all .` with zero drift plus `git diff --check`, and the normal PR `tests` workflow passed after removal of the one-shot refresh workflow on head `ad835a310d2ed2a6e3a2eda2d22f182bd3115d8e`. This final durable checkpoint changes only PLAN/STATE; the resulting exact head still has to remain green before any owner-approved merge.
 ## Fast Track implementation complete — subtree onboarding (#92, with #91)
 
 A later project can live inside an already-onboarded Git repository without becoming a second Git repository. The implementation under review separates the **Git repository root** from the **onboarding project/scope root**: inventory, Evidence, workspace, materialized Nodes and reset stay inside the selected subtree, while repository-wide compilation and maintenance continue to use the outer Git root.
