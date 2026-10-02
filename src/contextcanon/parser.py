@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path, PurePosixPath
 
-from .model import NodeMetadata, ParentRef, ParsedNode, Rule, RuleChange, SourceRef, Topic, TopicTarget
+from .model import NodeMetadata, ParentRef, ParsedNode, RelationshipKind, Rule, RuleChange, SourceRef, Topic, TopicTarget
 
 NODE_COMMENT_RE = re.compile(r'<!--\s*ctx:node\s+(?P<attrs>.*?)\s*-->')
 RULE_COMMENT_RE = re.compile(r'<!--\s*ctx:rule\s+(?P<attrs>.*?)\s*-->')
@@ -14,7 +14,10 @@ PARENT_COMMENT_RE = re.compile(r'<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->')
 CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
-SOURCE_RE = re.compile(r'^- \[(?P<name>[^]]+)\]\((?P<path>[^)]+)\)\s+—\s+`(?P<version>[^`]+)`\s*$')
+SOURCE_RE = re.compile(
+    r'^- \\[(?P<name>[^]]+)\\]\\((?P<path>[^)]+)\\)\\s+—\\s+`(?P<version>[^`]+)`'
+    r'(?:\\s+—\\s+`relationship=(?P<relationship>parent|reference)`)?\\s*$'
+)
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
 CHANGE_TARGET_RE = re.compile(r'^- `(?P<source>.+?) / (?P<rule_id>[^`]+)`(?:\s+—\s+.*)?\s*$')
 TARGET_RE = re.compile(r'^- (?P<label>Resource|Context Node):\s+`(?P<path>[^`]+)`\s*$')
@@ -92,7 +95,11 @@ def parse_node(
         if parent.id == metadata.id:
             raise ContextCanonError(f"{source_path}: Parent cannot be the Node itself")
     _ensure_unique([parent.id for parent in parents], f"{source_path}: duplicate Parent Node ID")
-    sources = _parse_sources(lines, sections.get("Sources"), source_path)
+    sources = _parse_sources(
+        lines,
+        _section_range(sections, source_path, "Context Imports", "Sources"),
+        source_path,
+    )
     rules = _parse_rules(lines, _section_range(sections, source_path, "Local Rules", "Rules"), source_path, metadata)
     topics = _parse_topics(lines, _section_range(sections, source_path, "Local Topics", "Topics"), source_path, metadata)
     _validate_resource_identities(topics, source_path)
@@ -253,6 +260,7 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 why = stripped[4:].strip() or None
                 break
 
+        relationship: RelationshipKind = match.group("relationship") or "parent"  # type: ignore[assignment]
         result.append(
             SourceRef(
                 attrs["id"],
@@ -265,6 +273,7 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 transport_ref,
                 node_path,
                 why,
+                relationship,
             )
         )
         i += 1
