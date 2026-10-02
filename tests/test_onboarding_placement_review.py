@@ -67,6 +67,29 @@ class EditablePlacementReviewTests(unittest.TestCase):
         text = path.read_text(encoding="utf-8").replace("- Decision: `pending`", "- Decision: `accept`", 1)
         path.write_text(text, encoding="utf-8")
 
+    def test_progress_counts_decided_and_pending_from_same_review_state(self):
+        prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
+        progress = review.progress
+
+        self.assertEqual(progress.items.total, len(review.items))
+        self.assertEqual(progress.source_edits.total, len(review.source_edits))
+        self.assertEqual(progress.sources.total, len(review.sources))
+        self.assertEqual(progress.total, len(review.items) + len(review.source_edits) + len(review.sources))
+        self.assertEqual(progress.pending, sum(
+            value.decision == "pending"
+            for value in (*review.items, *review.source_edits, *review.sources)
+        ))
+        self.assertEqual(progress.decided + progress.pending, progress.total)
+        self.assertEqual(review.is_complete, progress.pending == 0)
+
+        before = progress
+        self.accept_finding(workspace, proposal)
+        updated = load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+        after = updated.progress
+        self.assertEqual(after.decided, before.decided + 1)
+        self.assertEqual(after.pending, before.pending - 1)
+        self.assertEqual(updated.is_complete, after.pending == 0)
+
     def test_review_is_split_into_self_explanatory_p_and_e_sheets(self):
         prepared, workspace, source_root, package, proposal, review, created = self.make_review()
         self.assertTrue(created)
