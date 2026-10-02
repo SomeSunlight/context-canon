@@ -62,7 +62,7 @@ Candidates are not inheritance. Merely fetching one cannot change a normal build
 A local development Source may remain unpinned:
 
 ```markdown
-- [Python Development](../python-development/) — `1.2.0`
+- [Python Development](../python-development/) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" -->
 ```
 
@@ -71,7 +71,7 @@ This remains the simple local-development case.
 An accepted immutable Source adds both exact digests:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
@@ -84,7 +84,7 @@ Compiler 0.5 provides a generic Git candidate transport. It is not GitHub-specif
 A Git-backed Source adds three transport fields:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
 ```
 
