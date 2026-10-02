@@ -9,7 +9,7 @@ Start with the Node's [`CONTEXT.md`](../CONTEXT.md) rather than reading this dir
 - [`source-format.md`](source-format.md) — reusable `CONTEXT.src.md` authoring syntax and identity rules.
 - [`official-context.md`](official-context.md) — the compiled Official Context Package and generated package boundary.
 - [`topics.md`](topics.md) — progressive-disclosure Topic semantics and resource materialization.
-- [`composition.md`](composition.md) — Source composition, local changes, exact accepted packages, and update semantics.
+- [`composition.md`](composition.md) — Parent/Reference composition, local changes, exact accepted packages, and update semantics.
 - [`harnesses.md`](harnesses.md) — harness-neutral adapter principles and current compatibility guidance.
 
 Framework-implementation architecture, compiler internals, onboarding implementation, tests/CI, project state, and ContextCanon's own development history belong to the internal [Framework Development Node](../../../internal/framework-development/) instead.
