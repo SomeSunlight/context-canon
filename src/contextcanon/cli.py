@@ -486,6 +486,12 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print("------------------------------------------------------------------------")
 
         live_parent_package = compiled_package(live_parent)
+        if current_parent.package_digest == live_parent_package.package_digest:
+            print(
+                f"Already current: {child.metadata.name} uses "
+                f"{live_parent.metadata.name} {live_parent.metadata.version}. No action needed."
+            )
+            continue
         if export_digest(current_parent) == export_digest(live_parent_package):
             print(
                 f"Normative Parent Context already current for {child.metadata.name}: "
@@ -2032,7 +2038,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Context import update for Node: {parsed.metadata.name}")
                 print(f"Relationship: {current.relationship.title()}")
                 print("")
-                print("Current package:")
+                print("Current Source:")
                 print(f"  {parsed.metadata.name} uses {current.name} {current.version}.")
                 print("Candidate found:")
                 print(f"  {candidate.metadata.name} {candidate.metadata.version}")
