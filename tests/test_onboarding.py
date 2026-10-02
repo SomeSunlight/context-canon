@@ -152,7 +152,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ContextCanonError, r"blocked \(sensitive-path\)"):
             prepare_onboarding_evidence(repo, explicit_paths=[".env"])
-        with self.assertRaisesRegex(ContextCanonError, "escapes repository"):
+        with self.assertRaisesRegex(ContextCanonError, "escapes onboarding project scope"):
             prepare_onboarding_evidence(repo, explicit_paths=["../outside.md"])
         with self.assertRaisesRegex(ContextCanonError, "regular file"):
             prepare_onboarding_evidence(repo, explicit_paths=["folder"])
@@ -192,14 +192,31 @@ class OnboardingEvidenceTests(unittest.TestCase):
         self.assertEqual(len(snapshots), 1)
         self.assertTrue((snapshots[0] / "manifest.json").is_file())
 
-    def test_prepare_requires_repository_root(self):
+    def test_prepare_accepts_repository_subtree_and_keeps_evidence_scope_relative(self):
         repo = self.make_repo()
+        (repo / "README.md").write_text("# Parent project\n", encoding="utf-8")
         child = repo / "child"
         child.mkdir()
-        (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+        (child / "README.md").write_text("# Child project\n", encoding="utf-8")
+        (child / "docs").mkdir()
+        (child / "docs/spec.md").write_text("# Child specification\n", encoding="utf-8")
 
-        with self.assertRaisesRegex(ContextCanonError, "must target the Git repository root"):
-            prepare_onboarding_evidence(child)
+        prepared = prepare_onboarding_evidence(child)
+
+        self.assertEqual(prepared.project_root, child.resolve())
+        self.assertEqual(
+            [entry.path for entry in prepared.included],
+            ["README.md", "docs/spec.md"],
+        )
+        self.assertEqual(
+            prepared.snapshot_root.parent,
+            (child / ".context/onboarding").resolve(),
+        )
+        self.assertFalse((prepared.snapshot_root / "evidence/../README.md").exists())
+        self.assertEqual(
+            (prepared.snapshot_root / "evidence/README.md").read_text(encoding="utf-8"),
+            "# Child project\n",
+        )
 
 
 if __name__ == "__main__":
