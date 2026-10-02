@@ -183,21 +183,21 @@ This repository does not explain ContextCanon from outside and then switch it on
 
 **The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then routes only tasks that need more depth.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Parents and no Rules. It gives a short Overview of why ContextCanon exists, then routes only tasks that need more depth.
 
 ```text
                          ┌─ Topic ──> onboarding / maintenance docs
 ContextCanon Gateway ───┤
                          └─ Topic ──> ContextCanon Framework Development
                                            ▲              ▲
-                                           │ Source       │ Source
+                                           │ Parent       │ Parent
                               ContextCanon Foundation     │
                                                    Development Workflow
 
 Reusable workflow providers:
                          Development Workflow
                                   ▲
-                                  │ Source
+                                  │ Parent
                            ┌──────┴──────┐
                          GitHub      GitHub Local
 ```
@@ -211,9 +211,9 @@ That gives this repository **six real Nodes with different jobs**:
 - **[GitHub Local](nodes/library/github-local/CONTEXT.md)** — the concrete provider for a local GitHub-compatible development surface; the executable `github.local` runtime is intentionally a separate future project.
 - **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the ContextCanon-specific delta needed to design and implement this framework.
 
-The Gateway arrows are **navigation**: Topics send a relevant task to deeper material without inheriting all of it. The upward arrows are **composition**: one Node accepts another Node as a Source.
+The Gateway arrows are **navigation**: Topics send a relevant task to deeper material without inheriting all of it. The upward arrows are **normative Parent composition**: one Node accepts another Node as governing Context.
 
-The provider diagram uses “workflow/provider” as a familiar software analogy, not as extra ContextCanon grammar. GitHub and GitHub Local are ordinary reusable Nodes that compose Development Workflow. Likewise, reusable Nodes do **not** automatically inherit Foundation merely because they live in the library; every Source relationship is an explicit semantic product decision.
+The provider diagram uses “workflow/provider” as a familiar software analogy, not as extra ContextCanon grammar. GitHub and GitHub Local are ordinary reusable Nodes that compose Development Workflow. Likewise, reusable Nodes do **not** automatically inherit Foundation merely because they live in the library; every Parent relationship is an explicit semantic product decision.
 
 Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent “almost no context” cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
@@ -298,7 +298,7 @@ A useful distinction when browsing is explicit: **authored technical documents l
 
 The tree should answer this without guesswork:
 
-- a **reusable Node intended to ship with ContextCanon** goes in `nodes/library/<node-name>/`; it composes only the Sources its semantics actually require;
+- a **reusable Node intended to ship with ContextCanon** goes in `nodes/library/<node-name>/`; it composes only the Parents its semantics actually require;
 - a **ContextCanon-internal Node** goes in `nodes/internal/<node-name>/`;
 - an **example or experiment** does not enter the library merely because it uses ContextCanon.
 
