@@ -167,24 +167,36 @@ class OnboardingSubtreeTests(unittest.TestCase):
             json.dumps(placement_raw, indent=2),
             encoding="utf-8",
         )
+        parent_package = Compiler(repo).compile(repo)
         proposal = load_onboarding_placement_proposal(
             workspace.placement_proposal_path,
             prepared.snapshot_root,
             workspace.structure_proposal_path,
             workspace.structure_path,
+            catalog_package_roots=[repo],
         )
         review, _ = create_or_load_placement_review(
             workspace.placement_path,
             proposal,
             prepared.snapshot_root,
+            owner_source_specs=[f"N-B={parent_package.metadata.id}"],
+            owner_source_whys={
+                f"N-B={parent_package.metadata.id}": "Explicit STEP-07 assignment already satisfied by the enclosing Parent."
+            },
+            preaccepted_owner_sources=True,
         )
         self.assertTrue(review.is_complete)
+        self.assertEqual(len(review.sources), 1)
+        self.assertEqual(review.sources[0].source_node_id, "node-a")
+        self.assertEqual(review.sources[0].decision, "accept")
 
         preview = build_placement_publication_preview(
             proposal,
             review,
             prepared.snapshot_root,
+            catalog_package_roots=[repo],
         )
+        self.assertEqual(preview.sources, ())
         self.assertEqual(preview.project_root, subtree.resolve())
         self.assertEqual(len(preview.parents), 1)
         parent = preview.parents[0]
@@ -196,11 +208,13 @@ class OnboardingSubtreeTests(unittest.TestCase):
             preview,
             review,
             snapshot_root=prepared.snapshot_root,
+            catalog_package_roots=[repo],
             acceptance_path=prepared.snapshot_root / "placement-acceptance.json",
         )
 
         parsed = parse_node(subtree, repo)
         self.assertEqual(len(parsed.parents), 1)
+        self.assertEqual(parsed.sources, ())
         self.assertEqual(parsed.parents[0].id, "node-a")
         compiled = Compiler(repo).compile(subtree)
         self.assertEqual(compiled.parent_package.metadata.id, "node-a")
