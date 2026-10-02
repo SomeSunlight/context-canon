@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable, Mapping
 
-from .parser import ContextCanonError
+from .parser import ContextCanonError, find_repo_root
 
 
 EVIDENCE_SCHEMA = "contextcanon/onboarding-evidence/v0"
@@ -188,11 +188,13 @@ def _require_git_repository_root(path: Path) -> Path:
 
 def project_root_from_snapshot(snapshot_root: Path) -> Path:
     root = snapshot_root.resolve()
-    if root.parent.name != "onboarding" or root.parent.parent.name != ".context":
-        raise ContextCanonError(
-            f"Onboarding Evidence snapshot is not under <project>/.context/onboarding: {root}"
-        )
-    return resolve_onboarding_scope(root.parent.parent.parent).project_root
+    if root.parent.name == "onboarding" and root.parent.parent.name == ".context":
+        return root.parent.parent.parent.resolve()
+    # Preserve the historical workspace/error path for callers that have not
+    # yet proved that the supplied path is an Evidence snapshot. This matters
+    # for validation diagnostics and lightweight tests that use a .git marker
+    # without invoking Git itself.
+    return find_repo_root(root)
 
 
 def find_enclosing_context_root(project_root: Path) -> Path | None:
@@ -311,7 +313,7 @@ def _safe_project_file(project_root: Path, relative: str) -> Path:
 def _explicit_path(project_root: Path, value: str) -> str:
     raw = Path(value)
     if raw.is_absolute():
-        raise ContextCanonError(f"Explicit onboarding include must be repository-relative: {value}")
+        raise ContextCanonError(f"Explicit onboarding include must be project-scope-relative: {value}")
     raw_candidate = project_root / raw
     if raw_candidate.is_symlink():
         raise ContextCanonError(f"Explicit onboarding include must not be a symlink: {value}")
@@ -319,7 +321,7 @@ def _explicit_path(project_root: Path, value: str) -> str:
     try:
         relative = candidate.relative_to(project_root)
     except ValueError as exc:
-        raise ContextCanonError(f"Explicit onboarding include escapes repository: {value}") from exc
+        raise ContextCanonError(f"Explicit onboarding include escapes onboarding project scope: {value}") from exc
     if not candidate.exists():
         raise ContextCanonError(f"Explicit onboarding include does not exist: {relative.as_posix()}")
     if not candidate.is_file():
