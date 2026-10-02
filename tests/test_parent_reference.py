@@ -344,7 +344,8 @@ class ParentReferenceTests(unittest.TestCase):
         )
         b_text = (b / "CONTEXT.src.md").read_text(encoding="utf-8")
         (b / "CONTEXT.src.md").write_text(
-            b_text.replace("Reference R](../r/) — `1.0.0`", "Reference R](../r/) — `1.1.0`")
+            b_text.replace('name="Node B" version="1.0.0"', 'name="Node B" version="1.1.0"')
+            .replace("Reference R](../r/) — `1.0.0`", "Reference R](../r/) — `1.1.0`")
             .replace('id="node-r" version="1.0.0"', 'id="node-r" version="1.1.0"')
             .replace("Normative B v1.", "Normative B v2."),
             encoding="utf-8",
