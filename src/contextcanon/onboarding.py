@@ -151,6 +151,12 @@ def _same_path(left: Path, right: Path) -> bool:
     return os.path.normcase(str(left.resolve())) == os.path.normcase(str(right.resolve()))
 
 
+@dataclass(frozen=True)
+class OnboardingScope:
+    project_root: Path
+    repository_root: Path
+
+
 def _require_git_repository_root(path: Path) -> Path:
     project_root = path.resolve()
     if not project_root.is_dir():
