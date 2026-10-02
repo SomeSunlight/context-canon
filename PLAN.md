@@ -15,11 +15,13 @@ Purpose: allow a later project subtree inside an already onboarded Git repositor
 
 Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain separate; they touch onboarding but are not required for subtree semantics.
 
-Checkpoint: Draft PR #93 contains the completed implementation and remains unmerged for owner review. The vertical A → B regression, full deterministic suite and self-hosted zero-drift gate are green; the final metadata checkpoint reruns the same exact-head CI before handoff.
+Checkpoint: Draft PR #93 contains the completed implementation. The real confidential corporate-project subtree onboarding has now completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content. The owner explicitly accepts the result as merge-ready; the final metadata checkpoint reruns the same exact-head CI before the owner performs the squash merge.
 
 Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
 
 Owner-test UX follow-up — Issue #96: STEP 10 placement review now reports canonical decided/pending counts for P findings, E source edits and S reusable Sources, plus one overall progress bar/status. The same review-state counts drive `complete`, so progress and publish readiness cannot disagree. This scope expansion was explicitly requested during the active owner test.
+
+Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors identify the concrete finding file, and #98 prevents an already-established enclosing semantic Parent from being published a second time as an ordinary Source. The successful run also exposed a broader pre-existing architecture ambiguity: ordinary Sources are currently normative imports much like Parents. Follow-up #99 records the intended simplification to explicit **Parent / Reference** relationships. Existing normative Sources must migrate safely to Parent by default; Reference is informational/non-normative and requires explicit owner intent. #99 is deliberately post-merge work and does not block the proven subtree implementation.
 
 ## Active development block: editable owner-test installs — Issue #75
 
