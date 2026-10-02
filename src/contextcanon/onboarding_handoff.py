@@ -144,14 +144,25 @@ def _safe_evidence_target(root: Path, evidence_path: str) -> Path:
     return target
 
 
-def _plan(spec: SemanticHandoffSpec, snapshot: EvidenceSnapshot) -> str:
+def _plan(
+    spec: SemanticHandoffSpec,
+    snapshot: EvidenceSnapshot,
+    parent_context: HandoffParentContext | None,
+) -> str:
+    parent_note = (
+        f"The exact accepted enclosing Parent package is available under "
+        f"`{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}/`. "
+        "Its CONTEXT.md and packaged Topic Resources are read-only Context input, not project Evidence.\n\n"
+        if parent_context is not None
+        else ""
+    )
     return f"""# ContextCanon semantic handoff — STEP {spec.step:02d}
 
 This is a **single-task, disposable workspace** prepared by ContextCanon.
 
 Your complete universe for this task is this directory. The ordinary files and directories at the workspace root are exact frozen project Evidence, laid out at their repository-relative paths. The harness has already mapped the Evidence paths named by the instruction directly into this workspace.
 
-## Do exactly this
+{parent_note}## Do exactly this
 
 1. Read `{HANDOFF_CONTROL_DIR}/{HANDOFF_INSTRUCTION_NAME}` completely.
 2. Read the frozen project files required by that instruction. When it names a repository-relative path such as `docs/example.md`, open exactly `docs/example.md` inside this workspace.
@@ -175,6 +186,7 @@ def _manifest(
     snapshot: EvidenceSnapshot,
     entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
+    parent_context: HandoffParentContext | None,
 ) -> dict[str, object]:
     evidence = [
         {
@@ -194,6 +206,26 @@ def _manifest(
         "result_path": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_RESULT_NAME}",
         "canonical_result_name": spec.proposal_name,
         "evidence": evidence,
+        "enclosing_parent": (
+            None
+            if parent_context is None
+            else {
+                "node_id": parent_context.node_id,
+                "name": parent_context.name,
+                "version": parent_context.version,
+                "normalized_digest": parent_context.normalized_digest,
+                "package_digest": parent_context.package_digest,
+                "root": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}",
+                "files": [
+                    {
+                        "path": path,
+                        "sha256": _sha256(content),
+                        "size": len(content),
+                    }
+                    for path, content in parent_context.files
+                ],
+            }
+        ),
     }
 
 
