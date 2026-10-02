@@ -15,7 +15,7 @@ from .diff import ContextDiff, diff_compiled
 from .config import CONFIG_FILENAME, config_path, upsert_local_source
 from .git_transport import load_candidate_provenance
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
-from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
+from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, export_digest, load_package
 from .package_diff import diff_packages
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .versioning import ensure_node_version_advanced
@@ -26,7 +26,9 @@ _ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 _SOURCE_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _SOURCE_LINE_RE = re.compile(
-    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>[^)]+)\)(?P<separator>\s+—\s+))`[^`]+`(?P<ending>\s*(?:\r?\n)?)$'
+    r'^(?P<prefix>(?P<bullet>- )\\[[^]]+\\]\\((?P<path>[^)]+)\\)(?P<separator>\\s+—\\s+))'
+    r'`[^`]+`(?P<relationship>\\s+—\\s+`relationship=(?:parent|reference)`)?'
+    r'(?P<ending>\\s*(?:\\r?\\n)?)$'
 )
 
 
@@ -137,7 +139,7 @@ def _render_adopted_source(node_root: Path, repo_root: Path, candidate: Compiled
     locator = Path(os.path.relpath(repo_root / CONFIG_FILENAME, node_root)).as_posix()
     return "\n".join(
         [
-            f"- [{name}]({locator}) — `{candidate.metadata.version}`",
+            f"- [{name}]({locator}) — `{candidate.metadata.version}` — `relationship=parent`",
             (
                 f'  <!-- ctx:source id="{candidate.metadata.id}" version="{candidate.metadata.version}" '
                 f'normalized-digest="{candidate.normalized_digest}" '
@@ -147,9 +149,9 @@ def _render_adopted_source(node_root: Path, repo_root: Path, candidate: Compiled
     )
 
 def _insert_source_entry(text: str, entry: str) -> str:
-    heading = re.search(r"(?m)^## Sources\s*$", text)
+    heading = re.search(r"(?m)^## (?:Context Imports|Sources)\s*$", text)
     if heading is None:
-        return text.rstrip() + "\n\n## Sources\n\n" + entry.rstrip() + "\n"
+        return text.rstrip() + "\n\n## Context Imports\n\n" + entry.rstrip() + "\n"
     next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
     insert_at = next_heading.start() if next_heading else len(text)
     before = text[:insert_at].rstrip()
@@ -159,6 +161,62 @@ def _insert_source_entry(text: str, entry: str) -> str:
         result += "\n" + after
     return result.rstrip() + "\n"
 
+
+def normalize_source_relationships(node_root: Path) -> bool:
+    """Make legacy implicit Source -> Parent semantics explicit in authoring.
+
+    This is an explicit maintenance action rather than a side effect of
+    build/check. It only adds the semantically neutral legacy default and
+    canonicalizes the section heading from Sources to Context Imports.
+    """
+
+    node_root = node_root.resolve()
+    repo_root = find_repo_root(node_root)
+    parsed = parse_node(node_root, repo_root)
+    if not parsed.sources:
+        return False
+
+    path = node_root / "CONTEXT.src.md"
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    changed = False
+    matched_ids: set[str] = set()
+    for index, line in enumerate(lines):
+        visible = _SOURCE_LINE_RE.match(line)
+        if not visible:
+            continue
+        search_end = min(index + 5, len(lines))
+        source_id = None
+        for comment_index in range(index + 1, search_end):
+            comment = _SOURCE_COMMENT_RE.match(lines[comment_index])
+            if comment:
+                attrs = dict(_ATTR_RE.findall(comment.group("attrs")))
+                source_id = attrs.get("id")
+                if source_id:
+                    break
+        if not source_id:
+            continue
+        matched_ids.add(source_id)
+        if visible.group("relationship") is None:
+            lines[index] = (
+                line[: visible.start("ending")]
+                + " — `relationship=parent`"
+                + visible.group("ending")
+            )
+            changed = True
+
+    expected_ids = {source.id for source in parsed.sources}
+    if matched_ids != expected_ids:
+        raise ContextCanonError(
+            f"{path}: could not identify every Context import while normalizing relationships"
+        )
+
+    text = "".join(lines)
+    if re.search(r"(?m)^## Sources\s*$", text):
+        text = re.sub(r"(?m)^## Sources\s*$", "## Context Imports", text, count=1)
+        changed = True
+    if changed:
+        _atomic_write_text(path, text)
+    return changed
 
 def _require_candidate_version_advance(current: CompiledPackage, candidate: CompiledPackage, relation: str) -> None:
     if current.package_digest != candidate.package_digest and current.metadata.version == candidate.metadata.version:
@@ -355,6 +413,11 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
             f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
         )
     _require_candidate_version_advance(current, candidate, "Parent")
+    if export_digest(current) == export_digest(candidate):
+        raise ContextCanonError(
+            f"Parent {candidate.metadata.name} has no changed normative export; "
+            "Reference-only or other local-only changes do not propagate to Children"
+        )
 
     _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
     candidate_root = _store_parent_candidate(node_root, live_parent)
@@ -409,6 +472,11 @@ def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = Non
             f"Live Parent Node ID {candidate.metadata.id} does not match accepted Parent {parent_ref.name} ({parent_ref.id})"
         )
     _require_candidate_version_advance(current, candidate, "Parent")
+    if export_digest(current) == export_digest(candidate):
+        raise ContextCanonError(
+            f"Parent {candidate.metadata.name} has no changed normative export; "
+            "Reference-only or other local-only changes do not propagate to Children"
+        )
     _validate_parent_candidate_composition(compiler, current_compiled, parent_index, candidate)
 
     candidate_root = _store_parent_candidate(node_root, live_parent)
@@ -506,8 +574,14 @@ def _validate_parent_candidate_composition(
     parent_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = [*compiled.parent_packages, *compiled.source_packages]
-    packages[parent_index] = candidate
+    parents = list(compiled.parent_packages)
+    parents[parent_index] = candidate
+    packages = [*parents]
+    packages.extend(
+        package
+        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
+        if ref.relationship == "parent"
+    )
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
         inherited,
@@ -639,9 +713,16 @@ def _validate_candidate_composition(
     source_index: int,
     candidate: CompiledPackage,
 ) -> None:
-    packages = [*compiled.parent_packages, *compiled.source_packages]
-    candidate_index = source_index + len(compiled.parent_packages)
-    packages[candidate_index] = candidate
+    source_ref = compiled.parsed.sources[source_index]
+    if source_ref.relationship == "reference":
+        compiler._validate_package_topics(candidate, compiled.metadata.name)
+        return
+
+    packages = [*compiled.parent_packages]
+    for index, (ref, package) in enumerate(zip(compiled.parsed.sources, compiled.source_packages)):
+        if ref.relationship != "parent":
+            continue
+        packages.append(candidate if index == source_index else package)
     inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
     inherited, removals = compiler._apply_rule_changes(
         inherited,
@@ -662,7 +743,6 @@ def _validate_candidate_composition(
 
     inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
     compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
-
 
 def _validated_candidate_provenance(
     node_root: Path,
@@ -797,6 +877,7 @@ def _render_source_pin_text(
                 + f"[{candidate.metadata.name}]({visible.group('path')})"
                 + visible.group("separator")
                 + f"`{candidate.metadata.version}`"
+                + (visible.group("relationship") or "")
                 + visible.group("ending")
             )
 
