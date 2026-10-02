@@ -14,13 +14,14 @@ from typing import Iterable
 
 from .compiler import Compiler
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
 from .onboarding_reusable_contexts import FROZEN_PROVENANCE_REL, FROZEN_PROVENANCE_SCHEMA
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
-from .parser import ContextCanonError, find_repo_root, parse_node
+from .parser import ContextCanonError, parse_node
 
 
 PLACEMENT_ACCEPTANCE_SCHEMA = "contextcanon/onboarding-placement-acceptance/v1"
@@ -605,6 +606,7 @@ def _managed_ids_outside_blocks(text: str) -> tuple[set[str], set[str], set[str]
 def _render_node_source(
     before: str,
     project_root: Path,
+    repository_root: Path,
     node_root: Path,
     items: list[PlacementReviewItem],
     sources: list[PlacementReviewSource],
@@ -635,7 +637,7 @@ def _render_node_source(
     text = _replace_managed_section(text, "Local Overview", "overview", _render_overviews(overviews), aliases=("Overview",))
     text = _replace_managed_section(text, "Local State", "state", _render_state(states), aliases=("State",))
     text = _replace_managed_section(text, "Local Plan", "plan", _render_summaries(plans, "plan"), aliases=("Plan",))
-    config_locator = Path(os.path.relpath(project_root / CONFIG_FILENAME, node_root)).as_posix()
+    config_locator = Path(os.path.relpath(repository_root / CONFIG_FILENAME, node_root)).as_posix()
     text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id, config_locator))
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
     text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
@@ -752,9 +754,9 @@ def build_placement_publication_preview(
     project_root: Path | None = None,
 ) -> PlacementPublicationPreview:
     snapshot = load_evidence_snapshot(snapshot_root)
-    project = (project_root or find_repo_root(snapshot_root)).resolve()
-    if not (project / ".git").exists():
-        raise _error(f"target project root is not a Git repository: {project}")
+    project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    scope = resolve_onboarding_scope(project)
+    repository = scope.repository_root
     documents = _expected_document_deltas(snapshot, project, review)
     provenance = _source_provenance(review, proposal, catalog_package_roots)
     provenance_by_id = {item.source_node_id: item for item in provenance}
@@ -771,13 +773,14 @@ def build_placement_publication_preview(
         source_path = root / "CONTEXT.src.md"
         if not source_path.is_file():
             raise _error(f"accepted destination Node is not materialized: {node.name} ({node.path})")
-        parsed = parse_node(root, project)
+        parsed = parse_node(root, repository)
         before = source_path.read_text(encoding="utf-8")
         _assert_parent_block_is_framework_owned(before, node.name)
         if node.key in items_by_node or node.key in sources_by_node:
             after = _render_node_source(
                 before,
                 project,
+                repository,
                 root,
                 items_by_node.get(node.key, []),
                 sources_by_node.get(node.key, []),
@@ -841,7 +844,7 @@ def build_placement_publication_preview(
             )
 
         compiled = Compiler(
-            project,
+            repository,
             source_overrides=source_overrides,
             file_overrides=file_overrides,
             package_overrides=package_overrides,
@@ -1330,7 +1333,7 @@ def publish_placement_review(
                 if _copy_compiled_package(compiled_parent, delta.source_path.parent):
                     new_package_dirs.append(destination)
 
-            compiled = Compiler(project).compile(delta.source_path.parent)
+            compiled = Compiler(repository).compile(delta.source_path.parent)
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
@@ -1348,7 +1351,7 @@ def publish_placement_review(
         for compiled in compiled_nodes:
             write_outputs(compiled)
 
-        verifier = Compiler(project)
+        verifier = Compiler(repository)
         node_digests: dict[str, dict[str, str]] = {}
         for delta in preview.nodes:
             compiled = verifier.compile(delta.source_path.parent)
