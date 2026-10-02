@@ -130,7 +130,7 @@ Module contracts:
 
 - **`model.py`** — typed compiler data only.
 - **`parser.py`** — constrained authoring grammar and syntax validation.
-- **`compiler.py`** — semantic compiler truth: Source composition, Rule changes, conflicts, targets and resource closure.
+- **`compiler.py`** — semantic compiler truth: Parent/Reference semantics, Rule changes, conflicts, targets and resource closure.
 - **`package.py`** — immutable package state, canonical semantic digest, exact package identity and verification.
 - **`diff.py` / `package_diff.py`** — deterministic comparison by stable identity.
 - **`render.py`** — deterministic human/machine projection.
@@ -167,9 +167,9 @@ Unsupported syntax, incomplete pins, dangling Changes, duplicate identities, cyc
 
 Semantic uncertainty is different: an onboarding LLM should preserve it as an unresolved question rather than invent certainty.
 
-### No implicit Source precedence
+### No implicit Parent precedence
 
-Multiple Sources are independent. Source order must not decide conflicts. Canonical semantic normalization likewise ignores ordering where the model assigns no semantic meaning.
+Multiple Parents are unordered. Parent order must not decide conflicts. References are informational rather than lower-priority Parents and do not enter normative conflict resolution. Canonical semantic normalization likewise ignores ordering where the model assigns no semantic meaning.
 
 ### Keep accepted state reproducible
 
