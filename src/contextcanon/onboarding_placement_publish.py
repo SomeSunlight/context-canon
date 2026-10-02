@@ -691,6 +691,22 @@ def _render_parent_body(parent, compiled_parent, child_root: Path, parent_root: 
     return body, locator
 
 
+def _render_enclosing_parent_body(compiled_parent, child_root: Path, parent_root: Path) -> tuple[str, str]:
+    locator = _parent_locator(child_root, parent_root)
+    name = _safe_line(compiled_parent.metadata.name, "enclosing Parent name")
+    if any(char in name for char in "]\n\r"):
+        raise _error("Enclosing Parent name cannot be represented safely")
+    body = "\n".join([
+        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}`",
+        (
+            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
+            f'normalized-digest="{compiled_parent.normalized_digest}" '
+            f'package-digest="{compiled_parent.package_digest}" -->'
+        ),
+    ])
+    return body, locator
+
+
 def _assert_parent_block_is_framework_owned(text: str, node_name: str) -> None:
     stripped = _strip_managed_block(text, "parent")
     if re.search(r"ctx:parent\s+", stripped):
