@@ -37,14 +37,14 @@ Purpose: remove the public semantic duplication between normative ordinary Sourc
 - [x] Add a deterministic, explicit legacy normalization path that makes implicit Source → Parent semantics visible without making ordinary build/check rewrite human-authored source.
 - [x] Make generated human and machine Context surfaces state relationship kind explicitly; Reference Rules must never appear as effective Rules.
 - [x] Reuse the existing Source-update machinery for direct Reference updates, but do not route Reference changes through the Parent propagation graph.
-- [ ] Add focused Parent/Reference/legacy/package/update regressions, run the complete deterministic suite, rebuild/check every self-hosted Node with zero drift, and prepare one Draft PR for owner testing.
-- [ ] Update only the Phase-1-owned design/maintenance/CLI documentation plus PLAN/STATE/CHANGELOG and Issue #99. Do not implement onboarding relationship selection yet.
+- [x] Add focused Parent/Reference/legacy/package/update regressions, run the complete deterministic suite, rebuild/check every self-hosted Node with zero drift, and prepare one Draft PR for owner testing.
+- [x] Update only the Phase-1-owned design/maintenance/CLI documentation plus PLAN/STATE/CHANGELOG and Issue #99. Do not implement onboarding relationship selection yet.
 
 Design constraint: `Source` may remain an internal package/discovery/provenance term, but the public semantic relationship is only **Parent** or **Reference**. Existing accepted Source semantics must never silently weaken; missing relationship type means **Parent**.
 
 Exit: a user can explain the model in two sentences — Parent Context applies and propagates through the semantic graph; Reference Context is useful background here, its Rules do not apply, and it is not inherited by Children.
 
-Implementation checkpoint: Draft PR #100 contains the Phase-1 compiler/package/authoring/maintenance model plus focused relationship regressions. Remaining closure work is self-hosted legacy normalization/regeneration, complete exact-head tests/zero-drift verification, final PLAN/STATE/CHANGELOG/Issue reconciliation, and owner test. The PR remains Draft.
+Fast Track implementation checkpoint: Draft PR #100 contains the complete Phase-1 compiler/package/authoring/maintenance model and remains open for owner testing. The self-host gate passed 342/342 tests, normalized the repository's three legacy Source-bearing Nodes to explicit Parents, rebuilt all Nodes, passed `contextcanon check --all .` with zero drift, and passed `git diff --check`. After the one-shot refresh workflow was removed, the normal PR `tests` workflow was green on `ad835a310d2ed2a6e3a2eda2d22f182bd3115d8e`. Issue #99 records the concrete Phase-1 result. This final durable checkpoint is documentation-only; the exact resulting head must remain green before owner review/merge. PR #100 stays Draft and must not be merged without explicit owner approval.
 
 
 ## Active development block: editable owner-test installs — Issue #75
