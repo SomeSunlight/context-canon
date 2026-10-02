@@ -15,7 +15,7 @@ Purpose: allow a later project subtree inside an already onboarded Git repositor
 
 Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain separate; they touch onboarding but are not required for subtree semantics.
 
-Checkpoint: Draft PR #93 contains the completed implementation. The real confidential corporate-project subtree onboarding has now completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content. The owner explicitly accepts the result as merge-ready; the final metadata checkpoint reruns the same exact-head CI before the owner performs the squash merge.
+Checkpoint: PR #93 contains the completed implementation and is ready for owner squash merge. The real confidential corporate-project subtree onboarding has now completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content. The owner explicitly accepts the result as merge-ready; the final metadata checkpoint reruns the same exact-head CI before the owner performs the squash merge.
 
 Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
 
