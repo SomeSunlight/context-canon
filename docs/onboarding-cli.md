@@ -1,6 +1,6 @@
 # ContextCanon onboarding CLI
 
-This is the compact command reference for **onboarding an existing Git project**.
+This is the compact command reference for **onboarding an existing Git project or a later project subtree inside one**.
 
 For an actual run, the generated `contextcanon-onboarding/PLAN.md` remains the primary operator console because it contains the current checkpoint and exact snapshot-bound commands. This page is the stable place to rediscover commands when the workspace is missing, when you need to step backwards, or when you want to understand the CLI stages.
 
@@ -8,12 +8,14 @@ Use `contextcanon onboard <command> --help` for every flag.
 
 ## Start
 
-From the Git repository root:
+From the project scope you want to onboard:
 
 ```text
 contextcanon --version
 contextcanon onboard init .
 ```
+
+For a first adoption this is usually the Git repository root. For a later subproject inside an already-onboarded repository, run the same command from that subtree root. Git still defines the outer repository boundary; onboarding state and Evidence stay inside the selected subtree.
 
 Then open:
 
@@ -56,6 +58,8 @@ Useful inventory options:
 contextcanon onboard inventory . --directory P1 --directory P2
 contextcanon onboard inventory . --rule "docs/*.csv=structured-data:source"
 ```
+
+Obvious copies that should not participate in onboarding may be marked `kind=duplicate` with `handling=ignore`; this is a human inventory decision, not automatic deduplication.
 
 Freeze the reviewed `source` / `interpret` rows:
 
@@ -115,6 +119,8 @@ contextcanon onboard placement-instruction .context/onboarding/<evidence-digest>
 ```
 
 STEP 08 creates a separate `handoffs/STEP-08-placement/` workspace and ZIP. Never reuse the STEP-04 agent workspace. The handoff binds its input set from the frozen snapshot manifest; files an IDE later adds inside the directory are not semantic inputs and are not added to regenerated ZIPs.
+
+When the selected project is a subtree inside an existing ContextCanon Node, STEP 04 and STEP 08 also receive that nearest enclosing Node as already-accepted inherited Context. Its exact compiled package is bound under `.contextcanon-handoff/enclosing-parent/`; the model may read its `CONTEXT.md` and packaged Topic Resources, but they are not subtree Evidence. Publication pins the subtree root to that exact Parent package.
 
 ```text
 contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 8

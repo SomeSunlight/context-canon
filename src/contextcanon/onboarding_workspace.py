@@ -9,7 +9,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from .parser import ContextCanonError, find_repo_root
+from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
+from .parser import ContextCanonError
 
 
 WORKSPACE_SCHEMA = "contextcanon/onboarding-workspace/v0"
@@ -235,9 +236,9 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 
 | Column | Meaning |
 | --- | --- |
-| `path` | Repository-relative file path. |
+| `path` | Onboarding-scope-relative file path. |
 | `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
-| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
+| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, `duplicate`, or `unknown`. |
 | `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
 | `description` | Human explanation carried into frozen Evidence metadata. |
 | `note` | Optional owner note. |
@@ -253,6 +254,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 - `interpret` — freeze the original bytes, but mark them as raw/ambiguous material whose meaning must be interpreted explicitly rather than silently promoted to truth.
 - `lookup` — known material that may be consulted later but is not eagerly frozen into the semantic Evidence set.
 - `ignore` — intentionally outside this onboarding Evidence.
+  Use `kind=duplicate` with `handling=ignore` when you already know this copy should not participate in onboarding; ContextCanon does not try to prove or delete duplicates automatically.
 - `undecided` — unresolved; STEP 03 refuses to freeze Evidence until you decide.
 
 ## Status values
@@ -262,7 +264,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 - `changed` — the path is still present but its bytes changed.
 - `missing` — the previously known path no longer exists in the repository scope.
 
-You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if repository files were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
+You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if files in this onboarding scope were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
 
 ## PDF, Word, PowerPoint and similar documents
 
@@ -299,7 +301,7 @@ In short: **inventory → shelves → optional reusable Context → LLM sorting 
 
 ## Need to go back?
 
-You do not need a Git rollback or a fresh clone. From the Git repository root, reset the onboarding from any numbered step and then continue from that step:
+You do not need a Git rollback or a fresh clone. From the selected onboarding project/subtree root, reset the onboarding from any numbered step and then continue from that step:
 
 ```text
 contextcanon onboard reset . --from <STEP>
@@ -408,7 +410,7 @@ def write_utf8(path: Path, text: str) -> None:
 
 def _snapshot_label(snapshot_root: Path) -> str:
     snapshot = snapshot_root.resolve()
-    project = find_repo_root(snapshot)
+    project = project_root_from_snapshot(snapshot)
     try:
         return snapshot.relative_to(project).as_posix()
     except ValueError:
@@ -423,7 +425,7 @@ def _quote_cli(value: str) -> str:
 
 def _workspace_option(workspace: OnboardingWorkspace, snapshot_root: Path) -> list[str]:
     try:
-        default = (find_repo_root(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
+        default = (project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
     except ContextCanonError:
         return ["--workspace", str(workspace.root)]
     return [] if workspace.root.resolve() == default else ["--workspace", str(workspace.root)]
@@ -465,7 +467,7 @@ def _exact_commands(
     snapshot = _snapshot_label(snapshot_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
-    project_root = find_repo_root(snapshot_root)
+    project_root = project_root_from_snapshot(snapshot_root)
     try:
         inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
         workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
@@ -505,7 +507,7 @@ def _exact_commands(
         "### STEP 02 — Review file inventory",
         f"- [{mark(2)}] **Done**",
         "",
-        "Generate or refresh the CSV whenever repository files change:",
+        "Generate or refresh the CSV whenever files in this onboarding scope change:",
         "",
         "```text",
         render(["contextcanon", "onboard", "inventory", ".", *workspace_args]),
@@ -854,13 +856,7 @@ def update_workspace_checkpoint(
 
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
-    project_root = find_repo_root(snapshot_root)
-    if not (project_root / ".git").exists():
-        raise ContextCanonError(
-            "Cannot infer the onboarding project root from the Evidence snapshot; "
-            "run from/use a snapshot inside its Git repository or pass --workspace explicitly"
-        )
-    return project_root / DEFAULT_WORKSPACE_NAME
+    return project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
@@ -1164,12 +1160,7 @@ def reset_inventory_workspace_plan(
 
 
 def _require_project_root_for_inventory(project_root: Path) -> Path:
-    project = project_root.resolve()
-    if not (project / ".git").exists():
-        raise ContextCanonError(
-            f"Inventory workspace must be opened at the Git repository root: {project}"
-        )
-    return project
+    return resolve_onboarding_scope(project_root).project_root
 
 
 def open_onboarding_workspace(

@@ -14,13 +14,18 @@ from typing import Iterable
 
 from .compiler import Compiler
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
-from .onboarding_reusable_contexts import FROZEN_PROVENANCE_REL, FROZEN_PROVENANCE_SCHEMA
+from .onboarding_reusable_contexts import (
+    FROZEN_PROVENANCE_REL,
+    FROZEN_PROVENANCE_SCHEMA,
+    git_package_artifact_status,
+)
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
-from .parser import ContextCanonError, find_repo_root, parse_node
+from .parser import ContextCanonError, parse_node
 
 
 PLACEMENT_ACCEPTANCE_SCHEMA = "contextcanon/onboarding-placement-acceptance/v1"
@@ -302,7 +307,11 @@ def _frozen_catalog_provenance(
     )
 
 
-def _git_provenance(source: PlacementReviewSource, package_root: Path) -> SourceGitProvenance:
+def _git_provenance(
+    source: PlacementReviewSource,
+    package_root: Path,
+    package: CompiledPackage,
+) -> SourceGitProvenance:
     frozen = _frozen_catalog_provenance(source, package_root)
     if frozen is not None:
         return frozen
@@ -327,10 +336,11 @@ def _git_provenance(source: PlacementReviewSource, package_root: Path) -> Source
         node_path = package_root.relative_to(repository).as_posix() or "."
     except ValueError as exc:
         raise _error(f"catalog package root is not inside its repository: {package_root}") from exc
-    status = _try_git(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
+    status = git_package_artifact_status(repository, package_root, package)
     if status:
         raise _error(
-            f"accepted Source {source.source_name} has uncommitted package-path changes; exact package provenance would be ambiguous"
+            f"accepted Source {source.source_name} has uncommitted package artifact changes; "
+            "exact package provenance would be ambiguous"
         )
     exact = _try_git(repository, "rev-parse", "HEAD")
     origin = _try_git(repository, "remote", "get-url", "origin")
@@ -366,16 +376,14 @@ def _git_provenance(source: PlacementReviewSource, package_root: Path) -> Source
     )
 
 def _source_provenance(
-    review: OnboardingPlacementReview,
+    sources: Iterable[PlacementReviewSource],
     proposal: OnboardingPlacementProposal,
     catalog_package_roots: Iterable[Path],
 ) -> tuple[SourceGitProvenance, ...]:
     roots = _catalog_roots(catalog_package_roots)
     package_by_id = {package.metadata.id: package for package in proposal.catalog_packages}
     result: list[SourceGitProvenance] = []
-    for source in review.sources:
-        if source.decision != "accept":
-            continue
+    for source in sources:
         package = package_by_id.get(source.source_node_id)
         root = roots.get(source.source_node_id)
         if package is None or root is None:
@@ -386,7 +394,7 @@ def _source_provenance(
             or package.package_digest != source.source_package_digest
         ):
             raise _error(f"accepted Source {source.source_name} no longer matches the reviewed exact package")
-        result.append(_git_provenance(source, root))
+        result.append(_git_provenance(source, root, package))
     return tuple(result)
 
 
@@ -605,6 +613,7 @@ def _managed_ids_outside_blocks(text: str) -> tuple[set[str], set[str], set[str]
 def _render_node_source(
     before: str,
     project_root: Path,
+    repository_root: Path,
     node_root: Path,
     items: list[PlacementReviewItem],
     sources: list[PlacementReviewSource],
@@ -635,7 +644,7 @@ def _render_node_source(
     text = _replace_managed_section(text, "Local Overview", "overview", _render_overviews(overviews), aliases=("Overview",))
     text = _replace_managed_section(text, "Local State", "state", _render_state(states), aliases=("State",))
     text = _replace_managed_section(text, "Local Plan", "plan", _render_summaries(plans, "plan"), aliases=("Plan",))
-    config_locator = Path(os.path.relpath(project_root / CONFIG_FILENAME, node_root)).as_posix()
+    config_locator = Path(os.path.relpath(repository_root / CONFIG_FILENAME, node_root)).as_posix()
     text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id, config_locator))
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
     text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
@@ -689,6 +698,22 @@ def _render_parent_body(parent, compiled_parent, child_root: Path, parent_root: 
     return body, locator
 
 
+def _render_enclosing_parent_body(compiled_parent, child_root: Path, parent_root: Path) -> tuple[str, str]:
+    locator = _parent_locator(child_root, parent_root)
+    name = _safe_line(compiled_parent.metadata.name, "enclosing Parent name")
+    if any(char in name for char in "]\n\r"):
+        raise _error("Enclosing Parent name cannot be represented safely")
+    body = "\n".join([
+        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}`",
+        (
+            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
+            f'normalized-digest="{compiled_parent.normalized_digest}" '
+            f'package-digest="{compiled_parent.package_digest}" -->'
+        ),
+    ])
+    return body, locator
+
+
 def _assert_parent_block_is_framework_owned(text: str, node_name: str) -> None:
     stripped = _strip_managed_block(text, "parent")
     if re.search(r"ctx:parent\s+", stripped):
@@ -727,11 +752,25 @@ def _accepted_by_node(review: OnboardingPlacementReview) -> dict[str, list[Place
     return result
 
 
-def _sources_by_node(review: OnboardingPlacementReview) -> dict[str, list[PlacementReviewSource]]:
+def _accepted_ordinary_sources(
+    review: OnboardingPlacementReview,
+    *,
+    enclosing_parent_node_id: str | None = None,
+) -> tuple[PlacementReviewSource, ...]:
+    return tuple(
+        source
+        for source in review.sources
+        if source.decision == "accept"
+        and source.source_node_id != enclosing_parent_node_id
+    )
+
+
+def _sources_by_node(
+    sources: Iterable[PlacementReviewSource],
+) -> dict[str, list[PlacementReviewSource]]:
     result: dict[str, list[PlacementReviewSource]] = {}
-    for source in review.sources:
-        if source.decision == "accept":
-            result.setdefault(source.target_node_key, []).append(source)
+    for source in sources:
+        result.setdefault(source.target_node_key, []).append(source)
     return result
 
 
@@ -752,14 +791,26 @@ def build_placement_publication_preview(
     project_root: Path | None = None,
 ) -> PlacementPublicationPreview:
     snapshot = load_evidence_snapshot(snapshot_root)
-    project = (project_root or find_repo_root(snapshot_root)).resolve()
-    if not (project / ".git").exists():
-        raise _error(f"target project root is not a Git repository: {project}")
+    project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    scope = resolve_onboarding_scope(project)
+    repository = scope.repository_root
     documents = _expected_document_deltas(snapshot, project, review)
-    provenance = _source_provenance(review, proposal, catalog_package_roots)
+    enclosing_parent_root = find_enclosing_context_root(project)
+    enclosing_parent = (
+        Compiler(repository).compile(enclosing_parent_root)
+        if enclosing_parent_root is not None
+        else None
+    )
+    ordinary_sources = _accepted_ordinary_sources(
+        review,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+    )
+    provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
     provenance_by_id = {item.source_node_id: item for item in provenance}
     items_by_node = _accepted_by_node(review)
-    sources_by_node = _sources_by_node(review)
+    sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
     ordered_nodes = _structure_order(proposal.structure.nodes)
 
@@ -771,13 +822,14 @@ def build_placement_publication_preview(
         source_path = root / "CONTEXT.src.md"
         if not source_path.is_file():
             raise _error(f"accepted destination Node is not materialized: {node.name} ({node.path})")
-        parsed = parse_node(root, project)
+        parsed = parse_node(root, repository)
         before = source_path.read_text(encoding="utf-8")
         _assert_parent_block_is_framework_owned(before, node.name)
         if node.key in items_by_node or node.key in sources_by_node:
             after = _render_node_source(
                 before,
                 project,
+                repository,
                 root,
                 items_by_node.get(node.key, []),
                 sources_by_node.get(node.key, []),
@@ -795,9 +847,7 @@ def build_placement_publication_preview(
     }
     roots = _catalog_roots(catalog_package_roots)
     package_overrides: dict[tuple[Path, str], tuple[object, dict[str, bytes]]] = {}
-    for source in review.sources:
-        if source.decision != "accept":
-            continue
+    for source in ordinary_sources:
         target = node_by_key[source.target_node_key]
         target_root = _node_root(project, target.path)
         package_root = roots.get(source.source_node_id)
@@ -814,7 +864,31 @@ def build_placement_publication_preview(
     for node in ordered_nodes:
         root = _node_root(project, node.path).resolve()
         if node.parent_key is None:
-            source_overrides[root] = _replace_parent_section(source_overrides[root], "")
+            if node.path == "." and enclosing_parent is not None and enclosing_parent_root is not None:
+                body, locator = _render_enclosing_parent_body(
+                    enclosing_parent, root, enclosing_parent_root
+                )
+                source_overrides[root] = _replace_parent_section(source_overrides[root], body)
+                package_overrides[(root, enclosing_parent.package_digest)] = _compiled_package_override(
+                    enclosing_parent
+                )
+                parent_pins.append(
+                    PlacementParentPin(
+                        child_key=node.key,
+                        child_name=node.name,
+                        child_path=node.path,
+                        parent_key="@enclosing",
+                        parent_name=enclosing_parent.metadata.name,
+                        parent_path=locator,
+                        parent_node_id=enclosing_parent.metadata.id,
+                        parent_version=enclosing_parent.metadata.version,
+                        parent_normalized_digest=enclosing_parent.normalized_digest,
+                        parent_package_digest=enclosing_parent.package_digest,
+                        locator=locator,
+                    )
+                )
+            else:
+                source_overrides[root] = _replace_parent_section(source_overrides[root], "")
         else:
             parent = node_by_key[node.parent_key]
             compiled_parent = compiled_by_key.get(parent.key)
@@ -841,7 +915,7 @@ def build_placement_publication_preview(
             )
 
         compiled = Compiler(
-            project,
+            repository,
             source_overrides=source_overrides,
             file_overrides=file_overrides,
             package_overrides=package_overrides,
@@ -1067,7 +1141,7 @@ def _publication_order(preview: PlacementPublicationPreview) -> list[PlacementNo
             raise _error(f"publication preview Parent references missing Child {key}")
         active.add(key)
         parent_key = parent_by_child.get(key)
-        if parent_key is None:
+        if parent_key is None or parent_key == "@enclosing":
             value = 0
         else:
             if parent_key not in by_key:
@@ -1126,7 +1200,7 @@ def _acceptance_payload(
     source_by_id = {source.source_node_id: source for source in preview.sources}
     accepted_sources = []
     for source in review.sources:
-        if source.decision != "accept":
+        if source.decision != "accept" or source.source_node_id not in source_by_id:
             continue
         provenance = source_by_id[source.source_node_id]
         entry = {**source.to_dict(), "discovery": {**provenance.to_dict(), "kind": provenance.kind, "discovery_ref": provenance.discovery_ref}}
@@ -1257,6 +1331,7 @@ def publish_placement_review(
     if not preview.review_complete or not review.is_complete:
         raise _error("review still contains pending decisions; publication requires a complete human review")
     project = preview.project_root
+    repository = resolve_onboarding_scope(project).repository_root
     snapshot = load_evidence_snapshot(snapshot_root)
     expected_documents = _expected_document_deltas(snapshot, project, review)
     if expected_documents != preview.documents:
@@ -1278,7 +1353,7 @@ def publish_placement_review(
     generated_snapshots: dict[Path, dict[str, bytes | None]] = {}
     generated_new_rels: dict[Path, set[str]] = {}
     acceptance_before = acceptance_path.read_bytes() if acceptance_path.is_file() else None
-    project_config_path = config_path(project)
+    project_config_path = config_path(repository)
     project_config_before = project_config_path.read_bytes() if project_config_path.is_file() else None
     legacy_parent_upgrade = _legacy_parent_acceptance_upgrade(acceptance_before, preview)
 
@@ -1290,7 +1365,12 @@ def publish_placement_review(
             if document.changed:
                 _atomic_write(document.source_path, document.after.encode("utf-8"))
 
-        accepted_sources_by_node = _sources_by_node(review)
+        ordinary_source_ids = {source.source_node_id for source in preview.sources}
+        accepted_sources_by_node = _sources_by_node(
+            source
+            for source in review.sources
+            if source.decision == "accept" and source.source_node_id in ordinary_source_ids
+        )
         provenance_by_id = {source.source_node_id: source for source in preview.sources}
         for key, sources in accepted_sources_by_node.items():
             delta = delta_by_key.get(key)
@@ -1312,11 +1392,15 @@ def publish_placement_review(
         for delta in _publication_order(preview):
             parent_pin = parent_by_child.get(delta.key)
             if parent_pin is not None:
-                compiled_parent = compiled_by_key.get(parent_pin.parent_key)
-                if compiled_parent is None:
-                    raise _error(
-                        f"internal error: Parent {parent_pin.parent_key} was not compiled before Child {delta.key}"
-                    )
+                if parent_pin.parent_key == "@enclosing":
+                    enclosing_root = (delta.source_path.parent / parent_pin.locator).resolve()
+                    compiled_parent = Compiler(repository).compile(enclosing_root)
+                else:
+                    compiled_parent = compiled_by_key.get(parent_pin.parent_key)
+                    if compiled_parent is None:
+                        raise _error(
+                            f"internal error: Parent {parent_pin.parent_key} was not compiled before Child {delta.key}"
+                        )
                 if (
                     compiled_parent.metadata.id != parent_pin.parent_node_id
                     or compiled_parent.metadata.version != parent_pin.parent_version
@@ -1330,7 +1414,7 @@ def publish_placement_review(
                 if _copy_compiled_package(compiled_parent, delta.source_path.parent):
                     new_package_dirs.append(destination)
 
-            compiled = Compiler(project).compile(delta.source_path.parent)
+            compiled = Compiler(repository).compile(delta.source_path.parent)
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
@@ -1348,7 +1432,7 @@ def publish_placement_review(
         for compiled in compiled_nodes:
             write_outputs(compiled)
 
-        verifier = Compiler(project)
+        verifier = Compiler(repository)
         node_digests: dict[str, dict[str, str]] = {}
         for delta in preview.nodes:
             compiled = verifier.compile(delta.source_path.parent)
@@ -1366,10 +1450,10 @@ def publish_placement_review(
 
         for source in preview.sources:
             if source.kind == "git":
-                upsert_git_source(project, source.source_node_id, source.locator, source.discovery_ref or None, source.node_path)
+                upsert_git_source(repository, source.source_node_id, source.locator, source.discovery_ref or None, source.node_path)
             else:
-                repository_root = Path(source.locator).resolve()
-                upsert_local_mapping(project, source.source_node_id, repository_root, source.node_path)
+                source_repository_root = Path(source.locator).resolve()
+                upsert_local_mapping(repository, source.source_node_id, source_repository_root, source.node_path)
 
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")

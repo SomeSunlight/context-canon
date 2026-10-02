@@ -6,8 +6,18 @@ All notable ContextCanon changes will be documented here.
 
 ContextCanon **0.10.0** is the current review candidate. It builds on the accepted 0.9.9 onboarding baseline and adds first-class stable Topic Resource identity plus reviewed rename/move maintenance. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to the accepted onboarding baseline.
 
+### Added
+
+- STEP 10 `placement-review` now shows a compact progress scoreboard for placement findings, Source edits and reusable Sources, including decided/pending counts, an overall progress bar and a lightweight motivating status; review completeness is derived from the same canonical decision counts.
+- Subtree onboarding can target a project directory inside an existing Git repository without re-onboarding the whole repository. The selected subtree keeps its own inventory/Evidence/workspace scope while ContextCanon still compiles against the outer repository. If the subtree is explicitly onboarded inside an existing Context Node, its root adopts that nearest enclosing Node as an exact pinned Parent; STEP 04/08 receive the inherited Context and the Semantic Handoff binds the exact compiled Parent package, including packaged Topic Resources.
+- STEP-02 inventory accepts the explicit human classification `kind=duplicate` with `handling=ignore` for an obvious copy that should not participate in onboarding; ContextCanon does not attempt automatic semantic deduplication.
+
 ### Fixed
 
+- STEP-10 split-review validation errors now identify the concrete P finding and Markdown file that failed validation, and the progress block is visually separated from the ordinary item-count line.
+- Subtree placement no longer publishes an accepted reusable Context a second time as an ordinary Source when that exact Node is already the enclosing semantic Parent; the accepted STEP-07/10 trace remains valid while publication keeps only the Parent relationship.
+- `check --all` parse failures now report the recursive scan root and explain that every ContextCanon Node below that root participates, making accidental one-directory-too-high invocation much easier to diagnose.
+- Resource rename/reconcile is now recorded as extensively owner-tested in a real project, including successful unique rename preservation and deliberate human selection among ambiguous byte-identical candidates.
 - Onboarding STEP 01 now warns operators to finish file and directory renames/moves before STEP 03 freezes immutable Evidence; later path changes require refreshed inventory, a new Evidence snapshot, and recreation of dependent onboarding work.
 - Renamed the owner-approved accelerated development mode to **Fast Track** throughout the reusable Development Workflow and project documentation; workflow semantics are unchanged.
 - ContextCanon 0.9.9 owner-test candidate: Markdown Topic Resource closure now ignores inline `data:` URIs (for example Confluence/Chrome-exported base64 SVG images) instead of treating them as missing repository-local files. The original Resource remains unchanged; genuine local Markdown links still participate in deterministic closure/materialization.

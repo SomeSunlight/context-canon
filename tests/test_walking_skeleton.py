@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -467,6 +469,22 @@ Required:
         path.write_text(DEVELOPMENT.replace('id="node-foundation"', 'id="wrong-id"'), encoding="utf-8")
         with self.assertRaisesRegex(ContextCanonError, "expects Node ID"):
             Compiler(repo).compile(repo / "nodes/internal/development")
+
+    def test_check_all_parse_error_names_recursive_scan_root(self):
+        repo = self.make_repo()
+        legacy = repo / "legacy"
+        legacy.mkdir()
+        (legacy / "CONTEXT.src.md").write_text(
+            "# Legacy\n<!-- ctx:node id=\"legacy\" version=\"0.1.0\" -->\n",
+            encoding="utf-8",
+        )
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(main(["check", "--all", str(repo)]), 2)
+        message = stderr.getvalue()
+        self.assertIn("missing compiler-managed ctx:node id/name/version metadata", message)
+        self.assertIn(f"Scan root: {repo.resolve()}", message)
+        self.assertIn("--all recursively checks every ContextCanon Node below this scan root", message)
 
     def test_cli_build_all_and_check_all(self):
         repo = self.make_repo()

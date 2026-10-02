@@ -63,14 +63,30 @@ Reusable Context configuration lives in `STEP-07-reusable-contexts.md`, where it
 
 For ordinary use, install ContextCanon as an isolated uv tool rather than into the project environment being onboarded. The repository README keeps the short current installation commands.
 
-From the Git repository root:
+From the project you want to onboard:
 
 ```text
 contextcanon --version
 contextcanon onboard init .
 ```
 
-The second command creates the visible `contextcanon-onboarding/` directory before any inventory/Evidence decision exists. Open its `PLAN.md`; all concrete run commands continue there. This page remains background/reference documentation rather than a keyboard script.
+For a first repository-wide adoption, that project is normally the Git repository root. For a later project living in a subdirectory of an already-onboarded repository, run the same command from that **subtree root** instead. ContextCanon keeps the Git repository as the outer repository boundary while inventory, Evidence, workspace and newly materialized Nodes remain relative to the selected subtree.
+
+The second command creates the visible `contextcanon-onboarding/` directory inside that selected project scope before any inventory/Evidence decision exists. Open its `PLAN.md`; all concrete run commands continue there. This page remains background/reference documentation rather than a keyboard script.
+
+### Later subtree inside an already-onboarded Context
+
+Scoped onboarding is an explicit composition action, not passive filesystem inference. When the selected subtree sits inside an existing ContextCanon Node, ContextCanon treats the nearest enclosing Node as the semantic Parent for the new subtree root. Ordinary directory nesting elsewhere still carries no Parent meaning.
+
+Both semantic passes receive that already-accepted enclosing Context as design input. The isolated Semantic Handoff also contains the exact compiled Parent package under `.contextcanon-handoff/enclosing-parent/`, so the model can inspect its `CONTEXT.md` and relevant packaged Topic Resources without treating them as Evidence authored by the subtree. Publication pins the subtree root to the exact Parent ID/version/digests and copies that immutable package into the Child's normal local Source store.
+
+After publication, repository-wide maintenance remains ordinary ContextCanon maintenance from the outer repository root:
+
+```text
+contextcanon propagate --all
+contextcanon build --all .
+contextcanon check --all .
+```
 
 ## 1. Tidy before durable references
 
@@ -78,9 +94,11 @@ Before ContextCanon creates durable Topic/Resource paths, use this cheapest mome
 
 This is deliberately **guidance rather than an automated rewrite**. ContextCanon does not move or delete project files during onboarding. The point is simply to avoid creating durable references to locations you already know are wrong.
 
+If you deliberately keep an obvious duplicate in the working tree but do not want it to participate in onboarding, the STEP-02 inventory can mark it as `kind=duplicate` with `handling=ignore`. This is a human classification only; ContextCanon does not try to prove duplicate semantics or delete either file.
+
 ## 2. Inventory and review the project files
 
-Run from the Git repository root:
+Run from the selected project/subtree root:
 
 ```text
 contextcanon onboard inventory .

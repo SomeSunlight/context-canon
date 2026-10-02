@@ -113,6 +113,9 @@ contextcanon resource reconcile
 
 The review shows the old and proposed new path, stable Resource IDs, exact hash match, byte count, and line count for UTF-8 text. ContextCanon asks before changing authoring state. Multiple identical candidates remain ambiguous in `status`; interactive `reconcile` offers them as a numbered human choice. Non-interactive `--yes` deliberately skips them rather than guessing.
 
+> [!NOTE]
+> This rename/reconcile path has now been exercised extensively in a real owner project. Unique renames were detected correctly, interactive confirmation preserved identity cleanly, and deliberately ambiguous byte-identical candidates were presented as explicit numbered choices instead of being guessed. The owner test completed successfully.
+
 Markdown needs one extra safety check: moving an unchanged Markdown file can change what relative links such as `images/diagram.svg` mean. ContextCanon therefore compares the resolved package closure before and after the candidate move. A changed closure is not accepted as a simple rename.
 
 Moving a Resource across a Context Node's physical ownership boundary is also not treated as a routine rename. That is a stronger semantic **rehome** operation and is deliberately refused by the first move implementation.

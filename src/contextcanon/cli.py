@@ -10,7 +10,7 @@ from .version import display_version
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
-from .onboarding import prepare_onboarding_evidence
+from .onboarding import prepare_onboarding_evidence, project_root_from_snapshot
 from .onboarding_inventory import prepare_from_inventory, refresh_inventory
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_handoff import (
@@ -24,7 +24,12 @@ from .onboarding_handoff import (
 )
 from .onboarding_placement import load_onboarding_placement_proposal
 from .onboarding_placement_audit import render_placement_source_audit
-from .onboarding_placement_review import create_or_load_placement_review, load_placement_review
+from .onboarding_placement_review import (
+    OnboardingPlacementReview,
+    ReviewDecisionProgress,
+    create_or_load_placement_review,
+    load_placement_review,
+)
 from .onboarding_reusable_contexts import load_accepted_reusable_contexts, refresh_reusable_contexts
 from .onboarding_placement_publish import (
     build_placement_publication_preview,
@@ -97,7 +102,7 @@ def _workspace_path(value: str | None) -> Path | None:
 
 def _snapshot_cli(snapshot: Path) -> str:
     try:
-        return snapshot.resolve().relative_to(find_repo_root(snapshot)).as_posix()
+        return snapshot.resolve().relative_to(project_root_from_snapshot(snapshot)).as_posix()
     except ValueError:
         return str(snapshot)
 
@@ -107,6 +112,54 @@ def _catalog_labels(packages) -> tuple[str, ...]:
         f"{package.metadata.id} · {package.metadata.name} · {package.metadata.version} · {package.package_digest}"
         for package in packages
     )
+
+
+def _progress_bar(decided: int, total: int, width: int = 12) -> str:
+    if total <= 0:
+        filled = width
+    else:
+        filled = min(width, max(0, (decided * width) // total))
+    return "[" + "#" * filled + "-" * (width - filled) + "]"
+
+
+def _progress_tail(progress: ReviewDecisionProgress) -> str:
+    return "done" if progress.pending == 0 else f"{progress.pending} to go"
+
+
+def _placement_review_status(review: OnboardingPlacementReview) -> str:
+    progress = review.progress
+    if progress.pending == 0:
+        return "cleared — every STEP 10 decision is final."
+    if progress.decided == 0:
+        return "ready — every decision makes the Context sharper."
+    if progress.pending <= 5:
+        return f"final stretch — only {progress.pending} to go."
+    if progress.decided * 2 >= progress.total:
+        return f"past halfway — {progress.pending} to go."
+    return f"keep going — {progress.pending} to go, and every decision sharpens the Context."
+
+
+def _print_placement_review_progress(review: OnboardingPlacementReview) -> None:
+    progress = review.progress
+    overall_tail = "done" if progress.pending == 0 else f"{progress.pending} to go"
+    print(
+        f"STEP 10 progress {_progress_bar(progress.decided, progress.total)} "
+        f"{progress.decided}/{progress.total} decided · {overall_tail}"
+    )
+    print(
+        f"  P findings  {progress.items.decided:>3}/{progress.items.total:<3} · "
+        f"{_progress_tail(progress.items)}"
+    )
+    print(
+        f"  E edits     {progress.source_edits.decided:>3}/{progress.source_edits.total:<3} · "
+        f"{_progress_tail(progress.source_edits)}"
+    )
+    if progress.sources.total:
+        print(
+            f"  S sources   {progress.sources.decided:>3}/{progress.sources.total:<3} · "
+            f"{_progress_tail(progress.sources)}"
+        )
+    print(f"  Status: {_placement_review_status(review)}")
 
 
 def _owner_specs_for_review(
@@ -547,20 +600,20 @@ def main(argv: list[str] | None = None) -> int:
         "init",
         help="create the visible onboarding workspace and PLAN before starting STEP 01",
     )
-    onboard_init.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_init.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     _add_workspace(onboard_init)
 
     onboard_inventory = onboard_sub.add_parser(
         "inventory",
         help="create or refresh the human-reviewed onboarding file inventory CSV",
     )
-    onboard_inventory.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_inventory.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     onboard_inventory.add_argument(
         "--directory",
         action="append",
         default=[],
         metavar="PATH",
-        help="repository-relative directory to inventory; may be repeated (default: whole repository)",
+        help="project-scope-relative directory to inventory; may be repeated (default: whole selected project/subtree)",
     )
     onboard_inventory.add_argument(
         "--rule",
@@ -575,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
         "prepare",
         help="freeze reviewed onboarding Evidence; use --inventory for the normal reviewed path",
     )
-    onboard_prepare.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_prepare.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     onboard_prepare.add_argument(
         "--inventory",
         metavar="CSV",
@@ -842,7 +895,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_accept.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
     onboard_accept.add_argument("proposal", help="validated JSON onboarding proposal")
     onboard_accept.add_argument("review", help="completed onboarding review JSON file")
-    onboard_accept.add_argument("--project", default=".", help="target Git repository root (default: current directory)")
+    onboard_accept.add_argument("--project", default=".", help="target onboarding project/subtree root (default: current directory)")
     onboard_accept.add_argument(
         "--catalog-package",
         action="append",
@@ -1419,6 +1472,8 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Review file: {review_path}")
                     print(f"Source audit: {workspace.placement_audit_path}")
                     print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    print()
+                    _print_placement_review_progress(review)
                     next_action = (
                         f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
@@ -2084,25 +2139,35 @@ def main(argv: list[str] | None = None) -> int:
         failed = False
         for node_root in node_roots:
             label = node_root.relative_to(repo_root).as_posix() or "."
-            if args.command == "build":
-                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
-                compiled = Compiler(repo_root).compile(node_root)
-                changed = write_outputs(compiled)
-                suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
-                print(f"built {label}{suffix}")
-            else:
-                compiled = compiler.compile(node_root)
-                drift = check_outputs(compiled)
-                version_problem = version_reuse_problem(compiled)
-                if version_problem is not None:
-                    drift = [version_problem, *drift]
-                if drift:
-                    failed = True
-                    print(f"drift {label}:")
-                    for item in drift:
-                        print(f"  - {item}")
+            try:
+                if args.command == "build":
+                    _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                    compiled = Compiler(repo_root).compile(node_root)
+                    changed = write_outputs(compiled)
+                    suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
+                    print(f"built {label}{suffix}")
                 else:
-                    print(f"ok {label}")
+                    compiled = compiler.compile(node_root)
+                    drift = check_outputs(compiled)
+                    version_problem = version_reuse_problem(compiled)
+                    if version_problem is not None:
+                        drift = [version_problem, *drift]
+                    if drift:
+                        failed = True
+                        print(f"drift {label}:")
+                        for item in drift:
+                            print(f"  - {item}")
+                    else:
+                        print(f"ok {label}")
+            except ContextCanonError as exc:
+                if not args.all:
+                    raise
+                raise ContextCanonError(
+                    f"{exc}\n"
+                    f"Scan root: {repo_root}\n"
+                    "--all recursively checks every ContextCanon Node below this scan root. "
+                    "If the failing file is unrelated, rerun from the intended repository/project root."
+                ) from exc
         return 1 if failed else 0
     except ContextCanonError as exc:
         print(f"contextcanon: error: {exc}", file=sys.stderr)

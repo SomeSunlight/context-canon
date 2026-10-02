@@ -8,7 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
+from .compiler import Compiler
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
+from .package import artifact_files
 from .onboarding_workspace import write_utf8
 from .parser import ContextCanonError
 
@@ -20,6 +23,34 @@ HANDOFF_PLAN_NAME = "PLAN.md"
 HANDOFF_INSTRUCTION_NAME = "INSTRUCTION.md"
 HANDOFF_MANIFEST_NAME = "manifest.json"
 HANDOFF_RESULT_NAME = "RESULT.json"
+HANDOFF_PARENT_CONTEXT_DIR = "enclosing-parent"
+
+
+@dataclass(frozen=True)
+class HandoffParentContext:
+    node_id: str
+    name: str
+    version: str
+    normalized_digest: str
+    package_digest: str
+    files: tuple[tuple[str, bytes], ...]
+
+
+def _enclosing_parent_context(snapshot_root: Path) -> HandoffParentContext | None:
+    project = project_root_from_snapshot(snapshot_root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    compiled = Compiler(repository).compile(parent_root)
+    return HandoffParentContext(
+        node_id=compiled.metadata.id,
+        name=compiled.metadata.name,
+        version=compiled.metadata.version,
+        normalized_digest=compiled.normalized_digest,
+        package_digest=compiled.package_digest,
+        files=tuple(sorted(artifact_files(compiled).items())),
+    )
 
 
 @dataclass(frozen=True)
@@ -113,14 +144,25 @@ def _safe_evidence_target(root: Path, evidence_path: str) -> Path:
     return target
 
 
-def _plan(spec: SemanticHandoffSpec, snapshot: EvidenceSnapshot) -> str:
+def _plan(
+    spec: SemanticHandoffSpec,
+    snapshot: EvidenceSnapshot,
+    parent_context: HandoffParentContext | None,
+) -> str:
+    parent_note = (
+        f"The exact accepted enclosing Parent package is available under "
+        f"`{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}/`. "
+        "Its CONTEXT.md and packaged Topic Resources are read-only Context input, not project Evidence.\n\n"
+        if parent_context is not None
+        else ""
+    )
     return f"""# ContextCanon semantic handoff — STEP {spec.step:02d}
 
 This is a **single-task, disposable workspace** prepared by ContextCanon.
 
 Your complete universe for this task is this directory. The ordinary files and directories at the workspace root are exact frozen project Evidence, laid out at their repository-relative paths. The harness has already mapped the Evidence paths named by the instruction directly into this workspace.
 
-## Do exactly this
+{parent_note}## Do exactly this
 
 1. Read `{HANDOFF_CONTROL_DIR}/{HANDOFF_INSTRUCTION_NAME}` completely.
 2. Read the frozen project files required by that instruction. When it names a repository-relative path such as `docs/example.md`, open exactly `docs/example.md` inside this workspace.
@@ -144,6 +186,7 @@ def _manifest(
     snapshot: EvidenceSnapshot,
     entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
+    parent_context: HandoffParentContext | None,
 ) -> dict[str, object]:
     evidence = [
         {
@@ -153,7 +196,7 @@ def _manifest(
         }
         for entry in entries
     ]
-    return {
+    result: dict[str, object] = {
         "schema": HANDOFF_SCHEMA,
         "step": spec.step,
         "name": spec.slug,
@@ -164,6 +207,24 @@ def _manifest(
         "canonical_result_name": spec.proposal_name,
         "evidence": evidence,
     }
+    if parent_context is not None:
+        result["enclosing_parent"] = {
+            "node_id": parent_context.node_id,
+            "name": parent_context.name,
+            "version": parent_context.version,
+            "normalized_digest": parent_context.normalized_digest,
+            "package_digest": parent_context.package_digest,
+            "root": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}",
+            "files": [
+                {
+                    "path": path,
+                    "sha256": _sha256(content),
+                    "size": len(content),
+                }
+                for path, content in parent_context.files
+            ],
+        }
+    return result
 
 
 def _selected_evidence(
@@ -212,9 +273,10 @@ def _expected_inputs(
     entries: tuple[SnapshotEvidence, ...],
     instruction_bytes: bytes,
     manifest_bytes: bytes,
+    parent_context: HandoffParentContext | None,
 ) -> dict[Path, bytes]:
     expected = {
-        root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME: _plan(spec, snapshot).encode("utf-8"),
+        root / HANDOFF_CONTROL_DIR / HANDOFF_PLAN_NAME: _plan(spec, snapshot, parent_context).encode("utf-8"),
         root / HANDOFF_CONTROL_DIR / HANDOFF_INSTRUCTION_NAME: instruction_bytes,
         root / HANDOFF_CONTROL_DIR / HANDOFF_MANIFEST_NAME: manifest_bytes,
     }
@@ -232,6 +294,15 @@ def _expected_inputs(
                 f"Frozen Evidence hash changed while preparing semantic handoff: {entry.path}"
             )
         expected[_safe_evidence_target(root, entry.path)] = file_bytes
+    if parent_context is not None:
+        parent_root = root / HANDOFF_CONTROL_DIR / HANDOFF_PARENT_CONTEXT_DIR
+        for relative, file_bytes in parent_context.files:
+            pure = PurePosixPath(relative)
+            if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+                raise ContextCanonError(
+                    f"Unsafe enclosing Parent package path in semantic handoff: {relative!r}"
+                )
+            expected[parent_root.joinpath(*pure.parts)] = file_bytes
     return expected
 
 
@@ -300,6 +371,7 @@ def build_semantic_handoff(
 ) -> SemanticHandoff:
     spec = handoff_spec(step)
     snapshot = load_evidence_snapshot(snapshot_root)
+    parent_context = _enclosing_parent_context(snapshot_root)
     workspace = workspace_root.resolve()
     instruction = (
         instruction_path.resolve()
@@ -320,12 +392,14 @@ def build_semantic_handoff(
     root = workspace / HANDOFFS_DIR_NAME / spec.directory_name
     zip_path = workspace / HANDOFFS_DIR_NAME / f"{spec.directory_name}.zip"
     entries = _selected_evidence(snapshot, evidence_paths)
-    manifest_value = _manifest(spec, snapshot, entries, instruction_bytes)
+    manifest_value = _manifest(spec, snapshot, entries, instruction_bytes, parent_context)
     manifest_bytes = (
         json.dumps(manifest_value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")
     handoff_digest = _sha256(_canonical_json(manifest_value))
-    expected = _expected_inputs(root, spec, snapshot, entries, instruction_bytes, manifest_bytes)
+    expected = _expected_inputs(
+        root, spec, snapshot, entries, instruction_bytes, manifest_bytes, parent_context
+    )
     result_path = root / HANDOFF_CONTROL_DIR / HANDOFF_RESULT_NAME
 
     created = not root.exists()

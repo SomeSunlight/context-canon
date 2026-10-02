@@ -22,7 +22,7 @@ from contextcanon.onboarding_reusable_contexts import (
 from contextcanon.onboarding_structure import HumanStructureNode, HumanStructurePlan
 from contextcanon.outputs import write_outputs
 from contextcanon.onboarding_placement_instruction import _render_accepted_reusable_contexts
-from contextcanon.parser import parse_node
+from contextcanon.parser import ContextCanonError, parse_node
 
 
 class ReusableContextsTests(unittest.TestCase):
@@ -158,6 +158,50 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertEqual(len(accepted.catalog_packages), 1)
             state = json.loads((snapshot / "reusable-contexts.json").read_text(encoding="utf-8"))
             self.assertEqual(state["assignments"][0]["source_node_id"], "workflow-node")
+
+    def test_accept_allows_dirty_nested_worktree_outside_package_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog, node = self._git_catalog(root)
+
+            active_subtree = node / "active-subtree"
+            active_subtree.mkdir()
+            (active_subtree / "working.md").write_text(
+                "# Uncommitted child project work\n",
+                encoding="utf-8",
+            )
+            status = subprocess.run(
+                ["git", "-C", str(catalog), "status", "--porcelain", "--", str(active_subtree)],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            self.assertTrue(status)
+
+            accepted = self._accept_workflow(workspace_file, snapshot, structure, catalog)
+
+            self.assertTrue(accepted.is_complete)
+            self.assertEqual(accepted.catalog_packages[0].metadata.id, "workflow-node")
+            self.assertTrue((accepted.catalog_roots[0] / ".context/package.json").is_file())
+
+    def test_accept_rejects_dirty_exact_package_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog, node = self._git_catalog(root)
+
+            with (node / ".context" / "package.json").open("a", encoding="utf-8") as handle:
+                handle.write("\n")
+
+            with self.assertRaisesRegex(ContextCanonError, "uncommitted package artifact changes"):
+                self._accept_workflow(workspace_file, snapshot, structure, catalog)
 
     def test_accepted_catalog_is_frozen_before_provider_advances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

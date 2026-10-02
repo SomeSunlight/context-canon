@@ -8,7 +8,7 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Gateway  
-**Context version:** `0.3.12-draft`
+**Context version:** `0.3.13-draft`
 
 ## Local Overview
 

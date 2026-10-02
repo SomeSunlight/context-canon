@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable, Mapping
 
-from .parser import ContextCanonError
+from .parser import ContextCanonError, find_repo_root
 
 
 EVIDENCE_SCHEMA = "contextcanon/onboarding-evidence/v0"
@@ -151,25 +151,78 @@ def _same_path(left: Path, right: Path) -> bool:
     return os.path.normcase(str(left.resolve())) == os.path.normcase(str(right.resolve()))
 
 
-def _require_git_repository_root(path: Path) -> Path:
+@dataclass(frozen=True)
+class OnboardingScope:
+    project_root: Path
+    repository_root: Path
+
+    @property
+    def repository_prefix(self) -> str:
+        relative = self.project_root.relative_to(self.repository_root).as_posix()
+        return "" if relative == "." else relative
+
+
+def resolve_onboarding_scope(path: Path) -> OnboardingScope:
     project_root = path.resolve()
     if not project_root.is_dir():
         raise ContextCanonError(f"Onboarding project is not a directory: {project_root}")
     raw = _run_git(project_root, "rev-parse", "--show-toplevel")
     try:
-        git_root = Path(raw.decode("utf-8").strip()).resolve()
+        repository_root = Path(raw.decode("utf-8").strip()).resolve()
     except UnicodeDecodeError as exc:
         raise ContextCanonError("Git repository root is not valid UTF-8") from exc
-    if not _same_path(project_root, git_root):
+    try:
+        project_root.relative_to(repository_root)
+    except ValueError as exc:
         raise ContextCanonError(
-            f"onboard prepare must target the Git repository root; repository root is {git_root}"
-        )
-    return project_root
+            f"Onboarding project is not inside its Git repository root: {project_root}"
+        ) from exc
+    return OnboardingScope(project_root, repository_root)
+
+
+def _require_git_repository_root(path: Path) -> Path:
+    """Return the selected onboarding scope root inside its Git repository."""
+
+    return resolve_onboarding_scope(path).project_root
+
+
+def project_root_from_snapshot(snapshot_root: Path) -> Path:
+    root = snapshot_root.resolve()
+    if root.parent.name == "onboarding" and root.parent.parent.name == ".context":
+        return root.parent.parent.parent.resolve()
+    # Preserve the historical workspace/error path for callers that have not
+    # yet proved that the supplied path is an Evidence snapshot. This matters
+    # for validation diagnostics and lightweight tests that use a .git marker
+    # without invoking Git itself.
+    return find_repo_root(root)
+
+
+def find_enclosing_context_root(project_root: Path) -> Path | None:
+    scope = resolve_onboarding_scope(project_root)
+    if scope.project_root == scope.repository_root:
+        return None
+    current = scope.project_root.parent
+    while True:
+        if (current / "CONTEXT.src.md").is_file():
+            return current
+        if current == scope.repository_root:
+            return None
+        current = current.parent
 
 
 def _repository_paths(project_root: Path) -> list[str]:
-    raw = _run_git(project_root, "ls-files", "--cached", "--others", "--exclude-standard", "-z")
+    scope = resolve_onboarding_scope(project_root)
+    raw = _run_git(
+        scope.repository_root,
+        "ls-files",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--full-name",
+        "-z",
+    )
     result: list[str] = []
+    prefix = scope.repository_prefix
     for item in raw.split(b"\0"):
         if not item:
             continue
@@ -180,7 +233,13 @@ def _repository_paths(project_root: Path) -> list[str]:
         pure = PurePosixPath(path)
         if pure.is_absolute() or ".." in pure.parts:
             raise ContextCanonError(f"Git returned unsafe repository path: {path}")
-        result.append(pure.as_posix())
+        normalized = pure.as_posix()
+        if prefix:
+            marker = prefix + "/"
+            if not normalized.startswith(marker):
+                continue
+            normalized = normalized[len(marker):]
+        result.append(normalized)
     return sorted(set(result))
 
 
@@ -254,7 +313,7 @@ def _safe_project_file(project_root: Path, relative: str) -> Path:
 def _explicit_path(project_root: Path, value: str) -> str:
     raw = Path(value)
     if raw.is_absolute():
-        raise ContextCanonError(f"Explicit onboarding include must be repository-relative: {value}")
+        raise ContextCanonError(f"Explicit onboarding include must be project-scope-relative: {value}")
     raw_candidate = project_root / raw
     if raw_candidate.is_symlink():
         raise ContextCanonError(f"Explicit onboarding include must not be a symlink: {value}")
@@ -262,7 +321,7 @@ def _explicit_path(project_root: Path, value: str) -> str:
     try:
         relative = candidate.relative_to(project_root)
     except ValueError as exc:
-        raise ContextCanonError(f"Explicit onboarding include escapes repository: {value}") from exc
+        raise ContextCanonError(f"Explicit onboarding include escapes onboarding project scope: {value}") from exc
     if not candidate.exists():
         raise ContextCanonError(f"Explicit onboarding include does not exist: {relative.as_posix()}")
     if not candidate.is_file():

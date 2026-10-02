@@ -1,5 +1,28 @@
 # Plan
 
+## Fast Track implementation complete: subtree onboarding — Issues #92 and #91
+
+Purpose: allow a later project subtree inside an already onboarded Git repository to become its own ContextCanon hierarchy without re-onboarding the whole repository, while inheriting the nearest accepted enclosing Context Node.
+
+- [x] Separate the Git repository root from the onboarding project/scope root across init, inventory, Evidence, workspace and publication.
+- [x] Keep inventory/Evidence paths relative to the selected subtree and allow an obvious duplicate to be classified as `duplicate / ignore` without automatic deduplication machinery.
+- [x] Detect the nearest enclosing existing Context Node for a subtree and supply its exact effective Rules/Topics to STEP 08 placement reasoning.
+- [x] Publish the subtree root with an exact immutable Parent pin to that enclosing Node while keeping internal subtree Parent edges unchanged.
+- [x] Preserve repository-wide `build/check --all` and propagation behavior; add a realistic A → B subtree regression.
+- [x] Fold in #91 by making broad `check --all` parse failures name the scan root and explain the recursive scope.
+- [x] Record the successful extensive owner test of interactive Resource rename/reconcile, including ambiguous candidate selection.
+- [x] Run focused tests, the complete deterministic suite, self-hosted build/check and the exact-head CI gate. Keep the review PR Draft/unmerged until explicit owner approval.
+
+Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain separate; they touch onboarding but are not required for subtree semantics.
+
+Checkpoint: PR #93 contains the completed implementation and is ready for owner squash merge. The real confidential corporate-project subtree onboarding has now completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content. The owner explicitly accepts the result as merge-ready; the final metadata checkpoint reruns the same exact-head CI before the owner performs the squash merge.
+
+Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
+
+Owner-test UX follow-up — Issue #96: STEP 10 placement review now reports canonical decided/pending counts for P findings, E source edits and S reusable Sources, plus one overall progress bar/status. The same review-state counts drive `complete`, so progress and publish readiness cannot disagree. This scope expansion was explicitly requested during the active owner test.
+
+Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors identify the concrete finding file, and #98 prevents an already-established enclosing semantic Parent from being published a second time as an ordinary Source. The successful run also exposed a broader pre-existing architecture ambiguity: ordinary Sources are currently normative imports much like Parents. Follow-up #99 records the intended simplification to explicit **Parent / Reference** relationships. Existing normative Sources must migrate safely to Parent by default; Reference is informational/non-normative and requires explicit owner intent. #99 is deliberately post-merge work and does not block the proven subtree implementation.
+
 ## Active development block: editable owner-test installs — Issue #75
 
 Purpose: keep the preferred fast owner-test loop in the reusable Development Workflow so GitHub, GitHub Local, and other consumers inherit it instead of repeating provider-specific guidance.
@@ -10,7 +33,7 @@ Purpose: keep the preferred fast owner-test loop in the reusable Development Wor
 
 ## Accepted baseline
 
-The current accepted `main` product baseline is ContextCanon **0.9.9** after PR #73, owner-approved and squash-merged as `4a1622685ba4bc6956b90f36cd13b8df473954ff`.
+The accepted product baseline is ContextCanon **0.10.0** after owner-reviewed PR #74. The current `main` head at the start of this Fast Track was `4ade1f38caaf0b01bf2c6d6224ef4cb7dfd18ed1`.
 
 PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 

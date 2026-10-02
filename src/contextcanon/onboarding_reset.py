@@ -39,10 +39,11 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
+from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
 from .outputs import expected_outputs
-from .parser import ContextCanonError, find_repo_root
+from .parser import ContextCanonError
 
 
 RESET_JOURNAL_NAME = "onboarding-reset-journal.json"
@@ -126,8 +127,9 @@ def _write_journal(snapshot_root: Path, records: list[dict[str, object]]) -> Non
 
 def _managed_state(project_root: Path, extra_paths: Iterable[str] = ()) -> dict[str, bytes | None]:
     project = project_root.resolve()
+    repository = resolve_onboarding_scope(project).repository_root
     result: dict[str, bytes | None] = {}
-    compiler = Compiler(project)
+    compiler = Compiler(repository)
     for node_root in discover_nodes(project):
         source = node_root / "CONTEXT.src.md"
         result[source.relative_to(project).as_posix()] = source.read_bytes() if source.is_file() else None
@@ -190,7 +192,7 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
         if index + 1 >= len(argv):
             return delegate(argv)
         project_arg = Path(argv[index + 1])
-    project = (project_arg or find_repo_root(snapshot)).resolve()
+    project = (project_arg or project_root_from_snapshot(snapshot)).resolve()
     extra_paths: tuple[str, ...] = ()
     if argv[1] == "placement-publish":
         extras = [
@@ -315,7 +317,7 @@ def _remove_legacy_skeletons(project: Path) -> list[str]:
 
 
 def _workspace_root(snapshot_root: Path, workspace: Path | None) -> Path:
-    return workspace.resolve() if workspace is not None else find_repo_root(snapshot_root) / DEFAULT_WORKSPACE_NAME
+    return workspace.resolve() if workspace is not None else project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
 
 
 def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
@@ -389,8 +391,13 @@ def _resolve_reset_target(
     project_root: Path | None,
 ) -> tuple[Path, Path | None]:
     resolved = target.resolve()
-    project = (project_root.resolve() if project_root is not None else find_repo_root(resolved)).resolve()
     explicit_snapshot = resolved if (resolved / "manifest.json").is_file() else None
+    if project_root is not None:
+        project = resolve_onboarding_scope(project_root).project_root
+    elif explicit_snapshot is not None:
+        project = project_root_from_snapshot(explicit_snapshot)
+    else:
+        project = resolve_onboarding_scope(resolved).project_root
     snapshot = explicit_snapshot or _discover_snapshot(project)
     if from_step >= 4 and snapshot is None:
         raise _error(
@@ -599,7 +606,7 @@ def add_reset_parser(onboard_sub) -> None:
         "target",
         nargs="?",
         default=".",
-        help="Git repository root (recommended) or an explicit prepared Evidence snapshot",
+        help="onboarding project/subtree root (recommended) or an explicit prepared Evidence snapshot",
     )
     command.add_argument("--from", dest="from_step", type=int, required=True, choices=range(1, 13), metavar="STEP")
     command.add_argument("--workspace", metavar="PATH")

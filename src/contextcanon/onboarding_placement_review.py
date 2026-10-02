@@ -148,6 +148,42 @@ class PlacementReviewSource:
 
 
 @dataclass(frozen=True)
+class ReviewDecisionProgress:
+    total: int
+    decided: int
+    pending: int
+
+
+@dataclass(frozen=True)
+class PlacementReviewProgress:
+    items: ReviewDecisionProgress
+    source_edits: ReviewDecisionProgress
+    sources: ReviewDecisionProgress
+
+    @property
+    def total(self) -> int:
+        return self.items.total + self.source_edits.total + self.sources.total
+
+    @property
+    def decided(self) -> int:
+        return self.items.decided + self.source_edits.decided + self.sources.decided
+
+    @property
+    def pending(self) -> int:
+        return self.items.pending + self.source_edits.pending + self.sources.pending
+
+    @property
+    def is_complete(self) -> bool:
+        return self.pending == 0
+
+
+def _decision_progress(values: Iterable[object]) -> ReviewDecisionProgress:
+    rows = tuple(values)
+    pending = sum(1 for value in rows if getattr(value, "decision", None) == "pending")
+    return ReviewDecisionProgress(total=len(rows), decided=len(rows) - pending, pending=pending)
+
+
+@dataclass(frozen=True)
 class OnboardingPlacementReview:
     evidence_digest: str
     structure_digest: str
@@ -158,12 +194,16 @@ class OnboardingPlacementReview:
     review_digest: str
 
     @property
-    def is_complete(self) -> bool:
-        return (
-            all(item.decision != "pending" for item in self.items)
-            and all(edit.decision != "pending" for edit in self.source_edits)
-            and all(source.decision != "pending" for source in self.sources)
+    def progress(self) -> PlacementReviewProgress:
+        return PlacementReviewProgress(
+            items=_decision_progress(self.items),
+            source_edits=_decision_progress(self.source_edits),
+            sources=_decision_progress(self.sources),
         )
+
+    @property
+    def is_complete(self) -> bool:
+        return self.progress.is_complete
 
 
 def _error(message: str) -> ContextCanonError:
@@ -900,17 +940,26 @@ def _load_monolithic_placement_review(
         if authoring_id in authoring_ids:
             raise _error(f"placement.md contains duplicate stable authoring ID {authoring_id}")
         authoring_ids.add(authoring_id)
-        decision = _simple_value(block, "Decision")
-        if decision not in REVIEW_DECISIONS:
-            raise _error(f"item {item_id} Decision must be pending, accept, or reject")
-        kind = _simple_value(block, "Kind")
-        action = ACTION_FOR_KIND.get(kind, "")
-        destination = _destination(block, allow_none=True)
-        if destination is not None and destination not in node_keys:
-            raise _error(f"item {item_id} references unknown destination Node {destination}")
-        payload = _payload_from_block(kind, block)
-        _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
-        note = _find_line(block, "Review note: ", "Review note")
+        try:
+            decision = _simple_value(block, "Decision")
+            if decision not in REVIEW_DECISIONS:
+                raise _error(f"item {item_id} Decision must be pending, accept, or reject")
+            kind = _simple_value(block, "Kind")
+            action = ACTION_FOR_KIND.get(kind, "")
+            destination = _destination(block, allow_none=True)
+            if destination is not None and destination not in node_keys:
+                raise _error(f"item {item_id} references unknown destination Node {destination}")
+            payload = _payload_from_block(kind, block)
+            _validate_item_edit(item_id, kind, action, destination, payload, proposal, snapshot)
+            note = _find_line(block, "Review note: ", "Review note")
+        except ContextCanonError as exc:
+            prefix = "Invalid onboarding placement review: "
+            detail = str(exc)
+            if detail.startswith(prefix):
+                detail = detail[len(prefix):]
+            if not detail.startswith(f"item {item_id}"):
+                raise _error(f"item {item_id}: {detail}") from exc
+            raise
         parsed_items.append(
             PlacementReviewItem(
                 proposal_id=item_id,
