@@ -261,6 +261,13 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
     )
 
 
+def _dependency_dict(dependency: PackageDependency) -> dict[str, Any]:
+    item = asdict(dependency)
+    if dependency.relationship is None:
+        item.pop("relationship", None)
+    return item
+
+
 def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> str:
     package = compiled_package(compiled)
     payload = {
@@ -271,9 +278,9 @@ def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> st
             "name": package.metadata.name,
             "version": package.metadata.version,
         },
-        "parents": [asdict(parent) for parent in package.parents],
-        "sources": [asdict(source) for source in package.sources],
-        "imports": [asdict(dependency) for dependency in package.imports],
+        "parents": [_dependency_dict(parent) for parent in package.parents],
+        "sources": [_dependency_dict(source) for source in package.sources],
+        "imports": [_dependency_dict(dependency) for dependency in package.imports],
         "changes": [asdict(change) for change in package.changes],
         "rules": [asdict(rule) for rule in package.rules],
         "removed_rules": [asdict(removal) for removal in package.removed_rules],
