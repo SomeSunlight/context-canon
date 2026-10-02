@@ -10,7 +10,7 @@ from .version import display_version
 from .compiler import Compiler, discover_nodes
 from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
-from .onboarding import prepare_onboarding_evidence
+from .onboarding import prepare_onboarding_evidence, project_root_from_snapshot
 from .onboarding_inventory import prepare_from_inventory, refresh_inventory
 from .onboarding_instruction import build_onboarding_instruction
 from .onboarding_handoff import (
@@ -97,7 +97,7 @@ def _workspace_path(value: str | None) -> Path | None:
 
 def _snapshot_cli(snapshot: Path) -> str:
     try:
-        return snapshot.resolve().relative_to(find_repo_root(snapshot)).as_posix()
+        return snapshot.resolve().relative_to(project_root_from_snapshot(snapshot)).as_posix()
     except ValueError:
         return str(snapshot)
 
@@ -547,20 +547,20 @@ def main(argv: list[str] | None = None) -> int:
         "init",
         help="create the visible onboarding workspace and PLAN before starting STEP 01",
     )
-    onboard_init.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_init.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     _add_workspace(onboard_init)
 
     onboard_inventory = onboard_sub.add_parser(
         "inventory",
         help="create or refresh the human-reviewed onboarding file inventory CSV",
     )
-    onboard_inventory.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_inventory.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     onboard_inventory.add_argument(
         "--directory",
         action="append",
         default=[],
         metavar="PATH",
-        help="repository-relative directory to inventory; may be repeated (default: whole repository)",
+        help="project-scope-relative directory to inventory; may be repeated (default: whole selected project/subtree)",
     )
     onboard_inventory.add_argument(
         "--rule",
@@ -575,7 +575,7 @@ def main(argv: list[str] | None = None) -> int:
         "prepare",
         help="freeze reviewed onboarding Evidence; use --inventory for the normal reviewed path",
     )
-    onboard_prepare.add_argument("project", nargs="?", default=".", help="Git repository root (default: current directory)")
+    onboard_prepare.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     onboard_prepare.add_argument(
         "--inventory",
         metavar="CSV",
@@ -842,7 +842,7 @@ def main(argv: list[str] | None = None) -> int:
     onboard_accept.add_argument("snapshot", help="root of the prepared content-addressed evidence snapshot")
     onboard_accept.add_argument("proposal", help="validated JSON onboarding proposal")
     onboard_accept.add_argument("review", help="completed onboarding review JSON file")
-    onboard_accept.add_argument("--project", default=".", help="target Git repository root (default: current directory)")
+    onboard_accept.add_argument("--project", default=".", help="target onboarding project/subtree root (default: current directory)")
     onboard_accept.add_argument(
         "--catalog-package",
         action="append",
