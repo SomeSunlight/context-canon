@@ -186,6 +186,15 @@ def _require_git_repository_root(path: Path) -> Path:
     return resolve_onboarding_scope(path).project_root
 
 
+def project_root_from_snapshot(snapshot_root: Path) -> Path:
+    root = snapshot_root.resolve()
+    if root.parent.name != "onboarding" or root.parent.parent.name != ".context":
+        raise ContextCanonError(
+            f"Onboarding Evidence snapshot is not under <project>/.context/onboarding: {root}"
+        )
+    return resolve_onboarding_scope(root.parent.parent.parent).project_root
+
+
 def _repository_paths(project_root: Path) -> list[str]:
     scope = resolve_onboarding_scope(project_root)
     raw = _run_git(
