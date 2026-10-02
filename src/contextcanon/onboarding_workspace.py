@@ -9,7 +9,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from .parser import ContextCanonError, find_repo_root
+from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
+from .parser import ContextCanonError
 
 
 WORKSPACE_SCHEMA = "contextcanon/onboarding-workspace/v0"
@@ -408,7 +409,7 @@ def write_utf8(path: Path, text: str) -> None:
 
 def _snapshot_label(snapshot_root: Path) -> str:
     snapshot = snapshot_root.resolve()
-    project = find_repo_root(snapshot)
+    project = project_root_from_snapshot(snapshot)
     try:
         return snapshot.relative_to(project).as_posix()
     except ValueError:
@@ -423,7 +424,7 @@ def _quote_cli(value: str) -> str:
 
 def _workspace_option(workspace: OnboardingWorkspace, snapshot_root: Path) -> list[str]:
     try:
-        default = (find_repo_root(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
+        default = (project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
     except ContextCanonError:
         return ["--workspace", str(workspace.root)]
     return [] if workspace.root.resolve() == default else ["--workspace", str(workspace.root)]
@@ -465,7 +466,7 @@ def _exact_commands(
     snapshot = _snapshot_label(snapshot_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
-    project_root = find_repo_root(snapshot_root)
+    project_root = project_root_from_snapshot(snapshot_root)
     try:
         inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
         workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
@@ -854,13 +855,7 @@ def update_workspace_checkpoint(
 
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
-    project_root = find_repo_root(snapshot_root)
-    if not (project_root / ".git").exists():
-        raise ContextCanonError(
-            "Cannot infer the onboarding project root from the Evidence snapshot; "
-            "run from/use a snapshot inside its Git repository or pass --workspace explicitly"
-        )
-    return project_root / DEFAULT_WORKSPACE_NAME
+    return project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
@@ -1164,12 +1159,7 @@ def reset_inventory_workspace_plan(
 
 
 def _require_project_root_for_inventory(project_root: Path) -> Path:
-    project = project_root.resolve()
-    if not (project / ".git").exists():
-        raise ContextCanonError(
-            f"Inventory workspace must be opened at the Git repository root: {project}"
-        )
-    return project
+    return resolve_onboarding_scope(project_root).project_root
 
 
 def open_onboarding_workspace(
