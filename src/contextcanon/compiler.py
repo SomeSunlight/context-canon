@@ -20,7 +20,7 @@ from .package import (
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.6.0"
+COMPILER_VERSION = "0.7.0"
 
 CONTEXT_FOLDER_README = """# Generated Context package resources
 
