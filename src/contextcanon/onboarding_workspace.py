@@ -236,7 +236,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 
 | Column | Meaning |
 | --- | --- |
-| `path` | Repository-relative file path. |
+| `path` | Onboarding-scope-relative file path. |
 | `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
 | `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, `duplicate`, or `unknown`. |
 | `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
@@ -264,7 +264,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 - `changed` — the path is still present but its bytes changed.
 - `missing` — the previously known path no longer exists in the repository scope.
 
-You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if repository files were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
+You do **not** rerun inventory merely because you edited this CSV. Rerun `contextcanon onboard inventory .` only if files in this onboarding scope were added, changed, renamed/moved, or deleted before STEP 03. ContextCanon then preserves your semantic decisions for known paths while refreshing the machine columns and statuses.
 
 ## PDF, Word, PowerPoint and similar documents
 
@@ -301,7 +301,7 @@ In short: **inventory → shelves → optional reusable Context → LLM sorting 
 
 ## Need to go back?
 
-You do not need a Git rollback or a fresh clone. From the Git repository root, reset the onboarding from any numbered step and then continue from that step:
+You do not need a Git rollback or a fresh clone. From the selected onboarding project/subtree root, reset the onboarding from any numbered step and then continue from that step:
 
 ```text
 contextcanon onboard reset . --from <STEP>
@@ -507,7 +507,7 @@ def _exact_commands(
         "### STEP 02 — Review file inventory",
         f"- [{mark(2)}] **Done**",
         "",
-        "Generate or refresh the CSV whenever repository files change:",
+        "Generate or refresh the CSV whenever files in this onboarding scope change:",
         "",
         "```text",
         render(["contextcanon", "onboard", "inventory", ".", *workspace_args]),
