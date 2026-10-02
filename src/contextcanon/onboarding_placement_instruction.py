@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from .compiler import Compiler
 from .model import CompiledPackage
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
+from .package import compiled_package
 from .onboarding_instruction import MAX_INSTRUCTION_BYTES, _load_catalog, _render_evidence
 from .onboarding_proposal import load_evidence_snapshot
 from .onboarding_reusable_contexts import ReusableContextAssignment
@@ -21,6 +24,7 @@ class OnboardingPlacementInstruction:
     evidence_digest: str
     structure_digest: str
     catalog_packages: tuple[CompiledPackage, ...]
+    enclosing_parent_package: CompiledPackage | None
     text: str
     instruction_digest: str
 
@@ -64,6 +68,58 @@ def _render_structure(structure: HumanStructurePlan) -> list[str]:
             "",
         ]
     )
+    return lines
+
+
+def _enclosing_parent_package(snapshot_root: Path) -> tuple[CompiledPackage, Path] | None:
+    project = project_root_from_snapshot(snapshot_root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    return compiled_package(Compiler(repository).compile(parent_root)), parent_root
+
+
+def _render_enclosing_parent_context(
+    value: tuple[CompiledPackage, Path] | None,
+    project_root: Path,
+) -> list[str]:
+    lines = ["## Enclosing Parent Context — already accepted", ""]
+    if value is None:
+        lines.extend([
+            "This onboarding scope is not inside an existing ContextCanon Node.",
+            "",
+        ])
+        return lines
+    package, parent_root = value
+    locator = Path(__import__("os").path.relpath(parent_root, project_root)).as_posix()
+    lines.extend([
+        f"The selected onboarding subtree lives inside **{package.metadata.name}**. Treat this as fixed inherited context for the subtree, not as project Evidence and not as a reusable Source suggestion.",
+        f"- Parent locator: `{locator}`",
+        f"- Node ID: `{package.metadata.id}`",
+        f"- Version: `{package.metadata.version}`",
+        f"- Normalized digest: `{package.normalized_digest}`",
+        f"- Package digest: `{package.package_digest}`",
+    ])
+    if package.rules:
+        lines.append("- Effective inherited Rules:")
+        for rule in package.rules:
+            lines.append(
+                f"  - `{rule.origin_node_id}#{rule.id}` — **{rule.title}**: {rule.statement} Why: {rule.why}"
+            )
+    else:
+        lines.append("- Effective inherited Rules: none")
+    if package.topics:
+        lines.append("- Effective inherited Topics:")
+        for topic in package.topics:
+            lines.append(f"  - `{topic.id}` — **{topic.title}**: {topic.condition}")
+    else:
+        lines.append("- Effective inherited Topics: none")
+    lines.extend([
+        "",
+        "Do not recreate these inherited Rules or Topics locally merely because subtree Evidence repeats or depends on them. Add only the subtree-specific delta.",
+        "",
+    ])
     return lines
 
 
@@ -273,6 +329,8 @@ def build_onboarding_placement_instruction(
     structure = load_structure_markdown(structure_path, structure_proposal)
     packages = _load_catalog(catalog_package_roots)
     assignments = tuple(accepted_reusable_assignments)
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
+    project_root = project_root_from_snapshot(snapshot_root)
 
     lines = [
         "# ContextCanon Onboarding Placement Instruction",
@@ -284,6 +342,7 @@ def build_onboarding_placement_instruction(
     ]
     lines.extend(_render_evidence(snapshot))
     lines.extend(_render_structure(structure))
+    lines.extend(_render_enclosing_parent_context(enclosing_parent, project_root))
     lines.extend(_render_accepted_reusable_contexts(assignments))
     lines.extend(_render_catalog(packages))
     lines.extend(_render_contract(snapshot.evidence_digest, structure.structure_digest))
@@ -298,6 +357,7 @@ def build_onboarding_placement_instruction(
         evidence_digest=snapshot.evidence_digest,
         structure_digest=structure.structure_digest,
         catalog_packages=packages,
+        enclosing_parent_package=enclosing_parent[0] if enclosing_parent is not None else None,
         text=text,
         instruction_digest=hashlib.sha256(encoded).hexdigest(),
     )
