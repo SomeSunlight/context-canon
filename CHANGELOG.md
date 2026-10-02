@@ -8,6 +8,7 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 
 ### Added
 
+- STEP 10 `placement-review` now shows a compact progress scoreboard for placement findings, Source edits and reusable Sources, including decided/pending counts, an overall progress bar and a lightweight motivating status; review completeness is derived from the same canonical decision counts.
 - Subtree onboarding can target a project directory inside an existing Git repository without re-onboarding the whole repository. The selected subtree keeps its own inventory/Evidence/workspace scope while ContextCanon still compiles against the outer repository. If the subtree is explicitly onboarded inside an existing Context Node, its root adopts that nearest enclosing Node as an exact pinned Parent; STEP 04/08 receive the inherited Context and the Semantic Handoff binds the exact compiled Parent package, including packaged Topic Resources.
 - STEP-02 inventory accepts the explicit human classification `kind=duplicate` with `handling=ignore` for an obvious copy that should not participate in onboarding; ContextCanon does not attempt automatic semantic deduplication.
 
