@@ -196,7 +196,7 @@ def _manifest(
         }
         for entry in entries
     ]
-    return {
+    result: dict[str, object] = {
         "schema": HANDOFF_SCHEMA,
         "step": spec.step,
         "name": spec.slug,
@@ -206,27 +206,25 @@ def _manifest(
         "result_path": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_RESULT_NAME}",
         "canonical_result_name": spec.proposal_name,
         "evidence": evidence,
-        "enclosing_parent": (
-            None
-            if parent_context is None
-            else {
-                "node_id": parent_context.node_id,
-                "name": parent_context.name,
-                "version": parent_context.version,
-                "normalized_digest": parent_context.normalized_digest,
-                "package_digest": parent_context.package_digest,
-                "root": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}",
-                "files": [
-                    {
-                        "path": path,
-                        "sha256": _sha256(content),
-                        "size": len(content),
-                    }
-                    for path, content in parent_context.files
-                ],
-            }
-        ),
     }
+    if parent_context is not None:
+        result["enclosing_parent"] = {
+            "node_id": parent_context.node_id,
+            "name": parent_context.name,
+            "version": parent_context.version,
+            "normalized_digest": parent_context.normalized_digest,
+            "package_digest": parent_context.package_digest,
+            "root": f"{HANDOFF_CONTROL_DIR}/{HANDOFF_PARENT_CONTEXT_DIR}",
+            "files": [
+                {
+                    "path": path,
+                    "sha256": _sha256(content),
+                    "size": len(content),
+                }
+                for path, content in parent_context.files
+            ],
+        }
+    return result
 
 
 def _selected_evidence(
