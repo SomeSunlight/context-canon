@@ -223,7 +223,9 @@ class Compiler:
 
         override = self._package_overrides.get((node_root.resolve(), dependency.package_digest))
         if override is not None:
-            package, resources = override
+            package, supplied_resources = override
+            exported_paths = {file.path for file in exported_resource_files(package)}
+            resources = {path: content for path, content in supplied_resources.items() if path in exported_paths}
         else:
             package_root = node_root / ".context" / "sources" / dependency.package_digest
             if not package_root.is_dir():
