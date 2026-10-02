@@ -2084,25 +2084,35 @@ def main(argv: list[str] | None = None) -> int:
         failed = False
         for node_root in node_roots:
             label = node_root.relative_to(repo_root).as_posix() or "."
-            if args.command == "build":
-                _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
-                compiled = Compiler(repo_root).compile(node_root)
-                changed = write_outputs(compiled)
-                suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
-                print(f"built {label}{suffix}")
-            else:
-                compiled = compiler.compile(node_root)
-                drift = check_outputs(compiled)
-                version_problem = version_reuse_problem(compiled)
-                if version_problem is not None:
-                    drift = [version_problem, *drift]
-                if drift:
-                    failed = True
-                    print(f"drift {label}:")
-                    for item in drift:
-                        print(f"  - {item}")
+            try:
+                if args.command == "build":
+                    _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
+                    compiled = Compiler(repo_root).compile(node_root)
+                    changed = write_outputs(compiled)
+                    suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
+                    print(f"built {label}{suffix}")
                 else:
-                    print(f"ok {label}")
+                    compiled = compiler.compile(node_root)
+                    drift = check_outputs(compiled)
+                    version_problem = version_reuse_problem(compiled)
+                    if version_problem is not None:
+                        drift = [version_problem, *drift]
+                    if drift:
+                        failed = True
+                        print(f"drift {label}:")
+                        for item in drift:
+                            print(f"  - {item}")
+                    else:
+                        print(f"ok {label}")
+            except ContextCanonError as exc:
+                if not args.all:
+                    raise
+                raise ContextCanonError(
+                    f"{exc}\n"
+                    f"Scan root: {repo_root}\n"
+                    "--all recursively checks every ContextCanon Node below this scan root. "
+                    "If the failing file is unrelated, rerun from the intended repository/project root."
+                ) from exc
         return 1 if failed else 0
     except ContextCanonError as exc:
         print(f"contextcanon: error: {exc}", file=sys.stderr)
