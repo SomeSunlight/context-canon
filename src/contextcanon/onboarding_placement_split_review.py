@@ -780,7 +780,26 @@ def _parse_split(
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(synthetic)
-        return _load_monolithic_placement_review(temporary, proposal, snapshot_root)
+        try:
+            return _load_monolithic_placement_review(temporary, proposal, snapshot_root)
+        except ContextCanonError as exc:
+            prefix = "Invalid onboarding placement review: "
+            detail = str(exc)
+            if detail.startswith(prefix):
+                detail = detail[len(prefix):]
+            match = re.match(r"item (?P<id>[^ :]+)(?:: | )(?P<detail>.*)$", detail)
+            if match is not None:
+                item = next((value for value in proposal.items if value.id == match.group("id")), None)
+                if item is not None:
+                    finding_path = placement_finding_path(index_path, item)
+                    try:
+                        display_path = finding_path.relative_to(index_path.parent).as_posix()
+                    except ValueError:
+                        display_path = str(finding_path)
+                    raise _error(
+                        f"{item.id} in {display_path}: {match.group('detail')}"
+                    ) from exc
+            raise
     finally:
         temporary.unlink(missing_ok=True)
 
