@@ -30,19 +30,21 @@ Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors ide
 
 Purpose: remove the public semantic duplication between normative ordinary Sources and semantic Parents. Phase 1 changes only normal authoring/compiler/package/build/inspect/maintenance behavior; onboarding STEP 07 remains compatible and intentionally unchanged.
 
-- [ ] Introduce explicit `parent` / `reference` relationship semantics for reusable Context imports while treating legacy untyped Sources as `parent`.
-- [ ] Keep Parent composition normative, unordered and transitive; make Reference informational, non-normative and non-transitive.
-- [ ] Separate the Context a Node sees locally from the normative Context it exports to semantic Children without creating a second compiler pipeline.
-- [ ] Preserve immutable package/provenance infrastructure for both relationship kinds and prevent Reference-only changes from entering Parent propagation.
-- [ ] Add a deterministic, explicit legacy normalization path that makes implicit Source → Parent semantics visible without making ordinary build/check rewrite human-authored source.
-- [ ] Make generated human and machine Context surfaces state relationship kind explicitly; Reference Rules must never appear as effective Rules.
-- [ ] Reuse the existing Source-update machinery for direct Reference updates, but do not route Reference changes through the Parent propagation graph.
+- [x] Introduce explicit `parent` / `reference` relationship semantics for reusable Context imports while treating legacy untyped Sources as `parent`.
+- [x] Keep Parent composition normative, unordered and transitive; make Reference informational, non-normative and non-transitive.
+- [x] Separate the Context a Node sees locally from the normative Context it exports to semantic Children without creating a second compiler pipeline.
+- [x] Preserve immutable package/provenance infrastructure for both relationship kinds and prevent Reference-only changes from entering Parent propagation.
+- [x] Add a deterministic, explicit legacy normalization path that makes implicit Source → Parent semantics visible without making ordinary build/check rewrite human-authored source.
+- [x] Make generated human and machine Context surfaces state relationship kind explicitly; Reference Rules must never appear as effective Rules.
+- [x] Reuse the existing Source-update machinery for direct Reference updates, but do not route Reference changes through the Parent propagation graph.
 - [ ] Add focused Parent/Reference/legacy/package/update regressions, run the complete deterministic suite, rebuild/check every self-hosted Node with zero drift, and prepare one Draft PR for owner testing.
 - [ ] Update only the Phase-1-owned design/maintenance/CLI documentation plus PLAN/STATE/CHANGELOG and Issue #99. Do not implement onboarding relationship selection yet.
 
 Design constraint: `Source` may remain an internal package/discovery/provenance term, but the public semantic relationship is only **Parent** or **Reference**. Existing accepted Source semantics must never silently weaken; missing relationship type means **Parent**.
 
 Exit: a user can explain the model in two sentences — Parent Context applies and propagates through the semantic graph; Reference Context is useful background here, its Rules do not apply, and it is not inherited by Children.
+
+Implementation checkpoint: Draft PR #100 contains the Phase-1 compiler/package/authoring/maintenance model plus focused relationship regressions. Remaining closure work is self-hosted legacy normalization/regeneration, complete exact-head tests/zero-drift verification, final PLAN/STATE/CHANGELOG/Issue reconciliation, and owner test. The PR remains Draft.
 
 
 ## Active development block: editable owner-test installs — Issue #75
