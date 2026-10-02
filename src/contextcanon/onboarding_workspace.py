@@ -238,7 +238,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 | --- | --- |
 | `path` | Repository-relative file path. |
 | `status` | Relation to the last known inventory/accepted baseline: `new`, `unchanged`, `changed`, or `missing`. |
-| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, or `unknown`. |
+| `kind` | Coarse artifact type: `document`, `transcription`, `structured-data`, `configuration`, `source-code`, `raw-record`, `generated`, `binary`, `other`, `duplicate`, or `unknown`. |
 | `handling` | Onboarding decision: `source`, `interpret`, `lookup`, `ignore`, or `undecided`. |
 | `description` | Human explanation carried into frozen Evidence metadata. |
 | `note` | Optional owner note. |
@@ -254,6 +254,7 @@ Do not hand-edit `status`, `hint`, `size`, `sha256`, `accepted_sha256`, or `rule
 - `interpret` — freeze the original bytes, but mark them as raw/ambiguous material whose meaning must be interpreted explicitly rather than silently promoted to truth.
 - `lookup` — known material that may be consulted later but is not eagerly frozen into the semantic Evidence set.
 - `ignore` — intentionally outside this onboarding Evidence.
+  Use `kind=duplicate` with `handling=ignore` when you already know this copy should not participate in onboarding; ContextCanon does not try to prove or delete duplicates automatically.
 - `undecided` — unresolved; STEP 03 refuses to freeze Evidence until you decide.
 
 ## Status values
