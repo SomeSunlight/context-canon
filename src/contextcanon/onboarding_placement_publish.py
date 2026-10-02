@@ -18,7 +18,11 @@ from .onboarding import find_enclosing_context_root, project_root_from_snapshot,
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
 from .onboarding_proposal import EvidenceSnapshot, load_evidence_snapshot
-from .onboarding_reusable_contexts import FROZEN_PROVENANCE_REL, FROZEN_PROVENANCE_SCHEMA
+from .onboarding_reusable_contexts import (
+    FROZEN_PROVENANCE_REL,
+    FROZEN_PROVENANCE_SCHEMA,
+    git_package_artifact_status,
+)
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
 from .parser import ContextCanonError, parse_node
@@ -303,7 +307,11 @@ def _frozen_catalog_provenance(
     )
 
 
-def _git_provenance(source: PlacementReviewSource, package_root: Path) -> SourceGitProvenance:
+def _git_provenance(
+    source: PlacementReviewSource,
+    package_root: Path,
+    package: CompiledPackage,
+) -> SourceGitProvenance:
     frozen = _frozen_catalog_provenance(source, package_root)
     if frozen is not None:
         return frozen
@@ -328,10 +336,11 @@ def _git_provenance(source: PlacementReviewSource, package_root: Path) -> Source
         node_path = package_root.relative_to(repository).as_posix() or "."
     except ValueError as exc:
         raise _error(f"catalog package root is not inside its repository: {package_root}") from exc
-    status = _try_git(repository, "status", "--porcelain", "--untracked-files=all", "--", node_path)
+    status = git_package_artifact_status(repository, package_root, package)
     if status:
         raise _error(
-            f"accepted Source {source.source_name} has uncommitted package-path changes; exact package provenance would be ambiguous"
+            f"accepted Source {source.source_name} has uncommitted package artifact changes; "
+            "exact package provenance would be ambiguous"
         )
     exact = _try_git(repository, "rev-parse", "HEAD")
     origin = _try_git(repository, "remote", "get-url", "origin")
@@ -387,7 +396,7 @@ def _source_provenance(
             or package.package_digest != source.source_package_digest
         ):
             raise _error(f"accepted Source {source.source_name} no longer matches the reviewed exact package")
-        result.append(_git_provenance(source, root))
+        result.append(_git_provenance(source, root, package))
     return tuple(result)
 
 
