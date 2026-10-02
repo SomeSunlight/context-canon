@@ -8,7 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
+from .compiler import Compiler
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
+from .package import artifact_files
 from .onboarding_workspace import write_utf8
 from .parser import ContextCanonError
 
@@ -20,6 +23,7 @@ HANDOFF_PLAN_NAME = "PLAN.md"
 HANDOFF_INSTRUCTION_NAME = "INSTRUCTION.md"
 HANDOFF_MANIFEST_NAME = "manifest.json"
 HANDOFF_RESULT_NAME = "RESULT.json"
+HANDOFF_PARENT_CONTEXT_DIR = "enclosing-parent"
 
 
 @dataclass(frozen=True)
