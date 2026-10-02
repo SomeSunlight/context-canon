@@ -1,6 +1,6 @@
 # Plan
 
-## Fast Track implementation complete: subtree onboarding — Issues #92 and #91
+## Accepted Fast Track: subtree onboarding — Issues #92 and #91
 
 Purpose: allow a later project subtree inside an already onboarded Git repository to become its own ContextCanon hierarchy without re-onboarding the whole repository, while inheriting the nearest accepted enclosing Context Node.
 
@@ -15,13 +15,35 @@ Purpose: allow a later project subtree inside an already onboarded Git repositor
 
 Boundary: #89 (authored Source ordering) and #90 (adapter-selection UX) remain separate; they touch onboarding but are not required for subtree semantics.
 
-Checkpoint: PR #93 contains the completed implementation and is ready for owner squash merge. The real confidential corporate-project subtree onboarding has now completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content. The owner explicitly accepts the result as merge-ready; the final metadata checkpoint reruns the same exact-head CI before the owner performs the squash merge.
+Checkpoint: PR #93 was owner-approved and squash-merged to `main` as `86e08894a306386d15da71f134e0ab95a37c8316`. The real confidential corporate-project subtree onboarding completed successfully end-to-end, including semantic placement review, preview/publication, inherited enclosing-Parent Context and the resulting fachlich dense Context content.
 
 Owner-test correction: the real subtree run exposed that STEP 07 used `git status -- <entire Catalog Node path>` when freezing reusable package provenance. A dirty onboarding Child below the enclosing Catalog Node therefore falsely made the Parent package look dirty. Provenance now checks only the exact package artifact bytes that are actually frozen; unrelated dirty descendants are allowed, while dirty package artifacts remain rejected. Regression coverage proves both sides.
 
 Owner-test UX follow-up — Issue #96: STEP 10 placement review now reports canonical decided/pending counts for P findings, E source edits and S reusable Sources, plus one overall progress bar/status. The same review-state counts drive `complete`, so progress and publish readiness cannot disagree. This scope expansion was explicitly requested during the active owner test.
 
 Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors identify the concrete finding file, and #98 prevents an already-established enclosing semantic Parent from being published a second time as an ordinary Source. The successful run also exposed a broader pre-existing architecture ambiguity: ordinary Sources are currently normative imports much like Parents. Follow-up #99 records the intended simplification to explicit **Parent / Reference** relationships. Existing normative Sources must migrate safely to Parent by default; Reference is informational/non-normative and requires explicit owner intent. #99 is deliberately post-merge work and does not block the proven subtree implementation.
+
+
+## Active Fast Track: explicit Parent / Reference relationships — Issue #99
+
+**Fast Track status — ACTIVE**
+
+Purpose: remove the public semantic duplication between normative ordinary Sources and semantic Parents. Phase 1 changes only normal authoring/compiler/package/build/inspect/maintenance behavior; onboarding STEP 07 remains compatible and intentionally unchanged.
+
+- [ ] Introduce explicit `parent` / `reference` relationship semantics for reusable Context imports while treating legacy untyped Sources as `parent`.
+- [ ] Keep Parent composition normative, unordered and transitive; make Reference informational, non-normative and non-transitive.
+- [ ] Separate the Context a Node sees locally from the normative Context it exports to semantic Children without creating a second compiler pipeline.
+- [ ] Preserve immutable package/provenance infrastructure for both relationship kinds and prevent Reference-only changes from entering Parent propagation.
+- [ ] Add a deterministic, explicit legacy normalization path that makes implicit Source → Parent semantics visible without making ordinary build/check rewrite human-authored source.
+- [ ] Make generated human and machine Context surfaces state relationship kind explicitly; Reference Rules must never appear as effective Rules.
+- [ ] Reuse the existing Source-update machinery for direct Reference updates, but do not route Reference changes through the Parent propagation graph.
+- [ ] Add focused Parent/Reference/legacy/package/update regressions, run the complete deterministic suite, rebuild/check every self-hosted Node with zero drift, and prepare one Draft PR for owner testing.
+- [ ] Update only the Phase-1-owned design/maintenance/CLI documentation plus PLAN/STATE/CHANGELOG and Issue #99. Do not implement onboarding relationship selection yet.
+
+Design constraint: `Source` may remain an internal package/discovery/provenance term, but the public semantic relationship is only **Parent** or **Reference**. Existing accepted Source semantics must never silently weaken; missing relationship type means **Parent**.
+
+Exit: a user can explain the model in two sentences — Parent Context applies and propagates through the semantic graph; Reference Context is useful background here, its Rules do not apply, and it is not inherited by Children.
+
 
 ## Active development block: editable owner-test installs — Issue #75
 
@@ -33,7 +55,7 @@ Purpose: keep the preferred fast owner-test loop in the reusable Development Wor
 
 ## Accepted baseline
 
-The accepted product baseline is ContextCanon **0.10.0** after owner-reviewed PR #74. The current `main` head at the start of this Fast Track was `4ade1f38caaf0b01bf2c6d6224ef4cb7dfd18ed1`.
+The accepted product baseline is ContextCanon **0.10.0** after the owner-reviewed Resource work and the subsequently accepted subtree-onboarding PR #93. The current `main` head at the start of Issue #99 Phase 1 is `86e08894a306386d15da71f134e0ab95a37c8316`.
 
 PR #54 completed the reviewed inventory → immutable Evidence → structure → reusable Context → isolated semantic placement → human review → preview/publication onboarding line through repeated real-project owner testing. The final validation was the first complete onboarding of a confidential non-GitHub corporate project and exercised the GitHub Local reusable provider in the real intended setting.
 
