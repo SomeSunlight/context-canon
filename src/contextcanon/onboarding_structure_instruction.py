@@ -47,6 +47,7 @@ def _render_enclosing_parent(package: CompiledPackage | None) -> list[str]:
         f"- Node ID: `{package.metadata.id}`",
         f"- Version: `{package.metadata.version}`",
         f"- Package digest: `{package.package_digest}`",
+        "- Exact package files are available in the Semantic Handoff under `.contextcanon-handoff/enclosing-parent/`; read `CONTEXT.md` and relevant packaged Topic Resources when that helps the structural judgment.",
     ])
     if package.rules:
         lines.append("- Effective inherited Rules:")
