@@ -1,13 +1,13 @@
 # Architecture
 
-ContextCanon separates a small human-facing authoring surface, a compact entry context, optional deeper package resources, immutable compiled Source state, and deterministic machine bookkeeping.
+ContextCanon separates a small human-facing authoring surface, a compact entry context, optional deeper package resources, immutable reusable-package state, explicit Parent/Reference semantics, and deterministic machine bookkeeping.
 
 ## Compilation pipeline
 
 ```text
 CONTEXT.src.md
        +
-accepted Source packages
+accepted reusable packages
        +
 referenced source material
        |
@@ -22,7 +22,7 @@ referenced source material
        +--> compiled state ──────> deterministic Context/package diff
 ```
 
-`CONTEXT.md` is always present. `CONTEXT/` is generated only when a Node has resources to materialize. Every non-empty generated `CONTEXT/` also contains a compiler-generated `README.md` that explains the package boundary and why `references/` contains materialized copies rather than a second authoring surface. `.context/` is compiler-owned state about the Node, its package, accepted external Sources, candidates, and review state.
+`CONTEXT.md` is always present. `CONTEXT/` is generated only when a Node has resources to materialize. Every non-empty generated `CONTEXT/` also contains a compiler-generated `README.md` that explains the package boundary and why `references/` contains materialized copies rather than a second authoring surface. `.context/` is compiler-owned state about the Node, its package, accepted reusable imports, candidates, and review state.
 
 The implementation mirrors that conceptual pipeline with narrow stages:
 
@@ -51,7 +51,7 @@ Every Context Node is organized around one **node-root directory**. That directo
 
 The node-root is a physical location, not identity. Moving or renaming the directory does not create a new Node as long as the stable Node ID remains the same.
 
-A repository root may itself be a node root. Nested Nodes are also possible. Filesystem nesting alone does not create Source composition.
+A repository root may itself be a node root. Nested Nodes are also possible. Filesystem nesting alone does not create Parent or Reference relationships.
 
 Category directories may organize several Nodes without becoming Nodes themselves. In this repository, `nodes/library/` and `nodes/internal/` are such categories.
 
@@ -73,7 +73,7 @@ Across projects, ContextCanon gives humans and agents the same conceptual entry 
 
 - `CONTEXT.md` — what applies here and where to go deeper,
 - `CONTEXT.src.md` — what this Node adds or changes,
-- Sources — which reusable foundations are accepted,
+- Parents / References — which reusable Context governs this Node and which Context is informational only,
 - Topics — which deeper knowledge applies to which tasks,
 - `STATE.md` — where the project is now,
 - `PLAN.md` — where it is going.
@@ -92,9 +92,9 @@ This is an explicit architecture decision rather than an inference from whicheve
 
 ## Gateway nodes: almost nothing can be enough
 
-A valid Context Node may have zero Sources, zero Rules and zero materialized resources. A Gateway can stay close to that minimum while still routing a few top-level tasks to the right depth.
+A valid Context Node may have zero Parent/Reference imports, zero Rules and zero materialized resources. A Gateway can stay close to that minimum while still routing a few top-level tasks to the right depth.
 
-The root of this repository is **ContextCanon Gateway**. It has no Sources and no Rules. Its `CONTEXT.md` currently recognizes two top-level tasks:
+The root of this repository is **ContextCanon Gateway**. It has no Parent/Reference imports and no Rules. Its `CONTEXT.md` currently recognizes two top-level tasks:
 
 - framework-development work routes to the ContextCanon Framework Development Node;
 - onboarding an existing project routes to the user-facing onboarding guide.
@@ -114,7 +114,7 @@ Repository Gateway
 
 ## Navigation is different from composition
 
-A Topic target tells an agent **where to read next for this task**. A Source tells the compiler **which published context becomes part of this Node**.
+A Topic target tells an agent **where to read next for this task**. A Parent tells the compiler **which published Context applies normatively**; a Reference attaches published Context as direct informational background without inheritance.
 
 ContextCanon itself demonstrates both kinds of navigation plus composition:
 
@@ -124,21 +124,21 @@ ContextCanon Gateway ───┤
                          └─ Topic ──> onboarding guide
 
 ContextCanon Foundation ─────────────┐
-                                     ├─ Source ──> ContextCanon Framework Development
+                                     ├─ Parent ──> ContextCanon Framework Development
 ContextCanon Development Workflow ───┘
 ```
 
-The Gateway does not inherit either Topic target as governance. Framework Development explicitly composes Foundation and the internal Development Workflow as Sources, then adds its local delta.
+The Gateway does not inherit either Topic target as governance. Framework Development explicitly composes Foundation and the internal Development Workflow as Parents, then adds its local delta.
 
 ## Transitive composition preserves identity and state
 
-Source composition is transitive package meaning, not a direct-parent text copy.
+Parent composition is transitive package meaning, not a direct-parent text copy. References are deliberately non-transitive.
 
 If `Foundation → Team Standard → Project`, a Foundation Rule remains identified by the Foundation Node ID plus Rule ID in Project. A Team Standard Override changes the effective statement and adds provenance without changing that identity. A Team Standard Remove makes the Rule absent from active downstream context while preserving a machine-level removal record.
 
-That removal record matters in a DAG: if another Source path still carries the same Rule, the compiler can detect the contradiction instead of inventing Source precedence. Likewise, two different effective Overrides of the same stable Rule are a structural conflict, while equivalent compiled Rule state may be deduplicated.
+That removal record matters in a DAG: if another Parent path still carries the same Rule, the compiler can detect the contradiction instead of inventing Parent precedence. Likewise, two different effective Overrides of the same stable Rule are a structural conflict, while equivalent compiled Rule state may be deduplicated.
 
-This identity- and state-preserving model enables exact diffs, dangling-operation checks, Source-update review, and standalone Source packages.
+This identity- and state-preserving model enables exact diffs, dangling-operation checks, Parent-update review, and standalone reusable packages.
 
 ## Semantic identity is different from package presentation
 
@@ -150,7 +150,7 @@ ContextCanon distinguishes the normalized semantic meaning of a Node from the ex
 
 The deterministic diff preserves that distinction: it reports stable semantic entries when meaning changes and can separately report a package-presentation change when only generated bytes differ.
 
-Accepted external Sources pin both digests. Semantic equality therefore does not erase the exact identity of the published human/agent package.
+Accepted external reusable imports pin both digests and their direct Parent/Reference kind. Semantic equality therefore does not erase the exact identity of the published human/agent package.
 
 ## Resource identity is different from Resource location
 
@@ -196,7 +196,7 @@ The immutable `.context/package.json` manifest records the exact package file se
 
 `.context/` is analogous to `.git/` in one important respect: it contains infrastructure that matters but should not dominate normal work.
 
-For a compiled Node, `.context/context.yaml` is the local explanatory machine view and `.context/package.json` is the portable immutable package manifest. A consumer of external Sources may additionally hold content-addressed accepted packages, temporary candidates, and review receipts below `.context/`.
+For a compiled Node, `.context/context.yaml` is the local explanatory machine view and `.context/package.json` is the portable immutable package manifest. A consumer of external reusable imports may additionally hold content-addressed accepted packages, temporary candidates, and review receipts below `.context/`.
 
 Accepted external packages are reproducible project state:
 
@@ -248,7 +248,7 @@ A Context Node contains actual context content. Another reusable base Node is ju
 
 ## Deterministic skeleton, semantic assistance at the edges
 
-Compiler 0.4 deterministically handles the current source grammar, node-root discovery, stable IDs, local Source resolution, immutable external Source packages, exact Source pins, package integrity verification, cycle/version errors, transitive Rule composition, Remove/Override operations, override/removal provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, Topic targets, resource materialization, canonical semantic normalization, exact hashes, compiled Context/package diff, Git candidate retrieval, review receipts, explicit Source acceptance, generated views, adapters, drift checks, and atomic publication of Source-update state.
+Compiler 0.7 deterministically handles the current source grammar, node-root discovery, stable IDs, local and immutable reusable packages, explicit Parent/Reference relationships with legacy Source→Parent compatibility, exact pins, package integrity verification, cycle/version errors, Parent-only transitive Rule/Topic composition, non-transitive informational References, Remove/Override operations, provenance, deterministic same-Rule DAG conflicts, dangling Change diagnostics, resource materialization, canonical semantic normalization, exact package and normative-export hashes, Context/package diff, Git candidate retrieval, review receipts, explicit package acceptance, generated views, adapters, drift checks, and atomic update state.
 
 Reviewed onboarding adds bounded semantic tasks above that deterministic core. Deterministic tooling freezes repository evidence, selects the task-specific input set and renders the framework-owned assignment; a reasoning LLM may interpret or reorganize meaning only inside that box; deterministic validation binds the result back to exact inputs; the human then reviews and explicitly decides what may become durable truth.
 
@@ -258,7 +258,7 @@ This is a deterministic **semantic-task harness**, not a general agent orchestra
 
 First-adoption acceptance is implemented as a separate deterministic publication boundary: ContextCanon rechecks the reviewed evidence against the live repository, verifies exact reusable Source identities, stages and compiles the proposed Node, checks output ownership, publishes only after those checks succeed, runs normal build/check, and records the accepted state.
 
-Other later deterministic capabilities include protected Rules and authorized exceptions, richer resource-collision policy beyond the current stable-origin exact-byte rule, and broader repository-boundary diagnostics. Effective Topics and their Resource closures now compose across Source package boundaries without parsing generated Markdown.
+Other later deterministic capabilities include protected Rules and authorized exceptions, richer resource-collision policy beyond the current stable-origin exact-byte rule, and broader repository-boundary diagnostics. Effective Parent Topics and their Resource closures compose across package boundaries without parsing generated Markdown; direct Reference Topics/Resources remain local to the referencing Node.
 
 LLMs may assist with work that genuinely requires interpretation:
 
