@@ -1307,6 +1307,7 @@ def publish_placement_review(
     if not preview.review_complete or not review.is_complete:
         raise _error("review still contains pending decisions; publication requires a complete human review")
     project = preview.project_root
+    repository = resolve_onboarding_scope(project).repository_root
     snapshot = load_evidence_snapshot(snapshot_root)
     expected_documents = _expected_document_deltas(snapshot, project, review)
     if expected_documents != preview.documents:
@@ -1328,7 +1329,7 @@ def publish_placement_review(
     generated_snapshots: dict[Path, dict[str, bytes | None]] = {}
     generated_new_rels: dict[Path, set[str]] = {}
     acceptance_before = acceptance_path.read_bytes() if acceptance_path.is_file() else None
-    project_config_path = config_path(project)
+    project_config_path = config_path(repository)
     project_config_before = project_config_path.read_bytes() if project_config_path.is_file() else None
     legacy_parent_upgrade = _legacy_parent_acceptance_upgrade(acceptance_before, preview)
 
@@ -1362,11 +1363,15 @@ def publish_placement_review(
         for delta in _publication_order(preview):
             parent_pin = parent_by_child.get(delta.key)
             if parent_pin is not None:
-                compiled_parent = compiled_by_key.get(parent_pin.parent_key)
-                if compiled_parent is None:
-                    raise _error(
-                        f"internal error: Parent {parent_pin.parent_key} was not compiled before Child {delta.key}"
-                    )
+                if parent_pin.parent_key == "@enclosing":
+                    enclosing_root = (delta.source_path.parent / parent_pin.locator).resolve()
+                    compiled_parent = Compiler(repository).compile(enclosing_root)
+                else:
+                    compiled_parent = compiled_by_key.get(parent_pin.parent_key)
+                    if compiled_parent is None:
+                        raise _error(
+                            f"internal error: Parent {parent_pin.parent_key} was not compiled before Child {delta.key}"
+                        )
                 if (
                     compiled_parent.metadata.id != parent_pin.parent_node_id
                     or compiled_parent.metadata.version != parent_pin.parent_version
@@ -1416,10 +1421,10 @@ def publish_placement_review(
 
         for source in preview.sources:
             if source.kind == "git":
-                upsert_git_source(project, source.source_node_id, source.locator, source.discovery_ref or None, source.node_path)
+                upsert_git_source(repository, source.source_node_id, source.locator, source.discovery_ref or None, source.node_path)
             else:
-                repository_root = Path(source.locator).resolve()
-                upsert_local_mapping(project, source.source_node_id, repository_root, source.node_path)
+                source_repository_root = Path(source.locator).resolve()
+                upsert_local_mapping(repository, source.source_node_id, source_repository_root, source.node_path)
 
         payload = _acceptance_payload(preview, review, node_digests)
         encoded = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
