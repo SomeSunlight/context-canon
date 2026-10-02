@@ -67,6 +67,21 @@ class EditablePlacementReviewTests(unittest.TestCase):
         text = path.read_text(encoding="utf-8").replace("- Decision: `pending`", "- Decision: `accept`", 1)
         path.write_text(text, encoding="utf-8")
 
+    def test_split_finding_validation_error_names_id_and_file(self):
+        prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
+        path = self.finding(workspace, proposal, "P-001")
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"(?m)^- Wording: `[^`]+`\\n", "", text, count=1)
+        path.write_text(text, encoding="utf-8")
+
+        with self.assertRaises(ContextCanonError) as caught:
+            load_placement_review(workspace.placement_path, proposal, prepared.snapshot_root)
+
+        message = str(caught.exception)
+        self.assertIn("P-001", message)
+        self.assertIn(path.name, message)
+        self.assertIn("missing Wording", message)
+
     def test_progress_counts_decided_and_pending_from_same_review_state(self):
         prepared, workspace, source_root, package, proposal, review, _ = self.make_review(owner_source=False)
         progress = review.progress
