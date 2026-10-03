@@ -35,26 +35,13 @@ Changing only an Overview therefore changes the exact published package bytes an
 
 Keep an Overview compact. It is always-read entry context, so deeper explanations belong behind Topics rather than turning the Overview into another preload document. In particular, use Topics for material that needs to be packaged as deeper Resources instead of relying on repository-local links from an Overview.
 
-## Parent Context Node
-
-A Context Node may have zero, one, or several semantic Parents. Parents are explicit accepted relationships; filesystem nesting creates none. Parent order has no precedence.
-
-Each Parent is an exact immutable package pin:
-
-```markdown
-## Parent Context Node
-
-- [Project Context](../) — `0.1.0`
-  <!-- ctx:parent id="<stable-parent-node-id>" version="0.1.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
-```
-
-The visible label must match the canonical Node name of the accepted Parent package; the link target records where a newer Parent candidate may later be discovered. Stable ID/version/digests remain the technical identity. `contextcanon check` reports a stale or accidentally edited Parent label. Ordinary `contextcanon build` never dereferences the locator. Build loads only the accepted Parent artifact from the Child's local `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests and package files.
-
-A Parent is a semantic relationship, not a package-transport type. The dedicated `Parent Context Node` form is the first-class Parent/Child lifecycle used by propagation. A reusable import marked `relationship=parent` has the same normative meaning while reusing the Source-package discovery/update machinery. Both feed the same immutable Parent-composition engine; `relationship=reference` uses the same verified package carrier but stays outside normative composition.
-
-Changing a Parent's live files does not silently change the Child. Each Parent advances only through explicit review and acceptance.
-
 ## Context Imports
+
+All reusable Context relationships use this one authoring form. There is no
+separate Parent section in canonical authoring: **Parent** and **Reference**
+are values of the same explicit relationship field.
+
+
 
 `## Context Imports` lists reusable Context packages and makes the semantic relationship explicit on every visible import line:
 
@@ -76,13 +63,13 @@ The two values are deliberately small and complete:
 
 The visible relationship marker is machine-significant authoring syntax. The adjacent `ctx:source` comment preserves stable package identity and accepted version/pins. The visible link label must match the canonical Node name of the accepted package; the link target is provenance/update location.
 
-For migration, the legacy heading `## Sources` remains accepted and a missing relationship marker means **Parent**. ContextCanon never silently weakens an existing Source into a Reference. Use:
+For migration only, ContextCanon still reads `## Sources`, missing relationship markers, and the older dedicated `## Parent Context Node` / `ctx:parent` form. Every one of those legacy forms normalizes to `## Context Imports` with `ctx:source` and an explicit `relationship=parent`. ContextCanon never silently weakens an existing Parent into a Reference. Use:
 
 ```text
 contextcanon source normalize --all .
 ```
 
-to make those legacy Parent semantics explicit and rename `Sources` to `Context Imports`. This is an explicit maintenance action: ordinary `build` and `check` continue not to rewrite human-authored `CONTEXT.src.md`.
+to migrate all relationship authoring in the selected scope to that single canonical form. This is an explicit maintenance action: ordinary `build` and `check` continue not to rewrite human-authored `CONTEXT.src.md`.
 
 ### Local development import
 

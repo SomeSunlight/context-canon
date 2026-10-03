@@ -1,5 +1,5 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.13-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.14-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
@@ -33,8 +33,8 @@ OVERRIDE IMPORTED RULE
 -->
 
 ## Context Imports
-- [ContextCanon Foundation](../../library/foundation/) — `0.2.2-draft` — `relationship=parent`
-  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.2-draft" -->
+- [ContextCanon Foundation](../../library/foundation/) — `0.2.3-draft` — `relationship=parent`
+  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.3-draft" -->
 
 - [Development Workflow](../../library/development-workflow/) — `0.3.5-draft` — `relationship=parent`
   <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.5-draft" -->
