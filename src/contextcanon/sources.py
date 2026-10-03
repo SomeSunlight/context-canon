@@ -14,6 +14,7 @@ from .compiler import Compiler
 from .diff import ContextDiff, diff_compiled
 from .config import CONFIG_FILENAME, config_path, upsert_local_source
 from .git_transport import load_candidate_provenance
+from .links import markdown_link_target, markdown_target_locator
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, export_digest, load_package
 from .package_diff import diff_packages
@@ -26,7 +27,7 @@ _ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 _SOURCE_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:source\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _PARENT_COMMENT_RE = re.compile(r'^(?P<indent>\s*)<!--\s*ctx:parent\s+(?P<attrs>.*?)\s*-->(?P<ending>\r?\n?)$')
 _SOURCE_LINE_RE = re.compile(
-    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>[^)]+)\)(?P<separator>\s+—\s+))'
+    r'^(?P<prefix>(?P<bullet>- )\[[^]]+\]\((?P<path>.+)\)(?P<separator>\s+—\s+))'
     r'`[^`]+`(?P<relationship>\s+—\s+`relationship=(?:parent|reference)`)?'
     r'(?P<ending>\s*(?:\r?\n)?)$'
 )
@@ -139,7 +140,7 @@ def _render_adopted_source(node_root: Path, repo_root: Path, candidate: Compiled
     locator = Path(os.path.relpath(repo_root / CONFIG_FILENAME, node_root)).as_posix()
     return "\n".join(
         [
-            f"- [{name}]({locator}) — `{candidate.metadata.version}` — `relationship=parent`",
+            f"- [{name}]({markdown_link_target(locator)}) — `{candidate.metadata.version}` — `relationship=parent`",
             (
                 f'  <!-- ctx:source id="{candidate.metadata.id}" version="{candidate.metadata.version}" '
                 f'normalized-digest="{candidate.normalized_digest}" '
@@ -248,12 +249,25 @@ def normalize_source_relationships(node_root: Path) -> bool:
                 f"{path}: duplicate Context import Node ID {source_id} after relationship normalization"
             )
         matched_ids.add(source_id)
-        if visible.group("relationship") is None:
-            lines[index] = (
-                line[: visible.start("ending")]
-                + " — `relationship=parent`"
-                + visible.group("ending")
+        semantic_locator = next(
+            (
+                ref.locator
+                for ref in (*parsed.sources, *parsed.parents)
+                if ref.id == source_id
+            ),
+            markdown_target_locator(visible.group("path")),
+        )
+        canonical_path = markdown_link_target(semantic_locator)
+        needs_relationship = visible.group("relationship") is None
+        if visible.group("path") != canonical_path or needs_relationship:
+            rendered = (
+                line[: visible.start("path")]
+                + canonical_path
+                + line[visible.end("path") : visible.start("ending")]
             )
+            if needs_relationship:
+                rendered += " — `relationship=parent`"
+            lines[index] = rendered + visible.group("ending")
             changed = True
 
     expected_ids = {source.id for source in parsed.sources} | {parent.id for parent in parsed.parents}
@@ -1001,9 +1015,10 @@ def _render_source_pin_text(
 
             if any(char in candidate.metadata.name for char in "]\n\r"):
                 raise ContextCanonError(f"Source name cannot be represented safely: {candidate.metadata.name!r}")
+            canonical_path = markdown_link_target(markdown_target_locator(visible.group("path")))
             lines[index] = (
                 visible.group("bullet")
-                + f"[{candidate.metadata.name}]({visible.group('path')})"
+                + f"[{candidate.metadata.name}]({canonical_path})"
                 + visible.group("separator")
                 + f"`{candidate.metadata.version}`"
                 + (visible.group("relationship") or "")
