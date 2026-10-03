@@ -5,7 +5,6 @@ import tempfile
 import tomllib
 import unittest
 from pathlib import Path
-from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -37,7 +36,6 @@ def broken_local_markdown_links(root: Path) -> list[str]:
             continue
         text = markdown.read_text(encoding="utf-8")
         for target in local_markdown_targets(text):
-            target = unquote(target)
             resolved = (markdown.parent / target).resolve()
             try:
                 resolved.relative_to(root.resolve())
