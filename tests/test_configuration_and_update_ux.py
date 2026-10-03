@@ -352,6 +352,85 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 
+    def test_propagate_explains_parent_to_reference_cause_before_large_child_effect(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+
+            provider_root = repo / "github-local"
+            provider = write_node(
+                provider_root,
+                "github-local",
+                "GitHub Local",
+                "1.0.0",
+                "Use GitHub Local development objects.",
+            )
+
+            root_source = f'''# P1 — Local Context Source
+<!-- ctx:node id="p1" name="P1" version="1.0.0" -->
+
+## Context Imports
+
+- [GitHub Local](github-local/) — `1.0.0` — `relationship=parent`
+  <!-- ctx:source id="github-local" version="1.0.0" -->
+
+## Local Rules
+
+### General
+
+- **P1 local:** Keep P1 local behavior.
+  Why: Local test rule.
+  <!-- ctx:rule id="P1-LOCAL" -->
+'''
+            (repo / "CONTEXT.src.md").write_text(root_source, encoding="utf-8")
+            compiled_root = Compiler(repo).compile(repo)
+            write_outputs(compiled_root)
+
+            child_root = repo / "F1"
+            child_root.mkdir()
+            (child_root / "CONTEXT.src.md").write_text(
+                parent_source("f1", "F1", "..", compiled_root),
+                encoding="utf-8",
+            )
+            install_package(child_root, compiled_root)
+            write_outputs(Compiler(repo).compile(child_root))
+
+            changed = root_source.replace(
+                'version="1.0.0"',
+                'version="1.1.0"',
+                1,
+            ).replace(
+                "`relationship=parent`",
+                "`relationship=reference`",
+                1,
+            )
+            (repo / "CONTEXT.src.md").write_text(changed, encoding="utf-8")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["propagate", "--all", str(repo), "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            rendered = out.getvalue()
+
+            cause = rendered.index('Why Parent "P1" changed:')
+            effect = rendered.index("Resulting normative Parent change:")
+            self.assertLess(cause, effect)
+            self.assertIn(
+                "Relationship changed: GitHub Local: Parent -> Reference",
+                rendered,
+            )
+            self.assertIn(
+                "GitHub Local remains available inside P1 as informational Reference Context",
+                rendered,
+            )
+            self.assertIn(
+                "but its Rules, Topics and Resources are no longer part of P1's normative export to Children.",
+                rendered,
+            )
+            self.assertIn("1 rule removed", rendered)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
     def test_parent_propagate_updates_chain_top_down_in_one_command(self):
         repo = Path(tempfile.mkdtemp())
         try:

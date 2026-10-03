@@ -354,6 +354,89 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
                     print(f"      When: {after['condition']}")
 
 
+def _relationship_label(value: str | None) -> str:
+    return "Parent" if value in {None, "parent"} else "Reference"
+
+
+def _print_parent_change_cause(current_parent, live_parent) -> bool:
+    """Explain direct import changes in the Parent before listing their downstream effects."""
+
+    before = {source.id: source for source in current_parent.sources}
+    after = {
+        ref.id: (ref, package)
+        for ref, package in zip(live_parent.parsed.sources, live_parent.source_packages)
+    }
+    changed = False
+
+    for source_id in sorted(set(before) | set(after)):
+        old = before.get(source_id)
+        new = after.get(source_id)
+
+        if old is not None and new is not None:
+            ref, package = new
+            old_relationship = _relationship_label(old.relationship)
+            new_relationship = _relationship_label(ref.relationship)
+            if old_relationship != new_relationship:
+                if not changed:
+                    print(f'Why Parent "{live_parent.metadata.name}" changed:')
+                    changed = True
+                print(
+                    f"  Relationship changed: {package.metadata.name}: "
+                    f"{old_relationship} -> {new_relationship}"
+                )
+                if old_relationship == "Parent" and new_relationship == "Reference":
+                    print(
+                        f"  Meaning: {package.metadata.name} remains available inside "
+                        f"{live_parent.metadata.name} as informational Reference Context, "
+                        "but its Rules, Topics and Resources are no longer part of "
+                        f"{live_parent.metadata.name}'s normative export to Children."
+                    )
+                elif old_relationship == "Reference" and new_relationship == "Parent":
+                    print(
+                        f"  Meaning: {package.metadata.name} becomes normative inside "
+                        f"{live_parent.metadata.name}; its effective Rules, Topics and Resources "
+                        f"now join {live_parent.metadata.name}'s normative export to Children."
+                    )
+                continue
+
+            if old.version != package.metadata.version or old.package_digest != package.package_digest:
+                if not changed:
+                    print(f'Why Parent "{live_parent.metadata.name}" changed:')
+                    changed = True
+                print(
+                    f"  Direct {new_relationship} import updated: {package.metadata.name} "
+                    f"{old.version} -> {package.metadata.version}"
+                )
+            continue
+
+        if old is not None:
+            if not changed:
+                print(f'Why Parent "{live_parent.metadata.name}" changed:')
+                changed = True
+            relationship = _relationship_label(old.relationship)
+            print(f"  Direct import removed: {old.name} (was {relationship})")
+            if relationship == "Parent":
+                print(
+                    f"  Meaning: {old.name}'s effective normative Context is no longer "
+                    f"exported through {live_parent.metadata.name} to Children."
+                )
+            continue
+
+        ref, package = new
+        relationship = _relationship_label(ref.relationship)
+        if not changed:
+            print(f'Why Parent "{live_parent.metadata.name}" changed:')
+            changed = True
+        print(f"  Direct import added: {package.metadata.name} as {relationship}")
+        if relationship == "Parent":
+            print(
+                f"  Meaning: {package.metadata.name}'s effective normative Context now "
+                f"joins {live_parent.metadata.name}'s export to Children."
+            )
+
+    return changed
+
+
 def _source_lookup_description(repo_root: Path, current, source_id: str, requested_ref: str | None) -> str:
     configured = configured_source(repo_root, source_id)
     if configured is not None:
@@ -646,7 +729,12 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print(f"  Nothing in {child.metadata.name} has changed yet.")
 
         print("")
-        print(f'What changed in Parent "{live_parent.metadata.name}" since the version used by this Child:')
+        explained_cause = _print_parent_change_cause(current_parent, live_parent)
+        if explained_cause:
+            print("")
+            print("Resulting normative Parent change:")
+        else:
+            print(f'What changed in Parent "{live_parent.metadata.name}" since the version used by this Child:')
         print(f"  Version: {current_parent.metadata.version} -> {live_parent.metadata.version}")
         print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
         _print_human_change_details(result, exclude_categories={"node"})
