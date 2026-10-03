@@ -16,7 +16,7 @@ CHANGE_COMMENT_RE = re.compile(r'<!--\s*ctx:change\s+(?P<attrs>.*?)\s*-->')
 ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
 SOURCE_RE = re.compile(
-    r'^- \[(?P<name>[^]]+)\]\((?P<path>[^)]+)\)\s+—\s+`(?P<version>[^`]+)`'
+    r'^- \[(?P<name>[^]]+)\]\((?P<path>.+)\)\s+—\s+`(?P<version>[^`]+)`'
     r'(?:\s+—\s+`relationship=(?P<relationship>[^`]+)`)?\s*$'
 )
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
