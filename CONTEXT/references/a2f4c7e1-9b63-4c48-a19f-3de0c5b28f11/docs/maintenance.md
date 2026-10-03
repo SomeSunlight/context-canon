@@ -80,6 +80,14 @@ If a question fails, the usual choices are deliberately different:
 
 Then do the detailed pass: read the actual changed Rules, Topics, Resources, and relevant local changes before accepting the edge. ContextCanon handles deterministic structural checks such as stable-identity conflicts and dangling changes; semantic correctness remains a human review decision.
 
+For a read-only dependency check before changing anything, inspect propagation status:
+
+```text
+contextcanon propagate --status --all .
+```
+
+It returns exit code 1 when any local Child still accepts an older normative Parent export. Package-only changes whose normative export is unchanged are reported as requiring no propagation. The status check does not bump versions, create review receipts, or update accepted pins.
+
 From one changed Node, start the guided downstream review with:
 
 ```text
@@ -154,7 +162,7 @@ contextcanon build --all .
 contextcanon check --all .
 ```
 
-`build` renders the accepted effective Context into the generated Official Context Packages. `check` verifies that the generated state matches the current authored and accepted state.
+`build` renders the accepted effective Context into the generated Official Context Packages. A single-Node `check` verifies that Node's authored, accepted and generated state. Repository-wide `check --all` goes one step further: it also runs the same read-only propagation-status logic as `propagate --status --all .` and returns non-zero while any local normative Parent/Child update remains pending. It never accepts or propagates the update automatically.
 
 ## The normal mental model
 
@@ -162,7 +170,7 @@ contextcanon check --all .
 Update      inspect and accept a newer Parent or Reference package
 Propagate   review only normative Parent changes across dependent Children
 Build       render accepted effective Context
-Check       verify that authored, accepted, and generated state agree
+Check       verify authored/generated consistency and, with --all, full local Parent propagation
 ```
 
 For the command map, see [CLI quick reference](cli.md). For the deeper composition model, including multiple Parents and conflict handling, see [Context composition](../nodes/library/foundation/docs/composition.md). For exact package and candidate mechanics, see [Immutable external Sources](../nodes/internal/framework-development/docs/external-sources.md).
