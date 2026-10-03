@@ -21,7 +21,7 @@ from tests.test_onboarding_placement_publish import PlacementPublicationTests
 
 
 PARENT_BLOCK_RE = re.compile(
-    r"\n## (?:Parent Context Node|Parent)\n\n<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?(?=\n## |\Z)",
+    r"\n?<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?",
     re.DOTALL,
 )
 
@@ -104,7 +104,9 @@ class LegacyParentMigrationTests(unittest.TestCase):
         migrated = json.loads(acceptance.read_text(encoding="utf-8"))
         self.assertEqual(len(migrated["parents"]), 1)
         child_text = (child / "CONTEXT.src.md").read_text(encoding="utf-8")
-        self.assertIn("ctx:parent", child_text)
+        self.assertNotIn("ctx:parent", child_text)
+        self.assertIn("`relationship=parent`", child_text)
+        self.assertIn("ctx:source", child_text)
         child_compiled = Compiler(repo).compile(child)
         self.assertIsNotNone(child_compiled.parent_package)
         parent_store = child / ".context" / "sources" / child_compiled.parent_package.package_digest

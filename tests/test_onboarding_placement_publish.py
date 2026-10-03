@@ -227,8 +227,9 @@ class PlacementPublicationTests(unittest.TestCase):
         parent = preview.parents[0]
         self.assertEqual((parent.child_key, parent.parent_key), ("N-002", "N-001"))
         child = next(delta for delta in preview.nodes if delta.key == "N-002")
-        self.assertIn("## Parent Context Node", child.after)
-        self.assertIn('ctx:parent id="aea56adf-2a26-43f0-b712-3bbeab7a3097"', child.after)
+        self.assertIn("## Context Imports", child.after)
+        self.assertIn("`relationship=parent`", child.after)
+        self.assertIn('ctx:source id="aea56adf-2a26-43f0-b712-3bbeab7a3097"', child.after)
         self.assertIn(parent.parent_package_digest, child.after)
         self.assertIn("Resource: `../../docs/architecture.md`", child.after)
         self.assertIn("Existing authored Goose orientation.", child.after)

@@ -24,7 +24,7 @@ from tests.test_onboarding_placement import OnboardingPlacementTests
 
 
 PARENT_BLOCK_RE = re.compile(
-    r"\n## (?:Parent Context Node|Parent)\n\n<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?(?=\n## |\Z)",
+    r"\n?<!-- contextcanon-placement-parent:start -->\n.*?\n<!-- contextcanon-placement-parent:end -->\n?",
     re.DOTALL,
 )
 
@@ -332,10 +332,10 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
         for key, _, rel, parent_key, _ in REAL_NODES:
             node = repo if rel == "." else repo / rel
             text = (node / "CONTEXT.src.md").read_text(encoding="utf-8")
-            if parent_key is None:
-                self.assertNotIn("ctx:parent", text)
-            else:
-                self.assertIn("ctx:parent", text, key)
+            self.assertNotIn("ctx:parent", text, key)
+            if parent_key is not None:
+                self.assertIn("`relationship=parent`", text, key)
+                self.assertIn("ctx:source", text, key)
                 compiled = Compiler(repo).compile(node)
                 self.assertIsNotNone(compiled.parent_package, key)
 
