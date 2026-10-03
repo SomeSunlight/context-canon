@@ -525,7 +525,7 @@ class Compiler:
             "> [!NOTE]\n"
             "> **GENERATED BRIDGE — DO NOT EDIT.**\n"
             "> An exact Topic Resource linked to its owning Node's generated `CONTEXT.md` before materialization.\n"
-            f"> Continue at [this package's Official Context]({target}).\n"
+            f"> Continue at [this package's Official Context]({markdown_link_target(target)}).\n"
         ).encode("utf-8")
 
     def _resource_closure(
