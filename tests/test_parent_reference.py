@@ -219,6 +219,30 @@ class ParentReferenceTests(unittest.TestCase):
         self.assertIn("## Reference Context — informational only", reference.official_markdown)
         self.assertIn("Legacy Parent", reference.official_markdown)
 
+    def test_invalid_relationship_value_fails_fast_instead_of_removing_import(self) -> None:
+        self._node(
+            "nodes/p",
+            "node-p",
+            "Parent P",
+            rule_id="P-1",
+            statement="Parent rule.",
+        )
+        consumer = self._node(
+            "consumer",
+            "consumer",
+            "Consumer",
+            imports=(
+                "- [Parent P](../nodes/p/) — `1.0.0` — `relationship=relation`\n"
+                '  <!-- ctx:source id="node-p" version="1.0.0" -->'
+            ),
+        )
+
+        with self.assertRaisesRegex(
+            ContextCanonError,
+            r"invalid Context import relationship 'relation'; expected 'parent' or 'reference'",
+        ):
+            Compiler(self.repo).compile(consumer)
+
     def test_normalize_converts_dedicated_parent_section_to_single_import_format(self) -> None:
         parent = self._node(
             "nodes/p",
