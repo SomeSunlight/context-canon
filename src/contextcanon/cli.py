@@ -373,7 +373,18 @@ def _parent_edges(repo_root: Path, start_root: Path | None = None):
     parsed = {root: parse_node(root, repo_root) for root in roots}
     parent_roots: dict[Path, list[tuple[object, Path]]] = {}
     for child_root, node in parsed.items():
-        for parent in node.parents:
+        parents = [
+            *node.parents,
+            *(source for source in node.sources if source.relationship == "parent"),
+        ]
+        seen_parent_ids: set[str] = set()
+        for parent in parents:
+            if parent.id in seen_parent_ids:
+                raise ContextCanonError(
+                    f"{node.metadata.name}: duplicate semantic Parent {parent.id}; "
+                    "run 'contextcanon source normalize' and keep one Context Import"
+                )
+            seen_parent_ids.add(parent.id)
             parent_root = compiler._resolve_source_root(child_root, parent.locator).resolve()
             if parent_root not in parsed:
                 raise ContextCanonError(
@@ -476,8 +487,22 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         child = parse_node(child_root, repo_root)
         child_label = child_root.relative_to(repo_root).as_posix() or "."
         child_compiled = Compiler(repo_root).compile(child_root)
-        parent_index = next(i for i, ref in enumerate(child_compiled.parsed.parents) if ref.id == parent.id)
-        current_parent = child_compiled.parent_packages[parent_index]
+        legacy_matches = [
+            package
+            for ref, package in zip(child_compiled.parsed.parents, child_compiled.parent_packages)
+            if ref.id == parent.id
+        ]
+        source_matches = [
+            package
+            for ref, package in zip(child_compiled.parsed.sources, child_compiled.source_packages)
+            if ref.relationship == "parent" and ref.id == parent.id
+        ]
+        current_matches = [*legacy_matches, *source_matches]
+        if len(current_matches) != 1:
+            raise ContextCanonError(
+                f"{child.metadata.name}: expected exactly one semantic Parent package for {parent.id}"
+            )
+        current_parent = current_matches[0]
         live_parent = Compiler(repo_root).compile(parent_root)
 
         print("")

@@ -163,22 +163,70 @@ def _insert_source_entry(text: str, entry: str) -> str:
 
 
 def normalize_source_relationships(node_root: Path) -> bool:
-    """Make legacy implicit Source -> Parent semantics explicit in authoring.
+    """Normalize every legacy Context relationship into canonical Context Imports.
 
-    This is an explicit maintenance action rather than a side effect of
-    build/check. It only adds the semantically neutral legacy default and
-    canonicalizes the section heading from Sources to Context Imports.
+    Canonical authoring has exactly one relationship form: Context Imports
+    with ctx:source metadata and an explicit parent/reference relationship.
+    Legacy forms remain readable only so this maintenance action can migrate
+    them; ordinary build/check do not rewrite human-authored relationships.
     """
 
     node_root = node_root.resolve()
     repo_root = find_repo_root(node_root)
     parsed = parse_node(node_root, repo_root)
-    if not parsed.sources:
-        return False
-
     path = node_root / "CONTEXT.src.md"
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    text = path.read_text(encoding="utf-8")
     changed = False
+
+    parent_sections = list(
+        re.finditer(
+            r"(?ms)^## (?:Parent Context Node|Parent)\s*\n(?P<body>.*?)(?=^## |\Z)",
+            text,
+        )
+    )
+    if len(parent_sections) > 1:
+        raise ContextCanonError(
+            f"{path}: multiple legacy Parent sections found; keep only one before normalization"
+        )
+
+    legacy_parent_body = ""
+    if parent_sections:
+        section = parent_sections[0]
+        body_lines = section.group("body").splitlines(keepends=True)
+        normalized_parent_lines: list[str] = []
+        for line in body_lines:
+            if "contextcanon-placement-parent:start" in line or "contextcanon-placement-parent:end" in line:
+                continue
+            visible = _SOURCE_LINE_RE.match(line)
+            if visible and visible.group("relationship") is None:
+                line = (
+                    line[: visible.start("ending")]
+                    + " — `relationship=parent`"
+                    + visible.group("ending")
+                )
+            line = re.sub(r"<!--\s*ctx:parent\s+", "<!-- ctx:source ", line)
+            normalized_parent_lines.append(line)
+        legacy_parent_body = "".join(normalized_parent_lines).strip()
+        text = text[: section.start()] + text[section.end() :]
+        changed = True
+
+    if re.search(r"(?m)^## Sources\s*$", text):
+        text = re.sub(r"(?m)^## Sources\s*$", "## Context Imports", text, count=1)
+        changed = True
+
+    if legacy_parent_body:
+        heading = re.search(r"(?m)^## Context Imports\s*$", text)
+        if heading is None:
+            text = text.rstrip() + "\n\n## Context Imports\n\n" + legacy_parent_body + "\n"
+        else:
+            next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
+            end = next_heading.start() if next_heading else len(text)
+            existing = text[heading.end():end].strip()
+            combined = legacy_parent_body if not existing else legacy_parent_body + "\n\n" + existing
+            text = text[:heading.end()] + "\n\n" + combined + "\n\n" + text[end:].lstrip("\n")
+        changed = True
+
+    lines = text.splitlines(keepends=True)
     matched_ids: set[str] = set()
     for index, line in enumerate(lines):
         visible = _SOURCE_LINE_RE.match(line)
@@ -195,6 +243,10 @@ def normalize_source_relationships(node_root: Path) -> bool:
                     break
         if not source_id:
             continue
+        if source_id in matched_ids:
+            raise ContextCanonError(
+                f"{path}: duplicate Context import Node ID {source_id} after relationship normalization"
+            )
         matched_ids.add(source_id)
         if visible.group("relationship") is None:
             lines[index] = (
@@ -204,18 +256,25 @@ def normalize_source_relationships(node_root: Path) -> bool:
             )
             changed = True
 
-    expected_ids = {source.id for source in parsed.sources}
+    expected_ids = {source.id for source in parsed.sources} | {parent.id for parent in parsed.parents}
     if matched_ids != expected_ids:
+        missing = ", ".join(sorted(expected_ids - matched_ids))
+        extra = ", ".join(sorted(matched_ids - expected_ids))
+        detail = "; ".join(
+            item for item in (
+                f"missing: {missing}" if missing else "",
+                f"unexpected: {extra}" if extra else "",
+            )
+            if item
+        )
         raise ContextCanonError(
             f"{path}: could not identify every Context import while normalizing relationships"
+            + (f" ({detail})" if detail else "")
         )
 
-    text = "".join(lines)
-    if re.search(r"(?m)^## Sources\s*$", text):
-        text = re.sub(r"(?m)^## Sources\s*$", "## Context Imports", text, count=1)
-        changed = True
+    normalized = "".join(lines)
     if changed:
-        _atomic_write_text(path, text)
+        _atomic_write_text(path, normalized)
     return changed
 
 def _require_candidate_version_advance(current: CompiledPackage, candidate: CompiledPackage, relation: str) -> None:
@@ -399,6 +458,91 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     return candidate
 
 
+def _parent_binding(
+    compiled: CompiledNode,
+    parent_id: str | None,
+) -> tuple[str, int, ParentRef | SourceRef, CompiledPackage]:
+    """Resolve one semantic Parent across canonical and migration-only legacy carriers."""
+
+    bindings: list[tuple[str, int, ParentRef | SourceRef, CompiledPackage]] = []
+    bindings.extend(
+        ("legacy", index, ref, package)
+        for index, (ref, package) in enumerate(zip(compiled.parsed.parents, compiled.parent_packages))
+    )
+    bindings.extend(
+        ("source", index, ref, compiled.source_packages[index])
+        for index, ref in enumerate(compiled.parsed.sources)
+        if ref.relationship == "parent"
+    )
+    if not bindings:
+        raise ContextCanonError(f"{compiled.metadata.name}: Node has no semantic Parent")
+
+    ids = [binding[2].id for binding in bindings]
+    if len(ids) != len(set(ids)):
+        raise ContextCanonError(
+            f"{compiled.metadata.name}: the same Node is declared as Parent more than once; "
+            "run 'contextcanon source normalize' and keep one Context Import"
+        )
+    if parent_id is None:
+        if len(bindings) != 1:
+            raise ContextCanonError(
+                f"{compiled.metadata.name}: Node has multiple semantic Parents ({', '.join(ids)}); "
+                "specify the Parent Node ID"
+            )
+        return bindings[0]
+    matches = [binding for binding in bindings if binding[2].id == parent_id]
+    if not matches:
+        raise ContextCanonError(f"{compiled.metadata.name}: no semantic Parent with Node ID {parent_id}")
+    return matches[0]
+
+
+def _parent_index(compiled: CompiledNode, parent_id: str | None) -> tuple[int, ParentRef | SourceRef]:
+    """Compatibility helper for callers that only need Parent identity/order."""
+
+    kind, index, ref, _ = _parent_binding(compiled, parent_id)
+    if kind == "legacy":
+        return index, ref
+    canonical = [source for source in compiled.parsed.sources if source.relationship == "parent"]
+    return canonical.index(ref), ref
+
+
+def _validate_parent_candidate_composition(
+    compiler: Compiler,
+    compiled: CompiledNode,
+    binding_kind: str,
+    binding_index: int,
+    candidate: CompiledPackage,
+) -> None:
+    packages = list(compiled.parent_packages)
+    if binding_kind == "legacy":
+        packages[binding_index] = candidate
+    packages.extend(
+        candidate if binding_kind == "source" and source_index == binding_index else package
+        for source_index, (ref, package) in enumerate(
+            zip(compiled.parsed.sources, compiled.source_packages)
+        )
+        if ref.relationship == "parent"
+    )
+    inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
+    inherited, removals = compiler._apply_rule_changes(
+        inherited,
+        removals,
+        compiled.local_changes,
+        compiled.metadata.id,
+        compiled.metadata.name,
+    )
+    seen: dict[str, Rule] = {}
+    for rule in (*inherited, *compiled.local_rules):
+        previous = seen.get(rule.id)
+        if previous is not None and previous.origin_node_id != rule.origin_node_id:
+            raise ContextCanonError(
+                f"Visible Rule ID collision in {compiled.metadata.name}: {rule.id} comes from multiple Nodes"
+            )
+        seen[rule.id] = rule
+    inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
+    compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
+
+
 def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tuple[ContextDiff, Path]:
     """Review one live semantic Parent as an immutable candidate."""
 
@@ -406,8 +550,7 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
     repo_root = find_repo_root(node_root)
     compiler = Compiler(repo_root)
     compiled = compiler.compile(node_root)
-    parent_index, parent_ref = _parent_index(compiled, parent_id)
-    current = compiled.parent_packages[parent_index]
+    binding_kind, binding_index, parent_ref, current = _parent_binding(compiled, parent_id)
 
     parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
     ensure_node_version_advanced(parent_root, repo_root)
@@ -424,7 +567,7 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
             "Reference-only or other local-only changes do not propagate to Children"
         )
 
-    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, binding_kind, binding_index, candidate)
     candidate_root = _store_parent_candidate(node_root, live_parent)
     result = diff_packages(current, candidate)
     receipt = {
@@ -453,20 +596,13 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
 
 
 def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = None) -> ContextDiff:
-    """Preview the Child's effective Context with the current live Parent candidate.
-
-    The Child's accepted Parent pin and authored source remain unchanged. Local
-    Overrides/Removes, local Rules, other Parents and Sources are applied by
-    the normal compiler so the returned diff describes the effective result of
-    accepting this Parent update for this Child.
-    """
+    """Preview effective Child Context for one live Parent candidate."""
 
     node_root = node_root.resolve()
     repo_root = find_repo_root(node_root)
     compiler = Compiler(repo_root)
     current_compiled = compiler.compile(node_root)
-    parent_index, parent_ref = _parent_index(current_compiled, parent_id)
-    current = current_compiled.parent_packages[parent_index]
+    binding_kind, binding_index, parent_ref, current = _parent_binding(current_compiled, parent_id)
 
     parent_root = compiler._resolve_source_root(node_root, parent_ref.locator)
     ensure_node_version_advanced(parent_root, repo_root)
@@ -482,7 +618,9 @@ def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = Non
             f"Parent {candidate.metadata.name} has no changed normative export; "
             "Reference-only or other local-only changes do not propagate to Children"
         )
-    _validate_parent_candidate_composition(compiler, current_compiled, parent_index, candidate)
+    _validate_parent_candidate_composition(
+        compiler, current_compiled, binding_kind, binding_index, candidate
+    )
 
     candidate_root = _store_parent_candidate(node_root, live_parent)
     candidate_resources = {
@@ -505,8 +643,7 @@ def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> Co
     node_root = node_root.resolve()
     compiler = Compiler(find_repo_root(node_root))
     compiled = compiler.compile(node_root)
-    parent_index, parent_ref = _parent_index(compiled, parent_id)
-    current = compiled.parent_packages[parent_index]
+    binding_kind, binding_index, parent_ref, current = _parent_binding(compiled, parent_id)
     receipt_path = _parent_review_path(node_root, parent_ref.id)
     if not receipt_path.is_file():
         raise ContextCanonError(
@@ -552,59 +689,10 @@ def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> Co
     if receipt.get("structural_validation") != "passed":
         raise ContextCanonError("Parent candidate review did not pass structural validation")
 
-    _validate_parent_candidate_composition(compiler, compiled, parent_index, candidate)
+    _validate_parent_candidate_composition(compiler, compiled, binding_kind, binding_index, candidate)
     _install_package(node_root, candidate_root, candidate)
     _write_parent_pin(node_root, parent_ref.id, candidate)
     return candidate
-
-
-def _parent_index(compiled: CompiledNode, parent_id: str | None) -> tuple[int, ParentRef]:
-    if not compiled.parsed.parents:
-        raise ContextCanonError(f"{compiled.metadata.name}: Node has no semantic Parent")
-    if parent_id is None:
-        if len(compiled.parsed.parents) != 1:
-            ids = ", ".join(parent.id for parent in compiled.parsed.parents)
-            raise ContextCanonError(
-                f"{compiled.metadata.name}: Node has multiple semantic Parents ({ids}); specify the Parent Node ID"
-            )
-        return 0, compiled.parsed.parents[0]
-    matches = [(index, parent) for index, parent in enumerate(compiled.parsed.parents) if parent.id == parent_id]
-    if not matches:
-        raise ContextCanonError(f"{compiled.metadata.name}: no semantic Parent with Node ID {parent_id}")
-    return matches[0]
-
-def _validate_parent_candidate_composition(
-    compiler: Compiler,
-    compiled: CompiledNode,
-    parent_index: int,
-    candidate: CompiledPackage,
-) -> None:
-    parents = list(compiled.parent_packages)
-    parents[parent_index] = candidate
-    packages = [*parents]
-    packages.extend(
-        package
-        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
-        if ref.relationship == "parent"
-    )
-    inherited, removals = compiler._compose_inherited_rule_state(packages, compiled.metadata.name)
-    inherited, removals = compiler._apply_rule_changes(
-        inherited,
-        removals,
-        compiled.local_changes,
-        compiled.metadata.id,
-        compiled.metadata.name,
-    )
-    seen: dict[str, Rule] = {}
-    for rule in (*inherited, *compiled.local_rules):
-        previous = seen.get(rule.id)
-        if previous is not None and previous.origin_node_id != rule.origin_node_id:
-            raise ContextCanonError(
-                f"Visible Rule ID collision in {compiled.metadata.name}: {rule.id} comes from multiple Nodes"
-            )
-        seen[rule.id] = rule
-    inherited_topics = compiler._compose_inherited_topics(packages, compiled.metadata.name)
-    compiler._validate_visible_topic_ids(inherited_topics, compiled.local_topics, compiled.metadata.name)
 
 def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> Path:
     package = compiled_package(compiled_parent)
@@ -654,14 +742,30 @@ def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: Compiled
             continue
         search_end = min(index + 5, len(lines))
         for comment_index in range(index + 1, search_end):
-            comment = _PARENT_COMMENT_RE.match(lines[comment_index])
+            source_comment = _SOURCE_COMMENT_RE.match(lines[comment_index])
+            parent_comment = _PARENT_COMMENT_RE.match(lines[comment_index])
+            comment = source_comment or parent_comment
             if not comment:
                 continue
             attrs = _ATTR_RE.findall(comment.group("attrs"))
             if not attrs or dict(attrs).get("id") != parent_id:
                 continue
+            if (
+                source_comment
+                and visible.group("relationship") is not None
+                and "relationship=parent" not in visible.group("relationship")
+            ):
+                continue
             found += 1
-            lines[index] = visible.group("prefix") + f"`{candidate.metadata.version}`" + visible.group("ending")
+            relationship = visible.group("relationship")
+            if source_comment and relationship is None:
+                relationship = " — `relationship=parent`"
+            lines[index] = (
+                visible.group("prefix")
+                + f"`{candidate.metadata.version}`"
+                + (relationship or "")
+                + visible.group("ending")
+            )
             updated: list[tuple[str, str]] = []
             seen_version = False
             for key, value in attrs:
@@ -677,12 +781,14 @@ def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: Compiled
                 ("package-digest", candidate.package_digest),
             ])
             attrs_text = " ".join(f'{key}="{value}"' for key, value in updated)
-            lines[comment_index] = f"{comment.group('indent')}<!-- ctx:parent {attrs_text} -->{comment.group('ending')}"
+            marker = "ctx:source" if source_comment else "ctx:parent"
+            lines[comment_index] = (
+                f"{comment.group('indent')}<!-- {marker} {attrs_text} -->{comment.group('ending')}"
+            )
             break
     if found != 1:
         raise ContextCanonError(f"Could not find exactly one semantic Parent Node ID {parent_id} in {path}")
     return "".join(lines)
-
 
 def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackage) -> None:
     path = node_root / "CONTEXT.src.md"
