@@ -4,6 +4,7 @@ import re
 from pathlib import Path, PurePosixPath
 
 from .model import NodeMetadata, ParentRef, ParsedNode, RelationshipKind, Rule, RuleChange, SourceRef, Topic, TopicTarget
+from .links import markdown_target_locator
 
 NODE_COMMENT_RE = re.compile(r'<!--\s*ctx:node\s+(?P<attrs>.*?)\s*-->')
 RULE_COMMENT_RE = re.compile(r'<!--\s*ctx:rule\s+(?P<attrs>.*?)\s*-->')
@@ -190,7 +191,7 @@ def _parse_parents(lines: list[str], section: tuple[int, int] | None, source_pat
                 id=attrs["id"],
                 name=match.group("name"),
                 version=attrs["version"],
-                locator=match.group("path"),
+                locator=markdown_target_locator(match.group("path")),
                 normalized_digest=normalized_digest,
                 package_digest=package_digest,
             )
@@ -273,7 +274,7 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 attrs["id"],
                 match.group("name"),
                 attrs["version"],
-                match.group("path"),
+                markdown_target_locator(match.group("path")),
                 normalized_digest,
                 package_digest,
                 transport,
