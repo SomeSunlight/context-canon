@@ -6,7 +6,7 @@ import posixpath
 from pathlib import Path
 import re
 
-from .links import local_markdown_targets
+from .links import local_markdown_targets, markdown_link_target
 from .model import CompiledNode, CompiledPackage, PackageDependency, ParentRef, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
 from .package import (
     compiled_package,
