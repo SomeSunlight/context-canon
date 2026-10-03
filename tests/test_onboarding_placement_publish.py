@@ -317,7 +317,14 @@ class PlacementPublicationTests(unittest.TestCase):
         second = build_placement_publication_preview(
             proposal, review, prepared.snapshot_root, catalog_package_roots=[source_root], project_root=repo
         )
-        self.assertTrue(all(not delta.changed for delta in second.nodes))
+        changed_nodes = [delta for delta in second.nodes if delta.changed]
+        self.assertFalse(
+            changed_nodes,
+            "\n\n".join(
+                f"{delta.key} before={delta.before!r}\nafter={delta.after!r}"
+                for delta in changed_nodes
+            ),
+        )
         self.assertTrue(all(not document.changed for document in second.documents))
         second_result = publish_placement_review(
             second,
