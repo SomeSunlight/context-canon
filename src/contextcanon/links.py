@@ -4,7 +4,7 @@ import re
 from collections.abc import Iterator
 from urllib.parse import quote, unquote
 
-LINK_RE = re.compile(r"!?\\[[^\\]]*\\]\\(([^)]+)\\)")
+LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 _EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "data:", "ssh://", "git://")
 
 
