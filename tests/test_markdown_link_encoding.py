@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from contextcanon.compiler import Compiler
 from contextcanon.links import local_markdown_targets, markdown_link_target, markdown_target_locator
+from contextcanon.onboarding_placement_instruction import _render_contract
 from contextcanon.onboarding_placement_publish import _render_parent_body
 from contextcanon.onboarding_placement_review import _node_entry_link
 from contextcanon.onboarding_placement_split_review import _finding_node_link
@@ -41,6 +42,8 @@ class MarkdownLinkEncodingTests(unittest.TestCase):
         self.assertEqual(markdown_link_target("safe/path.md"), "safe/path.md")
         self.assertEqual(markdown_link_target("https://example.org/a%20b"), "https://example.org/a%20b")
         self.assertEqual(list(local_markdown_targets(f"[local]({encoded})")), [raw])
+        contract = "\n".join(_render_contract("0" * 64, "1" * 64))
+        self.assertIn("percent-encode the link destination as a URI path", contract)
 
     def test_context_import_with_special_directory_name_normalizes_and_still_resolves(self) -> None:
         parent_root = self.repo / "01 F1 #100%(draft)"
