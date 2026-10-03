@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from .authoring import add_rule, add_topic
@@ -468,6 +469,125 @@ def _propagation_scope(path: Path, all_edges: bool):
     return repo_root, start_root, _parent_edges(repo_root, start_root)
 
 
+@dataclass(frozen=True)
+class _PropagationEdgeStatus:
+    child_root: Path
+    child_name: str
+    parent_id: str
+    parent_name: str
+    accepted_version: str
+    live_version: str
+    state: str
+
+    @property
+    def pending(self) -> bool:
+        return self.state == "pending"
+
+
+def _accepted_parent_package(compiled, parent_id: str):
+    legacy_matches = [
+        package
+        for ref, package in zip(compiled.parsed.parents, compiled.parent_packages)
+        if ref.id == parent_id
+    ]
+    source_matches = [
+        package
+        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
+        if ref.relationship == "parent" and ref.id == parent_id
+    ]
+    matches = [*legacy_matches, *source_matches]
+    if len(matches) != 1:
+        raise ContextCanonError(
+            f"{compiled.metadata.name}: expected exactly one semantic Parent package for {parent_id}"
+        )
+    return matches[0]
+
+
+def _collect_propagation_status(repo_root: Path, edges) -> tuple[_PropagationEdgeStatus, ...]:
+    """Read-only local Parent/Child freshness check.
+
+    This deliberately compares only accepted local Parent edges. It never bumps
+    versions, creates review receipts, or mutates accepted pins.
+    """
+
+    rows: list[_PropagationEdgeStatus] = []
+    for child_root, parent, parent_root in edges:
+        child_compiled = Compiler(repo_root).compile(child_root)
+        current_parent = _accepted_parent_package(child_compiled, parent.id)
+        live_parent = Compiler(repo_root).compile(parent_root)
+        live_package = compiled_package(live_parent)
+
+        if current_parent.package_digest == live_package.package_digest:
+            state = "current"
+        elif export_digest(current_parent) == export_digest(live_package):
+            state = "normative-current"
+        else:
+            state = "pending"
+
+        rows.append(
+            _PropagationEdgeStatus(
+                child_root=child_root,
+                child_name=child_compiled.metadata.name,
+                parent_id=parent.id,
+                parent_name=live_parent.metadata.name,
+                accepted_version=current_parent.metadata.version,
+                live_version=live_parent.metadata.version,
+                state=state,
+            )
+        )
+    return tuple(rows)
+
+
+def _print_pending_propagation(rows, repo_root: Path) -> None:
+    for row in rows:
+        child_label = row.child_root.relative_to(repo_root).as_posix() or "."
+        version_change = f"{row.accepted_version} -> {row.live_version}"
+        if row.accepted_version == row.live_version:
+            version_change += " (package changed without a new accepted Child snapshot)"
+        print(
+            f"  - {row.child_name} ({child_label}) <- {row.parent_name}: {version_change}"
+        )
+
+
+def _run_propagation_status(path: Path, *, all_edges: bool) -> int:
+    repo_root, start_root, edges = _propagation_scope(path, all_edges)
+    if not edges:
+        print("Propagation status: no local Parent/Child relationships in the selected scope.")
+        return 0
+
+    rows = _collect_propagation_status(repo_root, edges)
+    pending = tuple(row for row in rows if row.pending)
+    local_only = sum(row.state == "normative-current" for row in rows)
+
+    if all_edges:
+        scope = "repository"
+        next_command = "contextcanon propagate --all ."
+    else:
+        start = parse_node(start_root, repo_root)
+        scope = f"subtree below {start.metadata.name}"
+        next_command = "contextcanon propagate"
+
+    print(f"Propagation status: checked {len(rows)} local Parent/Child relationship(s) in {scope}.")
+    if pending:
+        print(f"Pending normative Parent updates: {len(pending)}")
+        _print_pending_propagation(pending, repo_root)
+        if local_only:
+            print(
+                f"{local_only} additional Parent package change(s) are non-normative "
+                "and require no propagation."
+            )
+        print("Repository is not fully propagated.")
+        print(f"Next: {next_command}")
+        return 1
+
+    print("All local Parent/Child relationships are normatively current.")
+    if local_only:
+        print(
+            f"{local_only} Parent package change(s) are non-normative and require no propagation."
+        )
+    return 0
+
+
 def _print_propagation_review_guide(scope: str, edge_count: int) -> None:
     print("Propagation review")
     print(f"{edge_count} Parent/Child update(s) will be checked {scope}, top-down.")
@@ -494,22 +614,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         child = parse_node(child_root, repo_root)
         child_label = child_root.relative_to(repo_root).as_posix() or "."
         child_compiled = Compiler(repo_root).compile(child_root)
-        legacy_matches = [
-            package
-            for ref, package in zip(child_compiled.parsed.parents, child_compiled.parent_packages)
-            if ref.id == parent.id
-        ]
-        source_matches = [
-            package
-            for ref, package in zip(child_compiled.parsed.sources, child_compiled.source_packages)
-            if ref.relationship == "parent" and ref.id == parent.id
-        ]
-        current_matches = [*legacy_matches, *source_matches]
-        if len(current_matches) != 1:
-            raise ContextCanonError(
-                f"{child.metadata.name}: expected exactly one semantic Parent package for {parent.id}"
-            )
-        current_parent = current_matches[0]
+        current_parent = _accepted_parent_package(child_compiled, parent.id)
         live_parent = Compiler(repo_root).compile(parent_root)
 
         print("")
@@ -982,9 +1087,14 @@ def main(argv: list[str] | None = None) -> int:
         "--all", action="store_true",
         help="broaden review scope to every semantic Parent edge in the repository",
     )
-    propagate_parser.add_argument(
+    propagate_mode = propagate_parser.add_mutually_exclusive_group()
+    propagate_mode.add_argument(
         "--yes", action="store_true",
         help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)",
+    )
+    propagate_mode.add_argument(
+        "--status", action="store_true",
+        help="read-only check for pending normative Parent propagation; exit 1 when updates are pending",
     )
 
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
@@ -998,7 +1108,9 @@ def main(argv: list[str] | None = None) -> int:
     parent_propagate = parent_sub.add_parser("propagate", help="explicit Parent-oriented form of guided downstream propagation")
     parent_propagate.add_argument("path", nargs="?", default=".", help="starting Context Node; with --all any path inside the repository")
     parent_propagate.add_argument("--all", action="store_true", help="broaden review scope to every semantic Parent edge in the repository")
-    parent_propagate.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
+    parent_propagate_mode = parent_propagate.add_mutually_exclusive_group()
+    parent_propagate_mode.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
+    parent_propagate_mode.add_argument("--status", action="store_true", help="read-only check for pending normative Parent propagation; exit 1 when updates are pending")
 
     resource_parser = sub.add_parser(
         "resource",
@@ -1949,10 +2061,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "propagate":
+            if args.status:
+                return _run_propagation_status(Path(args.path), all_edges=args.all)
             return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
 
         if args.command == "parent":
             if args.parent_command == "propagate":
+                if args.status:
+                    return _run_propagation_status(Path(args.path), all_edges=args.all)
                 return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
 
             node_root = _node_root(Path(args.node))
@@ -2248,6 +2364,22 @@ def main(argv: list[str] | None = None) -> int:
                     "--all recursively checks every ContextCanon Node below this scan root. "
                     "If the failing file is unrelated, rerun from the intended repository/project root."
                 ) from exc
+
+        if args.command == "check" and args.all:
+            propagation_rows = _collect_propagation_status(repo_root, _parent_edges(repo_root))
+            pending = tuple(row for row in propagation_rows if row.pending)
+            if pending:
+                failed = True
+                print("pending propagation:")
+                _print_pending_propagation(pending, repo_root)
+                print("  - local Parent/Child graph is not fully propagated")
+                print("  - Next: contextcanon propagate --all .")
+            else:
+                print(
+                    "ok propagation: "
+                    f"all {len(propagation_rows)} local Parent/Child relationship(s) are normatively current"
+                )
+
         return 1 if failed else 0
     except ContextCanonError as exc:
         print(f"contextcanon: error: {exc}", file=sys.stderr)

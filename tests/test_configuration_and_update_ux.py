@@ -285,6 +285,73 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 
+    def test_check_all_and_propagation_status_detect_pending_parent_without_mutation(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            parent = write_node(repo, "root", "Root", "1.0.0", "Initial meaning.")
+            child_root = repo / "child"
+            child_root.mkdir()
+            (child_root / "CONTEXT.src.md").write_text(
+                parent_source("child", "Child", "..", parent),
+                encoding="utf-8",
+            )
+            install_package(child_root, parent)
+            write_outputs(Compiler(repo).compile(child_root))
+
+            write_node(repo, "root", "Root", "1.1.0", "Updated meaning.")
+            child_before = (child_root / "CONTEXT.src.md").read_bytes()
+
+            status_out = io.StringIO()
+            with contextlib.redirect_stdout(status_out):
+                status_rc = cli_main(["propagate", "--status", "--all", str(repo)])
+            self.assertEqual(status_rc, 1, status_out.getvalue())
+            self.assertIn("Pending normative Parent updates: 1", status_out.getvalue())
+            self.assertIn("Child (child) <- Root: 1.0.0 -> 1.1.0", status_out.getvalue())
+            self.assertIn("Next: contextcanon propagate --all .", status_out.getvalue())
+            self.assertEqual((child_root / "CONTEXT.src.md").read_bytes(), child_before)
+            self.assertFalse((child_root / ".context" / "parent-reviews").exists())
+
+            check_out = io.StringIO()
+            with contextlib.redirect_stdout(check_out):
+                check_rc = cli_main(["check", "--all", str(repo)])
+            self.assertEqual(check_rc, 1, check_out.getvalue())
+            self.assertIn("ok .", check_out.getvalue())
+            self.assertIn("ok child", check_out.getvalue())
+            self.assertIn("pending propagation:", check_out.getvalue())
+            self.assertIn("Child (child) <- Root: 1.0.0 -> 1.1.0", check_out.getvalue())
+            self.assertIn("Next: contextcanon propagate --all .", check_out.getvalue())
+
+            propagate_out = io.StringIO()
+            with contextlib.redirect_stdout(propagate_out):
+                propagate_rc = cli_main(["propagate", "--all", str(repo), "--yes"])
+            self.assertEqual(propagate_rc, 0, propagate_out.getvalue())
+
+            build_out = io.StringIO()
+            with contextlib.redirect_stdout(build_out):
+                build_rc = cli_main(["build", "--all", str(repo)])
+            self.assertEqual(build_rc, 0, build_out.getvalue())
+
+            final_out = io.StringIO()
+            with contextlib.redirect_stdout(final_out):
+                final_rc = cli_main(["check", "--all", str(repo)])
+            self.assertEqual(final_rc, 0, final_out.getvalue())
+            self.assertIn(
+                "ok propagation: all 1 local Parent/Child relationship(s) are normatively current",
+                final_out.getvalue(),
+            )
+
+            status_after = io.StringIO()
+            with contextlib.redirect_stdout(status_after):
+                status_after_rc = cli_main(["propagate", "--status", "--all", str(repo)])
+            self.assertEqual(status_after_rc, 0, status_after.getvalue())
+            self.assertIn(
+                "All local Parent/Child relationships are normatively current.",
+                status_after.getvalue(),
+            )
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
     def test_parent_propagate_updates_chain_top_down_in_one_command(self):
         repo = Path(tempfile.mkdtemp())
         try:
