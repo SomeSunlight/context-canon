@@ -14,6 +14,7 @@ from typing import Iterable
 
 from .compiler import Compiler
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
+from .links import markdown_link_target
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
@@ -602,7 +603,7 @@ def _render_sources(
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
         lines.append(
-            f"- [{name}]({config_locator}) — `{source.source_version}` — `relationship=parent`"
+            f"- [{name}]({markdown_link_target(config_locator)}) — `{source.source_version}` — `relationship=parent`"
         )
         if source.relationship_why:
             lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
@@ -712,7 +713,7 @@ def _render_parent_body(parent, compiled_parent, child_root: Path, parent_root: 
     if any(char in name for char in "]\n\r"):
         raise _error(f"Parent {parent.key} name cannot be represented safely")
     body = "\n".join([
-        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
+        f"- [{name}]({markdown_link_target(locator)}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
         (
             f'  <!-- ctx:source id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
             f'normalized-digest="{compiled_parent.normalized_digest}" '
@@ -728,7 +729,7 @@ def _render_enclosing_parent_body(compiled_parent, child_root: Path, parent_root
     if any(char in name for char in "]\n\r"):
         raise _error("Enclosing Parent name cannot be represented safely")
     body = "\n".join([
-        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
+        f"- [{name}]({markdown_link_target(locator)}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
         (
             f'  <!-- ctx:source id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
             f'normalized-digest="{compiled_parent.normalized_digest}" '

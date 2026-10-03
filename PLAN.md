@@ -26,7 +26,7 @@ Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors ide
 
 ## Active Fast Track: explicit Parent / Reference relationships — Issue #99
 
-**Fast Track status — OWNER-TESTED / MERGE-READY**
+**Fast Track status — ACCEPTED**
 
 Purpose: remove the public semantic duplication between normative ordinary Sources and semantic Parents. Phase 1 changes only normal authoring/compiler/package/build/inspect/maintenance behavior; onboarding STEP 07 remains compatible and intentionally unchanged.
 
@@ -45,7 +45,7 @@ Design constraint: `Source` may remain an internal package/discovery/provenance 
 
 Exit: a user can explain the model in two sentences — Parent Context applies and propagates through the semantic graph; Reference Context is useful background here, its Rules do not apply, and it is not inherited by Children.
 
-Fast Track owner-test closure: PR #100 has now been exercised repeatedly in a real disposable hierarchy with Parent→Reference→Parent changes and downstream propagation. The final UX includes a read-only propagation status, repository-wide health checking, cause-first propagation explanations, one canonical Parent/Reference authoring format, and fail-fast rejection of invalid relationship values such as `relationship=relation`. The complete deterministic suite passes 346/346 tests; the self-host health gate reports all four local Parent/Child relationships normatively current, generated output is clean, and `git diff --check` passes. The owner has explicitly approved the implementation for squash merge after the final exact-head gate. Markdown-link encoding for repository paths containing spaces/special characters is intentionally split into follow-up Issue #101 and does not block #99.
+Accepted checkpoint: PR #100 was owner-approved and squash-merged to `main` as `b50f4e313a7ece010cbc2d94f143dab63dcbbe59`. Before merge it had been exercised repeatedly in a real disposable hierarchy with Parent→Reference→Parent changes and downstream propagation. The final UX includes a read-only propagation status, repository-wide health checking, cause-first propagation explanations, one canonical Parent/Reference authoring format, and fail-fast rejection of invalid relationship values such as `relationship=relation`. The complete deterministic suite passes 346/346 tests; the self-host health gate reports all four local Parent/Child relationships normatively current, generated output is clean, and `git diff --check` passes. The owner has explicitly approved the implementation for squash merge after the final exact-head gate. Markdown-link encoding for repository paths containing spaces/special characters is intentionally split into follow-up Issue #101 and does not block #99.
 
 
 ## Active development block: editable owner-test installs — Issue #75
