@@ -21,8 +21,9 @@ from .model import (
 )
 from .parser import ContextCanonError
 
-PACKAGE_SCHEMA = "contextcanon/package/v2"
-PREVIOUS_PACKAGE_SCHEMA = "contextcanon/package/v1"
+PACKAGE_SCHEMA = "contextcanon/package/v3"
+PREVIOUS_PACKAGE_SCHEMA = "contextcanon/package/v2"
+OLDER_PACKAGE_SCHEMA = "contextcanon/package/v1"
 LEGACY_PACKAGE_SCHEMA = "contextcanon/package/v0"
 PACKAGE_MANIFEST_PATH = ".context/package.json"
 
@@ -32,15 +33,22 @@ def package_dependencies(compiled: CompiledNode) -> tuple[PackageDependency, ...
         sorted(
             (
                 PackageDependency(
-                    id=source.metadata.id,
-                    name=source.metadata.name,
-                    version=source.metadata.version,
-                    normalized_digest=source.normalized_digest,
-                    package_digest=source.package_digest,
+                    id=package.metadata.id,
+                    name=package.metadata.name,
+                    version=package.metadata.version,
+                    normalized_digest=package.normalized_digest,
+                    package_digest=package.package_digest,
+                    relationship=ref.relationship,
                 )
-                for source in compiled.source_packages
+                for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
             ),
-            key=lambda source: (source.id, source.version, source.normalized_digest, source.package_digest),
+            key=lambda source: (
+                source.id,
+                source.version,
+                source.normalized_digest,
+                source.package_digest,
+                source.relationship or "",
+            ),
         )
     )
 
@@ -129,10 +137,16 @@ def semantic_payload(
                 "id": source.id,
                 "version": source.version,
                 "normalized_digest": source.normalized_digest,
+                **({"relationship": source.relationship} if source.relationship else {}),
             }
             for source in sources
         ),
-        key=lambda item: (item["id"], item["version"], item["normalized_digest"]),
+        key=lambda item: (
+            item["id"],
+            item["version"],
+            item["normalized_digest"],
+            item.get("relationship", ""),
+        ),
     )
     import_items = sorted(
         (
@@ -247,6 +261,13 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
     )
 
 
+def _dependency_dict(dependency: PackageDependency) -> dict[str, Any]:
+    item = asdict(dependency)
+    if dependency.relationship is None:
+        item.pop("relationship", None)
+    return item
+
+
 def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> str:
     package = compiled_package(compiled)
     payload = {
@@ -257,9 +278,9 @@ def render_package_manifest(compiled: CompiledNode, compiler_version: str) -> st
             "name": package.metadata.name,
             "version": package.metadata.version,
         },
-        "parents": [asdict(parent) for parent in package.parents],
-        "sources": [asdict(source) for source in package.sources],
-        "imports": [asdict(dependency) for dependency in package.imports],
+        "parents": [_dependency_dict(parent) for parent in package.parents],
+        "sources": [_dependency_dict(source) for source in package.sources],
+        "imports": [_dependency_dict(dependency) for dependency in package.imports],
         "changes": [asdict(change) for change in package.changes],
         "rules": [asdict(rule) for rule in package.rules],
         "removed_rules": [asdict(removal) for removal in package.removed_rules],
@@ -293,7 +314,7 @@ def load_package(package_root: Path) -> CompiledPackage:
 
     root = _dict(raw, "manifest")
     schema = root.get("schema")
-    if schema not in {PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
+    if schema not in {PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, OLDER_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
         raise ContextCanonError(
             f"Unsupported Context package schema in {manifest_path}: {schema!r}"
         )
@@ -314,7 +335,10 @@ def load_package(package_root: Path) -> CompiledPackage:
             for index, item in enumerate(_list(root.get("parents", []), "parents"))
         )
     _unique((parent.id for parent in parents), "package Parent Node ID")
-    sources = tuple(_parse_dependency(item, index) for index, item in enumerate(_list(root.get("sources"), "sources")))
+    sources = tuple(
+        _parse_dependency(item, index, require_relationship=(schema == PACKAGE_SCHEMA))
+        for index, item in enumerate(_list(root.get("sources"), "sources"))
+    )
     imports = tuple(
         _parse_import_dependency(item, index)
         for index, item in enumerate(_list(root.get("imports", []), "imports"))
@@ -442,6 +466,77 @@ def _topic_dict(topic: Topic) -> dict[str, Any]:
     return item
 
 
+def exported_resource_files(package: CompiledPackage) -> tuple[PackageFile, ...]:
+    """Return only Topic Resource files that belong to the normative export.
+
+    The owning package may also carry Resource bytes used only by its direct
+    informational References. Those bytes remain useful locally but are not
+    inherited when this package is consumed as a semantic Parent.
+    """
+
+    prefixes: set[str] = set()
+    for topic in package.topics:
+        for target in topic.targets:
+            if target.kind != "resource" or not target.locator.startswith("CONTEXT/references/"):
+                continue
+            parts = target.locator.split("/")
+            if len(parts) >= 3:
+                prefixes.add("/".join(parts[:3]) + "/")
+    return tuple(
+        file
+        for file in package.files
+        if any(file.path.startswith(prefix) for prefix in prefixes)
+    )
+
+
+def export_digest(package: CompiledPackage) -> str:
+    """Digest the normative Context this package exports to semantic Children.
+
+    Presentation, the Node's release version and direct Reference carriers are
+    deliberately excluded. Effective ancestry identities, Rules, removals,
+    Topics and their exact Resource bytes define what a Child can inherit.
+    """
+
+    imports = sorted(
+        (
+            {
+                "id": dependency.id,
+                "name": dependency.name,
+                **({"why": dependency.why} if dependency.why else {}),
+            }
+            for dependency in package.imports
+        ),
+        key=lambda item: (item["id"], item["name"], item.get("why", "")),
+    )
+    rules = sorted(
+        (asdict(rule) for rule in package.rules),
+        key=lambda item: (item["origin_node_id"], item["id"]),
+    )
+    removals = sorted(
+        (asdict(removal) for removal in package.removed_rules),
+        key=lambda item: (
+            item["origin_node_id"],
+            item["rule_id"],
+            item["removed_by_node_id"],
+            item["removed_by_node_name"],
+            item["why"],
+        ),
+    )
+    topics = [_topic_dict(topic) for topic in package.topics]
+    topics.sort(key=lambda item: (item["origin_node_id"], item["id"]))
+    files = [asdict(file) for file in exported_resource_files(package)]
+    payload = {
+        "node": {"id": package.metadata.id, "name": package.metadata.name},
+        "imports": imports,
+        "rules": rules,
+        "removed_rules": removals,
+        "topics": topics,
+        "files": files,
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _read_and_verify_files(package_root: Path, expected: tuple[PackageFile, ...]) -> dict[str, bytes]:
     expected_by_path = {file.path: file for file in expected}
     actual_paths: set[str] = set()
@@ -489,14 +584,28 @@ def _parse_parent_dependency(value: Any, label: str = "parent") -> PackageDepend
         _digest(item.get("package_digest"), f"{label}.package_digest"),
     )
 
-def _parse_dependency(value: Any, index: int) -> PackageDependency:
+def _parse_dependency(value: Any, index: int, *, require_relationship: bool = False) -> PackageDependency:
     item = _dict(value, f"sources[{index}]")
+    raw_relationship = item.get("relationship")
+    if raw_relationship is None:
+        if require_relationship:
+            raise ContextCanonError(
+                f"Invalid sources[{index}].relationship: v3 packages require parent or reference"
+            )
+        relationship = None
+    else:
+        relationship = _string(raw_relationship, f"sources[{index}].relationship")
+        if relationship not in {"parent", "reference"}:
+            raise ContextCanonError(
+                f"Invalid sources[{index}].relationship: expected parent or reference"
+            )
     return PackageDependency(
         _string(item.get("id"), f"sources[{index}].id"),
         _string(item.get("name"), f"sources[{index}].name"),
         _string(item.get("version"), f"sources[{index}].version"),
         _digest(item.get("normalized_digest"), f"sources[{index}].normalized_digest"),
         _digest(item.get("package_digest"), f"sources[{index}].package_digest"),
+        relationship=relationship,  # type: ignore[arg-type]
     )
 
 

@@ -3,27 +3,31 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.6.0"
+compiler_version: "0.7.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "63b92022-db1a-4875-be99-017726cbfce7"
   name: "GitHub Local"
-  version: "0.1.4-draft"
+  version: "0.1.5-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
 
-# Accepted reusable Source packages used by this build. Both digests are exact pins.
+# Immutable import carriers. relationship is the public semantic kind; Source remains technical provenance.
 sources:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.3.5-draft"
+    relationship: "parent"
     locator: "../development-workflow/"
     normalized_digest: "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2"
     package_digest: "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029"
 
-# Effective imported Context origins, flattened through accepted Parent/Source packages.
+# Direct informational References. Their Rules are not effective and they are not exported to Children.
+references: []
+
+# Effective normative imported Context origins, flattened through Parent relationships only.
 imports:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
@@ -96,5 +100,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "36c9c1579a62d64eef1a2b7710f312bbc2bf3fe9cb76de952f2222a075c3be8d"
-  package_digest: "a3484880111f10d94cf9af22ee9e95e538937bb720b94c4e2b4f05940d058239"
+  normalized_digest: "9deb7eac7dc88b029681ce57dadf8ef3cef2f027fc12558f5110ba6a533ff32d"
+  package_digest: "4a5ed6e82a93d34a7995b4fa6fd1b95bfcaf7ec78df7651f61b4d388b2512c91"

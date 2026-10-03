@@ -8,12 +8,12 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** ContextCanon Framework Development  
-**Context version:** `0.3.12-draft`
+**Context version:** `0.3.14-draft`
 
 **Resulting imported Contexts:**
 
-- **ContextCanon Foundation** — `0.2.1-draft` — direct Source — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
-- **Development Workflow** — `0.3.5-draft` — direct Source — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
+- **ContextCanon Foundation** — `0.2.3-draft` — direct Parent Context — [inspect accepted carrier](../../library/foundation/CONTEXT.md)
+- **Development Workflow** — `0.3.5-draft` — direct Parent Context — [inspect accepted carrier](../../library/development-workflow/CONTEXT.md)
 
 ## How to use this context
 
@@ -25,9 +25,9 @@ For the current task, evaluate each Topic condition. When one matches, read ever
 
 ### Canonical context
 
-#### `CC-001` — One official package
+#### `CC-001` — One canonical package with an explicit export boundary
 
-The compiled Official Context Package is the single canonical context for a Node: it applies to the Node itself and is the package meaning published to child Nodes.
+The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.
 
 #### `CC-002` — Edit source, not generated output
 
@@ -41,9 +41,9 @@ Framework bookkeeping belongs under `.context/` and should not be required readi
 
 ### Composition
 
-#### `CC-004` — No implicit Source precedence
+#### `CC-004` — References stay informational
 
-Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
+A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.
 
 #### `CC-013` — Parents are unordered
 
@@ -217,7 +217,7 @@ Use `uv` instead of direct `pip` installation when the required workflow is supp
 
 #### `CCI-004` — Keep reusable Node dependencies explicit
 
-A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
+A reusable Node in the ContextCanon Node Library uses Foundation as a Parent only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers add Foundation as another Parent when both are wanted.
 
 ## Topics from ContextCanon Foundation
 
@@ -233,7 +233,7 @@ When editing ContextCanon source, IDs, generated views, package resources, or To
 
 ### Context composition
 
-When adding Sources or changing inherited Rules:
+When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:
 
 **Required**
 
@@ -324,7 +324,7 @@ When changing authoring syntax, IDs, Topics, Changes, official entry views, or m
 
 ### Composition
 
-When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
+When changing Parent/Reference relationships, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
 
 **Required**
 

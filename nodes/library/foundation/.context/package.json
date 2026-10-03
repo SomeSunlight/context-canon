@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "1de69869841ce0028c42deeae836a2420f2e405b338502ea67bbef610389a371",
-    "package": "1d4318b317f76e125043ca3f95d311399650889d51b5434e6f2fe343154b6179"
+    "normalized": "e9cafd8e9eb60c8221f17f9ffecb13644d8d7a1b4db295737e671898cb9e52c0",
+    "package": "eed463681e455b3574b273000dcf8772184b056c48b3b41661c24eed9e7e3c46"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "ebaf5c0ad0f364cd36e11c65d10e82c825c60e625670324e5bd0dd3376fab5b4",
-      "size": 4732
+      "sha256": "25edd11afc52346a912107bbdb9bc62994ee9eed5555026979850db2b5f3deaa",
+      "size": 4985
     },
     {
       "path": "CONTEXT/README.md",
@@ -18,8 +18,8 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
-      "sha256": "8001b9b80d6e4a2b5097839c041194e8e7a9065294f3a1df1905ae68e2d7c388",
-      "size": 17026
+      "sha256": "5a61c28c67a1f5c7980b598c16e44e61c439a7b230cfff4465ad52f1709b50be",
+      "size": 17520
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
@@ -28,13 +28,13 @@
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
-      "sha256": "6061fc524967436d06313dec29de8074e4ae06518a7301b59842116970f62566",
-      "size": 7074
+      "sha256": "3d5f396f32508c1370099d519f7a163269c2df77b12727c7419b54a087900275",
+      "size": 7439
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
-      "sha256": "521bb4b66d6f0c485325e090003e8ea4d82c700226eaf45ecc58648f1ceeeb44",
-      "size": 19483
+      "sha256": "1f14f00fffe09955b1f1d46f9ccfb634e39c757a10231c97bdf61fdab39c5b0e",
+      "size": 20246
     },
     {
       "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
@@ -46,7 +46,7 @@
   "node": {
     "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
     "name": "ContextCanon Foundation",
-    "version": "0.2.1-draft"
+    "version": "0.2.3-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -57,9 +57,9 @@
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",
-      "statement": "The compiled Official Context Package is the single canonical context for a Node: it applies to the Node itself and is the package meaning published to child Nodes.",
-      "title": "One official package",
-      "why": "A Node must not operate under one context while publishing a different truth to descendants."
+      "statement": "The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.",
+      "title": "One canonical package with an explicit export boundary",
+      "why": "Local background information must not become inherited governance, but the local view and normative export must still come from one deterministic authenticated package."
     },
     {
       "group": "Canonical context",
@@ -87,9 +87,9 @@
       "modifications": [],
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",
-      "statement": "Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.",
-      "title": "No implicit Source precedence",
-      "why": "Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain."
+      "statement": "A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.",
+      "title": "References stay informational",
+      "why": "Related information must not silently become governance merely because it uses the same immutable package infrastructure."
     },
     {
       "group": "Composition",
@@ -182,7 +182,7 @@
       "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
     }
   ],
-  "schema": "contextcanon/package/v2",
+  "schema": "contextcanon/package/v3",
   "sources": [],
   "topics": [
     {
@@ -213,7 +213,7 @@
       "title": "Context authoring"
     },
     {
-      "condition": "When adding Sources or changing inherited Rules:",
+      "condition": "When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:",
       "id": "CC-TOPIC-COMPOSITION",
       "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
       "origin_node_name": "ContextCanon Foundation",

@@ -3,21 +3,24 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.6.0"
+compiler_version: "0.7.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.13-draft"
+  version: "0.3.15-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
 
-# Accepted reusable Source packages used by this build. Both digests are exact pins.
+# Immutable import carriers. relationship is the public semantic kind; Source remains technical provenance.
 sources: []
 
-# Effective imported Context origins, flattened through accepted Parent/Source packages.
+# Direct informational References. Their Rules are not effective and they are not exported to Children.
+references: []
+
+# Effective normative imported Context origins, flattened through Parent relationships only.
 imports: []
 
 # Elements authored in this Node's CONTEXT.src.md.
@@ -83,5 +86,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "3e5dadca87aa96f360555a65d97ee6814a8434f29f537fffe50ec3019f1a5475"
-  package_digest: "58b572c07a717e17baa2c2e1382f93345380fdc5dc520a3a8227a9d70415d003"
+  normalized_digest: "7b34c83123bc58db84673c81f8660dacb3e388e158f8cc5695051dad99a9d1fc"
+  package_digest: "bb9bc130f41f3b96948da6709646ed4528b185b5ef1ac6dbdea566b20918ec6c"

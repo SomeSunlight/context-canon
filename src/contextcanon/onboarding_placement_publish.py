@@ -457,10 +457,13 @@ def _replace_managed_section(
 
 
 def _replace_parent_section(text: str, body: str) -> str:
+    """Publish structural Parents inside the canonical Context Imports section."""
+
     text = _strip_managed_block(text, "parent")
+
     matches: list[re.Match[str]] = []
-    for heading in ("Parent Context Node", "Parent"):
-        match = re.search(rf"(?m)^## {re.escape(heading)}\s*$", text)
+    for heading_name in ("Parent Context Node", "Parent"):
+        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \t]*$", text)
         if match is not None:
             matches.append(match)
     if len(matches) > 1:
@@ -471,21 +474,34 @@ def _replace_parent_section(text: str, body: str) -> str:
         end = next_heading.start() if next_heading else len(text)
         existing = text[heading.end():end].strip()
         if existing and "ctx:parent" not in existing:
-            raise _error("Parent Context Node section contains unmanaged content; preserve it elsewhere before publication")
+            raise _error(
+                "Parent Context Node section contains unmanaged content; preserve it elsewhere before publication"
+            )
         text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
-    if not body.strip():
-        return text
-    block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
-    section = f"## Parent Context Node\n\n{block}\n"
-    first_local = re.search(r"(?m)^## .+$", text)
-    insert_at = first_local.start() if first_local else len(text)
-    before = text[:insert_at].rstrip()
-    after = text[insert_at:].lstrip("\n")
-    result = before + "\n\n" + section
-    if after:
-        result += "\n" + after
-    return result.rstrip() + "\n"
 
+    if not body.strip():
+        return text.rstrip() + "\n"
+
+    source_heading = re.search(r"(?m)^## Sources[ \t]*$", text)
+    context_heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
+    if source_heading is not None and context_heading is not None:
+        raise _error("CONTEXT.src.md contains both ## Context Imports and legacy ## Sources")
+    if source_heading is not None:
+        text = text[:source_heading.start()] + "## Context Imports" + text[source_heading.end():]
+
+    block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
+    heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
+    if heading is None:
+        return text.rstrip() + f"\n\n## Context Imports\n\n{block}\n"
+
+    next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
+    end = next_heading.start() if next_heading else len(text)
+    existing = text[heading.end():end].strip()
+    combined = block if not existing else block + "\n\n" + existing
+    result = text[:heading.end()] + "\n\n" + combined
+    if end < len(text):
+        result += "\n\n" + text[end:].lstrip("\n")
+    return result.rstrip() + "\n"
 
 def _safe_line(value: object, label: str) -> str:
     text = str(value).strip()
@@ -585,7 +601,9 @@ def _render_sources(
         name = _safe_line(source.source_name, f"Source {source.review_id} name")
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
-        lines.append(f"- [{name}]({config_locator}) — `{source.source_version}`")
+        lines.append(
+            f"- [{name}]({config_locator}) — `{source.source_version}` — `relationship=parent`"
+        )
         if source.relationship_why:
             lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
         lines.extend(
@@ -645,7 +663,13 @@ def _render_node_source(
     text = _replace_managed_section(text, "Local State", "state", _render_state(states), aliases=("State",))
     text = _replace_managed_section(text, "Local Plan", "plan", _render_summaries(plans, "plan"), aliases=("Plan",))
     config_locator = Path(os.path.relpath(repository_root / CONFIG_FILENAME, node_root)).as_posix()
-    text = _replace_managed_section(text, "Sources", "sources", _render_sources(sources, provenance_by_id, config_locator))
+    text = _replace_managed_section(
+        text,
+        "Context Imports",
+        "sources",
+        _render_sources(sources, provenance_by_id, config_locator),
+        aliases=("Sources",),
+    )
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
     text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
     return text
@@ -688,9 +712,9 @@ def _render_parent_body(parent, compiled_parent, child_root: Path, parent_root: 
     if any(char in name for char in "]\n\r"):
         raise _error(f"Parent {parent.key} name cannot be represented safely")
     body = "\n".join([
-        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}`",
+        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
         (
-            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
+            f'  <!-- ctx:source id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
             f'normalized-digest="{compiled_parent.normalized_digest}" '
             f'package-digest="{compiled_parent.package_digest}" -->'
         ),
@@ -704,9 +728,9 @@ def _render_enclosing_parent_body(compiled_parent, child_root: Path, parent_root
     if any(char in name for char in "]\n\r"):
         raise _error("Enclosing Parent name cannot be represented safely")
     body = "\n".join([
-        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}`",
+        f"- [{name}]({locator}) — `{compiled_parent.metadata.version}` — `relationship=parent`",
         (
-            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
+            f'  <!-- ctx:source id="{compiled_parent.metadata.id}" version="{compiled_parent.metadata.version}" '
             f'normalized-digest="{compiled_parent.normalized_digest}" '
             f'package-digest="{compiled_parent.package_digest}" -->'
         ),

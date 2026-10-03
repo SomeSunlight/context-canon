@@ -2,7 +2,7 @@
 
 `CONTEXT.src.md` is the human-editable source of truth for one Context Node. The compiler never needs to reconstruct authored information from generated `CONTEXT.md`, `.context/context.yaml`, or `.context/package.json`.
 
-The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing. Canonical local sections are named `Local Overview`, `Local State`, `Local Plan`, `Local Rules`, and `Local Topics`; `Local` means authored in this Node, not an implicit override. The relationship heading is `Parent Context Node`. Compiler 0.5 continues to accept the older `Overview`/`State`/`Plan`/`Rules`/`Topics`/`Parent` headings as migration aliases, but a source must not contain both forms for the same section.
+The format is deliberately constrained Markdown: readable without special tooling, but structured enough for deterministic parsing. Canonical local sections are named `Local Overview`, `Local State`, `Local Plan`, `Local Rules`, and `Local Topics`; `Local` means authored in this Node, not an implicit override. The dedicated ancestry heading is `Parent Context Node`; reusable package relationships are authored under `Context Imports`. Older local-section aliases and the legacy `Sources` import heading remain readable for migration, but canonical authoring must not mix duplicate aliases for the same section.
 
 ## Node header
 
@@ -29,64 +29,77 @@ The stable ID is independent of the Node's directory path or display name. A roo
 This service owns customer-facing notification delivery. It exists separately from the billing service because delivery retries, provider failover, and message templates have their own operational lifecycle.
 ```
 
-Overview text is copied into the generated `CONTEXT.md` near the top of the compact entry. It is **local presentation and orientation**, not inherited governance: using a Node as a Source does not copy its Overview into a child Node.
+Overview text is copied into the generated `CONTEXT.md` near the top of the compact entry. It is **local presentation and orientation**, not inherited governance: neither a Parent nor a Reference imports another Node's Overview.
 
-Changing only an Overview therefore changes the exact published package bytes and `package_digest`, but does not change `normalized_digest`. Rules, Changes, Sources, and Topics remain the semantic composition boundary.
+Changing only an Overview therefore changes the exact published package bytes and `package_digest`, but does not change `normalized_digest`. Rules, Changes, Parent/Reference relationships, and Topics remain the semantic boundary.
 
 Keep an Overview compact. It is always-read entry context, so deeper explanations belong behind Topics rather than turning the Overview into another preload document. In particular, use Topics for material that needs to be packaged as deeper Resources instead of relying on repository-local links from an Overview.
 
-## Parent Context Node
+## Context Imports
 
-A Context Node may have zero, one, or several semantic Parents. Parents are explicit accepted relationships; filesystem nesting creates none. Parent order has no precedence.
+All reusable Context relationships use this one authoring form. There is no
+separate Parent section in canonical authoring: **Parent** and **Reference**
+are values of the same explicit relationship field.
 
-Each Parent is an exact immutable package pin:
+
+
+`## Context Imports` lists reusable Context packages and makes the semantic relationship explicit on every visible import line:
 
 ```markdown
-## Parent Context Node
+## Context Imports
 
-- [Project Context](../) — `0.1.0`
-  <!-- ctx:parent id="<stable-parent-node-id>" version="0.1.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
+- [Security Baseline](../security/) — `1.2.0` — `relationship=parent`
+  <!-- ctx:source id="<stable-node-id>" version="1.2.0" -->
+
+- [Historical NZZ Material](../nzz/) — `1.0.0` — `relationship=reference`
+  Why: Background for older NZZ material.
+  <!-- ctx:source id="<stable-node-id>" version="1.0.0" -->
 ```
 
-The visible label must match the canonical Node name of the accepted Parent package; the link target records where a newer Parent candidate may later be discovered. Stable ID/version/digests remain the technical identity. `contextcanon check` reports a stale or accidentally edited Parent label. Ordinary `contextcanon build` never dereferences the locator. Build loads only the accepted Parent artifact from the Child's local `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests and package files.
+The two values are deliberately small and complete:
 
-Parent and ordinary Sources are intentionally different roles. Parent expresses the human-accepted semantic hierarchy; Sources express independent reusable composition. Both feed the same immutable package-composition engine, so inherited Rules, Topics and Resources use the same deterministic conflict rules without creating a second inheritance implementation.
+- `parent` — the imported Node's effective Rules apply here, its normative Topics/Resources are available, and that resulting Context may continue through Parent/Child relationships.
+- `reference` — the imported Node is informational background here; its Rules do not apply, its Overrides/Removes cannot alter this Node's normative Context, and the relationship is not inherited by Children.
 
-Changing a Parent's live files does not silently change the Child. Each Parent advances only through explicit review and acceptance.
+The visible relationship marker is machine-significant authoring syntax. The adjacent `ctx:source` comment preserves stable package identity and accepted version/pins. The visible link label must match the canonical Node name of the accepted package; the link target is provenance/update location.
 
-## Sources
+For migration only, ContextCanon still reads `## Sources`, missing relationship markers, and the older dedicated `## Parent Context Node` / `ctx:parent` form. Every one of those legacy forms normalizes to `## Context Imports` with `ctx:source` and an explicit `relationship=parent`. ContextCanon never silently weakens an existing Parent into a Reference. Use:
 
-`## Sources` lists accepted Context Nodes. The visible link label must match the canonical Node name of the accepted Source package, while the link target is its provenance/update location. The adjacent compiler-managed comment preserves stable identity and accepted version. Stable ID/version/digests define technical identity; `contextcanon check` reports a stale or accidentally edited visible Source label.
+```text
+contextcanon source normalize --all .
+```
 
-### Local development Source
+to migrate all relationship authoring in the selected scope to that single canonical form. This is an explicit maintenance action: ordinary `build` and `check` continue not to rewrite human-authored `CONTEXT.src.md`.
 
-An unpinned Source is resolved as a local node-root path inside the same repository:
+### Local development import
+
+An unpinned import resolves a local node-root path inside the same repository:
 
 ```markdown
-## Sources
+## Context Imports
 
-- [ContextCanon Foundation](../foundation/) — `0.1.0`
+- [ContextCanon Foundation](../foundation/) — `0.1.0` — `relationship=parent`
   <!-- ctx:source id="<stable-node-id>" version="0.1.0" -->
 ```
 
-This remains the simple development/dogfood case.
+A Reference uses the same carrier syntax with `relationship=reference`. Local compilation therefore exercises the same relationship semantics as an immutable pinned import.
 
-### Accepted immutable Source
+### Accepted immutable import
 
-An accepted external Source additionally pins both canonical semantics and exact published package bytes:
+An accepted external import additionally pins both canonical semantics and exact published package bytes:
 
 ```markdown
-## Sources
+## Context Imports
 
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
 `normalized-digest` and `package-digest` are an all-or-nothing pair. Each is lowercase SHA-256 hexadecimal.
 
-For a pinned Source, the visible link is provenance/update location rather than something ordinary `contextcanon build` dereferences. Build loads only the accepted immutable artifact from the consumer Node's `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests, and package files.
+For a pinned import, the visible link is provenance/update location rather than something ordinary `contextcanon build` dereferences. Build loads only the accepted immutable artifact from the consumer Node's `.context/sources/<package-digest>/` store and verifies Node ID, version, both digests, and package files.
 
-This keeps normal builds offline and prevents a Source repository update from silently changing a consumer.
+This keeps normal builds offline and prevents an upstream repository update from silently changing a consumer. The historical directory name `.context/sources/` is technical package/provenance storage, not a third semantic relationship kind.
 
 ### Central Source discovery configuration
 
@@ -118,18 +131,18 @@ repositories:
 
 Local paths may be relative to the consuming project root or absolute. They require no network access. Accepted package pins remain unchanged until explicit review/accept; changing discovery configuration never silently changes effective Context. The YAML file is deliberately the project-level operational configuration surface so later non-semantic ContextCanon settings can be added under a future schema version instead of inventing one file per setting.
 
-`contextcanon source list` shows the canonical name from each accepted Source package, stable IDs and the resolved discovery configuration. If a consumer carries a stale visible label, the list warns about it while name-based commands still accept the canonical package name; `contextcanon check` reports that mismatch until the source is repaired or a successful acceptance normalizes the label. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
+`contextcanon source list` shows the canonical name from each accepted import package, its Parent/Reference relationship, stable ID, and resolved discovery configuration. If a consumer carries a stale visible label, the list warns about it while name-based commands still accept the canonical package name; `contextcanon check` reports that mismatch until the source is repaired or a successful acceptance normalizes the label. `contextcanon source update "Development Workflow"` performs fetch + exact diff + explicit acceptance as one guided flow. `--ref <branch|tag|commit>` is a one-off Git candidate override and never rewrites the central configuration or accepted pin.
 
 When that guided `source update` starts from a legacy inline Git Source and no central mapping exists yet, ContextCanon records the equivalent durable discovery mapping in `contextcanon.yaml` after the legacy fetch succeeds. An exact 40-character legacy commit pin becomes default-branch discovery rather than a permanently frozen central ref, preserving the old "discover something newer" behavior; a one-off `--ref` is never persisted. This migration changes discovery configuration only, not the accepted immutable package pin. The legacy inline metadata remains readable as a compatibility fallback while the central mapping takes precedence.
 
-After an ancestor Source is accepted, `contextcanon parent propagate --all` walks semantic Parent edges top-down, shows each exact diff, and asks before accepting that edge. `--yes` is available for an already-reviewed scripted run. This removes UUID/path archaeology without turning Parent updates into live inheritance.
+After a **Parent** import is accepted, `contextcanon parent propagate --all` can walk semantic Parent edges top-down, show each exact diff, and ask before accepting that edge. A Reference update never enters this propagation graph. `--yes` is available for an already-reviewed scripted run. This removes UUID/path archaeology without turning Parent updates into live inheritance.
 
 ### Legacy inline Git update transport
 
-A pinned Source may additionally describe how candidate updates are retrieved when no central Source mapping exists:
+A pinned import may additionally describe how candidate updates are retrieved when no central Source mapping exists:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<stable-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
 ```
 
@@ -141,7 +154,7 @@ A pinned Source may additionally describe how candidate updates are retrieved wh
 
 Transport metadata is only for candidate discovery. Normal `build` never uses it.
 
-Source order is not precedence. See [Context composition](composition.md) for immutable package storage and the fetch/review/accept workflow.
+Parent order is not precedence. References are non-normative rather than lower-priority Parents. See [Context composition](composition.md) for immutable package storage and the fetch/review/accept workflow.
 
 ## Local Rules
 
@@ -295,4 +308,4 @@ A Context Node version is the human-facing release identity for one published pa
 
 When a prior generated package exists and `contextcanon build` detects changed package identity while `ctx:node version` is still unchanged, a SemVer-shaped version (`X.Y.Z`, optionally with a suffix such as `-draft`) receives the minimum automatic patch bump. For example, `0.2.0-draft` becomes `0.2.1-draft`. ContextCanon reports that this is only the mechanical minimum and asks the owner to consider a higher minor or major version when the semantic or compatibility significance warrants it. A version already advanced deliberately by the human is preserved.
 
-ContextCanon does not infer whether a change is breaking or feature-level. Versions that cannot be safely patch-bumped are left for explicit human editing, with an actionable error. Consumers also reject Source candidates whose package identity changed while the provider reused the currently accepted version; the consumer must not repair the provider's release identity.
+ContextCanon does not infer whether a change is breaking or feature-level. Versions that cannot be safely patch-bumped are left for explicit human editing, with an actionable error. Consumers also reject imported-package candidates whose package identity changed while the provider reused the currently accepted version; the consumer must not repair the provider's release identity.

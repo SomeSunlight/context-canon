@@ -1,11 +1,11 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.12-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.14-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
-> `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted Context Sources.
+> `CONTEXT.md` and `CONTEXT/` are generated from this source plus accepted reusable Parent/Reference imports.
 >
-> This Node composes [ContextCanon Foundation](../../library/foundation/) and the reusable [Development Workflow](../../library/development-workflow/), then adds only the framework-development delta.
+> This Node composes [ContextCanon Foundation](../../library/foundation/) and the reusable [Development Workflow](../../library/development-workflow/), then adds only the framework-development delta. Both reusable imports are normative Parents.
 >
 > Full format documentation: [../../library/foundation/docs/source-format.md](../../library/foundation/docs/source-format.md)
 
@@ -32,12 +32,11 @@ OVERRIDE IMPORTED RULE
   <!-- ctx:change op="override" source-id="<stable-source-node-id>" rule-id="RULE-ID" -->
 -->
 
-## Sources
+## Context Imports
+- [ContextCanon Foundation](../../library/foundation/) — `0.2.3-draft` — `relationship=parent`
+  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.3-draft" -->
 
-- [ContextCanon Foundation](../../library/foundation/) — `0.2.1-draft`
-  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.1-draft" -->
-
-- [Development Workflow](../../library/development-workflow/) — `0.3.5-draft`
+- [Development Workflow](../../library/development-workflow/) — `0.3.5-draft` — `relationship=parent`
   <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.5-draft" -->
 
 ## Local Rules
@@ -94,8 +93,8 @@ OVERRIDE IMPORTED RULE
 
 ### Node library
 
-- **Keep reusable Node dependencies explicit:** A reusable Node in the ContextCanon Node Library composes Foundation only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers compose Foundation alongside them when both are wanted.
-  Why: Reuse should not force unrelated transitive governance on consumers; explicit independent Sources are simpler than requiring consumers to remove a baseline that a reusable Node never needed.
+- **Keep reusable Node dependencies explicit:** A reusable Node in the ContextCanon Node Library uses Foundation as a Parent only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers add Foundation as another Parent when both are wanted.
+  Why: Reuse should not force unrelated transitive governance on consumers; explicit Parent relationships are simpler than requiring consumers to remove a baseline that a reusable Node never needed.
   <!-- ctx:rule id="CCI-004" -->
 
 ## Local Topics
@@ -165,7 +164,7 @@ Required:
 
 ### Composition
 
-When changing Source composition, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
+When changing Parent/Reference relationships, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:
 
 Required:
 - Resource: `../../library/foundation/docs/composition.md`

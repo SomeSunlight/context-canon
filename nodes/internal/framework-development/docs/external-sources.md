@@ -1,8 +1,8 @@
-# Immutable external Sources
+# Immutable reusable import packages
 
-ContextCanon separates **semantic composition** from **Source transport**.
+ContextCanon separates **semantic relationship** from **package transport**. Phase 1 keeps the historical `source` implementation/CLI name for transport and accepted-package maintenance, but every such import is semantically either **Parent** or **Reference**.
 
-A consumer should be able to keep using an already accepted Source even when the Source repository is unavailable, has moved, or contains a newer version that has not been reviewed yet.
+A consumer should be able to keep using an already accepted import package even when its repository is unavailable, has moved, or contains a newer version that has not been reviewed yet.
 
 The core rule is therefore:
 
@@ -62,7 +62,7 @@ Candidates are not inheritance. Merely fetching one cannot change a normal build
 A local development Source may remain unpinned:
 
 ```markdown
-- [Python Development](../python-development/) — `1.2.0`
+- [Python Development](../python-development/) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" -->
 ```
 
@@ -71,7 +71,7 @@ This remains the simple local-development case.
 An accepted immutable Source adds both exact digests:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" -->
 ```
 
@@ -84,7 +84,7 @@ Compiler 0.5 provides a generic Git candidate transport. It is not GitHub-specif
 A Git-backed Source adds three transport fields:
 
 ```markdown
-- [Python Development](https://example.org/context-nodes.git) — `1.2.0`
+- [Python Development](https://example.org/context-nodes.git) — `1.2.0` — `relationship=parent`
   <!-- ctx:source id="<python-node-id>" version="1.2.0" normalized-digest="<sha256>" package-digest="<sha256>" transport="git" ref="main" node-path="nodes/library/python-development" -->
 ```
 
@@ -197,17 +197,18 @@ This creates a deliberate recovery boundary. If acceptance installs the new immu
 
 Regression coverage simulates failure exactly at that final replace and verifies that the original `CONTEXT.src.md` bytes remain unchanged, no temporary file remains, and the consumer still compiles against the old pin.
 
-## One semantic composition path
+## One package path, relationship-aware semantics
 
-Local and external Sources converge before Rule composition:
+Local and external reusable imports converge at the same verified `CompiledPackage` boundary:
 
 ```text
-local Source Node ──compile──> CompiledPackage ─┐
-                                                ├──> Rule composition
-accepted external artifact ──load/verify───────> CompiledPackage ─┘
+local import Node ──compile──> CompiledPackage ─┐
+                                                ├──> Parent: normative composition/export
+accepted artifact ──load/verify────────────────> CompiledPackage ─┘
+                                                └──> Reference: local informational projection only
 ```
 
-Remove/Override behavior, diamond-conflict detection, provenance, and downstream normalized semantics therefore do not have separate remote implementations. Transport bugs cannot silently create a second composition language.
+Package loading, verification, provenance and update mechanics therefore do not have separate remote implementations. Parent composition still owns Remove/Override and conflict semantics; References deliberately bypass that normative path. Transport bugs cannot silently invent another relationship language.
 
 ## Presentation order versus canonical semantics
 
@@ -217,13 +218,13 @@ Canonical semantic hashing remains independently order-insensitive where order h
 
 ## Failure behavior
 
-Normal build fails rather than fetching or guessing when the pinned accepted package is absent, malformed, has wrong files/digests, or disagrees with the Source ID/version/pins.
+Normal build fails rather than fetching or guessing when a pinned accepted package is absent, malformed, has wrong files/digests, or disagrees with the imported Node ID/version/pins.
 
 Git candidate fetch fails on unsupported/incomplete transport metadata, an unavailable ref, an invalid/missing `node-path`, a missing Git executable, an invalid immutable package, or a candidate with the wrong stable Node ID.
 
-A missing accepted package is never permission for normal `build` to contact the Source locator automatically.
+A missing accepted package is never permission for normal `build` to contact an import locator automatically.
 
-## Candidate updates are change requests
+## Candidate updates are relationship-aware change requests
 
 The complete update model is:
 
@@ -245,11 +246,11 @@ explicit acceptance
 new accepted package + new exact pin
 ```
 
-A newer package is therefore a change request, not live inheritance. The deterministic review result is also the natural exact input to later LLM impact analysis.
+A newer package is therefore a change request, not live inheritance. For a Parent carrier, review includes normative consumer composition and later Child propagation when its exported Context changed. For a Reference carrier, review remains direct and informational: no Rule inheritance and no downstream propagation. The deterministic review result is also the natural exact input to later LLM impact analysis.
 
 ## Current implementation boundary
 
-Compiler 0.5 implements immutable manifests, full package verification, offline accepted-package composition, exact Source pins, deterministic package diff, review receipts, explicit acceptance, multi-Node Git addressing, generic Git candidate retrieval, staged package publication, atomic canonical-pin replacement, and exact-commit capture for update candidates discovered from a moving remote branch.
+Compiler 0.7 keeps the established immutable-manifest, verification, offline package, package-diff, review-receipt, acceptance and Git-discovery machinery while adding explicit Parent/Reference relationship semantics. Parent imports remain normative and transitive; References are non-normative and direct-only. Package schema v3 records the relationship kind on direct reusable imports.
 
 The current reviewed first-adoption onboarding layer can also propose an existing reusable Source from a verified catalog and bind that proposal through human review to the exact Node ID, name, version, normalized digest, and package digest that were inspected. Final onboarding acceptance requires the same immutable package again and then pins it into normal offline consumer state.
 

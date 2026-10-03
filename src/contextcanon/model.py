@@ -7,6 +7,7 @@ from typing import Literal
 TargetKind = Literal["resource", "context-node"]
 TargetIntent = Literal["required", "optional"]
 ChangeKind = Literal["remove", "override"]
+RelationshipKind = Literal["parent", "reference"]
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class SourceRef:
     transport_ref: str | None = None
     node_path: str | None = None
     why: str | None = None
+    relationship: RelationshipKind = "parent"
 
     @property
     def is_pinned(self) -> bool:
@@ -121,6 +123,7 @@ class PackageDependency:
     normalized_digest: str
     package_digest: str
     why: str | None = None
+    relationship: RelationshipKind | None = None
 
 
 @dataclass(frozen=True)
@@ -168,10 +171,20 @@ class ParsedNode:
     plan: str = ""
 
     @property
-    def parent(self) -> ParentRef | None:
-        if len(self.parents) > 1:
-            raise ValueError("Node has multiple semantic Parents; use .parents")
-        return self.parents[0] if self.parents else None
+    def semantic_parents(self) -> tuple[ParentRef | SourceRef, ...]:
+        """All direct semantic Parents, independent of migration-era syntax."""
+
+        return (
+            *self.parents,
+            *(source for source in self.sources if source.relationship == "parent"),
+        )
+
+    @property
+    def parent(self) -> ParentRef | SourceRef | None:
+        parents = self.semantic_parents
+        if len(parents) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .semantic_parents")
+        return parents[0] if parents else None
 
 
 @dataclass
@@ -198,10 +211,24 @@ class CompiledNode:
     adapters: dict[str, str] = field(default_factory=dict)
 
     @property
+    def semantic_parent_packages(self) -> list[CompiledPackage]:
+        """All direct semantic Parents, independent of their migration-era carrier."""
+
+        return [
+            *self.parent_packages,
+            *(
+                package
+                for ref, package in zip(self.parsed.sources, self.source_packages)
+                if ref.relationship == "parent"
+            ),
+        ]
+
+    @property
     def parent_package(self) -> CompiledPackage | None:
-        if len(self.parent_packages) > 1:
-            raise ValueError("Node has multiple semantic Parents; use .parent_packages")
-        return self.parent_packages[0] if self.parent_packages else None
+        parents = self.semantic_parent_packages
+        if len(parents) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .semantic_parent_packages")
+        return parents[0] if parents else None
 
     @property
     def metadata(self) -> NodeMetadata:

@@ -1,15 +1,15 @@
 {
   "changes": [],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "36c9c1579a62d64eef1a2b7710f312bbc2bf3fe9cb76de952f2222a075c3be8d",
-    "package": "a3484880111f10d94cf9af22ee9e95e538937bb720b94c4e2b4f05940d058239"
+    "normalized": "9deb7eac7dc88b029681ce57dadf8ef3cef2f027fc12558f5110ba6a533ff32d",
+    "package": "4a5ed6e82a93d34a7995b4fa6fd1b95bfcaf7ec78df7651f61b4d388b2512c91"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "120d4dd123f493fbe05aca4d89d6459a5f84e8c79c490e5bd0440db99a1abf3d",
-      "size": 8462
+      "sha256": "61681f10a2a71a21c4a3067c152c2a1ffd1e55e51636529d9e6cc271d6448010",
+      "size": 8470
     },
     {
       "path": "CONTEXT/README.md",
@@ -45,7 +45,7 @@
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.4-draft"
+    "version": "0.1.5-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -221,13 +221,14 @@
       "why": "Restricted/private projects must not leak development state or acquire an accidental second workflow system."
     }
   ],
-  "schema": "contextcanon/package/v2",
+  "schema": "contextcanon/package/v3",
   "sources": [
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
       "normalized_digest": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
       "package_digest": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029",
+      "relationship": "parent",
       "version": "0.3.5-draft",
       "why": null
     }

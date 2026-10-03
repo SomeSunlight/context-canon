@@ -1,5 +1,5 @@
 # ContextCanon Foundation — Local Context Source
-<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.2.1-draft" -->
+<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.2.3-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the reusable ContextCanon baseline.**
@@ -17,8 +17,8 @@
 
 ### Canonical context
 
-- **One official package:** The compiled Official Context Package is the single canonical context for a Node: it applies to the Node itself and is the package meaning published to child Nodes.
-  Why: A Node must not operate under one context while publishing a different truth to descendants.
+- **One canonical package with an explicit export boundary:** The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.
+  Why: Local background information must not become inherited governance, but the local view and normative export must still come from one deterministic authenticated package.
   <!-- ctx:rule id="CC-001" -->
 
 - **Edit source, not generated output:** Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.
@@ -33,8 +33,8 @@
 
 ### Composition
 
-- **No implicit Source precedence:** Context Sources are composed without implicit precedence; conflicts are resolved explicitly through local changes rather than Source order.
-  Why: Hidden first-source-wins behavior would make composed context difficult to reason about and unsafe to maintain.
+- **References stay informational:** A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.
+  Why: Related information must not silently become governance merely because it uses the same immutable package infrastructure.
   <!-- ctx:rule id="CC-004" -->
 
 - **Parents are unordered:** A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.
@@ -102,7 +102,7 @@ Required:
 
 ### Context composition
 
-When adding Sources or changing inherited Rules:
+When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:
 
 Required:
 - Resource: `docs/composition.md`

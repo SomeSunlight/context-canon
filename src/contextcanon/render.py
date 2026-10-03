@@ -61,6 +61,35 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
                 lines.append(f"- **{dependency.name}** — `{dependency.version}` — {rendered}{why}")
         lines.append("")
 
+    reference_pairs = [
+        (ref, package)
+        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
+        if ref.relationship == "reference"
+    ]
+    if reference_pairs:
+        lines.extend([
+            "## Reference Context — informational only",
+            "",
+            "The Context below is background information for this Node. Its Rules do **not** apply here, "
+            "and these Reference relationships are not inherited by Child Nodes.",
+            "",
+        ])
+        for ref, package in reference_pairs:
+            link = _source_carrier_link(compiled, ref, package)
+            lines.extend([
+                f"### Reference: {package.metadata.name}",
+                "",
+                f"Package: [{package.metadata.version}]({link}) — `{package.package_digest}`",
+                "",
+            ])
+            if ref.why:
+                lines.extend([f"Why: {ref.why}", ""])
+            if package.topics:
+                lines.extend(["Informational Topics:", ""])
+                _append_topics(lines, list(package.topics), compiled, repo_root, heading_level=4)
+            else:
+                lines.extend(["This Reference publishes no Topics.", ""])
+
     if compiled.parsed.overview:
         lines.extend(["## Local Overview", "", *compiled.parsed.overview.splitlines(), ""])
     if compiled.parsed.state:
@@ -140,10 +169,12 @@ def _import_carriers(compiled: CompiledNode, dependency: PackageDependency) -> l
 
     for ref, package in zip(compiled.parsed.sources, compiled.source_packages):
         link = _source_carrier_link(compiled, ref, package)
+        if ref.relationship != "parent":
+            continue
         if dependency.id == package.metadata.id:
-            result.append(("direct Source", link))
+            result.append(("direct Parent Context", link))
         elif any(item.id == dependency.id for item in package.imports):
-            result.append((f"via Source **{package.metadata.name}**", link))
+            result.append((f"via Parent Context **{package.metadata.name}**", link))
     if not result:
         raise ContextCanonError(
             f"{compiled.metadata.name}: no direct accepted carrier found for imported Context {dependency.name}"
@@ -176,9 +207,17 @@ def _append_rules(lines: list[str], rules: list[Rule]) -> None:
         lines.extend([rule.statement, ""])
 
 
-def _append_topics(lines: list[str], topics, compiled: CompiledNode, repo_root: Path) -> None:
+def _append_topics(
+    lines: list[str],
+    topics,
+    compiled: CompiledNode,
+    repo_root: Path,
+    *,
+    heading_level: int = 3,
+) -> None:
+    heading = "#" * heading_level
     for topic in topics:
-        lines.extend([f"### {topic.title}", "", topic.condition, ""])
+        lines.extend([f"{heading} {topic.title}", "", topic.condition, ""])
         for intent in ("required", "optional"):
             targets = [target for target in topic.targets if target.intent == intent]
             if not targets:
@@ -267,7 +306,10 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
     else:
         lines.append("parents: []")
 
-    lines.extend(["", "# Accepted reusable Source packages used by this build. Both digests are exact pins."])
+    lines.extend([
+        "",
+        "# Immutable import carriers. relationship is the public semantic kind; Source remains technical provenance.",
+    ])
     if compiled.source_packages:
         lines.append("sources:")
         for source_ref, source_package in zip(compiled.parsed.sources, compiled.source_packages):
@@ -275,14 +317,39 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
                 f"  - id: {q(source_package.metadata.id)}",
                 f"    name: {q(source_package.metadata.name)}",
                 f"    version: {q(source_package.metadata.version)}",
+                f"    relationship: {q(source_ref.relationship)}",
                 f"    locator: {q(source_ref.locator)}",
                 f"    normalized_digest: {q(source_package.normalized_digest)}",
                 f"    package_digest: {q(source_package.package_digest)}",
             ])
+            if source_ref.why:
+                lines.append(f"    why: {q(source_ref.why)}")
     else:
         lines.append("sources: []")
 
-    lines.extend(["", "# Effective imported Context origins, flattened through accepted Parent/Source packages."])
+    reference_pairs = [
+        (ref, package)
+        for ref, package in zip(compiled.parsed.sources, compiled.source_packages)
+        if ref.relationship == "reference"
+    ]
+    lines.extend(["", "# Direct informational References. Their Rules are not effective and they are not exported to Children."])
+    if reference_pairs:
+        lines.append("references:")
+        for ref, package in reference_pairs:
+            lines.extend([
+                f"  - id: {q(package.metadata.id)}",
+                f"    name: {q(package.metadata.name)}",
+                f"    version: {q(package.metadata.version)}",
+                f"    locator: {q(ref.locator)}",
+                f"    normalized_digest: {q(package.normalized_digest)}",
+                f"    package_digest: {q(package.package_digest)}",
+            ])
+            if ref.why:
+                lines.append(f"    why: {q(ref.why)}")
+    else:
+        lines.append("references: []")
+
+    lines.extend(["", "# Effective normative imported Context origins, flattened through Parent relationships only."])
     if compiled.imported_contexts:
         lines.append("imports:")
         for dependency in compiled.imported_contexts:

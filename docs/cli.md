@@ -7,16 +7,18 @@ This is a navigation page, not a dump of every flag. Use `contextcanon <command>
 | Goal | Command | What it does |
 | --- | --- | --- |
 | Show installed tool version | `contextcanon --version` | Confirms the installed ContextCanon release. |
-| Inspect reusable Sources | `contextcanon source list` | Shows the Source versions currently used here plus candidate-discovery configuration. |
-| Review/update one Source | `contextcanon source update <name-or-id>` | Shows what is used here now, what newer candidate was found, what changed there, what would change locally, and asks before applying it. |
-| Use one exact candidate ref | `contextcanon source update <name-or-id> --ref <ref>` | Reviews one branch/tag/commit without making that ref durable configuration. |
+| Inspect reusable imports | `contextcanon source list` | Shows each immutable import carrier with its semantic Parent/Reference relationship, accepted version, and candidate-discovery configuration. |
+| Review/update one import | `contextcanon source update <name-or-id>` | Reviews a newer package. Parent updates preview normative local impact and may need downstream propagation; Reference updates remain informational and local. |
+| Use one exact candidate ref | `contextcanon source update <name-or-id> --ref <ref>` | Reviews one branch/tag/commit without making that ref durable configuration. The `source` command name is a compatibility package/discovery surface, not a third relationship kind. |
 | Review downstream impact | `contextcanon propagate` | Reviews changed Parent → Child relationships top-down from the current Node and asks before each acceptance. |
+| Inspect propagation status | `contextcanon propagate --status --all .` | Read-only check for local Parent/Child edges whose accepted normative Parent snapshot is behind the current local Parent. Returns exit code 1 when propagation is pending. |
 | Review every Parent graph | `contextcanon propagate --all` | Broadens the review scope to all semantic Parent edges in the repository; it does not imply blanket acceptance. |
+| Normalize legacy import authoring | `contextcanon source normalize --all .` | Makes historical implicit Source → Parent semantics explicit; ordinary build/check do not rewrite authored relationship semantics. |
 | Render generated Context | `contextcanon build --all .` | Rebuilds every Context Node in the repository. |
-| Verify generated state | `contextcanon check --all .` | Reports drift or consistency problems. |
+| Verify repository health | `contextcanon check --all .` | Reports generated drift, version/consistency problems, and pending local normative Parent propagation. A clean result means every discovered Node is internally consistent and every local Parent/Child edge is normatively current. |
 | Inspect central discovery config | `contextcanon config show` | Validates and prints `contextcanon.yaml`. |
 
-The normal loop is **Update → review propagation when needed → Build → Check**. See [Maintain an existing ContextCanon project](maintenance.md) for the short propagation checklist.
+The normal loop is **Update → review Parent propagation when needed → Build → Check**. A Reference update has no propagation phase. `check --all` is the final repository health gate; use `propagate --status --all .` when you want the dependency/propagation part alone without changing anything. See [Maintain an existing ContextCanon project](maintenance.md) for the short propagation checklist.
 
 > [!IMPORTANT]
 > `--all` means **all Parent edges are in review scope**. Interactive propagation still asks at every changed edge. `--yes` suppresses those confirmations and is intended for controlled automation, not as the default human workflow.
@@ -28,7 +30,7 @@ The normal loop is **Update → review propagation when needed → Build → Che
 ```text
 contextcanon parent review [<parent-node-id>] --node <child>
 contextcanon parent accept [<parent-node-id>] --node <child>
-contextcanon parent propagate [path] [--all]
+contextcanon parent propagate [path] [--all] [--status]
 ```
 
 The first two commands are useful for one explicit edge. `contextcanon parent propagate` remains the explicit Parent-oriented form of the normal user command `contextcanon propagate`.
@@ -101,9 +103,9 @@ Then follow the generated `contextcanon-onboarding/PLAN.md`.
 
 For the onboarding command map — especially **go back / restart** with `contextcanon onboard reset . --from <STEP>` — use the dedicated **[Onboarding CLI reference](onboarding-cli.md)**. The conceptual walkthrough remains in **[Onboard an existing project](onboarding.md)**.
 
-## Lower-level Source commands
+## Lower-level import-carrier commands
 
-The guided `source update` command is the normal human path. Separate commands remain available when automation or debugging needs explicit stages:
+Phase 1 keeps the historical `source` command group as the compatibility maintenance surface for immutable reusable package carriers. Each carrier is semantically either **Parent** or **Reference**; `Source` is not a third relationship type. The guided `source update` command is the normal human path. Separate commands remain available when automation or debugging needs explicit stages:
 
 ```text
 contextcanon source fetch <name-or-id>
@@ -112,4 +114,4 @@ contextcanon source accept <name-or-id> <candidate-package>
 contextcanon source adopt <package>
 ```
 
-They preserve the same rule: candidate discovery does not silently change accepted Context.
+They preserve the same rule: candidate discovery does not silently change accepted Context. Parent candidates are validated against normative composition; Reference candidates never inject their Rules or create downstream propagation.

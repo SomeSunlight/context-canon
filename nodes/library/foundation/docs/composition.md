@@ -1,28 +1,24 @@
 # Context Composition
 
-A Child Context Node does not have to copy everything it needs into one file. It can **combine several contexts** and add only what is special locally.
+A Child Context Node does not have to copy everything it needs into one file. It can **combine several normative Parent contexts**, add what is special locally, and attach informational References that are useful here without turning them into inherited governance.
 
 ```text
-Parent Context(s) ───────┐
-Reusable Source(s) ──────┼──> effective Context of this Child
-Local Delta ─────────────┘
+Normative Parent Context(s) ──┐
+Local Delta ──────────────────┼──> effective normative Context
+                              │
+Reference Context(s) ........ └──> local informational view only
 ```
 
-That is the practical benefit of composition: project-wide context can come from a Parent, independent reusable concerns such as a Development Workflow or security baseline can be imported as Sources, and the Child keeps only its own local differences.
+That distinction is the public relationship model:
 
-The important architectural warning follows immediately: **several imported contexts can contain non-orthogonal or contradictory guidance.** ContextCanon never treats import order as hidden precedence. Structural conflicts that can be proven deterministically are errors; semantic contradictions between otherwise unrelated statements must be resolved explicitly. See [Semantic conflicts](#semantic-conflicts) and [Local changes](#local-changes) for the deeper rules rather than duplicating that theory here.
+- **Parent** means normative semantic ancestry. Its effective Rules apply here; its Topics and Resources are available; the resulting normative Context can continue through Parent/Child relationships.
+- **Reference** means useful related Context. Its Rules do not apply, it does not participate in Override/Remove, and the Reference relationship is not inherited by Children.
 
-Filesystem nesting creates none of these relationships. Parent and Source relationships are explicit.
+A Node may have several Parents. Parent order never creates precedence. Filesystem nesting creates neither Parent nor Reference relationships.
 
-## Parent and Source in one minute
+Both relationship kinds can use the same immutable package/provenance machinery. That common carrier must not be confused with common semantics: a Reference package is verified and pinned like other imported packages, but the compiler keeps it outside normative Rule/Topic composition and outside Parent propagation.
 
-A **Source** is independent reusable Context accepted by this Node. It may be used by otherwise unrelated projects or subsystems.
-
-A **Parent** is accepted higher-level Context that a Child specializes. A Node may have several semantic Parents when several independent higher-level contexts genuinely apply.
-
-Both relationships use exact accepted snapshots, so imported Context does not change underneath the Child. The Child keeps living with its last accepted snapshot while a Parent or Source can evolve independently. A newer snapshot becomes a review object first.
-
-This is similar to notes from a lecture: the lecture may be revised later, while the student's existing notes remain as they were. Keeping the previous accepted snapshot lets ContextCanon show the exact change instead of asking the user to reconstruct it from memory.
+This is similar to a technical standard plus a bibliography. A standard inherited by a subsystem constrains it; a cited paper may be useful background without becoming a rule for that subsystem or all of its descendants.
 
 ## Reviewing a Parent change
 
@@ -32,7 +28,7 @@ A Parent update is not blind inheritance. For each changed Parent → Child edge
 2. Is it compatible with the Child's other imported Contexts?
 3. Is the upstream change itself correct, complete, and well-scoped when seen from this Child?
 
-If not, fix the reusable Parent/Source when the upstream guidance is wrong or too broad; use an explicit justified Override/Remove when the upstream rule is valid generally but intentionally differs here; or add a narrower local Rule when the real problem is missing scope or precision.
+If not, fix the reusable Parent when the upstream guidance is wrong or too broad; use an explicit justified Override/Remove when the upstream rule is valid generally but intentionally differs here; or add a narrower local Rule when the real problem is missing scope or precision.
 
 The normal guided command is:
 
@@ -55,7 +51,7 @@ A Node may have several Parents. Every relationship is explicit, and Parent orde
 
 Parents should normally represent orthogonal context. The compiler catches structural conflicts for the same stable identity; broader natural-language contradictions remain a human review responsibility for now.
 
-Parents and Sources are composed through the same `CompiledPackage` boundary. There is no special "parent text merge": the Child consumes the Parent's complete effective Rules, Topics, removals, overrides, and materialized Topic Resources as one exact package. The Parent role remains separately visible in human output, machine state, package metadata, and deterministic diff.
+Every Parent carrier crosses the same `CompiledPackage` boundary. There is no special "parent text merge": the Child consumes the Parent's complete **normative export** — effective Rules, Topics, removals, overrides, and their materialized Topic Resources — as one exact package. A direct Reference may use the same package carrier, but its Rules never enter this composition and its informational Topics/Resources remain local to the referencing Node.
 
 The accepted Parent pin is intentionally non-live. Editing or rebuilding the Parent Node elsewhere does not change an ordinary Child build. A Parent update is a later candidate/review/accept operation, not implicit inheritance from current filesystem bytes.
 
@@ -68,18 +64,18 @@ Semantic Parent paths scope context without loading unrelated siblings. Each acc
 For example:
 
 ```text
-Development Workflow Source ──> AI Workstation
+Development Workflow Parent ──> AI Workstation
                                  ├──> Llama Stack ──> Llama Dispatcher
                                  └──> Unrelated Sibling
 ```
 
 Starting from `Llama Dispatcher` yields the effective Development Workflow + AI Workstation + Llama Stack + Llama Dispatcher context. It does **not** include `Unrelated Sibling`. This is semantic reachability through accepted package edges, not directory recursion.
 
-Because every direct Parent pin is a self-contained immutable package snapshot, ordinary use at the leaf remains possible even when the upstream Source/Parent authoring trees are unavailable. Updating any ancestor is still an explicit review/accept operation at the next Child edge.
+Because every direct Parent pin is a self-contained immutable package snapshot, ordinary use at the leaf remains possible even when the upstream Parent authoring trees are unavailable. Updating any ancestor is still an explicit review/accept operation at the next Child edge.
 
 ## No implicit precedence
 
-Source or Parent order does not mean priority. ContextCanon must never silently apply "first source wins", "last source wins", or an equivalent Parent-order rule.
+Parent order does not mean priority. ContextCanon must never silently apply "first Parent wins", "last Parent wins", or any equivalent ordering rule. References do not take part in normative conflict resolution because their Rules are not effective.
 
 Different imports can therefore contribute independent elements without an artificial method-resolution order.
 
@@ -89,7 +85,7 @@ The compiler canonicalizes direct dependency order in normalized semantics. Reor
 
 Composition relationships form a directed acyclic graph. The compiler deterministically detects structural problems such as dependency cycles, invalid identities/versions, dangling Changes, and incompatible transitive states of the same stable Rule.
 
-Compiler 0.6 supports multiple immutable semantic Parents plus local and pinned Sources. All become `CompiledPackage` before composition, with no Parent- or Source-order precedence.
+Compiler 0.7 supports multiple immutable semantic Parents plus direct informational References. All reusable imports use `CompiledPackage` as the immutable carrier, but only Parent relationships enter normative composition. Parent order has no precedence; Reference relationships are non-transitive.
 
 ## Structural Rule conflicts
 
@@ -100,9 +96,9 @@ Equivalent compiled Rules with the same effective definition and provenance are 
 Remove is also carried as machine-level provenance rather than being forgotten as mere absence. Therefore a diamond such as this is detectable:
 
 ```text
-              ┌─ Source A: removes Rule X ─┐
+              ┌─ Parent A: removes Rule X ─┐
 Foundation ───┤                            ├─> Consumer: conflict
-              └─ Source B: keeps Rule X ──┘
+              └─ Parent B: keeps Rule X ──┘
 ```
 
 The consumer cannot silently keep or drop Rule X. It must resolve the relationship explicitly.
@@ -113,7 +109,7 @@ Two paths may both carry compatible removal provenance; the resulting Rule remai
 
 Two different imported elements may contradict each other even though their IDs are unrelated. A deterministic compiler cannot reliably prove every natural-language conflict. It preserves both unless an explicit local resolution exists.
 
-The human decision may be to improve an upstream Parent/Source, apply an intentional local Override/Remove, or introduce a more precisely scoped local Rule. Import order is never the resolution.
+The human decision may be to improve an upstream Parent, apply an intentional local Override/Remove, or introduce a more precisely scoped local Rule. Import order is never the resolution.
 
 A future optional LLM reviewer may flag likely conflicts, explain them, and suggest where to resolve them. The durable decision remains explicit in source.
 
@@ -141,7 +137,7 @@ Override keeps the inherited Rule identity and origin but replaces its effective
 
 ### Dangling operations
 
-If the target Rule is not inherited, compilation fails. This matters especially after Source or Parent updates: an upstream change cannot silently leave a Child operation pointing at nothing.
+If the target Rule is not inherited, compilation fails. This matters especially after Parent updates: an upstream change cannot silently leave a Child operation pointing at nothing.
 
 A Node may define only one local Change against the same inherited Rule identity.
 
@@ -171,12 +167,12 @@ For two snapshots of the same consumer Node:
 contextcanon diff <before-node-root> <after-node-root>
 ```
 
-For an accepted external Source and a candidate Source package, `source review` applies the same stable-identity `ContextDiff` model directly to the immutable packages:
+For a reusable imported package, the compatibility `source review` command applies the same stable-identity `ContextDiff` model directly to immutable carrier packages. The relationship kind then determines whether the candidate affects normative Parent composition or only local Reference information:
 
 ```text
-accepted Source package
+accepted import package
         +
-candidate Source package
+candidate import package
         ↓
 deterministic package diff
         +
@@ -189,11 +185,11 @@ The diff reports Source package/version changes, effective Rule changes includin
 
 The exact compiled difference exists first; semantic impact analysis is the human-facing layer above it.
 
-## Source updates are change requests
+## Imported package updates are change requests
 
-Consumers remain pinned to an accepted immutable Source package. A newly published Source version is an update candidate, not live inheritance. Repository/discovery parameters live centrally in `contextcanon.yaml`; changing a Git ref or switching the same repository to a local/offline checkout changes only where candidates are discovered, never the currently accepted package. Existing inline Git transport metadata remains a compatibility fallback for older projects.
+Consumers remain pinned to accepted immutable import packages. A newly published Source version is an update candidate, not live inheritance. Repository/discovery parameters live centrally in `contextcanon.yaml`; changing a Git ref or switching the same repository to a local/offline checkout changes only where candidates are discovered, never the currently accepted package. Existing inline Git transport metadata remains a compatibility fallback for older projects.
 
-Human operators may address a Source by its unique visible name instead of copying its stable UUID. `contextcanon source list` exposes both. `contextcanon source update <name-or-id>` combines fetch, deterministic review, local-impact explanation, and explicit acceptance. If that changes a Node that has semantic descendants, downstream propagation is a separate reviewed activity rather than an automatic pull through the tree.
+`contextcanon source ...` remains the compatibility maintenance surface for immutable import carriers in Phase 1. `contextcanon source list` exposes each package together with its semantic **Parent** or **Reference** relationship. `contextcanon source update <name-or-id>` combines fetch, deterministic review, impact explanation, and explicit acceptance. A Parent import may create a separate downstream propagation review; a Reference update changes only the direct Node's informational Context and never propagates to Children.
 
 Lower-level Source commands remain available when explicit stages are useful:
 
@@ -211,9 +207,9 @@ contextcanon source accept <source-name-or-id> <candidate-package> --node <consu
 accepted immutable package + updated exact Source pin
 ```
 
-`source fetch` uses declared transport metadata only to discover candidate bytes. It cannot change accepted inheritance. `source review` substitutes the candidate into the actual consumer composition in memory so dangling local Changes and visible Rule collisions are detected before acceptance. `source accept` requires the matching non-stale review receipt.
+`source fetch` uses declared transport metadata only to discover candidate bytes. It cannot change accepted Context. For a Parent relationship, `source review` substitutes the candidate into normative consumer composition so dangling local Changes and visible Rule collisions are detected before acceptance. For a Reference, it validates the referenced package without injecting its Rules into the consumer. `source accept` requires the matching non-stale review receipt.
 
-The accepted Source pin records version, `normalized-digest`, and `package-digest`. Git discovery ref and node path remain update/location metadata rather than accepted identity.
+The accepted import pin records version, `normalized-digest`, and `package-digest`. Git discovery ref and node path remain update/location metadata rather than accepted identity.
 
 ## Accepted versus candidate state
 
@@ -235,9 +231,9 @@ A missing or corrupt accepted package is an error. It is never permission for `b
 
 Package installation is staged and verified before atomic publication. Review receipts and Source-pin replacement are also published atomically. If the final canonical pin swap fails, the old `CONTEXT.src.md` and old accepted build state remain intact; a newly installed but unreferenced package is harmless immutable state.
 
-## Topics and Resources compose transitively
+## Parent Topics and Resources compose transitively
 
-A Source or Parent package carries its complete effective Topic set, not only the Topics authored directly at that dependency boundary. Resource targets are compiled to package-safe paths namespaced by the Topic's stable origin Node identity. Descendants therefore inherit both Topic conditions and the exact materialized Resource closure without consulting the upstream repository.
+A Parent package exports its complete effective normative Topic set, not only the Topics authored directly at that dependency boundary. A direct Reference exposes the referenced package's normative Topics and Resources as **informational Context for the current Node only**; they are deliberately omitted from that Node's normative export to Children. Resource targets are compiled to package-safe paths namespaced by the Topic's stable origin Node identity. Descendants therefore inherit both Topic conditions and the exact materialized Resource closure without consulting the upstream repository.
 
 When the same inherited Topic identity reaches a Node through several composition paths, equivalent Topic definitions are deduplicated. If their effective definitions differ, compilation fails. Origin-qualified Resource paths behave the same way: identical bytes deduplicate, while different bytes at the same stable inherited path are a structural conflict.
 
@@ -250,18 +246,18 @@ A Topic may direct an agent to deeper information or even to another Context Nod
 ```text
 Gateway ──Topic──> Deeper Context Node
                          ▲
-                         │ Source
+                         │ Parent
                     Foundation
 ```
 
-The Gateway does not inherit the deeper Node. It merely sends relevant work there. The deeper Node composes Foundation only when that Source relationship is declared explicitly.
+The Gateway does not inherit the deeper Node. It merely sends relevant work there. The deeper Node composes Foundation only when that Parent relationship is declared explicitly. A Reference from Gateway to the deeper Node would still be informational rather than inheritance.
 
 Keeping these relationships distinct prevents navigation choices from silently changing which Rules a Node publishes.
 
 ## Node directories do not define composition
 
-Every Context Node is physically rooted in its own directory, but that directory is only its location. A parent directory, nested directory, Git repository, or sibling directory does not become a Parent or Source automatically.
+Every Context Node is physically rooted in its own directory, but that directory is only its location. A parent directory, nested directory, Git repository, or sibling directory does not become a Parent or Reference automatically.
 
 This matters in repositories containing several Nodes: filesystem structure can organize them clearly without creating hidden context relationships. Prefer a Node root that contains the files it chiefly governs; when several semantic Parents apply, choose one clear physical home for navigation.
 
-The same principle applies to Git transport. A node path says where the Node is found inside a retrieved repository snapshot; the stable Node ID says which Node it is.
+The same principle applies to Git transport. A node path says where an imported Node is found inside a retrieved repository snapshot; the stable Node ID says which Node it is.

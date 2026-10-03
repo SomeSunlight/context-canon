@@ -213,9 +213,10 @@ class OnboardingSubtreeTests(unittest.TestCase):
         )
 
         parsed = parse_node(subtree, repo)
-        self.assertEqual(len(parsed.parents), 1)
-        self.assertEqual(parsed.sources, ())
-        self.assertEqual(parsed.parents[0].id, "node-a")
+        self.assertEqual(len(parsed.semantic_parents), 1)
+        self.assertEqual(len(parsed.sources), 1)
+        self.assertEqual(parsed.sources[0].relationship, "parent")
+        self.assertEqual(parsed.semantic_parents[0].id, "node-a")
         compiled = Compiler(repo).compile(subtree)
         self.assertEqual(compiled.parent_package.metadata.id, "node-a")
         self.assertIn("A-001", {rule.id for rule in [*compiled.inherited_rules, *compiled.local_rules]})

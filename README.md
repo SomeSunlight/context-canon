@@ -17,7 +17,7 @@ small CONTEXT.md ────┼─ logging task ──────────�
 
 A project keeps a compact dependable entry context, composes reusable context where useful, and exposes deeper knowledge only when a task needs it. Detailed guidance can live close to the narrow context where it belongs without bloating every higher-level overview; humans and agents still get clear landing points when they enter anywhere in the tree.
 
-Reusable Sources also give shared guidance one maintained origin. When accepted Sources or authored context change, deterministic builds render the accepted result without rewriting copied prompt bundles. Dependent Child Nodes advance to newer Parent snapshots only through an explicit propagation review.
+Reusable Parent Context gives shared guidance one maintained origin, while References attach useful background without turning it into governance. Deterministic builds render the accepted result without rewriting copied prompt bundles. Dependent Child Nodes advance to newer Parent snapshots only through an explicit propagation review; Reference updates stay local.
 
 That matters especially for **smaller, cheaper and local models**. ContextCanon cannot turn a weak model into a strong one, but it can avoid wasting model capability on reconstructing project structure and conventions from scratch. A well-scoped task with the right project knowledge gives smaller models a better chance to do useful work reliably.
 
@@ -110,7 +110,7 @@ After onboarding, the normal operator loop is short:
 inspect / update  →  review downstream propagation when needed  →  build  →  check
 ```
 
-Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**. It explains Source versus Parent from the user's point of view, the three-question propagation review, and when to fix upstream versus use a justified local Override/Remove. Use the **[CLI quick reference](docs/cli.md)** as the compact command map; exact flags remain available through `contextcanon <command> --help`.
+Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**. It explains Parent versus Reference from the user's point of view, the three-question propagation review, and when to fix upstream versus use a justified local Override/Remove. Use the **[CLI quick reference](docs/cli.md)** as the compact command map; exact flags remain available through `contextcanon <command> --help`.
 
 `contextcanon propagate` reviews only semantic descendants of the selected Context Node. `--all` deliberately broadens the review scope to every Parent graph in the repository; it is not blanket approval.
 
@@ -120,7 +120,7 @@ ContextCanon deliberately does **not** try to be the agent, the development proc
 
 | Concern | Answers | Examples |
 | --- | --- | --- |
-| **ContextCanon** | What applies here, and where should I go deeper for this task? | Context Nodes, Sources, Topics, State, Plan |
+| **ContextCanon** | What applies here, and where should I go deeper for this task? | Context Nodes, Parents, References, Topics, State, Plan |
 | **Development Workflow** | How does a change move from reason to accepted baseline? | Issue → branch → Pull Request → review → checks → merge |
 | **Workflow provider** | Which infrastructure implements those familiar development objects? | GitHub, GitHub Local |
 | **Agent / harness** | Which model or tool actually performs the work? | Copilot, Goose, Hermes, ChatGPT, other IDE/CLI agents |
@@ -151,14 +151,13 @@ That distinction is important in this repository: `nodes/library/` and `nodes/in
 
 ## The core model
 
-A Context Node combines accepted reusable Sources with a small Local Delta:
+A Context Node combines normative Parents, optional informational References, and a small Local Delta:
 
 ```text
-Context Source A ─────┐
-Context Source B ─────┤
-Context Source C ─────┼──> deterministic compile ──> Official Context Package
-                      │
-Local Delta ──────────┘
+Parent Context A ─────┐
+Parent Context B ─────┼──> normative effective Context ─┐
+Local Delta ──────────┘                                 ├──> Official Context Package
+Reference Context .... informational only .............┘
 ```
 
 The human-facing package begins with:
@@ -168,11 +167,11 @@ CONTEXT.md              compact entry; read first
 CONTEXT/                optional deeper compiled/materialized context
 ```
 
-`CONTEXT/` exists only when deeper resources are actually needed. `.context/` is separate machine territory for identities, accepted Sources, provenance, mappings, hashes and package metadata.
+`CONTEXT/` exists only when deeper resources are actually needed. `.context/` is separate machine territory for identities, accepted immutable imports, provenance, mappings, hashes and package metadata.
 
 The editable `CONTEXT.src.md` answers a deliberately narrower question:
 
-> What does this Node add or change compared with its Sources?
+> What does this Node add or change compared with its Parents, and which direct References are useful here?
 
 The generated `CONTEXT.md` answers:
 
@@ -184,21 +183,21 @@ This repository does not explain ContextCanon from outside and then switch it on
 
 **The repository root is already one of the smallest useful ContextCanon Nodes.**
 
-Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Sources and no Rules. It gives a short Overview of why ContextCanon exists, then routes only tasks that need more depth.
+Open [`CONTEXT.md`](CONTEXT.md): it contains no inherited Parents and no Rules. It gives a short Overview of why ContextCanon exists, then routes only tasks that need more depth.
 
 ```text
                          ┌─ Topic ──> onboarding / maintenance docs
 ContextCanon Gateway ───┤
                          └─ Topic ──> ContextCanon Framework Development
                                            ▲              ▲
-                                           │ Source       │ Source
+                                           │ Parent       │ Parent
                               ContextCanon Foundation     │
                                                    Development Workflow
 
 Reusable workflow providers:
                          Development Workflow
                                   ▲
-                                  │ Source
+                                  │ Parent
                            ┌──────┴──────┐
                          GitHub      GitHub Local
 ```
@@ -212,9 +211,9 @@ That gives this repository **six real Nodes with different jobs**:
 - **[GitHub Local](nodes/library/github-local/CONTEXT.md)** — the concrete provider for a local GitHub-compatible development surface; the executable `github.local` runtime is intentionally a separate future project.
 - **[ContextCanon Framework Development](nodes/internal/framework-development/CONTEXT.md)** — Foundation plus Development Workflow plus only the ContextCanon-specific delta needed to design and implement this framework.
 
-The Gateway arrows are **navigation**: Topics send a relevant task to deeper material without inheriting all of it. The upward arrows are **composition**: one Node accepts another Node as a Source.
+The Gateway arrows are **navigation**: Topics send a relevant task to deeper material without inheriting all of it. The upward arrows are **normative Parent composition**: one Node accepts another Node as governing Context.
 
-The provider diagram uses “workflow/provider” as a familiar software analogy, not as extra ContextCanon grammar. GitHub and GitHub Local are ordinary reusable Nodes that compose Development Workflow. Likewise, reusable Nodes do **not** automatically inherit Foundation merely because they live in the library; every Source relationship is an explicit semantic product decision.
+The provider diagram uses “workflow/provider” as a familiar software analogy, not as extra ContextCanon grammar. GitHub and GitHub Local are ordinary reusable Nodes that compose Development Workflow. Likewise, reusable Nodes do **not** automatically inherit Foundation merely because they live in the library; every Parent relationship is an explicit semantic product decision.
 
 Nothing special was invented for bootstrapping. Gateway is an ordinary Context Node. If ContextCanon cannot represent “almost no context” cleanly while still giving a newcomer enough orientation to know where they are, it has failed one of its own most important design goals.
 
@@ -222,7 +221,7 @@ Nothing special was invented for bootstrapping. Gateway is an ordinary Context N
 
 The same structure that saves model tokens makes a project easier to inspect:
 
-- Sources show which reusable context is accepted.
+- Parent/Reference relationships show which reusable Context applies normatively and which is informational only.
 - `CONTEXT.src.md` shows what is special here.
 - `CONTEXT.md` shows the compiled result without forcing the reader through inheritance archaeology.
 - visible stable IDs make inherited changes explicit and traceable.
@@ -299,15 +298,15 @@ A useful distinction when browsing is explicit: **authored technical documents l
 
 The tree should answer this without guesswork:
 
-- a **reusable Node intended to ship with ContextCanon** goes in `nodes/library/<node-name>/`; it composes only the Sources its semantics actually require;
+- a **reusable Node intended to ship with ContextCanon** goes in `nodes/library/<node-name>/`; it composes only the Parents its semantics actually require;
 - a **ContextCanon-internal Node** goes in `nodes/internal/<node-name>/`;
 - an **example or experiment** does not enter the library merely because it uses ContextCanon.
 
 These category names are conventions of this repository. ContextCanon does not require other projects to use `library/` or `internal/`; it only requires each Node to have a clear node root.
 
-## Immutable external Sources
+## Immutable reusable imports
 
-Reusable Sources are not live includes from another Git repository. A consumer accepts an exact immutable Source package and can build offline from its own accepted state.
+Reusable imports are not live includes from another Git repository. A consumer accepts an exact immutable package, marks the relationship Parent or Reference, and can build offline from its own accepted state.
 
 The compiler separates candidate discovery from accepted inheritance:
 
@@ -317,7 +316,7 @@ source review → exact diff + consumer structural validation + receipt
 source accept → immutable accepted package + exact updated pin
 ```
 
-Normal `build` never fetches a missing Source implicitly. Git repository location, ref, and `node-path` are update transport metadata; stable Node identity plus version and exact digests define accepted state.
+Normal `build` never fetches a missing import implicitly. Git repository location, ref, and `node-path` are update transport metadata; stable Node identity plus version and exact digests define accepted state.
 
 See [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) for the complete contract.
 
@@ -342,13 +341,13 @@ If the five-second idea above is enough, the best next reads are:
 
 - [Onboard an existing project](docs/onboarding.md) — first-user walkthrough for delivery triage, shelf design and placement.
 - [Onboarding CLI](docs/onboarding-cli.md) — onboarding command map, including reset/restart from any STEP 01–12.
-- [Maintain an existing ContextCanon project](docs/maintenance.md) — Source updates, downstream propagation review, build, and check.
+- [Maintain an existing ContextCanon project](docs/maintenance.md) — Parent/Reference updates, downstream Parent propagation review, build, and check.
 - [CLI quick reference](docs/cli.md) — compact command map for normal operation.
 - [Development Workflow](nodes/library/development-workflow/CONTEXT.src.md) — reusable Issue/branch/Pull Request/review/checks/merge lifecycle independent of a concrete forge.
 - [GitHub](nodes/library/github/CONTEXT.md) — concrete provider for the Development Workflow on github.com.
 - [GitHub Local](nodes/library/github-local/CONTEXT.md) — local GitHub-compatible provider Context for restricted/private development.
 - [Concepts](nodes/internal/framework-development/docs/concepts.md) — Node roots, vocabulary and mental model.
-- [Context composition](nodes/library/foundation/docs/composition.md) — Sources, local deltas, conflicts and updates.
+- [Context composition](nodes/library/foundation/docs/composition.md) — Parents, References, local deltas, conflicts and updates.
 - [Immutable external Sources](nodes/internal/framework-development/docs/external-sources.md) — exact packages, offline accepted state, candidate review and Git transport.
 - [Official context](nodes/library/foundation/docs/official-context.md) — `CONTEXT.md`, optional `CONTEXT/`, and package boundaries.
 - [Topics and context integration](nodes/library/foundation/docs/topics.md) — how deeper context is selected.
@@ -366,7 +365,7 @@ ContextCanon grew from experimenting with the filesystem-oriented progressive-di
 - Paper: https://arxiv.org/abs/2603.16021
 - ICM repository: https://github.com/RinDig/Interpretable-Context-Methodology
 
-ContextCanon is not an implementation of ICM. It focuses on composable Context Nodes, explicit local deltas, deterministic compilation, versioned Source acceptance, self-contained packages and harness-neutral project context.
+ContextCanon is not an implementation of ICM. It focuses on composable Context Nodes, explicit Parent/Reference relationships, local deltas, deterministic compilation, versioned package acceptance, self-contained packages and harness-neutral project context.
 
 ## Project status
 

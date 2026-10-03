@@ -1,12 +1,14 @@
 # Official Context
 
-The **Official Context** is the complete compiled context published by a node and used by that node itself.
+The **Official Context** is the canonical compiled context presented for one Node.
 
-It answers one question:
+It answers two deliberately separated questions:
 
-> What context officially applies here?
+> What normative Context applies here?
 
-A child node may compose exactly that same published semantic result. There is no separate hidden governance for the parent and a different governance exported to descendants.
+> What direct informational Reference Context is useful here?
+
+The same authenticated package carries both, but only the **normative export** may flow to semantic Children. Direct References are local informational relationships: their Rules do not apply and their Reference Topics/Resources are not re-exported through Parent inheritance. This is an explicit export boundary, not a second hidden compiler truth.
 
 ## Concrete package layout
 
@@ -26,13 +28,15 @@ CONTEXT/                optional deeper compiled/package-local material
 
 A tiny node with no materialized resources may legitimately have no `CONTEXT/` directory at all. When `CONTEXT/` exists, its `README.md` is compiler-generated package orientation: it explains that the directory is generated, where to start, and why materialized `references/` are package copies rather than another authoring surface.
 
-`.context/` is different. It contains compiler bookkeeping, accepted Source/Parent snapshots, provenance, hashes, package metadata, and other machine state. Humans normally do not browse it directly, but the compact composition summary at the top of `CONTEXT.md` links to the exact accepted local carrier packages when provenance needs inspection.
+`.context/` is different. It contains compiler bookkeeping, accepted immutable import/Parent snapshots, provenance, hashes, package metadata, and other machine state. Humans normally do not browse it directly, but the compact composition summary at the top of `CONTEXT.md` links to the exact accepted local carrier packages when provenance needs inspection.
 
 ## Effective composition must be visible
 
-When a Node composes Parent Context Nodes or reusable Sources, `CONTEXT.md` names the direct Parents and lists the resulting effective imported Context Nodes with their accepted versions. Transitive imports are flattened from authenticated immutable package metadata, so a deep Node can explain why a rule applies without dereferencing live ancestors or the network. Each list item links to the exact direct accepted carrier package (or the local development Source) that supplied that context. Unrelated sibling Nodes never appear merely because they share filesystem ancestry.
+When a Node composes semantic Parents, `CONTEXT.md` lists the resulting effective normative imported Context Nodes with accepted versions and carrier provenance. Transitive Parent imports are flattened from authenticated immutable package metadata, so a deep Node can explain why a Rule applies without dereferencing live ancestors or the network.
 
-The list is deliberately compact provenance, not a second rule surface: the actual effective Rules and Topics remain grouped below by origin. Exact low-level machine state and digests remain available in `.context/context.yaml` and package manifests.
+Direct References appear in a separate **Reference Context — informational only** section. Their Rules are deliberately not rendered as effective Rules. Informational Reference Topics/Resources may be shown there, but that relationship does not become part of the Node's normative export to Children.
+
+These sections are deliberately compact provenance and orientation, not competing rule surfaces. Exact low-level relationship kinds, pins and digests remain available in `.context/context.yaml` and package manifests.
 
 ## Why not put everything in `CONTEXT.md`?
 
@@ -46,7 +50,7 @@ This lets a package be complete without forcing every document, glossary, exampl
 
 A Node may begin its compact entry with a short `Local Overview`. It answers the orientation questions that are neither Rules nor conditional deep context: what this Node represents, why it exists, and what background helps a human or agent understand the surrounding problem.
 
-A Local Overview is deliberately **not inherited governance**. Child Nodes do not receive a Source's introductory prose merely because they compose its Rules. The Overview remains part of the exact published `CONTEXT.md`, so changing it changes the package bytes and `package_digest`, but not the Node's normalized semantic digest.
+A Local Overview is deliberately **not inherited governance**. Child Nodes do not receive a Parent's introductory prose, and direct References do not import another Node's Overview. The Overview remains part of the exact published `CONTEXT.md`, so changing it changes the package bytes and `package_digest`, but not the Node's normalized semantic digest.
 
 This distinction lets a Node explain itself without pretending every explanatory sentence is a Rule. The Overview should remain short; deeper explanation belongs behind Topics.
 
@@ -73,7 +77,7 @@ The generated copy is intentional package content, not another maintenance surfa
 
 The entry should prioritize a concise Local Overview when orientation is useful, broadly required Rules, Topics with clear conditions, explicit Required and Optional targets, and stable visible IDs for published elements that descendants may reference.
 
-It should expose only the small composition audit needed to understand what applies — imported Node names, accepted versions, relation/provenance, and local carrier links — rather than provenance event logs, dependency internals, or every resource in the package. Nor should an Overview become a hidden preload document: if material matters only for a recognizable task, it belongs behind a Topic.
+It should expose only the small composition audit needed to understand what applies and what is merely referenced — imported Node names, accepted versions, explicit Parent/Reference semantics, provenance, and local carrier links — rather than provenance event logs, dependency internals, or every resource in the package. Nor should an Overview become a hidden preload document: if material matters only for a recognizable task, it belongs behind a Topic.
 
 ## Generated output
 

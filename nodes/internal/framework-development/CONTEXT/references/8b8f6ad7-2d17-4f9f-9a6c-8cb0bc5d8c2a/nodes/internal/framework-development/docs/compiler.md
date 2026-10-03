@@ -1,6 +1,6 @@
 # Compiler
 
-ContextCanon has an executable deterministic core. The compiler deliberately separates authoring syntax, semantic composition, immutable package state, rendering, exact comparison, Source transport, and filesystem mutation so each layer stays testable without an LLM.
+ContextCanon has an executable deterministic core. The compiler deliberately separates authoring syntax, relationship-aware semantic composition, immutable package state, rendering, exact comparison, package transport, and filesystem mutation so each layer stays testable without an LLM.
 
 ## Commands
 
@@ -21,7 +21,7 @@ contextcanon source review <source-node-id> <candidate-package> --node <consumer
 contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
 ```
 
-`build` and `check` always consume accepted state. They never use Source transport metadata to discover or download a newer Source.
+`build` and `check` always consume accepted state. They never use package-discovery metadata to discover or download a newer import. They also never rewrite a human-authored legacy relationship marker; `source normalize` is the explicit migration action.
 
 `source fetch` is candidate discovery only. `source review` computes an exact package diff and runs the candidate through the consumer's structural composition checks. `source accept` requires the resulting review receipt before it can install the candidate and change the exact Source pin.
 
@@ -34,11 +34,15 @@ CONTEXT.src.md
       ↓
 parser.py          authoring syntax → ParsedNode
       ↓
-compiler.py        local Source compile / accepted package load
+compiler.py        local import compile / accepted package load
       ↓
-CompiledPackage   common immutable semantic Source boundary
+CompiledPackage   common immutable package boundary
       ↓
-compose → Change → validate → collect resources → normalize/digest
+relationship split
+      ├── Parent ──> compose → Change → validate → normative export
+      └── Reference ──> local informational Topics/Resources only
+      ↓
+collect resources → normalize/digest
       ├──────────────────────────────→ diff.py / package_diff.py
       ↓
 render.py          deterministic human/machine projections
@@ -46,7 +50,7 @@ render.py          deterministic human/machine projections
 outputs.py         exact generated output set
 
 external update path:
-Source transport metadata
+package discovery metadata
       ↓
 git_transport.py  candidate bytes only
       ↓
@@ -78,26 +82,29 @@ Changes should preserve these properties:
 2. **No LLM in deterministic truth.** Identity, composition, package verification, diff, transport state transitions, and hashes are reproducible.
 3. **No silent approximation.** Invalid, ambiguous, dangling, incomplete, or corrupt state fails clearly.
 4. **Stable identity before presentation.** Rule operations and diffs bind stable IDs, not titles or paths.
-5. **No implicit Source precedence.** Source list order does not resolve conflicts.
+5. **No implicit Parent precedence.** Parent order does not resolve conflicts; References do not participate in normative conflict resolution.
 6. **Canonical semantics ignore meaningless order.** `normalized_digest` is not accidental presentation identity.
 7. **Presentation order is still preserved where readers see it.** Canonical hashing must not reorder a loaded package's effective presentation.
 8. **Accepted state is separate from candidate state.** Fetching a candidate cannot change normal build output.
-9. **Normal build is offline with respect to external Sources.** A missing accepted package is an error, not permission to fetch.
+9. **Normal build is offline with respect to external imports.** A missing accepted package is an error, not permission to fetch.
 10. **Filesystem mutation stays narrow.** Compilation can run in memory; dedicated output/acceptance layers own writes.
 
-## What Compiler 0.4 implements
+## What Compiler 0.7 implements
 
-Compiler 0.4 includes all 0.3 behavior plus immutable external Source packages and reviewed update acceptance.
+Compiler 0.7 keeps the existing deterministic package/update machinery and adds explicit Parent/Reference semantics on reusable imports.
 
 The deterministic core now handles:
 
 - Node discovery, stable IDs and versions;
-- local unpinned Sources inside the repository;
-- immutable pinned Sources from a consumer-local accepted package store;
-- a common `CompiledPackage` semantic boundary for local and external Sources;
+- local unpinned reusable imports inside the repository;
+- immutable pinned imports from a consumer-local accepted package store;
+- a common `CompiledPackage` carrier boundary for local and external imports;
+- explicit `parent` / `reference` relationship kind on reusable import carriers, with legacy missing kind defaulting to Parent;
+- local Official Context projection of direct Reference Topics/Resources while Reference Rules, Changes and relationship edges remain outside normative export;
+- a normative `export_digest` used by Parent propagation so Reference-only or other local-only Parent-package changes do not fan out to Children;
 - Source identity/version validation and dependency-cycle detection for local compilation;
-- transitive Rule composition, Remove/Override, provenance, dangling diagnostics, and diamond conflicts;
-- transitive Topic composition with stable origin identity, package-safe Context-Node target identity, and deterministic diamond conflict handling;
+- transitive **Parent-only** Rule composition, Remove/Override, provenance, dangling diagnostics, and diamond conflicts;
+- transitive Parent Topic composition with stable origin identity, package-safe Context-Node target identity, and deterministic diamond conflict handling;
 - Required/Optional Topics, stable direct Resource IDs, and origin-namespaced materialized Resource closure across Source package boundaries;
 - canonical semantic normalization and exact package digests;
 - deterministic Node and package diff;
@@ -105,7 +112,7 @@ The deterministic core now handles:
 - full manifest/file/digest verification without needing `CONTEXT.src.md` from the Source;
 - consumer-local accepted packages under `.context/sources/<package-digest>/`;
 - candidate packages under `.context/candidates/<package-digest>/`;
-- exact Source pins using version, `normalized-digest`, and `package-digest`;
+- exact immutable import pins using version, `normalized-digest`, and `package-digest`;
 - generic Git candidate retrieval with explicit `ref` and `node-path` for repositories containing multiple Nodes;
 - structural review of a candidate in the real consumer composition before acceptance;
 - deterministic review receipts bound to the exact consumer source state;
@@ -117,7 +124,7 @@ No LLM participates in these operations.
 
 ## Immutable package boundary
 
-A compiled reusable Source artifact contains:
+A compiled reusable import artifact contains:
 
 ```text
 .context/package.json
@@ -127,15 +134,15 @@ CONTEXT/              optional
 
 The manifest contains complete effective Rule state rather than trying to reconstruct semantics from `CONTEXT.md`. That distinction matters: human presentation is an output, not a parser input.
 
-A descendant therefore sees the same semantic type regardless of how its Source arrived:
+A reusable package has the same authenticated carrier type regardless of how it arrived:
 
 ```text
 local Node ──compile──────────┐
-                              ├──> CompiledPackage ──> composition
+                              ├──> CompiledPackage ──> relationship semantics
 accepted external artifact ──┘
 ```
 
-This is why Remove/Override and conflict handling do not have a special remote implementation.
+Parent Remove/Override and conflict handling therefore have no special remote implementation. A Reference still uses the same verified package bytes, but does not enter that normative composition path.
 
 ## Digests
 
@@ -146,7 +153,7 @@ The compiler keeps two identities:
 
 Machine manifests are excluded from `package_digest` so a digest never hashes itself.
 
-For Source dependencies, semantic normalization depends on the accepted Source's `normalized_digest`; exact package bytes remain independently pinned by `package_digest`. A presentation-only Source change can therefore be represented without pretending semantic meaning changed.
+For reusable import dependencies, semantic normalization depends on the accepted package's `normalized_digest` and the direct Parent/Reference kind; exact package bytes remain independently pinned by `package_digest`. A separate normative export digest intentionally excludes direct Reference carriers so Reference-only changes do not propagate through Parent edges.
 
 ## Accepted versus candidate packages
 

@@ -10,6 +10,7 @@ from .links import local_markdown_targets
 from .model import CompiledNode, CompiledPackage, PackageDependency, ParentRef, Rule, RuleChange, RuleModification, RuleRemoval, SourceRef, Topic, TopicTarget
 from .package import (
     compiled_package,
+    exported_resource_files,
     load_package,
     package_content_files,
     package_digest,
@@ -19,7 +20,7 @@ from .package import (
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.6.0"
+COMPILER_VERSION = "0.7.0"
 
 CONTEXT_FOLDER_README = """# Generated Context package resources
 
@@ -96,7 +97,7 @@ class Compiler:
 
             compiled = CompiledNode(parsed=parsed)
             composition_packages: list[CompiledPackage] = []
-            source_resource_sets: list[dict[str, bytes]] = []
+            context_resource_sets: list[dict[str, bytes]] = []
             parent_ids: set[str] = set()
             for parent in parsed.parents:
                 parent_package, parent_resources = self._load_pinned_dependency(
@@ -106,7 +107,7 @@ class Compiler:
                     raise ContextCanonError(f"{node_root}: Parent cannot be the Node itself")
                 compiled.parent_packages.append(parent_package)
                 composition_packages.append(parent_package)
-                source_resource_sets.append(parent_resources)
+                context_resource_sets.append(parent_resources)
                 parent_ids.add(parent.id)
 
             seen_source_ids: set[str] = set()
@@ -126,8 +127,9 @@ class Compiler:
                         node_root, source, relation="Source"
                     )
                     compiled.source_packages.append(package)
-                    composition_packages.append(package)
-                    source_resource_sets.append(package_resources)
+                    if source.relationship == "parent":
+                        composition_packages.append(package)
+                    context_resource_sets.append(package_resources)
                     continue
 
                 source_root = self._resolve_source_root(node_root, source.locator)
@@ -142,11 +144,13 @@ class Compiler:
                     )
                 source_package = compiled_package(source_node)
                 compiled.source_packages.append(source_package)
-                composition_packages.append(source_package)
-                source_resource_sets.append({
+                if source.relationship == "parent":
+                    composition_packages.append(source_package)
+                exported_paths = {file.path for file in exported_resource_files(source_package)}
+                context_resource_sets.append({
                     path: content
                     for path, content in source_node.resources.items()
-                    if path.startswith("CONTEXT/references/")
+                    if path in exported_paths
                 })
 
             compiled.imported_contexts = self._compose_imported_contexts(
@@ -154,7 +158,11 @@ class Compiler:
                 compiled.metadata.id,
                 compiled.metadata.name,
             )
-            source_whys = {source.id: source.why for source in parsed.sources if source.why}
+            source_whys = {
+                source.id: source.why
+                for source in parsed.sources
+                if source.relationship == "parent" and source.why
+            }
             if source_whys:
                 compiled.imported_contexts = [
                     replace(dependency, why=source_whys.get(dependency.id, dependency.why))
@@ -188,7 +196,7 @@ class Compiler:
             compiled.resources = self._collect_resources(
                 compiled.metadata.name,
                 local_resources,
-                source_resource_sets,
+                context_resource_sets,
             )
             compiled.normalized_digest = semantic_digest_for_node(compiled)
             compiled.official_markdown = render_official(compiled, self.repo_root)
@@ -215,7 +223,9 @@ class Compiler:
 
         override = self._package_overrides.get((node_root.resolve(), dependency.package_digest))
         if override is not None:
-            package, resources = override
+            package, supplied_resources = override
+            exported_paths = {file.path for file in exported_resource_files(package)}
+            resources = {path: content for path, content in supplied_resources.items() if path in exported_paths}
         else:
             package_root = node_root / ".context" / "sources" / dependency.package_digest
             if not package_root.is_dir():
@@ -224,10 +234,11 @@ class Compiler:
                     f".context/sources/{dependency.package_digest}; build does not fetch {relation} packages"
                 )
             package = load_package(package_root)
+            exported_paths = {file.path for file in exported_resource_files(package)}
             resources = {
                 file.path: (package_root / file.path).read_bytes()
                 for file in package.files
-                if file.path.startswith("CONTEXT/references/")
+                if file.path in exported_paths
             }
         if package.metadata.id != dependency.id:
             raise ContextCanonError(
@@ -454,9 +465,7 @@ class Compiler:
     def _validate_inherited_resource_files(self, source_packages: list[CompiledPackage], node_name: str) -> None:
         seen: dict[str, tuple[str, int, str]] = {}
         for package in source_packages:
-            for file in package.files:
-                if not file.path.startswith("CONTEXT/references/"):
-                    continue
+            for file in exported_resource_files(package):
                 current = (file.sha256, file.size, package.metadata.name)
                 previous = seen.get(file.path)
                 if previous is None:
@@ -632,10 +641,10 @@ class Compiler:
         self,
         node_name: str,
         local_resources: dict[str, bytes],
-        source_resource_sets: list[dict[str, bytes]],
+        context_resource_sets: list[dict[str, bytes]],
     ) -> dict[str, bytes]:
         resources = dict(local_resources)
-        for inherited in source_resource_sets:
+        for inherited in context_resource_sets:
             for path, content in inherited.items():
                 previous = resources.get(path)
                 if previous is not None and previous != content:
