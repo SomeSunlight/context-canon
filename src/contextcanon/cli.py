@@ -374,19 +374,26 @@ def _parent_edges(repo_root: Path, start_root: Path | None = None):
     parent_roots: dict[Path, list[tuple[object, Path]]] = {}
     for child_root, node in parsed.items():
         parents = [
-            *node.parents,
-            *(source for source in node.sources if source.relationship == "parent"),
+            *((parent, False) for parent in node.parents),
+            *((source, True) for source in node.sources if source.relationship == "parent"),
         ]
         seen_parent_ids: set[str] = set()
-        for parent in parents:
+        for parent, import_carrier in parents:
             if parent.id in seen_parent_ids:
                 raise ContextCanonError(
                     f"{node.metadata.name}: duplicate semantic Parent {parent.id}; "
                     "run 'contextcanon source normalize' and keep one Context Import"
                 )
             seen_parent_ids.add(parent.id)
-            parent_root = compiler._resolve_source_root(child_root, parent.locator).resolve()
+            try:
+                parent_root = compiler._resolve_source_root(child_root, parent.locator).resolve()
+            except ContextCanonError:
+                if import_carrier:
+                    continue
+                raise
             if parent_root not in parsed:
+                if import_carrier:
+                    continue
                 raise ContextCanonError(
                     f"{node.metadata.name}: Parent {parent.name} is outside the repository-wide propagation set; update that edge explicitly"
                 )

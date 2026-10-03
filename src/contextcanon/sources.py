@@ -634,7 +634,25 @@ def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = Non
         source_overrides={node_root: preview_source},
         package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
     ).compile(node_root)
-    return diff_compiled(current_compiled, preview_compiled)
+    effect = diff_compiled(current_compiled, preview_compiled)
+    if binding_kind == "source":
+        effect = ContextDiff(
+            node_id=effect.node_id,
+            before_name=effect.before_name,
+            after_name=effect.after_name,
+            before_version=effect.before_version,
+            after_version=effect.after_version,
+            before_normalized_digest=effect.before_normalized_digest,
+            after_normalized_digest=effect.after_normalized_digest,
+            before_package_digest=effect.before_package_digest,
+            after_package_digest=effect.after_package_digest,
+            entries=tuple(
+                entry
+                for entry in effect.entries
+                if not (entry.category == "source" and entry.identity == parent_ref.id)
+            ),
+        )
+    return effect
 
 
 def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> CompiledPackage:

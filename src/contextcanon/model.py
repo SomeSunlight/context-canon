@@ -201,10 +201,24 @@ class CompiledNode:
     adapters: dict[str, str] = field(default_factory=dict)
 
     @property
+    def semantic_parent_packages(self) -> list[CompiledPackage]:
+        """All direct semantic Parents, independent of their migration-era carrier."""
+
+        return [
+            *self.parent_packages,
+            *(
+                package
+                for ref, package in zip(self.parsed.sources, self.source_packages)
+                if ref.relationship == "parent"
+            ),
+        ]
+
+    @property
     def parent_package(self) -> CompiledPackage | None:
-        if len(self.parent_packages) > 1:
-            raise ValueError("Node has multiple semantic Parents; use .parent_packages")
-        return self.parent_packages[0] if self.parent_packages else None
+        parents = self.semantic_parent_packages
+        if len(parents) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .semantic_parent_packages")
+        return parents[0] if parents else None
 
     @property
     def metadata(self) -> NodeMetadata:
