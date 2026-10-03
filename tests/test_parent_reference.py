@@ -97,9 +97,10 @@ class ParentReferenceTests(unittest.TestCase):
     def _pinned_parent(self, child: Path, parent_root: Path, parent) -> None:
         source = (child / "CONTEXT.src.md").read_text(encoding="utf-8")
         block = (
-            "## Parent Context Node\n\n"
-            f"- [{parent.metadata.name}]({os.path.relpath(parent_root, child).replace(os.sep, '/')}/) — `{parent.metadata.version}`\n"
-            f'  <!-- ctx:parent id="{parent.metadata.id}" version="{parent.metadata.version}" '
+            "## Context Imports\n\n"
+            f"- [{parent.metadata.name}]({os.path.relpath(parent_root, child).replace(os.sep, '/')}/) "
+            f"— `{parent.metadata.version}` — `relationship=parent`\n"
+            f'  <!-- ctx:source id="{parent.metadata.id}" version="{parent.metadata.version}" '
             f'normalized-digest="{parent.normalized_digest}" package-digest="{parent.package_digest}" -->\n\n'
         )
         marker = "## Local Rules"
@@ -217,6 +218,46 @@ class ParentReferenceTests(unittest.TestCase):
         self.assertEqual(reference.inherited_rules, [])
         self.assertIn("## Reference Context — informational only", reference.official_markdown)
         self.assertIn("Legacy Parent", reference.official_markdown)
+
+    def test_normalize_converts_dedicated_parent_section_to_single_import_format(self) -> None:
+        parent = self._node(
+            "nodes/p",
+            "node-p",
+            "Parent P",
+            rule_id="P-1",
+            statement="Parent rule.",
+        )
+        compiled_parent = Compiler(self.repo).compile(parent)
+        child = self._node("nodes/f1", "node-f1", "F1")
+        self._install(child, compiled_parent)
+        authored = (child / "CONTEXT.src.md").read_text(encoding="utf-8")
+        authored += (
+            "\n## Parent Context Node\n\n"
+            "<!-- contextcanon-placement-parent:start -->\n"
+            f"- [Parent P](../p/) — `{compiled_parent.metadata.version}`\n"
+            f'  <!-- ctx:parent id="{compiled_parent.metadata.id}" '
+            f'version="{compiled_parent.metadata.version}" '
+            f'normalized-digest="{compiled_parent.normalized_digest}" '
+            f'package-digest="{compiled_parent.package_digest}" -->\n'
+            "<!-- contextcanon-placement-parent:end -->\n"
+        )
+        (child / "CONTEXT.src.md").write_text(authored, encoding="utf-8")
+
+        before = Compiler(self.repo).compile(child)
+        self.assertIn("P-1", {rule.id for rule in before.inherited_rules})
+        self.assertTrue(normalize_source_relationships(child))
+
+        normalized = (child / "CONTEXT.src.md").read_text(encoding="utf-8")
+        self.assertIn("## Context Imports", normalized)
+        self.assertIn("`relationship=parent`", normalized)
+        self.assertIn("ctx:source", normalized)
+        self.assertNotIn("## Parent Context Node", normalized)
+        self.assertNotIn("ctx:parent", normalized)
+        self.assertNotIn("contextcanon-placement-parent", normalized)
+
+        after = Compiler(self.repo).compile(child)
+        self.assertIn("P-1", {rule.id for rule in after.inherited_rules})
+        self.assertFalse(normalize_source_relationships(child))
 
     def test_v3_package_roundtrip_preserves_relationship_kind(self) -> None:
         parent = self._node("p", "p", "Parent", rule_id="P-1", statement="Parent.")
