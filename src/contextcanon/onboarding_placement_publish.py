@@ -480,7 +480,7 @@ def _replace_parent_section(text: str, body: str) -> str:
         text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
 
     if not body.strip():
-        return text
+        return text.rstrip() + "\n"
 
     source_heading = re.search(r"(?m)^## Sources\s*$", text)
     context_heading = re.search(r"(?m)^## Context Imports\s*$", text)
@@ -498,7 +498,10 @@ def _replace_parent_section(text: str, body: str) -> str:
     end = next_heading.start() if next_heading else len(text)
     existing = text[heading.end():end].strip()
     combined = block if not existing else block + "\n\n" + existing
-    return text[:heading.end()] + "\n\n" + combined + "\n\n" + text[end:].lstrip("\n")
+    result = text[:heading.end()] + "\n\n" + combined
+    if end < len(text):
+        result += "\n\n" + text[end:].lstrip("\n")
+    return result.rstrip() + "\n"
 
 def _safe_line(value: object, label: str) -> str:
     text = str(value).strip()

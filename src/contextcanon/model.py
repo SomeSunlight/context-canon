@@ -171,10 +171,20 @@ class ParsedNode:
     plan: str = ""
 
     @property
-    def parent(self) -> ParentRef | None:
-        if len(self.parents) > 1:
-            raise ValueError("Node has multiple semantic Parents; use .parents")
-        return self.parents[0] if self.parents else None
+    def semantic_parents(self) -> tuple[ParentRef | SourceRef, ...]:
+        """All direct semantic Parents, independent of migration-era syntax."""
+
+        return (
+            *self.parents,
+            *(source for source in self.sources if source.relationship == "parent"),
+        )
+
+    @property
+    def parent(self) -> ParentRef | SourceRef | None:
+        parents = self.semantic_parents
+        if len(parents) > 1:
+            raise ValueError("Node has multiple semantic Parents; use .semantic_parents")
+        return parents[0] if parents else None
 
 
 @dataclass
