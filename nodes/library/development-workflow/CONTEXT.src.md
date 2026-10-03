@@ -37,6 +37,10 @@ This Node deliberately does **not** compose ContextCanon Foundation. A consumer 
   Why: Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior.
   <!-- ctx:rule id="CCW-012" -->
 
+- **Render repository-local Markdown links URL-safely:** When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.
+  Why: Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions.
+  <!-- ctx:rule id="CCW-015" -->
+
 ### Proportional verification
 
 - **Batch related edits before expensive final verification:** For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
