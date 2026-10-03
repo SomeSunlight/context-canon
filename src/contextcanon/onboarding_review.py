@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
+from .links import markdown_link_target
 from .model import CompiledPackage
 from .onboarding_proposal import (
     EvidenceSnapshot,
@@ -637,7 +638,7 @@ def _render_context_source(
             _publishable(locator, "Source locator")
             lines.extend(
                 [
-                    f"- [{package.metadata.name}]({locator}) — `{package.metadata.version}`",
+                    f"- [{package.metadata.name}]({markdown_link_target(locator)}) — `{package.metadata.version}`",
                     (
                         f'  <!-- ctx:source id="{package.metadata.id}" version="{package.metadata.version}" '
                         f'normalized-digest="{package.normalized_digest}" package-digest="{package.package_digest}" -->'
