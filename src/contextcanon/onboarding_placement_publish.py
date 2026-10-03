@@ -463,7 +463,7 @@ def _replace_parent_section(text: str, body: str) -> str:
 
     matches: list[re.Match[str]] = []
     for heading_name in ("Parent Context Node", "Parent"):
-        match = re.search(rf"(?m)^## {re.escape(heading_name)}\s*$", text)
+        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \t]*$", text)
         if match is not None:
             matches.append(match)
     if len(matches) > 1:
@@ -482,15 +482,15 @@ def _replace_parent_section(text: str, body: str) -> str:
     if not body.strip():
         return text.rstrip() + "\n"
 
-    source_heading = re.search(r"(?m)^## Sources\s*$", text)
-    context_heading = re.search(r"(?m)^## Context Imports\s*$", text)
+    source_heading = re.search(r"(?m)^## Sources[ \t]*$", text)
+    context_heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
     if source_heading is not None and context_heading is not None:
         raise _error("CONTEXT.src.md contains both ## Context Imports and legacy ## Sources")
     if source_heading is not None:
         text = text[:source_heading.start()] + "## Context Imports" + text[source_heading.end():]
 
     block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
-    heading = re.search(r"(?m)^## Context Imports\s*$", text)
+    heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
     if heading is None:
         return text.rstrip() + f"\n\n## Context Imports\n\n{block}\n"
 
