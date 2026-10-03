@@ -16,7 +16,7 @@ ATTR_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_-]*)="([^"]*)"')
 DIGEST_RE = re.compile(r'^[0-9a-f]{64}$')
 SOURCE_RE = re.compile(
     r'^- \[(?P<name>[^]]+)\]\((?P<path>[^)]+)\)\s+—\s+`(?P<version>[^`]+)`'
-    r'(?:\s+—\s+`relationship=(?P<relationship>parent|reference)`)?\s*$'
+    r'(?:\s+—\s+`relationship=(?P<relationship>[^`]+)`)?\s*$'
 )
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
 CHANGE_TARGET_RE = re.compile(r'^- `(?P<source>.+?) / (?P<rule_id>[^`]+)`(?:\s+—\s+.*)?\s*$')
@@ -208,6 +208,13 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
         if not match:
             i += 1
             continue
+        raw_relationship = match.group("relationship")
+        if raw_relationship is not None and raw_relationship not in {"parent", "reference"}:
+            raise ContextCanonError(
+                f"{source_path}:{i+1}: invalid Context import relationship {raw_relationship!r}; "
+                "expected 'parent' or 'reference'"
+            )
+
         attrs = _find_ctx_attrs(lines, SOURCE_COMMENT_RE, i + 1, min(i + 5, end))
         if not attrs or not attrs.get("id") or not attrs.get("version"):
             raise ContextCanonError(f"{source_path}:{i+1}: Source needs ctx:source id/version metadata")
@@ -260,7 +267,7 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
                 why = stripped[4:].strip() or None
                 break
 
-        relationship: RelationshipKind = match.group("relationship") or "parent"  # type: ignore[assignment]
+        relationship: RelationshipKind = raw_relationship or "parent"  # type: ignore[assignment]
         result.append(
             SourceRef(
                 attrs["id"],
