@@ -1,5 +1,21 @@
 # Plan
 
+## Active Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
+
+**Fast Track status — ACTIVE**
+
+Purpose: make onboarding emit the same single canonical Context Import relationship model already accepted in Phase 1, with an explicit owner-visible Parent/Reference choice and no new legacy Source/Parent publication split.
+
+- [ ] Reconstruct the STEP 07 → STEP 08 → STEP 10 → preview/publication/reset data flow and identify every remaining onboarding-only Source/Parent split.
+- [ ] Make STEP 07 distinguish existing enclosing Parents, additional Parents, and optional References; preserve explicit relationship kind in accepted machine state with legacy state defaulting safely to Parent.
+- [ ] Carry relationship kind unchanged through placement instruction/proposal/review, preview, publication and recovery; avoid duplicate publication of an enclosing Parent.
+- [ ] Publish all new reusable relationships only as canonical `## Context Imports` + `ctx:source` + `relationship=parent|reference`, reusing the Phase-1 compiler/package semantics rather than translating onboarding Sources afterward.
+- [ ] Add focused regressions for root/subtree Parent+Reference combinations, multiple Parents, enclosing-Parent deduplication, STEP-07 recovery, preview/publication preservation, Reference non-normativity/non-propagation and Parent equivalence with manual authoring.
+- [ ] Update onboarding/framework documentation plus PLAN/STATE/CHANGELOG, regenerate the self-hosted Context, and run the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, propagation health and diff hygiene.
+- [ ] Prepare/update one Draft PR for owner testing. Do not merge without explicit owner approval.
+
+Boundary: Issue #103 (Windows path lengths, candidate stores, ignore rules and cleanup) remains separate.
+
 ## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
 
 **Fast Track status — OWNER-TESTED / MERGE-READY**
