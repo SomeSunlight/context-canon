@@ -280,7 +280,9 @@ class WindowsPathBudgetTests(unittest.TestCase):
 
     def test_251_unit_parent_acceptance_warns_publishes_and_builds_offline(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = Path(directory)
+            # Match preflight's resolved destination, including Windows temp
+            # directory aliases, before sizing the exact 251-unit fixture.
+            repo = Path(directory).resolve()
             (repo / '.git').mkdir()
             resource_rel = 'nodes/library/development-workflow/docs/change-workflow.md'
             resource = repo / resource_rel
