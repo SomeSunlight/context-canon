@@ -19,7 +19,7 @@ def _windows() -> bool:
 
 
 def _length(path: PurePath) -> int:
-    return len(str(path).encode("utf-16-le")) // 2
+    return len(str(path).encode("utf-16-le", errors="surrogatepass")) // 2
 
 
 def preflight_paths(

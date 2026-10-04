@@ -17,7 +17,7 @@ Scope: Source/Reference and Parent candidate storage/acceptance, Windows destina
 - [x] Update documentation/PLAN/STATE/CHANGELOG, regenerate self-hosted packages, and run the complete suite, build/check, propagation health and diff hygiene.
 - [ ] Publish one Draft PR with exact-head CI evidence. Do not merge.
 
-Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added; its result is required at the final PR gate.
+Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added. Its first run exposed test-fixture encoding and Git-vs-platform separator assumptions; fixtures now explicitly use UTF-8 and compare Git paths in POSIX form. The new Git tree preflight also decodes Git paths explicitly as UTF-8. The corrected exact-head run is required at the final PR gate.
 
 Deferred ceremony: one final full gate and PR handoff after focused implementation checks. Exit: coherent Draft PR for owner review. No new general cleanup command or user path rewriting.
 

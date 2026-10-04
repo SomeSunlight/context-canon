@@ -249,7 +249,7 @@ def _clone_location(locator: str, destination: Path, ref: str | None) -> str:
     listing = subprocess.run(
         ["git", "-C", str(destination), "ls-tree", "-r", "--name-only", "-z", revision],
         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, check=False,
+        encoding="utf-8", errors="surrogateescape", check=False,
     )
     if listing.returncode != 0:
         raise ContextCanonError(f"Could not inspect Git candidate checkout paths: {listing.stderr.strip()}")

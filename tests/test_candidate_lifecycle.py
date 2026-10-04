@@ -37,10 +37,10 @@ class CandidateLifecycleTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, repo, True)
         # Exercise canonical imports, not only the compatibility carrier.
         source = child / 'CONTEXT.src.md'
-        source.write_text(source.read_text().replace('## Parent', '## Context Imports').replace('ctx:parent', 'ctx:source').replace('— `1.0.0`', '— `1.0.0` — `relationship=parent`'))
-        (parent / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='2.0.0', statement='Reviewed v2.'))
+        source.write_text(source.read_text(encoding="utf-8").replace('## Parent', '## Context Imports').replace('ctx:parent', 'ctx:source').replace('— `1.0.0`', '— `1.0.0` — `relationship=parent`'), encoding="utf-8")
+        (parent / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='2.0.0', statement='Reviewed v2.'), encoding="utf-8")
         _, receipt = review_parent_candidate(child)
-        raw = json.loads(receipt.read_text())
+        raw = json.loads(receipt.read_text(encoding="utf-8"))
         candidate = child / raw['candidate_path']
         return repo, parent, child, old, receipt, candidate
 
@@ -49,18 +49,18 @@ class CandidateLifecycleTests(unittest.TestCase):
         new = load_package(candidate)
         self.assertEqual(len(candidate.name), 16)
         # A second independently frozen candidate and receipt must survive.
-        (parent / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='3.0.0', statement='Unreviewed v3.'))
+        (parent / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='3.0.0', statement='Unreviewed v3.'), encoding="utf-8")
         other_compiled = Compiler(repo).compile(parent)
         other = store_candidate(child, 'parent-candidates', compiled_package(other_compiled), artifact_files(other_compiled))
         other_receipt = receipt.with_name('another-parent.json')
-        other_receipt.write_text('unrelated receipt')
+        other_receipt.write_text('unrelated receipt', encoding="utf-8")
         shutil.rmtree(parent)
         accepted = accept_parent_candidate(child)
         self.assertEqual(accepted.package_digest, new.package_digest)
         self.assertFalse(candidate.exists())
         self.assertFalse(receipt.exists())
         self.assertTrue(other.is_dir())
-        self.assertEqual(other_receipt.read_text(), 'unrelated receipt')
+        self.assertEqual(other_receipt.read_text(encoding="utf-8"), 'unrelated receipt')
         self.assertTrue((child / '.context/sources' / old.package_digest).is_dir())
         self.assertTrue((child / '.context/sources' / new.package_digest).is_dir())
         shutil.rmtree(child / '.context/parent-candidates')
@@ -75,9 +75,9 @@ class CandidateLifecycleTests(unittest.TestCase):
         digest = load_package(short).package_digest
         legacy = short.with_name(digest)
         short.rename(legacy)
-        raw = json.loads(receipt.read_text())
+        raw = json.loads(receipt.read_text(encoding="utf-8"))
         raw['candidate_path'] = legacy.relative_to(child).as_posix()
-        receipt.write_text(json.dumps(raw))
+        receipt.write_text(json.dumps(raw), encoding="utf-8")
         self.assertEqual(accept_parent_candidate(child).package_digest, digest)
         self.assertFalse(legacy.exists())
         self.assertFalse(receipt.exists())
@@ -120,17 +120,17 @@ class CandidateLifecycleTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, provider, True)
         self.addCleanup(shutil.rmtree, consumer, True)
         source = consumer / 'CONTEXT.src.md'
-        source.write_text(source.read_text().replace('— `1.0.0`', '— `1.0.0` — `relationship=reference`'))
+        source.write_text(source.read_text(encoding="utf-8").replace('— `1.0.0`', '— `1.0.0` — `relationship=reference`'), encoding="utf-8")
         package, candidate = fetch_git_candidate(consumer, 'node-python')
         _, receipt = review_source_candidate(consumer, 'node-python', candidate)
         sidecar = candidate_provenance_path(consumer, package.package_digest)
         other = candidate.parent / 'unrelated'
         other.mkdir()
-        (other / 'keep').write_text('other candidate')
+        (other / 'keep').write_text('other candidate', encoding="utf-8")
         other_sidecar = candidate.parent / 'unrelated.git.json'
-        other_sidecar.write_text('other provenance')
+        other_sidecar.write_text('other provenance', encoding="utf-8")
         other_receipt = receipt.with_name('unrelated.json')
-        other_receipt.write_text('other receipt')
+        other_receipt.write_text('other receipt', encoding="utf-8")
         before = source.read_bytes()
         with patch('contextcanon.sources._write_source_pin', side_effect=OSError('pin failure')):
             with self.assertRaisesRegex(OSError, 'pin failure'):
@@ -196,7 +196,7 @@ class CandidateLifecycleTests(unittest.TestCase):
         seen = {}
         collision = None
         for index in range(40):
-            source.write_text(PARENT_TEMPLATE.format(version=f'1.0.{index}', statement=f'Policy {index}.'))
+            source.write_text(PARENT_TEMPLATE.format(version=f'1.0.{index}', statement=f'Policy {index}.'), encoding="utf-8")
             compiled = Compiler(repo).compile(repo)
             token = compiled.package_digest[:1]
             if token in seen:
@@ -215,13 +215,13 @@ class CandidateLifecycleTests(unittest.TestCase):
             self.assertEqual(load_package(b).package_digest, second.package_digest)
             self.assertEqual(candidate_path(repo, 'candidates', second.package_digest), b)
             self.assertEqual(store_candidate(repo, 'candidates', compiled_package(second), artifact_files(second)), b)
-            (b / 'CONTEXT.md').write_text('tampered')
+            (b / 'CONTEXT.md').write_text('tampered', encoding="utf-8")
             with self.assertRaises(ContextCanonError):
                 candidate_path(repo, 'candidates', second.package_digest)
 
     def test_tampered_parent_candidate_cannot_be_accepted_or_cleaned(self):
         _, _, child, _, receipt, candidate = self.parent_case()
-        (candidate / 'CONTEXT.md').write_text('tampered')
+        (candidate / 'CONTEXT.md').write_text('tampered', encoding="utf-8")
         with self.assertRaises(ContextCanonError):
             accept_parent_candidate(child)
         self.assertTrue(candidate.is_dir())
@@ -269,7 +269,7 @@ class WindowsPathBudgetTests(unittest.TestCase):
             (repo / '.git').mkdir()
             resource = repo / 'nodes/library/development-workflow/docs/change-workflow.md'
             resource.parent.mkdir(parents=True)
-            resource.write_text('# Workflow\n')
+            resource.write_text('# Workflow\n', encoding="utf-8")
             (repo / 'CONTEXT.src.md').write_text('''# Workflow
 <!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Workflow" version="1.0.0" -->
 
@@ -281,7 +281,7 @@ When developing:
 
 Required:
 - Resource: `nodes/library/development-workflow/docs/change-workflow.md`
-''')
+''', encoding="utf-8")
             compiled = Compiler(repo).compile(repo)
             package = compiled_package(compiled)
             internal_old = Path('.context/parent-candidates') / package.package_digest / DEEP
@@ -303,16 +303,16 @@ Required:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory)
             (repo / '.git').mkdir()
-            (repo / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='1.0.0', statement='Policy.'))
+            (repo / 'CONTEXT.src.md').write_text(PARENT_TEMPLATE.format(version='1.0.0', statement='Policy.'), encoding="utf-8")
             compiled = Compiler(repo).compile(repo)
             stale = repo / 'CONTEXT/stale.md'
             stale.parent.mkdir()
-            stale.write_text('keep before successful preflight')
+            stale.write_text('keep before successful preflight', encoding="utf-8")
             compiled.resources[DEEP + ('x' * 150)] = b'resource'
             with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
                 with self.assertRaisesRegex(ContextCanonError, 'Official Context output publication'):
                     write_outputs(compiled)
-            self.assertEqual(stale.read_text(), 'keep before successful preflight')
+            self.assertEqual(stale.read_text(encoding="utf-8"), 'keep before successful preflight')
             self.assertFalse((repo / 'CONTEXT.md').exists())
 
 
@@ -321,11 +321,16 @@ class GitCheckoutPreflightTests(unittest.TestCase):
         helper = git_fixtures.GitTransportTests()
         provider, _, _ = helper.make_provider()
         self.addCleanup(shutil.rmtree, provider, True)
+        unicode_name = 'Übersicht 📚' + ('x' * 60) + '.md'
+        (provider / unicode_name).write_text('Unicode path', encoding='utf-8')
+        helper.git(provider, 'add', unicode_name)
+        helper.git(provider, 'commit', '-m', 'Publish Unicode path')
         with tempfile.TemporaryDirectory() as directory:
             checkout = Path(directory) / ('Checkout' * 22)
             with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
-                with self.assertRaisesRegex(ContextCanonError, 'Git Source candidate checkout'):
+                with self.assertRaisesRegex(ContextCanonError, 'Git Source candidate checkout') as caught:
                     _clone_location(str(provider), checkout, 'main')
+            self.assertIn(unicode_name, str(caught.exception))
             self.assertTrue((checkout / '.git').exists())
             self.assertFalse((checkout / 'nodes').exists())
             first = helper.git(provider, 'log', '--reverse', '--format=%H').stdout.splitlines()[0]
@@ -340,7 +345,7 @@ class GitIgnoreLifecycleTests(unittest.TestCase):
             repo = Path(directory)
             subprocess.run(['git', 'init', '-q', str(repo)], check=True)
             old = '# >>> ContextCanon onboarding (managed)\n/contextcanon-onboarding/\n/.context/onboarding/*\n!/.context/onboarding/inventory-state.json\n!/.context/onboarding/inventory-acceptance.json\n# <<< ContextCanon onboarding (managed)\n'
-            (repo / '.gitignore').write_text('project-temp/\n\n' + old)
+            (repo / '.gitignore').write_text('project-temp/\n\n' + old, encoding="utf-8")
             ensure_onboarding_gitignore(repo, repo / 'contextcanon-onboarding')
             before = (repo / '.gitignore').read_bytes()
             ensure_onboarding_gitignore(repo, repo / 'contextcanon-onboarding')
@@ -359,7 +364,7 @@ class GitIgnoreLifecycleTests(unittest.TestCase):
                 target = repo / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 if rel != '.gitignore':
-                    target.write_text('test')
+                    target.write_text('test', encoding="utf-8")
             for rel in hidden:
                 result = subprocess.run(['git', '-C', str(repo), 'check-ignore', rel], capture_output=True)
                 self.assertEqual(result.returncode, 0, rel)
@@ -368,7 +373,7 @@ class GitIgnoreLifecycleTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, rel)
             subprocess.run(['git', '-C', str(repo), 'add', '.'], check=True)
             staged = subprocess.check_output(['git', '-C', str(repo), 'diff', '--cached', '--name-only'], text=True).splitlines()
-            self.assertEqual(set(staged), visible)
+            self.assertEqual(set(staged), {Path(rel).as_posix() for rel in visible})
 
     def test_existing_repository_review_installs_ignore_rules_and_keeps_packages_visible(self):
         repo, _, child, _, receipt, candidate = CandidateLifecycleTests().parent_case()
