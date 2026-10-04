@@ -2,7 +2,7 @@
 
 ## Active Fast Track: portable package scratch lifecycle — Issue #103
 
-**Fast Track status — ACTIVE**
+**Fast Track status — CLOSED / OWNER REVIEW PENDING**
 
 Purpose: reduce ContextCanon-owned Windows path depth, fail before risky package/output writes, and manage the complete local candidate lifecycle without weakening exact package identity or the durable offline store.
 
@@ -15,11 +15,11 @@ Scope: Source/Reference and Parent candidate storage/acceptance, Windows destina
 - [x] Clean only the accepted transaction after the durable package and pin succeed; preserve scratch on failure and prove offline independence.
 - [x] Cover realistic deep Windows paths, prefix collisions/tampering, Git visibility at root/two subtrees, legacy recovery and non-Windows behavior.
 - [x] Update documentation/PLAN/STATE/CHANGELOG, regenerate self-hosted packages, and run the complete suite, build/check, propagation health and diff hygiene.
-- [ ] Publish one Draft PR with exact-head CI evidence. Do not merge.
+- [x] Publish Draft PR #105 with exact-head Linux/native-Windows CI evidence. Do not merge.
 
-Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added. Its first run exposed test-fixture encoding and Git-vs-platform separator assumptions; fixtures now explicitly use UTF-8 and compare Git paths in POSIX form. The new Git tree preflight also decodes Git paths explicitly as UTF-8. The corrected exact-head run is required at the final PR gate.
+Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added. Its first run exposed test-fixture encoding and Git-vs-platform separator assumptions; fixtures now explicitly use UTF-8 and compare Git paths in POSIX form. The new Git tree preflight also decodes Git paths explicitly as UTF-8. The corrected exact-head run `37222369211` is green on `8399215bdd117f46d1e1402de49b04f9c2049c2c`: Linux full suite/self-host health and all seven native Windows path-budget/Git-visibility tests pass.
 
-Deferred ceremony: one final full gate and PR handoff after focused implementation checks. Exit: coherent Draft PR for owner review. No new general cleanup command or user path rewriting.
+Closing checkpoint: Draft PR #105 is ready for owner review. All 378 deterministic tests pass, self-host build/check has zero drift, all four local Parent/Child edges are normatively current, and diff hygiene is clean. Gateway and Framework Development are `0.3.17-draft`; executable release remains `0.10.0`. The implementation tree is `aac64338c9798d76e6a10f5af29ce779151edacf`; this final PLAN/STATE closure changes no package/code behavior. Real Windows owner testing remains pending. Do not merge without explicit approval. No new general cleanup command or user path rewriting.
 
 ## Accepted Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
 
