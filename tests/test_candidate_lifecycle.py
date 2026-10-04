@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import warnings
 from pathlib import Path, PureWindowsPath
 from unittest.mock import patch
 
@@ -16,7 +17,7 @@ from contextcanon.onboarding_workspace import GITIGNORE_START, ensure_onboarding
 from contextcanon.outputs import check_outputs, write_outputs
 from contextcanon.package import artifact_files, compiled_package, load_package
 from contextcanon.parser import ContextCanonError
-from contextcanon.path_budget import WINDOWS_PATH_BUDGET, _length, preflight_paths
+from contextcanon.path_budget import WINDOWS_PATH_BUDGET, WINDOWS_PATH_LIMIT, _length, preflight_paths
 from contextcanon.sources import accept_parent_candidate, accept_source_candidate, review_parent_candidate, review_source_candidate
 from tests import test_git_transport as git_fixtures
 from tests import test_parent_acceptance as parent_fixtures
@@ -230,10 +231,11 @@ class CandidateLifecycleTests(unittest.TestCase):
 
 class WindowsPathBudgetTests(unittest.TestCase):
     def test_realistic_windows_prefix_and_deep_workflow_diagnostic(self):
-        root = PureWindowsPath('C:/Users/Owner/Corporate Projects/Knowledge Platform/P1')
+        root = PureWindowsPath('C:/Users/Owner/Corporate Projects/Knowledge Platform/Project One')
         store = root / '.context/parent-candidates' / ('a' * 64)
         self.assertLess(_length(root / 'CONTEXT.md'), WINDOWS_PATH_BUDGET)
-        with patch('contextcanon.path_budget._windows', return_value=True):
+        self.assertGreaterEqual(_length(store / DEEP), WINDOWS_PATH_LIMIT)
+        with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
             with self.assertRaises(ContextCanonError) as caught:
                 preflight_paths(store, ['CONTEXT.md', DEEP], action='Parent review', node_root=root)
         message = str(caught.exception)
@@ -242,26 +244,98 @@ class WindowsPathBudgetTests(unittest.TestCase):
         self.assertIn('exceeds the Node/project root contribution', message)
 
     def test_long_user_node_and_unc_names_are_preserved(self):
-        for root in (PureWindowsPath('C:/Projects') / ('Long Project Name ' * 7), PureWindowsPath('//company-server/Engineering/Context Library') / ('Node Name ' * 8)):
-            with self.subTest(root=root), patch('contextcanon.path_budget._windows', return_value=True):
+        for root in (PureWindowsPath('C:/Projects') / ('Long Project Name ' * 8), PureWindowsPath('//company-server/Engineering/Context Library') / ('Node Name ' * 10)):
+            with self.subTest(root=root), patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
                 with self.assertRaises(ContextCanonError) as caught:
                     preflight_paths(root, [DEEP], action='Official Context output publication')
                 self.assertIn(str(root / DEEP), str(caught.exception))
 
     def test_unicode_budget_boundary_and_explicit_long_path_opt_in(self):
         root = PureWindowsPath('C:/P')
-        under = 'x' * (WINDOWS_PATH_BUDGET - _length(root) - 2)
+        def relative(length):
+            return 'x' * (length - _length(root) - 1)
+
         with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
-            preflight_paths(root, [under], action='test')
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter('always')
+                preflight_paths(root, [relative(239)], action='test')
+                self.assertEqual(caught, [])
+            for length in (240, 251, 259):
+                with self.subTest(length=length), self.assertWarnsRegex(RuntimeWarning, f'{length} characters'):
+                    preflight_paths(root, [relative(length)], action='test')
+            # One non-BMP character occupies two UTF-16 units.
+            with self.assertWarnsRegex(RuntimeWarning, '240 characters'):
+                preflight_paths(root, [relative(238) + '\U0001f4da'], action='test')
             with self.assertRaises(ContextCanonError):
-                preflight_paths(root, [under + 'x'], action='test')
+                preflight_paths(root, [relative(260)], action='test')
             with self.assertRaises(ContextCanonError):
-                preflight_paths(root, [under[:-1] + '\U0001f4da'], action='test')
+                preflight_paths(root, [relative(258) + '\U0001f4da'], action='test')
             with patch.dict('os.environ', {'CONTEXTCANON_ALLOW_LONG_PATHS': '1'}):
                 with self.assertWarnsRegex(RuntimeWarning, 'tool-dependent'):
-                    preflight_paths(root, [under + 'x'], action='test')
+                    preflight_paths(root, [relative(260)], action='test')
         with patch('contextcanon.path_budget._windows', return_value=False):
-            preflight_paths(root, [DEEP * 5], action='unchanged non-Windows behavior')
+            with warnings.catch_warnings(record=True) as caught:
+                preflight_paths(root, [DEEP * 5], action='unchanged non-Windows behavior')
+                self.assertEqual(caught, [])
+
+    def test_251_unit_parent_acceptance_warns_publishes_and_builds_offline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / '.git').mkdir()
+            resource_rel = 'nodes/library/development-workflow/docs/change-workflow.md'
+            resource = repo / resource_rel
+            resource.parent.mkdir(parents=True)
+            resource.write_text('# Workflow\n', encoding='utf-8')
+            source = repo / 'CONTEXT.src.md'
+            parent_text = PARENT_TEMPLATE.replace('node-parent', 'c4c94726-3cc7-4df6-b779-72bbf9c06f40') + f'''
+## Topics
+
+### Workflow
+<!-- ctx:topic id="WORKFLOW" -->
+When developing:
+
+Required:
+- Resource: `{resource_rel}`
+'''
+            source.write_text(parent_text.format(version='1.0.0', statement='Old policy.'), encoding='utf-8')
+            old = Compiler(repo).compile(repo)
+            accepted_rel = Path('.context/sources') / old.package_digest / DEEP
+            name_length = 251 - _length(repo / accepted_rel) - 1
+            self.assertGreater(name_length, 0)
+            child = repo / ('P' * name_length)
+            for rel, content in artifact_files(old).items():
+                path = child / '.context/sources' / old.package_digest / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            (child / 'CONTEXT.src.md').write_text(f'''# Child
+<!-- ctx:node id="child" name="Child" version="1.0.0" -->
+
+## Context Imports
+
+- [{old.metadata.name}](..) — `1.0.0` — `relationship=parent`
+  <!-- ctx:source id="{old.metadata.id}" version="1.0.0" normalized-digest="{old.normalized_digest}" package-digest="{old.package_digest}" -->
+''', encoding='utf-8')
+            source.write_text(parent_text.format(version='2.0.0', statement='Reviewed policy.'), encoding='utf-8')
+            with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
+                _, receipt = review_parent_candidate(child)
+                raw = json.loads(receipt.read_text(encoding='utf-8'))
+                candidate = child / raw['candidate_path']
+                with self.assertWarnsRegex(RuntimeWarning, '251 characters') as caught:
+                    accepted = accept_parent_candidate(child)
+                self.assertIn('C:\\Projektverzeichnis', str(caught.warning))
+                self.assertIn('at least 12 characters', str(caught.warning))
+                self.assertIn('Continuing with a warning', str(caught.warning))
+                destination = child / '.context/sources' / accepted.package_digest / DEEP
+                self.assertEqual(_length(destination), 251)
+                self.assertEqual(destination.read_bytes(), b'# Workflow\n')
+                self.assertFalse(candidate.exists())
+                self.assertFalse(receipt.exists())
+                self.assertTrue((child / '.context/sources' / old.package_digest).is_dir())
+                source.unlink()  # Only the exact accepted package supplies Parent Context.
+                compiled = Compiler(repo).compile(child)
+                self.assertEqual(compiled.inherited_rules[0].statement, 'Reviewed policy.')
+                write_outputs(compiled)
+                self.assertEqual(check_outputs(Compiler(repo).compile(child)), [])
 
     def test_short_candidate_passes_where_old_digest_path_exceeded_budget(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -292,11 +366,12 @@ Required:
                 candidate = store_candidate(consumer, 'parent-candidates', package, artifact_files(compiled))
                 self.assertEqual(load_package(candidate).package_digest, package.package_digest)
                 self.assertLess(_length(candidate / DEEP), WINDOWS_PATH_BUDGET)
-                # Durable stores intentionally keep full digests: fail before copying.
+                # Durable stores keep full digests; headroom pressure alone must
+                # not prevent an existing project from accepting an update.
                 from contextcanon.sources import _install_package
-                with self.assertRaisesRegex(ContextCanonError, 'accepted immutable package installation'):
+                with self.assertWarnsRegex(RuntimeWarning, 'accepted immutable package installation'):
                     _install_package(consumer, candidate, package)
-                self.assertFalse((consumer / '.context/sources').exists())
+                self.assertEqual(load_package(consumer / '.context/sources' / package.package_digest).package_digest, package.package_digest)
                 self.assertTrue(candidate.is_dir())
 
     def test_failed_output_preflight_does_not_delete_or_write_any_outputs(self):

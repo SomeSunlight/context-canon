@@ -1,5 +1,18 @@
 # Plan
 
+## Active owner-test correction: Windows warning headroom — Issue #103 / PR #105
+
+**Fast Track status — OPEN**
+
+Purpose: let existing 251-unit accepted package paths propagate without treating the conservative 240-unit headroom target as an actual file API failure.
+
+Scope: warn at 240–259 UTF-16 units, retain default pre-write rejection at 260 and the existing explicit long-path opt-in; explain whole-checkout relocation and why rebuilding cannot shorten canonical accepted digests. General reinitialization/identity remapping (#106) and the owner-requested compact durable `sources`/packaged `references` locators with migration (#107) are independent follow-up work, without implementation here.
+
+- [x] Adjust the shared preflight policy and actionable diagnostic, with the migration rationale documented in code.
+- [ ] Prove exact 251-unit Parent acceptance, warning/error boundaries, scratch preservation on errors and native Windows materialization. Local focused coverage passes; native CI remains pending.
+- [x] Update operator/framework documentation, PLAN/STATE/CHANGELOG and regenerate self-hosted Context.
+- [ ] Pass focused/full tests, build/check, propagation health and exact-head Linux/Windows CI; update the existing Draft PR without merging.
+
 ## Active Fast Track: portable package scratch lifecycle — Issue #103
 
 **Fast Track status — CLOSED / OWNER REVIEW PENDING**
