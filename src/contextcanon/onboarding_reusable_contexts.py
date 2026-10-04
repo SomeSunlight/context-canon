@@ -8,15 +8,19 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from .model import CompiledPackage
+from .compiler import Compiler
+from .model import CompiledPackage, RelationshipKind
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_structure import HumanStructurePlan
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError
 from .onboarding_workspace import write_utf8
 
 
-REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v0"
-REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v0"
+LEGACY_REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v0"
+REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v1"
+LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v0"
+REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v1"
 REUSABLE_CONTEXTS_STATE_NAME = "reusable-contexts.json"
 FROZEN_CATALOG_DIR_NAME = "reusable-context-packages"
 FROZEN_PROVENANCE_REL = ".context/onboarding-provenance.json"
@@ -35,12 +39,14 @@ _HEADER_RE = re.compile(
     r'evidence="(?P<evidence>[0-9a-f]{64})" structure="(?P<structure>[0-9a-f]{64})" -->'
 )
 _ASSIGN_RE = re.compile(
-    r'^- \*\*(?P<target>.+?)\*\* \(`(?P<path>[^`]+)`\) ← '
-    r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)$'
+    r'^- \\*\\*(?P<target>.+?)\\*\\* \\(`(?P<path>[^`]+)`\\) ← '
+    r'\\*\\*(?P<source>.+?)\\*\\* \\(`(?P<version>[^`]+)`\\)'
+    r'(?: \\[(?P<relationship>Parent|Reference)\\])?$'
 )
 _PLAIN_ASSIGN_RE = re.compile(
-    r'^(?:- )?(?P<target>.+) \((?P<path>.+)\) ← '
-    r'(?P<source>.+) \((?P<version>.+)\)$'
+    r'^(?:- )?(?P<target>.+) \\((?P<path>.+)\\) ← '
+    r'(?P<source>.+) \\((?P<version>.+)\\)'
+    r'(?: \\[(?P<relationship>Parent|Reference)\\])?$'
 )
 @dataclass(frozen=True)
 class ReusableContextAssignment:
@@ -52,6 +58,7 @@ class ReusableContextAssignment:
     source_version: str
     source_normalized_digest: str
     source_package_digest: str
+    relationship: RelationshipKind
     why: str
 
     @property
@@ -68,6 +75,7 @@ class ReusableContextAssignment:
             "source_version": self.source_version,
             "source_normalized_digest": self.source_normalized_digest,
             "source_package_digest": self.source_package_digest,
+            "relationship": self.relationship,
             "why": self.why,
         }
 
@@ -98,6 +106,10 @@ class ReusableContextsPlan:
     @property
     def owner_source_whys(self) -> dict[str, str]:
         return {assignment.owner_spec: assignment.why for assignment in self.assignments}
+
+    @property
+    def owner_source_relationships(self) -> dict[str, RelationshipKind]:
+        return {assignment.owner_spec: assignment.relationship for assignment in self.assignments}
 
 
 def _error(message: str) -> ContextCanonError:
@@ -144,6 +156,15 @@ def _decision(text: str) -> str:
     if len(matches) != 1 or matches[0] not in {"pending", "accept"}:
         raise _error("Decision must appear exactly once and be `pending` or `accept`")
     return matches[0]
+
+
+def _enclosing_parent_package(snapshot_root: Path):
+    project = project_root_from_snapshot(snapshot_root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    return Compiler(repository).compile(parent_root)
 
 
 def _candidate_manifest_paths(location: Path) -> list[Path]:
