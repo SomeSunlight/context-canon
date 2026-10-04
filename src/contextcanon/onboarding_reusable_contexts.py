@@ -723,6 +723,7 @@ def render_reusable_contexts(
     locations: tuple[str, ...],
     packages: tuple[CompiledPackage, ...],
     assignments: tuple[ReusableContextAssignment, ...],
+    enclosing_parent=None,
 ) -> str:
     lines = [
         "# STEP 07 — Reusable Contexts",
@@ -730,7 +731,7 @@ def render_reusable_contexts(
         "",
         "Your project now has its own Context shelves. This step asks one simple question: **should any already-curated reusable Context also apply here?** For example, a shared Development Workflow or GitHub Local Context can be attached where it belongs instead of copying those rules into this project by hand.",
         "",
-        "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
+        "You choose the relationship explicitly. **Parent** is normative: its Rules apply here and its effective Context propagates to semantic Children. **Reference** is informational: its Rules do not apply and the relationship is not inherited by Children. ContextCanon keeps that exact choice through preview and publication.",
         "",
         "> **Important:** every editing/copy instruction in this file refers to the **raw Markdown text**, not to the rendered preview.",
         "",
@@ -755,19 +756,42 @@ def render_reusable_contexts(
             "",
             "> **END EDITABLE Catalog locations.**",
             "",
+            "## Existing Parents — generated",
+            "",
+        ]
+    )
+    if enclosing_parent is None:
+        lines.append("No enclosing Parent exists for this onboarding scope.")
+    else:
+        root_node = next((node for node in structure.nodes if node.path == "."), None)
+        root_label = root_node.name if root_node is not None else "Onboarding root"
+        lines.extend(
+            [
+                f"{root_label} (.) ← {enclosing_parent.metadata.name} ({enclosing_parent.metadata.version}) [Parent]",
+                "Why: This is the already accepted nearest enclosing Context; its Rules govern this subtree.",
+                "",
+                "This relationship already exists. **Do not copy it into Assignments below.** ContextCanon publishes it once as the root's canonical Parent import.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
             "## Assignments",
             "",
-            "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
+            "An Assignment means: **this project Context Node imports this reusable Context as either Parent or Reference**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it imports on the right.",
             "",
-            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, then put `Why: ...` on the next line. Indentation is optional.",
+            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, append exactly ` [Parent]` or ` [Reference]`, then put `Why: ...` on the next line. Indentation is optional.",
             "",
             "There is deliberately **no Markdown formatting syntax to preserve** in an Assignment: no list dash, no bold markers and no backticks.",
             "",
             "Assignment syntax: **read-only help — do not edit here.**",
             "",
             "```text",
-            "<project name> (<project path>) ← <reusable Context name> (<version>)",
-            "Why: <why this reusable Context belongs here>",
+            "<project name> (<project path>) ← <reusable Context name> (<version>) [Parent]",
+            "Why: <why this reusable Context governs this Node>",
+            "",
+            "<project name> (<project path>) ← <reusable Context name> (<version>) [Reference]",
+            "Why: <why this reusable Context is useful information here>",
             "```",
             "",
             "> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**",
@@ -781,7 +805,7 @@ def render_reusable_contexts(
     for assignment in assignments:
         lines.extend(
             [
-                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version})",
+                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version}) [{assignment.relationship.title()}]",
                 f"Why: {assignment.why}",
             ]
         )
@@ -792,7 +816,7 @@ def render_reusable_contexts(
             "",
             "> **END EDITABLE reusable-Context Assignments.**",
             "",
-            "Set `Decision` to `accept` when the Catalog and assignments describe the reusable Context you really want this project to inherit. An empty assignment list is valid when none applies.",
+            "Set `Decision` to `accept` when every Assignment has the intended Parent/Reference meaning. An empty assignment list is valid when no additional reusable Context applies.",
             "",
             "## Available project Context Nodes — generated",
             "",
