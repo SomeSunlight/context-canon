@@ -1,0 +1,49 @@
+name: issue-101 self-host refresh
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.event.pull_request.head.ref == 'issue-101-markdown-link-encoding'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: issue-101-markdown-link-encoding
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stop after the refresh commit
+        id: guard
+        shell: bash
+        run: |
+          if git log -1 --pretty=%B | grep -Fq "Refresh self-hosted Context for #101"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Refresh self-hosted Context
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          python -m pip install -e .
+          contextcanon build nodes/library/development-workflow
+          contextcanon propagate --all . --yes
+          contextcanon build --all .
+          python -m unittest discover -s tests -v
+          contextcanon check --all .
+          git diff --check
+      - name: Commit refreshed packages
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Refresh self-hosted Context for #101"
+          git push origin HEAD:issue-101-markdown-link-encoding
