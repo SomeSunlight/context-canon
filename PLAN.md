@@ -2,16 +2,18 @@
 
 ## Active owner-test correction: Windows warning headroom — Issue #103 / PR #105
 
-**Fast Track status — OPEN**
+**Fast Track status — CLOSED / OWNER REVIEW PENDING**
 
 Purpose: let existing 251-unit accepted package paths propagate without treating the conservative 240-unit headroom target as an actual file API failure.
 
 Scope: warn at 240–259 UTF-16 units, retain default pre-write rejection at 260 and the existing explicit long-path opt-in; explain whole-checkout relocation and why rebuilding cannot shorten canonical accepted digests. General reinitialization/identity remapping (#106) and the owner-requested compact durable `sources`/packaged `references` locators with migration (#107) are independent follow-up work, without implementation here.
 
 - [x] Adjust the shared preflight policy and actionable diagnostic, with the migration rationale documented in code.
-- [ ] Prove exact 251-unit Parent acceptance, warning/error boundaries, scratch preservation on errors and native Windows materialization. Local focused coverage passes; native CI remains pending.
+- [x] Prove exact 251-unit Parent acceptance, warning/error boundaries, scratch preservation on errors and native Windows materialization.
 - [x] Update operator/framework documentation, PLAN/STATE/CHANGELOG and regenerate self-hosted Context.
-- [ ] Pass focused/full tests, build/check, propagation health and exact-head Linux/Windows CI; update the existing Draft PR without merging.
+- [x] Pass focused/full tests, build/check, propagation health and exact-head Linux/Windows CI; update the existing Draft PR without merging.
+
+Closing checkpoint: all 379 deterministic tests, self-host build/check, all four local Parent/Child health checks and diff hygiene pass. Correction implementation head `ba8839301283b562d5a641eb55db7a6382c146b5` (tree `8205fa2d8f3a67ffe5cb35a6b557f273f1a7aa52`) passes GitHub Actions run `37233038203`: Linux full suite/self-host gate and all eight native Windows tests. The new fixture measures resolved Windows destinations and compares original native Resource bytes, so temporary-directory aliases and CRLF cannot distort its exact-length/preservation assertions. Gateway and Framework Development are `0.3.18-draft`. This PLAN/STATE closure changes no product/package behavior; final documentation-head CI is recorded on Draft PR #105. Do not merge without explicit owner approval. Future #106/#107 implementation remains separate.
 
 ## Active Fast Track: portable package scratch lifecycle — Issue #103
 
