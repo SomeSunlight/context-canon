@@ -20,6 +20,7 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 
 ### Fixed
 
+- Generated repository-local Markdown link destinations are now URL-safe across Official Context rendering, Context Imports, Resource bridges/closure and onboarding review/publication surfaces. Raw filesystem/ContextCanon locators remain semantic truth; encoded local targets are decoded before filesystem resolution, including paths with spaces, `#`, `%`, and parentheses.
 - STEP-10 split-review validation errors now identify the concrete P finding and Markdown file that failed validation, and the progress block is visually separated from the ordinary item-count line.
 - Subtree placement no longer publishes an accepted reusable Context a second time as an ordinary Source when that exact Node is already the enclosing semantic Parent; the accepted STEP-07/10 trace remains valid while publication keeps only the Parent relationship.
 - `check --all` parse failures now report the recursive scan root and explain that every ContextCanon Node below that root participates, making accidental one-directory-too-high invocation much easier to diagnose.
