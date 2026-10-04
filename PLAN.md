@@ -13,14 +13,14 @@ Purpose: make every ContextCanon-generated repository-local Markdown link safe f
 - [x] Apply the contract to onboarding publication/review/split-review/audit surfaces and teach the semantic placement instruction the same rule.
 - [x] Add integration regressions for spaces, `#`, `%`, parentheses, already-safe paths, encoded Resource closure, Context Imports, Official Context and onboarding Parent links.
 - [x] Run the deterministic suite after the link scanner fix: 350/350 tests pass.
-- [ ] Rebuild Development Workflow so its new Rule becomes an immutable package/version.
-- [ ] Propagate that newer Development Workflow Parent through Framework Development, GitHub and GitHub Local, then rebuild every affected self-hosted Node.
-- [ ] Audit the final PR diff for any remaining dynamic repository-local Markdown writer that bypasses the shared helper.
-- [ ] Run the exact-head full CI / `contextcanon check --all .` / zero-drift gate, update STATE/CHANGELOG/Issue #101/PR #102, and leave the PR Draft for owner testing. Do not merge without explicit owner approval.
+- [x] Rebuild Development Workflow so its new Rule becomes an immutable package/version.
+- [x] Promote the newer Development Workflow Parent into Framework Development, GitHub and GitHub Local and rebuild every affected self-hosted Node. The repository's self-host library uses explicit local version declarations rather than immutable consumer pins, so this internal refresh follows the established provider-first/version-sync pattern from #100; normal user-project Parent updates still use `propagate`.
+- [x] Audit every Python Markdown writer for remaining dynamic repository-local targets. Dynamic repository paths now go through the shared helper; remaining generated links use fixed ContextCanon-owned ASCII filenames/anchors.
+- [ ] Run the final exact-head normal CI / `contextcanon check --all .` / zero-drift gate after durable documentation updates, then leave PR #102 Draft for owner testing. Do not merge without explicit owner approval.
 
-Design constraint: raw filesystem paths and ContextCanon locators are semantic truth. Percent encoding belongs only to Markdown presentation. ContextCanon must decode encoded local link destinations before it uses them as filesystem paths; repeated rendering must never turn `%20` into `%2520`.
+Design constraint: raw filesystem paths and ContextCanon locators are semantic truth. Percent encoding belongs only to Markdown presentation. ContextCanon decodes encoded local link destinations before using them as filesystem paths; repeated normalization/rendering is tested so `%20` never becomes `%2520`. A literal percent sign in a real filename remains distinguishable by rendering as `%25`.
 
-Current checkpoint: branch `issue-101-markdown-link-encoding`, Draft PR #102. Head `0bd19a6a3c1c8aa3d81d1be64bf69a12538075d1` has 350/350 tests green. CI fails only at the expected self-host generated-state gate: Development Workflow requires its patch bump and the newer Parent package has not yet been propagated into its three consumers.
+Current checkpoint: Draft PR #102 has completed the implementation and self-host refresh. Development Workflow is `0.3.6-draft`; Framework Development `0.3.15-draft`; GitHub `0.1.7-draft`; GitHub Local `0.1.6-draft`. The refresh workflow ran 350/350 deterministic tests, `contextcanon check --all .`, and `git diff --check` successfully before committing the generated packages. The temporary refresh workflow has been removed; only the final normal PR gate remains before owner testing.
 
 ## Accepted Fast Track: subtree onboarding — Issues #92 and #91
 
