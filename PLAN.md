@@ -6,7 +6,7 @@
 
 Purpose: make onboarding emit the same single canonical Context Import relationship model already accepted in Phase 1, with an explicit owner-visible Parent/Reference choice and no new legacy Source/Parent publication split.
 
-- [ ] Reconstruct the STEP 07 → STEP 08 → STEP 10 → preview/publication/reset data flow and identify every remaining onboarding-only Source/Parent split.
+- [x] Reconstruct the STEP 07 → STEP 08 → STEP 10 → preview/publication/reset data flow and identify every remaining onboarding-only Source/Parent split.
 - [ ] Make STEP 07 distinguish existing enclosing Parents, additional Parents, and optional References; preserve explicit relationship kind in accepted machine state with legacy state defaulting safely to Parent.
 - [ ] Carry relationship kind unchanged through placement instruction/proposal/review, preview, publication and recovery; avoid duplicate publication of an enclosing Parent.
 - [ ] Publish all new reusable relationships only as canonical `## Context Imports` + `ctx:source` + `relationship=parent|reference`, reusing the Phase-1 compiler/package semantics rather than translating onboarding Sources afterward.
