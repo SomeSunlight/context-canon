@@ -457,14 +457,32 @@ def _replace_managed_section(
     return result.rstrip() + "\n"
 
 
-def _replace_parent_section(text: str, body: str) -> str:
-    """Publish structural Parents inside the canonical Context Imports section."""
+def _managed_block_body(text: str, name: str) -> str:
+    start = _MARKER_START[name]
+    end = _MARKER_END[name]
+    if text.count(start) != 1 or text.count(end) != 1:
+        return ""
+    a = text.index(start) + len(start)
+    b = text.index(end, a)
+    return text[a:b].strip()
 
+
+def _replace_parent_section(text: str, body: str) -> str:
+    """Fold one structural Parent into the same canonical Context Imports block.
+
+    Older onboarding wrote structural Parents through a second managed marker even
+    though both mechanisms rendered under Context Imports. New publication keeps
+    only the normal Context-Import block; legacy parent markers/headings are cleanup
+    input only.
+    """
+
+    existing_imports = _managed_block_body(text, "sources")
+    text = _strip_managed_block(text, "sources")
     text = _strip_managed_block(text, "parent")
 
     matches: list[re.Match[str]] = []
     for heading_name in ("Parent Context Node", "Parent"):
-        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \t]*$", text)
+        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \\t]*$", text)
         if match is not None:
             matches.append(match)
     if len(matches) > 1:
@@ -478,31 +496,26 @@ def _replace_parent_section(text: str, body: str) -> str:
             raise _error(
                 "Parent Context Node section contains unmanaged content; preserve it elsewhere before publication"
             )
-        text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
+        text = (text[:heading.start()].rstrip() + "\\n\\n" + text[end:].lstrip("\\n")).rstrip() + "\\n"
 
-    if not body.strip():
-        return text.rstrip() + "\n"
-
-    source_heading = re.search(r"(?m)^## Sources[ \t]*$", text)
-    context_heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
-    if source_heading is not None and context_heading is not None:
-        raise _error("CONTEXT.src.md contains both ## Context Imports and legacy ## Sources")
-    if source_heading is not None:
-        text = text[:source_heading.start()] + "## Context Imports" + text[source_heading.end():]
-
-    block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
-    heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
-    if heading is None:
-        return text.rstrip() + f"\n\n## Context Imports\n\n{block}\n"
-
-    next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
-    end = next_heading.start() if next_heading else len(text)
-    existing = text[heading.end():end].strip()
-    combined = block if not existing else block + "\n\n" + existing
-    result = text[:heading.end()] + "\n\n" + combined
-    if end < len(text):
-        result += "\n\n" + text[end:].lstrip("\n")
-    return result.rstrip() + "\n"
+    structural = body.strip()
+    if structural and existing_imports:
+        match = re.search(r\'ctx:source id="([^"]+)"\', structural)
+        if match is not None and re.search(
+            rf\'ctx:source id="{re.escape(match.group(1))}"\', existing_imports
+        ):
+            raise _error(
+                "the structural Parent is also selected as an additional Context Import; "
+                "remove the duplicate STEP-07 assignment"
+            )
+    combined = "\\n\\n".join(part for part in (structural, existing_imports) if part)
+    return _replace_managed_section(
+        text,
+        "Context Imports",
+        "sources",
+        combined,
+        aliases=("Sources",),
+    )
 
 def _safe_line(value: object, label: str) -> str:
     text = str(value).strip()
@@ -603,7 +616,7 @@ def _render_sources(
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
         lines.append(
-            f"- [{name}]({markdown_link_target(config_locator)}) — `{source.source_version}` — `relationship=parent`"
+            f"- [{name}]({markdown_link_target(config_locator)}) — `{source.source_version}` — `relationship={source.relationship}`"
         )
         if source.relationship_why:
             lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
@@ -1037,14 +1050,14 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
             ])
         lines.append("")
 
-    lines.extend(["## Accepted reusable Source state", ""])
+    lines.extend(["## Accepted reusable Context Imports", ""])
     if not preview.sources:
-        lines.extend(["No reusable Source is accepted in the current review.", ""])
+        lines.extend(["No additional reusable Context Import is accepted in the current review.", ""])
     for source in preview.sources:
         lines.extend(
             [
-                f"- **{source.source_name}** — origin: `{source.origin}`",
-                f"  - Source Node: `{source.source_node_id}`",
+                f"- **{source.source_name}** — **{source.relationship.title()}** · origin: `{source.origin}`",
+                f"  - Context Node: `{source.source_node_id}`",
                 f"  - version: `{source.source_version}`",
                 f"  - package: `{source.source_package_digest}`",
                 f"  - discovery: `{source.kind}` `{source.locator}`" + (f" @ `{source.discovery_ref}`" if source.discovery_ref else ""),
