@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 from .links import markdown_link_target
-from .model import CompiledPackage
+from .model import CompiledPackage, RelationshipKind
 from .onboarding_placement import (
     PLACEMENT_ACTIONS,
     PLACEMENT_KINDS,
@@ -46,14 +46,15 @@ _ITEM_HEADING_RE = re.compile(r"^## (?P<id>[^ ]+) — (?P<title>.+)$")
 _ITEM_COMMENT_RE = re.compile(
     r'^<!-- cc:placement-item id="(?P<id>[^"]+)" authoring-id="(?P<authoring>[^"]+)" -->$'
 )
-_SOURCE_HEADING_RE = re.compile(r"^## Source (?P<id>[^ ]+) — (?P<title>.+)$")
+_SOURCE_HEADING_RE = re.compile(r"^## (?:Context Import|Source) (?P<id>[^ ]+) — (?P<title>.+)$")
 _SOURCE_COMMENT_RE = re.compile(
     r'^<!-- cc:placement-source id="(?P<id>[^"]+)" origin="(?P<origin>[^"]+)" '
-    r'source-id="(?P<source_id>[^"]+)" version="(?P<version>[^"]+)" '
+    r'(?:relationship="(?P<relationship>parent|reference)" )?'
+    r'source-id="(?P<source_id>[^"]+)" version="(?P<version>[^"]+)" 
     r'normalized-digest="(?P<normalized>[0-9a-f]{64})" package-digest="(?P<package>[0-9a-f]{64})" -->$'
 )
 _DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
-_SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin): `(?P<value>[^`]+)`$")
+_SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin|Relationship): `(?P<value>[^`]+)`$")
 _PATH_RE = re.compile(r"`([^`]+)`")
 _AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _SOURCE_EDIT_COMMENT_RE = re.compile(
@@ -127,6 +128,7 @@ class PlacementReviewSource:
     source_version: str
     source_normalized_digest: str
     source_package_digest: str
+    relationship: RelationshipKind
     review_note: str
     proposal_id: str | None
     relationship_why: str = ""
@@ -142,6 +144,7 @@ class PlacementReviewSource:
             "source_version": self.source_version,
             "source_normalized_digest": self.source_normalized_digest,
             "source_package_digest": self.source_package_digest,
+            "relationship": self.relationship,
             "review_note": self.review_note,
             "proposal_id": self.proposal_id,
             "relationship_why": self.relationship_why,
