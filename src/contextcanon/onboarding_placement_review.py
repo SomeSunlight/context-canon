@@ -51,7 +51,8 @@ _SOURCE_COMMENT_RE = re.compile(
     r'^<!-- cc:placement-source id="(?P<id>[^"]+)" origin="(?P<origin>[^"]+)" '
     r'(?:relationship="(?P<relationship>parent|reference)" )?'
     r'source-id="(?P<source_id>[^"]+)" version="(?P<version>[^"]+)" '
-    r'normalized-digest="(?P<normalized>[0-9a-f]{64})" package-digest="(?P<package>[0-9a-f]{64})" -->
+    r'normalized-digest="(?P<normalized>[0-9a-f]{64})" package-digest="(?P<package>[0-9a-f]{64})" -->$'
+)
 _DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
 _SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin|Relationship): `(?P<value>[^`]+)`$")
 _PATH_RE = re.compile(r"`([^`]+)`")
