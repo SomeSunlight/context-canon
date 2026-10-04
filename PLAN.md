@@ -1,5 +1,27 @@
 # Plan
 
+## Active Fast Track: URL-safe Markdown links — Issue #101
+
+**Fast Track status — ACTIVE**
+
+Purpose: make every ContextCanon-generated repository-local Markdown link safe for valid repository paths containing spaces or Markdown/URI-sensitive characters, without changing the underlying filesystem/semantic locator.
+
+- [x] Start from accepted PR #100 / Parent-Reference baseline and keep #101 isolated in Draft PR #102.
+- [x] Add reusable Rule `CCW-015` to Development Workflow first: repository-local Markdown destinations are URI-safe presentation of raw filesystem paths.
+- [x] Introduce one shared encode/decode contract in `links.py`: percent-encode generated local Markdown destinations; decode local Markdown targets exactly once before filesystem resolution.
+- [x] Apply the contract to Official Context rendering, Context Import parsing/writing/normalization, Resource closure and generated Resource bridges.
+- [x] Apply the contract to onboarding publication/review/split-review/audit surfaces and teach the semantic placement instruction the same rule.
+- [x] Add integration regressions for spaces, `#`, `%`, parentheses, already-safe paths, encoded Resource closure, Context Imports, Official Context and onboarding Parent links.
+- [x] Run the deterministic suite after the link scanner fix: 350/350 tests pass.
+- [ ] Rebuild Development Workflow so its new Rule becomes an immutable package/version.
+- [ ] Propagate that newer Development Workflow Parent through Framework Development, GitHub and GitHub Local, then rebuild every affected self-hosted Node.
+- [ ] Audit the final PR diff for any remaining dynamic repository-local Markdown writer that bypasses the shared helper.
+- [ ] Run the exact-head full CI / `contextcanon check --all .` / zero-drift gate, update STATE/CHANGELOG/Issue #101/PR #102, and leave the PR Draft for owner testing. Do not merge without explicit owner approval.
+
+Design constraint: raw filesystem paths and ContextCanon locators are semantic truth. Percent encoding belongs only to Markdown presentation. ContextCanon must decode encoded local link destinations before it uses them as filesystem paths; repeated rendering must never turn `%20` into `%2520`.
+
+Current checkpoint: branch `issue-101-markdown-link-encoding`, Draft PR #102. Head `0bd19a6a3c1c8aa3d81d1be64bf69a12538075d1` has 350/350 tests green. CI fails only at the expected self-host generated-state gate: Development Workflow requires its patch bump and the newer Parent package has not yet been propagated into its three consumers.
+
 ## Accepted Fast Track: subtree onboarding — Issues #92 and #91
 
 Purpose: allow a later project subtree inside an already onboarded Git repository to become its own ContextCanon hierarchy without re-onboarding the whole repository, while inheriting the nearest accepted enclosing Context Node.
