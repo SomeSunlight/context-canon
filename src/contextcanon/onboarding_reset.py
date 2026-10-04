@@ -423,6 +423,11 @@ def _reset_semantic(
     if from_step <= 4 and 4 not in selected_steps:
         legacy_files = _remove_legacy_skeletons(project)
     workspace_files = _reset_workspace(workspace, from_step)
+    if from_step <= 7:
+        (snapshot / "reusable-contexts.json").unlink(missing_ok=True)
+        frozen_catalog = snapshot / "reusable-context-packages"
+        if frozen_catalog.is_dir():
+            shutil.rmtree(frozen_catalog)
 
     if 10 in selected_steps:
         acceptance = snapshot / "placement-acceptance.json"

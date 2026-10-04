@@ -161,7 +161,6 @@ class OnboardingSubtreeTests(unittest.TestCase):
             "structure_digest": structure.structure_digest,
             "items": [],
             "source_edits": [],
-            "source_reuses": [],
         }
         workspace.placement_proposal_path.write_text(
             json.dumps(placement_raw, indent=2),

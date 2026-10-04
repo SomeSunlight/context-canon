@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -275,6 +276,7 @@ class ReusableContextsTests(unittest.TestCase):
                 "- **AI Workstation** (`.`) ← **Development Workflow** (`0.2.0-draft`)\n"
                 "  Why: Legacy authored syntax remains valid.\n"
             )
+            text = text.replace("contextcanon/onboarding-reusable-contexts/v1", "contextcanon/onboarding-reusable-contexts/v0")
             text = text.replace(
                 ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
                 ASSIGNMENTS_START + "\n" + legacy + ASSIGNMENTS_END,
@@ -330,6 +332,36 @@ class ReusableContextsTests(unittest.TestCase):
                 "Development Workflow (0.2.0-draft) [Reference]",
                 workspace_file.read_text(encoding="utf-8"),
             )
+
+    def test_legacy_accepted_state_keeps_exact_digest_and_defaults_to_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            path = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog = self._catalog(root)
+            accepted = self._accept_workflow(path, snapshot, structure, catalog)
+            text = path.read_text(encoding="utf-8").replace(
+                "contextcanon/onboarding-reusable-contexts/v1", "contextcanon/onboarding-reusable-contexts/v0"
+            ).replace(" [Parent]", "")
+            path.write_text(text, encoding="utf-8")
+            state_path = snapshot / "reusable-contexts.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["schema"] = "contextcanon/onboarding-reusable-contexts-state/v0"
+            for assignment in state["assignments"]:
+                assignment.pop("relationship")
+            payload = {key: value for key, value in state.items()
+                       if key not in {"review_digest", "human_file_sha256", "frozen_catalog_packages"}}
+            state["review_digest"] = hashlib.sha256(json.dumps(
+                payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")).hexdigest()
+            state["human_file_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            loaded = load_accepted_reusable_contexts(path, snapshot, "a" * 64, structure)
+            self.assertEqual(loaded.assignments[0].relationship, "parent")
+            self.assertEqual(loaded.review_digest, state["review_digest"])
+            self.assertEqual(loaded.catalog_packages[0].package_digest, accepted.catalog_packages[0].package_digest)
 
     def test_catalog_locations_accept_plain_windows_path_and_common_wrappers(self) -> None:
         windows_path = r"C:\Users\u239230\PycharmProjects\context-canon\nodes\library"

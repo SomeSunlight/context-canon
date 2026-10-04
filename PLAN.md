@@ -2,19 +2,21 @@
 
 ## Active Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
 
-**Fast Track status — ACTIVE**
+**Fast Track status — CLOSED / OWNER TEST PENDING**
 
 Purpose: make onboarding emit the same single canonical Context Import relationship model already accepted in Phase 1, with an explicit owner-visible Parent/Reference choice and no new legacy Source/Parent publication split.
 
 - [x] Reconstruct the STEP 07 → STEP 08 → STEP 10 → preview/publication/reset data flow and identify every remaining onboarding-only Source/Parent split.
-- [ ] Make STEP 07 distinguish existing enclosing Parents, additional Parents, and optional References; preserve explicit relationship kind in accepted machine state with legacy state defaulting safely to Parent.
-- [ ] Carry relationship kind unchanged through placement instruction/proposal/review, preview, publication and recovery; avoid duplicate publication of an enclosing Parent.
-- [ ] Publish all new reusable relationships only as canonical `## Context Imports` + `ctx:source` + `relationship=parent|reference`, reusing the Phase-1 compiler/package semantics rather than translating onboarding Sources afterward.
-- [ ] Add focused regressions for root/subtree Parent+Reference combinations, multiple Parents, enclosing-Parent deduplication, STEP-07 recovery, preview/publication preservation, Reference non-normativity/non-propagation and Parent equivalence with manual authoring.
-- [ ] Update onboarding/framework documentation plus PLAN/STATE/CHANGELOG, regenerate the self-hosted Context, and run the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, propagation health and diff hygiene.
-- [ ] Prepare/update one Draft PR for owner testing. Do not merge without explicit owner approval.
+- [x] Make STEP 07 distinguish existing enclosing Parents, additional Parents, and optional References; preserve explicit relationship kind in accepted machine state with legacy state defaulting safely to Parent.
+- [x] Carry relationship kind unchanged through placement instruction/proposal/review, preview, publication and recovery; avoid duplicate publication of an enclosing Parent.
+- [x] Publish all new reusable relationships only as canonical `## Context Imports` + `ctx:source` + `relationship=parent|reference`, reusing the Phase-1 compiler/package semantics rather than translating onboarding Sources afterward.
+- [x] Add focused regressions for root/subtree Parent+Reference combinations, multiple Parents, enclosing-Parent deduplication, STEP-07 recovery, preview/publication preservation, Reference non-normativity/non-propagation and Parent equivalence with manual authoring.
+- [x] Update onboarding/framework documentation plus PLAN/STATE/CHANGELOG, regenerate the self-hosted Context, and run the complete deterministic suite, `contextcanon build --all .`, `contextcanon check --all .`, propagation health and diff hygiene.
+- [x] Prepare/update one Draft PR for owner testing. Do not merge without explicit owner approval.
 
 Boundary: Issue #103 (Windows path lengths, candidate stores, ignore rules and cleanup) remains separate.
+
+Closing checkpoint: 360/360 deterministic tests pass. Self-hosted `build --all .` and `check --all .` are clean, read-only propagation health reports all four local Parent/Child relationships normatively current, and diff hygiene passes. Root/subtree combinations, several Parents, per-target provenance, explicit STEP-07 choices, legacy recovery, STEP-07/08 reset, STEP-10 tamper/CLI-override rejection, repeated publication and manual-import equivalence are covered. Gateway and Framework Development packages advanced to `0.3.16-draft`. Draft PR #104 is the completed implementation candidate; real owner onboarding testing remains pending. Do not merge without explicit approval.
 
 ## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
 

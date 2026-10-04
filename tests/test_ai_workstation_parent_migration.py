@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.compiler import Compiler
-from contextcanon.onboarding_placement import PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal
+from contextcanon.onboarding_placement import LEGACY_PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_publish import build_placement_publication_preview, publish_placement_review
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
 from contextcanon.onboarding_placement_split_review import placement_finding_path
@@ -21,6 +21,7 @@ from contextcanon.onboarding_structure import STRUCTURE_PROPOSAL_SCHEMA, create_
 from contextcanon.outputs import write_outputs
 from contextcanon.sources import adopt_source_package, accept_parent_candidate, review_parent_candidate
 from tests.test_onboarding_placement import OnboardingPlacementTests
+from tests.test_parent_migration import without_structural_parent
 
 
 PARENT_BLOCK_RE = re.compile(
@@ -157,7 +158,7 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
             ("P-006", "N-009", "Open WebUI policy."),
         )
         raw = {
-            "schema": PLACEMENT_PROPOSAL_SCHEMA,
+            "schema": LEGACY_PLACEMENT_PROPOSAL_SCHEMA,
             "evidence_digest": prepared.evidence_digest,
             "structure_digest": structure.structure_digest,
             "items": [
@@ -226,7 +227,7 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
         # reviewed placement content is published, but Parent blocks/packages do
         # not yet exist.
         for delta in preview.nodes:
-            legacy = PARENT_BLOCK_RE.sub("\n", delta.after).rstrip() + "\n"
+            legacy = without_structural_parent(delta, preview)
             delta.source_path.write_text(legacy, encoding="utf-8")
 
         for _, _, rel, _, _ in sorted(REAL_NODES, key=lambda item: len(Path(item[2]).parts)):

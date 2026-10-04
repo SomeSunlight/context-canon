@@ -581,7 +581,7 @@ def _exact_commands(
         "### STEP 07 — Reusable Contexts",
         f"- [{mark(7)}] **Done**",
         "",
-        "Your project shelves now exist. If an already-curated reusable Context should apply here — for example a Development Workflow or GitHub Local — attach it now instead of copying its rules by hand. The generated STEP-07 guide shows what is available and lets you choose exactly where each reusable Context applies.",
+        "Your project shelves now exist. If an already-curated reusable Context should apply here, choose its relationship explicitly. STEP 07 shows existing enclosing Parents and lets you choose additional Context Imports: [Parent] means its Rules apply and propagate to semantic Children; [Reference] means informational context whose Rules do not apply and whose relationship is not inherited. Do not assign an existing enclosing Parent again.",
         "",
         "```text",
         cmd("reusable-contexts"),

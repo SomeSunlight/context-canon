@@ -30,6 +30,17 @@ def sha(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def without_structural_parent(delta, preview):
+    text = PARENT_BLOCK_RE.sub("\n", delta.after)
+    for parent in preview.parents:
+        if parent.child_key == delta.key:
+            text = re.sub(
+                rf'(?m)^- \[.*\].*\n  <!-- ctx:source id="{re.escape(parent.parent_node_id)}"[^\n]* -->\n?',
+                "", text,
+            )
+    return text.rstrip() + "\n"
+
+
 class LegacyParentMigrationTests(unittest.TestCase):
     def make_legacy_publication(self):
         helper = PlacementPublicationTests()
@@ -45,7 +56,7 @@ class LegacyParentMigrationTests(unittest.TestCase):
         # Materialize exactly the old placement semantics: reviewed local
         # content and Source reuse, but no semantic Parent blocks/packages.
         for delta in preview.nodes:
-            legacy = PARENT_BLOCK_RE.sub("\n", delta.after).rstrip() + "\n"
+            legacy = without_structural_parent(delta, preview)
             delta.source_path.write_text(legacy, encoding="utf-8")
         for document in preview.documents:
             document.source_path.write_text(document.after, encoding="utf-8")

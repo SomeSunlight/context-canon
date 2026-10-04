@@ -136,7 +136,7 @@ The inventory uses Git's visible tracked/untracked file set, respects normal Git
 
 This split is deliberate. Before STEP 03, edits in the CSV are still unaccepted working state. STEP 03 turns that reviewed boundary into the compact durable acceptance files. After a fresh clone, `onboard init` followed by `onboard inventory` can regenerate the CSV from those committed files and surface current `new / changed / missing / unchanged` state without asking the owner to repeat prior classifications.
 
-Later accepted structure/reusable-Context/placement decisions do not need the whole onboarding workspace as a second authority: after publication their meaning lives in canonical `CONTEXT.src.md`, Parent/Source relationships and reviewed project-source changes. The workspace remains useful review history but is not the canonical maintenance surface.
+Later accepted structure/reusable-Context/placement decisions do not need the whole onboarding workspace as a second authority: after publication their meaning lives in canonical `CONTEXT.src.md`, Parent/Reference Context Imports and reviewed project-source changes. The workspace remains useful review history but is not the canonical maintenance surface.
 
 This does **not** yet mean that an already adopted project can be semantically re-onboarded by blindly replaying first-adoption publication. Incremental inventory recovery is supported; a full reviewed semantic update/re-onboarding contract remains separate work.
 
@@ -355,7 +355,7 @@ A useful side effect appears during the later book-placement pass: forcing every
 
 ## 7. Select reusable Contexts
 
-The project's own shelves now exist. Before asking an LLM to place the books, establish any **reusable external Context Nodes** that should already apply to those shelves.
+The project's own shelves now exist. Before asking an LLM to place the books, choose which reusable Context Nodes govern those shelves as **Parents**, and which are useful information as **References**.
 
 Run:
 
@@ -381,19 +381,28 @@ A typical edit uses deliberately plain raw text:
 ```text
 Decision: accept
 
-My Project (.) ← GitHub Local (0.1.0-draft)
+My Project (.) ← GitHub Local (0.1.0-draft) [Parent]
 Why: This project uses the local GitHub-compatible development workflow.
+
+My Project (.) ← Knowledge Archive (1.0.0) [Reference]
+Why: Useful background; its rules do not govern this project.
 ```
 
-The generated project/reusable choice lists contain `Copy:` lines. Editing instructions always refer to the **raw Markdown text**, not to the rendered preview: copy the project fragment after `Copy:` to line end; for a reusable Context, copy after `Copy:` up to but not including ` — exact package`. There is no Markdown formatting syntax to preserve in an Assignment.
+The generated project/reusable choice lists contain `Copy:` lines. Editing instructions always refer to the **raw Markdown text**, not to the rendered preview: copy the project fragment after `Copy:` to line end; for a reusable Context, copy after `Copy:` up to but not including ` — exact package`. Join the fragments with ` ← ` and append exactly `[Parent]` or `[Reference]`. There is no Markdown formatting syntax to preserve in an Assignment.
+
+**Parent:** its Rules apply at the target and its normative Context continues through semantic Children. **Reference:** its Rules do not apply; its Topics/Resources are available at the direct target, and the relationship is not inherited by Children. Several Parents are allowed and their order gives no precedence.
+
+For subtree onboarding, the generated **Existing Parents** area shows the nearest enclosing Parent separately. It already governs the subtree and is published once. Do not copy it into additional Assignments, even as a Reference.
 
 Run the **same command again** after editing. ContextCanon scans the Catalog locations, fully verifies compiled packages, resolves the human-readable assignment to stable IDs and exact package digests, canonicalizes the accepted plain form, and stores the validated machine state. You should not type Source UUIDs or package digests into the assignment.
 
 An empty assignment list is valid: a project may simply have no reusable Contexts. Set `Decision` to `accept` only when the Catalog and sparse relationships are what you intend.
 
-The relationship `Why` is not a Rule. A Rule says **what applies**; the Source relationship rationale says **why this whole reusable Context was composed here**. Publication carries that Why into local Source authoring and immutable import provenance, so descendants can later explain why an inherited reusable Context is in scope.
+The relationship `Why` is not a Rule. A Rule says **what applies**; the import rationale says **why this whole reusable Context was composed here**. Publication carries that Why into canonical Context Import authoring and immutable package provenance.
 
-This gate deliberately happens **before** placement reasoning. The placement LLM therefore sees which reusable context already exists and can avoid promoting the same generic guidance again as a duplicate local Rule.
+This gate deliberately happens **before** placement reasoning. STEP 08 receives each exact package and its accepted relationship. It may avoid duplicating Parent governance but must not treat Reference Rules as applicable. New placement proposals cannot invent additional imports; STEP 10 displays the accepted choices for traceability and refuses changes to them. To change a relationship, reset from STEP 07 and review it there.
+
+Preview and publication write every import, including structural/enclosing Parents, into one `## Context Imports` section with `ctx:source` and explicit `relationship=parent|reference`. No later Source-to-Parent conversion is needed. Historical untyped STEP-07 reviews remain readable as Parents; new reviews require an explicit choice. Reset from STEP 08 onward preserves accepted STEP-07 packages/relationships; reset from STEP 07 removes them so they can be chosen again.
 
 ## 8. Generate the content-placement assignment
 
@@ -417,7 +426,7 @@ The placement question is no longer "where is this text today?". It is:
 
 > **Where should this meaning be maintained from now on?**
 
-The v1 proposal distinguishes:
+The v2 proposal distinguishes:
 
 - `overview` — short stable orientation about what a Node owns;
 - `rule` — durable project-local governance;
@@ -500,7 +509,7 @@ contextcanon onboard placement-preview \
   .context/onboarding/<evidence-digest>
 ```
 
-The command writes `contextcanon-onboarding/STEP-11-placement-preview.md` and changes no project file. The preview shows exact `CONTEXT.src.md` deltas, semantic Parent pins, reusable Source installation/provenance, accepted follow-ups, and reviewed mutable-document changes.
+The command writes `contextcanon-onboarding/STEP-11-placement-preview.md` and changes no project file. The preview shows exact `CONTEXT.src.md` deltas, Parent/Reference Context Imports with exact package pins/provenance, accepted follow-ups, and reviewed mutable-document changes.
 
 Preview verifies live Evidence-covered bytes and current Node source bytes. Publication later refuses if those inputs changed after preview.
 
@@ -513,9 +522,9 @@ contextcanon onboard placement-publish \
   .context/onboarding/<evidence-digest>
 ```
 
-Publication transactionally materializes the semantics represented by the reviewed ContextCanon grammar: accepted local Overview/Rules/Topics/Resources, local State/Plan where supported, semantic Parent pins, and accepted exact reusable Sources. Existing Node identity and unrelated authored content are preserved.
+Publication transactionally materializes the semantics represented by the reviewed ContextCanon grammar: accepted local Overview/Rules/Topics/Resources, local State/Plan where supported, and exact Parent/Reference Context Imports. Existing Node identity and unrelated authored content are preserved.
 
-The command writes `contextcanon-onboarding/STEP-12-placement-followup.md`. Generated Node `CONTEXT.md` files then expose inherited context and reusable provenance; a direct reusable Source's Why remains visible through immutable imported-context provenance in descendants.
+The command writes `contextcanon-onboarding/STEP-12-placement-followup.md`. Generated Node `CONTEXT.md` files then expose normative Parent Context, direct informational References and exact import provenance. A Parent's Why remains visible in inherited provenance; a Reference relationship stays local.
 
 Normal onboarding after Step 7 no longer asks the operator to repeat Catalog paths, Source Node IDs, or one-time Source-selection CLI syntax. ContextCanon retains those exact machine identities behind the accepted human gate.
 

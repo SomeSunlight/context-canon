@@ -39,14 +39,14 @@ _HEADER_RE = re.compile(
     r'evidence="(?P<evidence>[0-9a-f]{64})" structure="(?P<structure>[0-9a-f]{64})" -->'
 )
 _ASSIGN_RE = re.compile(
-    r'^- \\*\\*(?P<target>.+?)\\*\\* \\(`(?P<path>[^`]+)`\\) ← '
-    r'\\*\\*(?P<source>.+?)\\*\\* \\(`(?P<version>[^`]+)`\\)'
-    r'(?: \\[(?P<relationship>Parent|Reference)\\])?$'
+    r'^- \*\*(?P<target>.+?)\*\* \(`(?P<path>[^`]+)`\) ← '
+    r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)'
+    r'(?: \[(?P<relationship>Parent|Reference)\])?$'
 )
 _PLAIN_ASSIGN_RE = re.compile(
-    r'^(?:- )?(?P<target>.+) \\((?P<path>.+)\\) ← '
-    r'(?P<source>.+) \\((?P<version>.+)\\)'
-    r'(?: \\[(?P<relationship>Parent|Reference)\\])?$'
+    r'^(?:- )?(?P<target>.+) \((?P<path>.+)\) ← '
+    r'(?P<source>.+) \((?P<version>.+)\)'
+    r'(?: \[(?P<relationship>Parent|Reference)\])?$'
 )
 @dataclass(frozen=True)
 class ReusableContextAssignment:
@@ -576,6 +576,7 @@ def _parse_assignments(
     *,
     enclosing_parent_node_id: str | None = None,
     reject_existing_parent_duplicate: bool = True,
+    require_relationship: bool = True,
 ) -> tuple[ReusableContextAssignment, ...]:
     body = _between(text, ASSIGNMENTS_START, ASSIGNMENTS_END, "Assignments")
     target_by_label = {(node.name, node.path): node for node in structure.nodes}
@@ -596,9 +597,11 @@ def _parse_assignments(
         if match is None:
             raise _error(
                 f"Cannot parse Assignment line {line!r}. Expected raw text like "
-                "'<project name> (<path>) ← <reusable Context name> (<version>)'. "
+                "'<project name> (<path>) ← <reusable Context name> (<version>) [Parent|Reference]'. "
                 "Do not add Markdown bold markers or backticks; a leading list dash is optional."
             )
+        if require_relationship and match.group("relationship") is None:
+            raise _error(f"Assignment {line!r} needs an explicit [Parent] or [Reference] choice")
         target = target_by_label.get((match.group("target"), match.group("path")))
         if target is None:
             raise _error(
@@ -928,6 +931,7 @@ def refresh_reusable_contexts(
         text,
         structure,
         packages,
+        require_relationship=human_schema != LEGACY_REUSABLE_CONTEXTS_SCHEMA,
         enclosing_parent_node_id=(
             enclosing_parent.metadata.id if enclosing_parent is not None else None
         ),
@@ -1017,6 +1021,7 @@ def load_accepted_reusable_contexts(
         text,
         structure,
         packages,
+        require_relationship=human_schema != LEGACY_REUSABLE_CONTEXTS_SCHEMA,
         enclosing_parent_node_id=(
             enclosing_parent.metadata.id if enclosing_parent is not None else None
         ),

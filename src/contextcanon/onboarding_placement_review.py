@@ -19,6 +19,7 @@ from .onboarding_placement import (
     PlacementSourceEdit,
 )
 from .onboarding_proposal import EvidenceReference, EvidenceSnapshot, load_evidence_snapshot
+from .onboarding_reusable_contexts import ReusableContextAssignment
 from .parser import ContextCanonError
 
 
@@ -1143,12 +1144,15 @@ def _load_monolithic_placement_review(
         if relationship_why == "-":
             relationship_why = ""
         relationship = attrs.group("relationship")
+        visible_relationship = (
+            _simple_value(block, "Relationship")
+            if any(entry.startswith("Relationship: ") for entry in block)
+            else None
+        )
+        if relationship is not None and visible_relationship != relationship:
+            raise _error(f"Context Import {review_id} Relationship differs from its machine metadata")
         if relationship is None:
-            relationship = (
-                _simple_value(block, "Relationship")
-                if any(entry.startswith("Relationship: ") for entry in block)
-                else "parent"
-            )
+            relationship = visible_relationship or "parent"
         if relationship not in {"parent", "reference"}:
             raise _error(f"Source {review_id} has unsupported relationship {relationship!r}")
         parsed_sources.append(
@@ -1209,6 +1213,28 @@ def _create_or_load_monolithic_placement_review(
     )
     return _load_monolithic_placement_review(path, proposal, snapshot_root), True
 
+
+
+def validate_step07_imports(
+    review: OnboardingPlacementReview, assignments: tuple[ReusableContextAssignment, ...]
+) -> None:
+    expected = {
+        (entry.target_node_key, entry.source_node_id): (
+            entry.source_package_digest, entry.relationship, entry.why
+        )
+        for entry in assignments
+    }
+    actual = {
+        (entry.target_node_key, entry.source_node_id): (
+            entry.source_package_digest, entry.relationship, entry.relationship_why
+        )
+        for entry in review.sources if entry.decision == "accept"
+    }
+    if actual != expected or len(review.sources) != len(expected):
+        raise _error(
+            "STEP-10 Context Imports differ from the accepted STEP-07 choices. "
+            "Reset from STEP 07 to change relationships, or from STEP 10 to recreate their trace."
+        )
 
 
 def load_placement_review(

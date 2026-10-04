@@ -91,7 +91,17 @@ The frozen Evidence identity is sacred for STEP 04–12. Once the generated PLAN
 
 Repository archaeology can suggest useful groupings, but filesystem layout and current prose do not automatically define the intended semantic architecture. The structure pass therefore proposes coarse Node boundaries first; the owner edits them; only then may placement reasoning distribute durable meaning.
 
-This separation also allows one Git repository to contain many Context Nodes. Repository nesting is evidence and location, not implicit semantic inheritance. Parent and reusable Source relationships remain explicit.
+This separation also allows one Git repository to contain many Context Nodes. Repository nesting is evidence and location, not implicit semantic inheritance. Every reusable relationship is an explicit Parent or Reference Context Import.
+
+## One relationship model from review to publication
+
+STEP 07 is the owner gate for additional Context Imports. Each Assignment carries `[Parent]` or `[Reference]` plus Why and the exact frozen package identity. A subtree's enclosing Parent is shown separately as existing governance and cannot be selected again at the root. Historical untyped STEP-07 states default to Parent; new human/machine states always record the explicit kind.
+
+STEP 08 receives accepted imports as fixed input. Its v2 proposal contains placement items and source-document edits, without `source_reuses`; reusable-relationship suggestions from older v1 proposals remain compatibility input only. References must not suppress project Rules as though they were inherited Parent governance. STEP 10 exposes the accepted relationship and refuses a mismatch with STEP 07 rather than silently reclassifying it.
+
+Preview and publication use the Phase-1 compiler/package semantics directly. Structural, enclosing and additional Parents and direct References all write `## Context Imports`, `ctx:source`, and explicit `relationship=parent|reference` inside one managed import block. Structural hierarchy data still determines parent-first staging and exact package pins; it is not another authoring syntax or runtime relationship kind. Multiple semantic Parents are validated through the plural compiler API.
+
+Publication provenance and acceptance bind each additional import by target Node plus imported Node identity, so the same package may be Parent at one target and Reference at another without conflating the relationships. Reset from STEP 08 onward preserves accepted STEP-07 state; reset from STEP 07 removes its human review, machine state and frozen Catalog packages before a fresh choice. Legacy dedicated Parent blocks remain cleanup input only.
 
 ## Recovery is part of the architecture
 

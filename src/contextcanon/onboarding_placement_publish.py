@@ -15,6 +15,7 @@ from typing import Iterable
 from .compiler import Compiler
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
 from .links import markdown_link_target
+from .model import RelationshipKind
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
@@ -49,7 +50,7 @@ class SourceGitProvenance:
     source_name: str
     source_version: str
     source_package_digest: str
-    relationship: str
+    relationship: RelationshipKind
     origin: str
     locator: str
     ref: str
@@ -420,7 +421,7 @@ def _strip_managed_block(text: str, name: str) -> str:
         raise _error(f"CONTEXT.src.md has malformed managed {name} placement block")
     if starts == 0:
         return text
-    pattern = re.compile(rf"\n?{re.escape(start)}\n.*?\n{re.escape(end)}\n?", re.DOTALL)
+    pattern = re.compile(rf"\n?{re.escape(start)}\n.*?{re.escape(end)}\n?", re.DOTALL)
     return pattern.sub("\n", text, count=1)
 
 
@@ -493,7 +494,7 @@ def _replace_parent_section(text: str, body: str) -> str:
 
     matches: list[re.Match[str]] = []
     for heading_name in ("Parent Context Node", "Parent"):
-        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \\t]*$", text)
+        match = re.search(rf"(?m)^## {re.escape(heading_name)}[ \t]*$", text)
         if match is not None:
             matches.append(match)
     if len(matches) > 1:
@@ -619,7 +620,6 @@ def _render_topics(items: list[PlacementReviewItem], project_root: Path, node_ro
 
 def _render_sources(
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[tuple[str, str], SourceGitProvenance],
     config_locator: str,
 ) -> str:
     lines: list[str] = []
@@ -661,7 +661,6 @@ def _render_node_source(
     node_root: Path,
     items: list[PlacementReviewItem],
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[tuple[str, str], SourceGitProvenance],
 ) -> str:
     overviews = [item for item in items if item.kind == "overview"]
     states = [item for item in items if item.kind in {"state", "unresolved"}]
@@ -693,7 +692,7 @@ def _render_node_source(
         text,
         "Context Imports",
         "sources",
-        _render_sources(sources, provenance_by_id, config_locator),
+        _render_sources(sources, config_locator),
         aliases=("Sources",),
     )
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
@@ -869,9 +868,6 @@ def build_placement_publication_preview(
         root_node_key=root_node_key,
     )
     provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
-    provenance_by_id = {
-        (item.target_node_key, item.source_node_id): item for item in provenance
-    }
     items_by_node = _accepted_by_node(review)
     sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
@@ -896,10 +892,13 @@ def build_placement_publication_preview(
                 root,
                 items_by_node.get(node.key, []),
                 sources_by_node.get(node.key, []),
-                provenance_by_id,
             )
         else:
-            after = before
+            # Rebuild the one managed import block even without local findings:
+            # it may contain a structural Parent from a previous publication.
+            after = _replace_managed_section(
+                before, "Context Imports", "sources", "", aliases=("Sources",)
+            )
         node_before[node.key] = before
         node_ids[node.key] = parsed.metadata.id
         source_overrides[root] = after
@@ -1431,20 +1430,18 @@ def publish_placement_review(
             if document.changed:
                 _atomic_write(document.source_path, document.after.encode("utf-8"))
 
-        ordinary_source_ids = {source.source_node_id for source in preview.sources}
+        import_keys = {(source.target_node_key, source.source_node_id) for source in preview.sources}
         accepted_sources_by_node = _sources_by_node(
             source
             for source in review.sources
-            if source.decision == "accept" and source.source_node_id in ordinary_source_ids
+            if source.decision == "accept" and (source.target_node_key, source.source_node_id) in import_keys
         )
-        provenance_by_id = {source.source_node_id: source for source in preview.sources}
         for key, sources in accepted_sources_by_node.items():
             delta = delta_by_key.get(key)
             if delta is None:
                 raise _error(f"internal error: accepted Source target {key} has no publication delta")
             target_root = delta.source_path.parent
             for source in sources:
-                provenance = provenance_by_id[(source.target_node_key, source.source_node_id)]
                 root = roots.get(source.source_node_id)
                 if root is None:
                     raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
@@ -1484,7 +1481,11 @@ def publish_placement_review(
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
-                if compiled.parent_package is None or compiled.parent_package.package_digest != parent_pin.parent_package_digest:
+                if not any(
+                    parent.metadata.id == parent_pin.parent_node_id
+                    and parent.package_digest == parent_pin.parent_package_digest
+                    for parent in compiled.semantic_parent_packages
+                ):
                     raise _error(f"published Parent pin for {delta.name} does not match reviewed preview")
             compiled_by_key[delta.key] = compiled
             compiled_nodes.append(compiled)
@@ -1509,9 +1510,10 @@ def publish_placement_review(
                 "package_digest": compiled.package_digest,
                 "source_sha256": _sha256_bytes(delta.source_path.read_bytes()),
             }
-            if compiled.parent_package is not None:
-                state["parent_node_id"] = compiled.parent_package.metadata.id
-                state["parent_package_digest"] = compiled.parent_package.package_digest
+            parent_pin = parent_by_child.get(delta.key)
+            if parent_pin is not None:
+                state["parent_node_id"] = parent_pin.parent_node_id
+                state["parent_package_digest"] = parent_pin.parent_package_digest
             node_digests[delta.key] = state
 
         for source in preview.sources:

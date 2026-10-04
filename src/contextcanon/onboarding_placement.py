@@ -479,8 +479,6 @@ def load_onboarding_placement_proposal(
     raw_reuses = raw.get("source_reuses", [])
     if not isinstance(raw_reuses, list):
         raise _error("source_reuses must be a list")
-    if schema == PLACEMENT_PROPOSAL_SCHEMA and raw_reuses:
-        raise _error("v2 placement proposals cannot create reusable Context relationships; choose them in STEP 07")
     reuses: list[PlacementSourceReuse] = []
     for index, raw_reuse in enumerate(raw_reuses):
         if not isinstance(raw_reuse, dict):

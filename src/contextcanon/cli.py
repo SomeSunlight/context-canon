@@ -30,6 +30,7 @@ from .onboarding_placement_review import (
     ReviewDecisionProgress,
     create_or_load_placement_review,
     load_placement_review,
+    validate_step07_imports,
 )
 from .onboarding_reusable_contexts import load_accepted_reusable_contexts, refresh_reusable_contexts
 from .onboarding_placement_publish import (
@@ -1610,7 +1611,13 @@ def main(argv: list[str] | None = None) -> int:
                     catalog_inputs=catalog_inputs,
                     owner_source_specs=explicit_owner,
                 )
-                if not catalog_inputs and workspace.reusable_contexts_path.is_file():
+                if workspace.reusable_contexts_path.is_file():
+                    if catalog_inputs or explicit_owner:
+                        raise ContextCanonError(
+                            "STEP 07 owns reusable Context Imports for this run; "
+                            "do not override them with --catalog-package or --owner-source. "
+                            "Reset from STEP 07 to change the accepted choices."
+                        )
                     reusable = load_accepted_reusable_contexts(
                         workspace.reusable_contexts_path,
                         snapshot,
@@ -1713,6 +1720,8 @@ def main(argv: list[str] | None = None) -> int:
                         owner_source_relationships=owner_source_relationships,
                         preaccepted_owner_sources=preaccepted_owner_sources,
                     )
+                    if preaccepted_owner_sources:
+                        validate_step07_imports(review, accepted_reusable_assignments)
                     verb = "created" if created else "loaded"
                     write_utf8(
                         workspace.placement_audit_path,
@@ -1744,6 +1753,8 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
 
                 review = load_placement_review(review_path, proposal, snapshot)
+                if preaccepted_owner_sources:
+                    validate_step07_imports(review, accepted_reusable_assignments)
                 project = Path(args.project) if args.project is not None else None
                 preview = build_placement_publication_preview(
                     proposal,
