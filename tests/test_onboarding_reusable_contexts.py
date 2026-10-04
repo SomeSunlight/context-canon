@@ -88,7 +88,7 @@ class ReusableContextsTests(unittest.TestCase):
         )
         text = text.replace("Decision: `pending`", "Decision: `accept`")
         assignment = (
-            "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+            "AI Workstation (.) ← Development Workflow (0.2.0-draft) [Parent]\n"
             "Why: Shared development workflow applies to the whole project.\n"
         )
         text = text.replace(
@@ -131,7 +131,7 @@ class ReusableContextsTests(unittest.TestCase):
             )
             text = text.replace("Decision: `pending`", "Decision: `accept`")
             assignment = (
-                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft) [Parent]\n"
                 "Why: Shared development workflow applies to the whole project.\n"
             )
             text = text.replace(
@@ -145,7 +145,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertTrue(second.is_complete)
             canonical_after_accept = workspace_file.read_text(encoding="utf-8")
             self.assertIn(
-                "AI Workstation (.) ← Development Workflow (0.2.0-draft)\n"
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft) [Parent]\n"
                 "Why: Shared development workflow applies to the whole project.",
                 canonical_after_accept,
             )
@@ -284,8 +284,52 @@ class ReusableContextsTests(unittest.TestCase):
             plan, _ = refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
             self.assertEqual(plan.owner_source_specs, ("N-001=workflow-node",))
             canonical = workspace_file.read_text(encoding="utf-8")
-            self.assertIn("AI Workstation (.) ← Development Workflow (0.2.0-draft)", canonical)
+            self.assertIn("AI Workstation (.) ← Development Workflow (0.2.0-draft) [Parent]", canonical)
             self.assertNotIn("- **AI Workstation**", canonical)
+
+    def test_reference_assignment_persists_explicit_relationship(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            snapshot = root / ("a" * 64)
+            snapshot.mkdir()
+            workspace_file = root / "STEP-07-reusable-contexts.md"
+            structure = self._structure()
+            catalog = self._catalog(root)
+
+            refresh_reusable_contexts(workspace_file, snapshot, "a" * 64, structure)
+            text = workspace_file.read_text(encoding="utf-8")
+            text = text.replace(
+                CATALOG_START + "\n" + CATALOG_END,
+                CATALOG_START + f"\n- `{catalog}`\n" + CATALOG_END,
+            )
+            text = text.replace("Decision: `pending`", "Decision: `accept`")
+            assignment = (
+                "AI Workstation (.) ← Development Workflow (0.2.0-draft) [Reference]\n"
+                "Why: Useful background, but its workflow rules do not govern this project.\n"
+            )
+            text = text.replace(
+                ASSIGNMENTS_START + "\n```text\n```\n" + ASSIGNMENTS_END,
+                ASSIGNMENTS_START + "\n```text\n" + assignment + "```\n" + ASSIGNMENTS_END,
+            )
+            workspace_file.write_text(text, encoding="utf-8")
+
+            accepted, _ = refresh_reusable_contexts(
+                workspace_file, snapshot, "a" * 64, structure
+            )
+
+            self.assertEqual(accepted.assignments[0].relationship, "reference")
+            self.assertEqual(
+                accepted.owner_source_relationships["N-001=workflow-node"],
+                "reference",
+            )
+            state = json.loads(
+                (snapshot / "reusable-contexts.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(state["assignments"][0]["relationship"], "reference")
+            self.assertIn(
+                "Development Workflow (0.2.0-draft) [Reference]",
+                workspace_file.read_text(encoding="utf-8"),
+            )
 
     def test_catalog_locations_accept_plain_windows_path_and_common_wrappers(self) -> None:
         windows_path = r"C:\Users\u239230\PycharmProjects\context-canon\nodes\library"
@@ -390,15 +434,17 @@ class ReusableContextsTests(unittest.TestCase):
             source_version="0.2.0-draft",
             source_normalized_digest="1" * 64,
             source_package_digest="2" * 64,
+            relationship="parent",
             why="Shared development workflow applies to the whole project.",
         )
         rendered = "\n".join(_render_accepted_reusable_contexts((assignment,)))
         self.assertIn("already accepted", rendered)
         self.assertIn("AI Workstation", rendered)
         self.assertIn("Development Workflow", rendered)
-        self.assertIn("semantic descendants", rendered)
+        self.assertIn("[Parent]", rendered)
+        self.assertIn("semantic Children", rendered)
         self.assertIn("Why: Shared development workflow applies to the whole project.", rendered)
-        self.assertIn("Do not emit a `source_reuses` entry", rendered)
+        self.assertIn("must not reclassify", rendered)
 
     def test_source_why_is_parsed_from_authored_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
