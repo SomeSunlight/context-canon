@@ -6,11 +6,17 @@ The Resource rename/reconcile path has now also passed an extensive real owner t
 
 ## Active Fast Track — URL-safe Markdown links (#101)
 
-Issue #101 is intentionally the next work block before further feature development because invalid/noisy Markdown links would contaminate later owner tests. The owner has real project Nodes in directories such as `01 F1` and `02 F2`; valid repository paths must not require renaming merely to keep generated Markdown portable.
+Issue #101 is implemented in Draft PR #102 and is intentionally being owner-tested before further feature development because invalid/noisy Markdown links would contaminate later tests. Real project Nodes may live in directories such as `01 F1` and `02 F2`; valid repository paths no longer need renaming merely to keep ContextCanon-generated Markdown portable.
 
-The normative guidance is being added first to the reusable Development Workflow. The implementation then follows that rule with one deterministic link contract: raw filesystem/ContextCanon locators remain semantic truth, generated local Markdown destinations are percent-encoded for presentation, and local Markdown targets are decoded before ContextCanon resolves them back to files. The audit covers normal Official Context output, Context Import maintenance/writers, Resource closure/bridges and all onboarding-generated Markdown surfaces with dynamic repository paths.
+The reusable Development Workflow now owns Rule `CCW-015`: repository-local Markdown destinations are a URL-safe presentation of real filesystem paths. The implementation uses one deterministic link contract in `links.py`: raw filesystem/ContextCanon locators remain semantic truth; generated local Markdown destinations percent-encode spaces and URI/Markdown-sensitive filename characters; ContextCanon decodes local Markdown targets exactly once before filesystem resolution.
 
-PR #100 is already merged; #101 is a separate Fast Track and must not rewrite the accepted Parent/Reference semantics.
+That contract now covers Official Context Resource/Context-Node links, Context Import parsing/writing/normalization, Resource closure and generated Context bridges, onboarding Source/Parent publication, placement review/split-review destination links, source-audit control links, and the semantic placement instruction. The final writer audit found no remaining dynamic repository-local Markdown target outside the shared helper; remaining generated links use fixed ContextCanon-owned ASCII filenames or pure anchors.
+
+Regression coverage uses actual names containing spaces, `#`, `%` and parentheses. It proves raw Context Imports still resolve, explicit normalization renders URL-safe destinations and is idempotent, encoded Markdown Resource closure resolves back to exact files, Official Context links are encoded, onboarding Parent links preserve raw semantic locators while rendering safely, already-safe paths stay unchanged, and external URLs are not rewritten.
+
+Self-hosting follows the repository's established provider-first local-version pattern: Development Workflow was rebuilt to `0.3.6-draft`, then its explicit local Parent version was synchronized into Framework Development, GitHub and GitHub Local before those Nodes were rebuilt. Their resulting versions are `0.3.15-draft`, `0.1.7-draft`, and `0.1.6-draft`. This internal self-host wiring is distinct from normal user-project immutable Parent pins, which continue to use ordinary propagation review.
+
+The deterministic suite passes 350/350 tests. The self-host refresh also passed `contextcanon check --all .` and `git diff --check`; the temporary refresh workflow has been removed. The remaining gate is the ordinary exact-head PR workflow after final documentation updates. PR #100 remains the accepted Parent/Reference baseline; #101 does not change those semantics.
 
 ## Accepted Fast Track — Parent / Reference Phase 1 (#99)
 
