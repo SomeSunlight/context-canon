@@ -134,6 +134,8 @@ The inventory uses Git's visible tracked/untracked file set, respects normal Git
   - `.context/onboarding/inventory-state.json` — inventory scope and deterministic rule configuration;
   - `.context/onboarding/inventory-acceptance.json` — the accepted per-path baseline including hashes plus reviewed `kind`, `handling`, `description` and `note`.
 
+The managed onboarding rules apply recursively, so nested project/Node onboarding and several simultaneous roots follow the same policy. Refreshing initialization migrates an older root-anchored managed block in place. A separate managed block ignores Source/Reference and Parent candidate packages plus both review-receipt stores; accepted `.context/sources/` stays trackable. The candidate block remains after STEP-01 reset because ordinary maintenance still needs it. See [Windows paths and local review scratch](windows-paths.md) for manual repair of existing repositories and path-length diagnostics.
+
 This split is deliberate. Before STEP 03, edits in the CSV are still unaccepted working state. STEP 03 turns that reviewed boundary into the compact durable acceptance files. After a fresh clone, `onboard init` followed by `onboard inventory` can regenerate the CSV from those committed files and surface current `new / changed / missing / unchanged` state without asking the owner to repeat prior classifications.
 
 Later accepted structure/reusable-Context/placement decisions do not need the whole onboarding workspace as a second authority: after publication their meaning lives in canonical `CONTEXT.src.md`, Parent/Reference Context Imports and reviewed project-source changes. The workspace remains useful review history but is not the canonical maintenance surface.

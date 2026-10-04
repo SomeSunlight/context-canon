@@ -13,6 +13,7 @@ from .model import CompiledPackage, RelationshipKind
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_structure import HumanStructurePlan
 from .package import PACKAGE_MANIFEST_PATH, load_package
+from .path_budget import preflight_paths
 from .parser import ContextCanonError
 from .onboarding_workspace import write_utf8
 
@@ -376,7 +377,10 @@ def _write_frozen_package(
             write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
         return destination
 
+    paths = (PACKAGE_MANIFEST_PATH, FROZEN_PROVENANCE_REL, *(file.path for file in package.files))
+    preflight_paths(destination, paths, action="onboarding frozen reusable Context")
     temporary = destination.with_name(destination.name + ".tmp")
+    preflight_paths(temporary, paths, action="onboarding frozen reusable Context staging")
     if temporary.exists():
         shutil.rmtree(temporary)
     try:
@@ -464,6 +468,8 @@ def _recover_historical_package(
 
         destination = _frozen_package_root(snapshot_root, expected_digest)
         temporary = destination.with_name(destination.name + ".tmp")
+        for target_root in (destination, temporary):
+            preflight_paths(target_root, (PACKAGE_MANIFEST_PATH, FROZEN_PROVENANCE_REL, *paths), action="onboarding historical package recovery")
         if temporary.exists():
             shutil.rmtree(temporary)
         try:

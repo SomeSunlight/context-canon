@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable, Mapping
 
+from .path_budget import preflight_paths
 from .parser import ContextCanonError, find_repo_root
 
 
@@ -523,9 +524,12 @@ def prepare_onboarding_evidence(
         _verify_existing_snapshot(snapshot_root, manifest, included)
         return PreparedEvidence(project_root, snapshot_root, digest, included, excluded)
 
+    paths = ("manifest.json", *(f"evidence/{entry.path}" for entry in included))
+    preflight_paths(snapshot_root, paths, action="onboarding Evidence snapshot", node_root=project_root)
     base.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=".prepare-", dir=base))
     try:
+        preflight_paths(staging, paths, action="onboarding Evidence staging", node_root=project_root)
         evidence_root = staging / "evidence"
         for entry in included:
             destination = evidence_root.joinpath(*PurePosixPath(entry.path).parts)

@@ -1,8 +1,29 @@
 # Plan
 
-## Active Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
+## Active Fast Track: portable package scratch lifecycle — Issue #103
 
-**Fast Track status — CLOSED / OWNER TEST PENDING**
+**Fast Track status — ACTIVE**
+
+Purpose: reduce ContextCanon-owned Windows path depth, fail before risky package/output writes, and manage the complete local candidate lifecycle without weakening exact package identity or the durable offline store.
+
+Scope: Source/Reference and Parent candidate storage/acceptance, Windows destination preflight, all managed transient Git ignore rules including subtree onboarding, lifecycle regressions and operator documentation. Review receipts are local scratch; remove only the matching receipt after durable acceptance. Accepted `.context/sources/<full-digest>/` remains unchanged.
+
+- [x] Close the accepted #99/#104 merge baseline and reconstruct #103 package/review/ignore data flow.
+- [x] Share short collision-safe candidate storage with full package verification and legacy full-digest recovery.
+- [x] Preflight final and staged Windows package/output paths before mutation; report the longest path, budget, owned contribution and tool-dependent failure/workarounds.
+- [x] Manage explicit recursive candidate/review/onboarding ignores, preserve durable inventory files, and migrate managed blocks idempotently.
+- [x] Clean only the accepted transaction after the durable package and pin succeed; preserve scratch on failure and prove offline independence.
+- [x] Cover realistic deep Windows paths, prefix collisions/tampering, Git visibility at root/two subtrees, legacy recovery and non-Windows behavior.
+- [x] Update documentation/PLAN/STATE/CHANGELOG, regenerate self-hosted packages, and run the complete suite, build/check, propagation health and diff hygiene.
+- [ ] Publish one Draft PR with exact-head CI evidence. Do not merge.
+
+Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added; its result is required at the final PR gate.
+
+Deferred ceremony: one final full gate and PR handoff after focused implementation checks. Exit: coherent Draft PR for owner review. No new general cleanup command or user path rewriting.
+
+## Accepted Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
+
+**Fast Track status — ACCEPTED**
 
 Purpose: make onboarding emit the same single canonical Context Import relationship model already accepted in Phase 1, with an explicit owner-visible Parent/Reference choice and no new legacy Source/Parent publication split.
 
@@ -16,7 +37,7 @@ Purpose: make onboarding emit the same single canonical Context Import relations
 
 Boundary: Issue #103 (Windows path lengths, candidate stores, ignore rules and cleanup) remains separate.
 
-Closing checkpoint: 360/360 deterministic tests pass. Self-hosted `build --all .` and `check --all .` are clean, read-only propagation health reports all four local Parent/Child relationships normatively current, and diff hygiene passes. Root/subtree combinations, several Parents, per-target provenance, explicit STEP-07 choices, legacy recovery, STEP-07/08 reset, STEP-10 tamper/CLI-override rejection, repeated publication and manual-import equivalence are covered. Gateway and Framework Development packages advanced to `0.3.16-draft`. Draft PR #104 is the completed implementation candidate; real owner onboarding testing remains pending. Do not merge without explicit approval.
+Closing checkpoint: 360/360 deterministic tests pass. Self-hosted `build --all .` and `check --all .` are clean, read-only propagation health reports all four local Parent/Child relationships normatively current, and diff hygiene passes. Root/subtree combinations, several Parents, per-target provenance, explicit STEP-07 choices, legacy recovery, STEP-07/08 reset, STEP-10 tamper/CLI-override rejection, repeated publication and manual-import equivalence are covered. Gateway and Framework Development packages advanced to `0.3.16-draft`. The owner accepted PR #104 without another real onboarding run and squash-merged it as `8cd0aaada3e74fbfbc44638f62bfe6ec1e492991`. Issue #99 is closed; the practical Owner-Test is deliberately deferred to the next real onboarding.
 
 ## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
 

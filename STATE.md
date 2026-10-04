@@ -1,18 +1,26 @@
 # Current State
 
-The accepted baseline is `main` at `8344731e645d3fc54bf492a225e6448a7de9698a`, including owner-tested PR #100 (Parent / Reference Phase 1) and PR #102 (URL-safe Markdown links). That accepted baseline includes canonical `Context Imports`, read-only propagation status, repository-wide propagation health checking, cause-first propagation review, and fail-fast relationship validation.
+The accepted baseline is `main` at `8cd0aaada3e74fbfbc44638f62bfe6ec1e492991`, including PR #104 (Parent / Reference onboarding Phase 2), owner-tested PR #100 (Phase 1) and PR #102 (URL-safe Markdown links). That accepted baseline includes canonical `Context Imports`, read-only propagation status, repository-wide propagation health checking, cause-first propagation review, and fail-fast relationship validation.
 
 The Resource rename/reconcile path has now also passed an extensive real owner test: unique renames were detected correctly, interactive confirmation preserved stable Resource identity, and ambiguous byte-identical candidates were surfaced as explicit numbered choices instead of being guessed.
 
-## Current review candidate — onboarding Parent / Reference (#99 Phase 2)
+## Current development — portable candidate stores (#103)
 
-Branch `agent/issue-99-onboarding-parent-reference` and Draft PR #104 complete the same relationship model in onboarding. STEP 07 distinguishes existing enclosing Parents, additional Parents and References with explicit `[Parent]` / `[Reference]` Assignments. Exact packages and relationship kind are fixed input to STEP 08 v2; new placement proposals have no `source_reuses`. STEP 10 verifies its trace against STEP 07 and refuses a changed kind, target, package or rationale.
+Implementation is complete on `agent/issue-103-portable-package-stores`, based on accepted PR #104. PLAN owns the Fast Track checklist. Source/Reference and Parent candidates share 16-character digest directory tokens with verified collision extension and legacy full-digest recovery. The full package digest remains identity. After successful durable package/pin publication, shared cleanup removes only the consumed candidate/provenance/receipt; failure preserves scratch and accepted packages remain available offline.
+
+All four candidate/review stores receive explicit recursive managed Git ignores, including for existing projects at fetch/review. Onboarding migrates root-only rules in place to recursive workspace/snapshot rules; durable inventory state remains trackable at every local root. Candidate ignores remain after onboarding reset. Windows preflight checks final and staged package/output destinations before mutation against a conservative budget below 240 UTF-16 units. It reports tool-dependent failure modes and owned path contributions; explicit `CONTEXTCANON_ALLOW_LONG_PATHS=1` permits verified long-path toolchains while retaining warnings.
+
+All 378 deterministic tests pass, including 18 new #103 regressions. Self-host build/check are clean and all four local Parent/Child edges are normatively current; diff hygiene passes. Gateway and Framework Development packages are `0.3.17-draft`; executable release remains `0.10.0`. Native Windows CI covers path-budget/materialization and Git visibility; publication and exact-head CI are the remaining handoff steps. Real Windows owner testing is still pending. No merge is authorized.
+
+## Accepted onboarding Parent / Reference (#99 Phase 2)
+
+Merged PR #104 completes the same relationship model in onboarding. STEP 07 distinguishes existing enclosing Parents, additional Parents and References with explicit `[Parent]` / `[Reference]` Assignments. Exact packages and relationship kind are fixed input to STEP 08 v2; new placement proposals have no `source_reuses`. STEP 10 verifies its trace against STEP 07 and refuses a changed kind, target, package or rationale.
 
 Every published import uses one canonical `Context Imports` section and managed block, with `ctx:source` and explicit `relationship=parent|reference`. Structural/enclosing Parents use that same authoring and compiler semantics. Publication supports several Parents, does not duplicate the enclosing Parent, preserves the relationship per target when one package is used differently at several Nodes, and is idempotent. References stay informational and do not propagate; Parents behave like manually authored canonical imports.
 
 Reset from STEP 08 onward preserves the accepted STEP-07 state and frozen packages. Reset from STEP 07 rolls back publication and removes that review/state/Catalog so a new relationship may be chosen. Historical untyped STEP-07 state remains readable as Parent with its original review/package identity.
 
-The completed candidate passes 360/360 deterministic tests, self-host `build --all .` and `check --all .`, all four local Parent/Child propagation-health checks and diff hygiene. Gateway and Framework Development packages are now `0.3.16-draft`; the executable release version remains `0.10.0` with Git runtime provenance. Owner testing remains pending; PR #104 must stay Draft and must not be merged without explicit approval. Issue #103 and future chat interpretation remain outside this change.
+The completed candidate passes 360/360 deterministic tests, self-host `build --all .` and `check --all .`, all four local Parent/Child propagation-health checks and diff hygiene. Gateway and Framework Development packages are now `0.3.16-draft`; the executable release version remains `0.10.0` with Git runtime provenance. The owner accepted and merged PR #104; Issue #99 is closed. A real onboarding test is deliberately deferred to the next onboarding. Issue #103 is the next authorized development block; future chat interpretation remains out of scope.
 
 ## Accepted Fast Track — URL-safe Markdown links (#101)
 

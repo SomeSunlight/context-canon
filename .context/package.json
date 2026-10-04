@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "1219bd2fa5679589ff5e19b3ea9565a859de196851e51fc96746accaff517819",
-    "package": "f6ac377d792af2e61ccd4033daeb1ea0a39a3a91f45a121df6ec6f01f173af54"
+    "normalized": "60883632227849054ae6ef7ec40efdbbc268499340e95a45f564f62b4907c1fa",
+    "package": "3aba6479ec4badf1326b64f6ae6c13814d0153a248d6fc7ede9877adbe6621ef"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "ef024d79fb026140661c8e3dad56fb81bdf6d97d2b7ace07a32bfdb6cd3299fe",
+      "sha256": "d23488f5a7a450abacb0d467db33ab60f869dc2449cd18d96974a8575dba8fc4",
       "size": 3283
     },
     {
@@ -23,8 +23,8 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md",
-      "sha256": "51f56a2c970035950d1b7dc1acd6dcda917e988505849b113548190c76d1add7",
-      "size": 10517
+      "sha256": "a3749d291b8aed03402ca4457946c760c71dd55cb30e85adcc0ce76db648147d",
+      "size": 11313
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md",
@@ -33,13 +33,18 @@
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md",
-      "sha256": "11cc70d898b4b84bd1718f694fe108b293952d7bcc0b7df94e0784f8831e5134",
-      "size": 37573
+      "sha256": "7149410d928e91a1b71d2c775408731c99d4bde75400d4644c698af5131c2ed4",
+      "size": 38180
+    },
+    {
+      "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/windows-paths.md",
+      "sha256": "08a82a16f266377e2bd616e54a752db1e29cef8ae5491b2c5eac70708af9040a",
+      "size": 6716
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md",
-      "sha256": "d4216cc63a6474ad951011e26d5758382f52dfb1d168f2e5994b13f2325e4e47",
-      "size": 16574
+      "sha256": "c414915a08cfa7d340d4ee0a501281542deecd8c22b4203b37e56d9251b1ceea",
+      "size": 17895
     },
     {
       "path": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md",
@@ -56,7 +61,7 @@
   "node": {
     "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
     "name": "ContextCanon Gateway",
-    "version": "0.3.16-draft"
+    "version": "0.3.17-draft"
   },
   "parents": [],
   "removed_rules": [],

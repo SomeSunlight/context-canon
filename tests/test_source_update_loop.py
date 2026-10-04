@@ -58,6 +58,10 @@ class SourceUpdateLoopTests(unittest.TestCase):
         self.assertEqual(parsed.package_digest, v2.package_digest)
         self.assertEqual(parsed.transport_ref, candidate_ref)
 
+        self.assertFalse(candidate_root.exists())
+        self.assertFalse(receipt.exists())
+        self.assertIsNone(load_candidate_provenance(consumer, candidate.package_digest))
+
         # Candidate/review scratch state is expendable after acceptance. The
         # normal consumer remains independently buildable/checkable offline.
         shutil.rmtree(consumer / ".context" / "candidates")

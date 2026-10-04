@@ -4,7 +4,7 @@ All notable ContextCanon changes will be documented here.
 
 ## Unreleased
 
-ContextCanon **0.10.0** is the current review candidate. It builds on the accepted 0.9.9 onboarding baseline and adds first-class stable Topic Resource identity plus reviewed rename/move maintenance. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to the accepted onboarding baseline.
+ContextCanon **0.10.0** is the current development release in accepted `main`. It builds on the accepted 0.9.9 onboarding baseline and adds first-class stable Topic Resource identity plus reviewed rename/move maintenance. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to the accepted onboarding baseline.
 
 ### Added
 
@@ -20,6 +20,10 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 - STEP-02 inventory accepts the explicit human classification `kind=duplicate` with `handling=ignore` for an obvious copy that should not participate in onboarding; ContextCanon does not attempt automatic semantic deduplication.
 
 ### Fixed
+
+- Windows package/output materialization now preflights final and staged absolute paths against a conservative 240 UTF-16-unit budget, with longest-path/action/owned-layout diagnostics, tool-dependent failure guidance and explicit warning-preserving long-path opt-in. Candidate Git checkouts are inspected before checkout; project/Resource paths are preserved.
+- Source/Reference and Parent candidate packages share short collision-safe digest directory tokens, with full identity verification and historical full-digest recovery. Successful acceptance cleans only the consumed candidate/provenance/receipt; failure preserves review scratch and accepted offline packages are never pruned.
+- Candidate and Source/Parent review scratch stores receive explicit recursive managed ignores. Onboarding ignores migrate idempotently to every subtree while compact inventory state stays trackable. Native Windows CI covers path budgets/materialization and Git visibility.
 
 - Onboarding publication supports multiple Parents and keeps per-target relationship provenance when the same package is imported differently at different Nodes. Reset from STEP 07 also removes the accepted reusable machine state and frozen Catalog, while later resets preserve it. STEP 10 rejects a changed relationship or inconsistent visible/machine Relationship field.
 - Generated repository-local Markdown link destinations are now URL-safe across Official Context rendering, Context Imports, Resource bridges/closure and onboarding review/publication surfaces. Raw filesystem/ContextCanon locators remain semantic truth; encoded local targets are decoded before filesystem resolution, including paths with spaces, `#`, `%`, and parentheses.

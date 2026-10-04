@@ -107,3 +107,8 @@ merge-candidate exact-head CI must pass tests + zero drift
 Known generated drift may therefore be visible during review, but unknown failures still require investigation. The workflow cancels superseded runs for the same PR/ref, so rapid corrective commits do not keep obsolete CI jobs running in parallel.
 
 This keeps the strong merge gate while avoiding repeated package regeneration on intermediate heads that may still change during human review.
+
+
+## Windows portability gate
+
+Issue #103 adds a `windows-latest` job for native path-budget/materialization and Git visibility regressions. It runs `WindowsPathBudgetTests` and `GitIgnoreLifecycleTests` from `tests/test_candidate_lifecycle.py`; the full deterministic suite and self-hosted drift gate remain on Linux. The Linux suite also covers exact short-prefix collision handling, legacy candidates, candidate tampering, failed pin publication, scoped cleanup, offline Parent/Reference builds and Git checkout preflight.

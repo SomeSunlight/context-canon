@@ -13,6 +13,7 @@ from .onboarding import find_enclosing_context_root, project_root_from_snapshot,
 from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
 from .package import artifact_files
 from .onboarding_workspace import write_utf8
+from .path_budget import preflight_paths
 from .parser import ContextCanonError
 
 
@@ -400,6 +401,7 @@ def build_semantic_handoff(
     expected = _expected_inputs(
         root, spec, snapshot, entries, instruction_bytes, manifest_bytes, parent_context
     )
+    preflight_paths(root, (path.relative_to(root).as_posix() for path in expected), action="semantic handoff materialization", node_root=workspace)
     result_path = root / HANDOFF_CONTROL_DIR / HANDOFF_RESULT_NAME
 
     created = not root.exists()
