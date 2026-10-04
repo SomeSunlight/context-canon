@@ -13,7 +13,8 @@ from .onboarding_structure import HumanStructurePlan, load_onboarding_structure_
 from .parser import ContextCanonError
 
 
-PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v1"
+LEGACY_PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v1"
+PLACEMENT_PROPOSAL_SCHEMA = "contextcanon/onboarding-placement-proposal/v2"
 PLACEMENT_KINDS = {
     "overview",
     "rule",
@@ -313,7 +314,12 @@ def load_onboarding_placement_proposal(
     node_keys = {node.key for node in structure.nodes}
 
     raw = _read_json(proposal_path)
-    required_top = {"schema", "evidence_digest", "structure_digest", "items", "source_reuses"}
+    schema = raw.get("schema")
+    if schema not in {PLACEMENT_PROPOSAL_SCHEMA, LEGACY_PLACEMENT_PROPOSAL_SCHEMA}:
+        raise _error(f"unsupported schema {schema!r}")
+    required_top = {"schema", "evidence_digest", "structure_digest", "items"}
+    if schema == LEGACY_PLACEMENT_PROPOSAL_SCHEMA:
+        required_top.add("source_reuses")
     allowed_top = required_top | {"source_edits"}
     unknown_top = sorted(set(raw) - allowed_top)
     missing_top = sorted(required_top - set(raw))
@@ -324,8 +330,6 @@ def load_onboarding_placement_proposal(
         if unknown_top:
             detail.append(f"unknown fields: {', '.join(unknown_top)}")
         raise _error(f"proposal has {'; '.join(detail)}")
-    if raw["schema"] != PLACEMENT_PROPOSAL_SCHEMA:
-        raise _error(f"unsupported schema {raw['schema']!r}")
     if raw["evidence_digest"] != snapshot.evidence_digest:
         raise _error("evidence_digest does not match the supplied frozen Evidence")
     if raw["structure_digest"] != structure.structure_digest:
@@ -472,9 +476,11 @@ def load_onboarding_placement_proposal(
             )
         )
 
-    raw_reuses = raw["source_reuses"]
+    raw_reuses = raw.get("source_reuses", [])
     if not isinstance(raw_reuses, list):
         raise _error("source_reuses must be a list")
+    if schema == PLACEMENT_PROPOSAL_SCHEMA and raw_reuses:
+        raise _error("v2 placement proposals cannot create reusable Context relationships; choose them in STEP 07")
     reuses: list[PlacementSourceReuse] = []
     for index, raw_reuse in enumerate(raw_reuses):
         if not isinstance(raw_reuse, dict):
@@ -520,13 +526,14 @@ def load_onboarding_placement_proposal(
         )
 
     normalized = {
-        "schema": PLACEMENT_PROPOSAL_SCHEMA,
+        "schema": schema,
         "evidence_digest": snapshot.evidence_digest,
         "structure_digest": structure.structure_digest,
         "items": [item.to_dict() for item in items],
         "source_edits": [edit.to_dict() for edit in source_edits],
-        "source_reuses": [reuse.to_dict() for reuse in reuses],
     }
+    if schema == LEGACY_PLACEMENT_PROPOSAL_SCHEMA:
+        normalized["source_reuses"] = [reuse.to_dict() for reuse in reuses]
     return OnboardingPlacementProposal(
         evidence_digest=snapshot.evidence_digest,
         structure_digest=structure.structure_digest,
