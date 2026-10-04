@@ -1,10 +1,14 @@
 # Current State
 
-The accepted baseline is `main` at `8cd0aaada3e74fbfbc44638f62bfe6ec1e492991`, including PR #104 (Parent / Reference onboarding Phase 2), owner-tested PR #100 (Phase 1) and PR #102 (URL-safe Markdown links). That accepted baseline includes canonical `Context Imports`, read-only propagation status, repository-wide propagation health checking, cause-first propagation review, and fail-fast relationship validation.
+The accepted baseline is `main` at `28ce62ef7aca4960bcf238b8d2221b7e445aa236`, including owner-tested PR #105 (portable candidates, scoped cleanup and Windows warning headroom), PR #104 (Parent / Reference onboarding Phase 2), PR #100 and PR #102. The owner successfully propagated the real Windows project without relocating its normal PyCharm checkout. Final reviewed head `4fa2e4f78e408162610511db1c8f1bcf79501b9e` passed Actions run `37233194691`, including 379 deterministic tests and eight native Windows checks.
+
+## Active development — shared Node versions (#107 Phase 1)
+
+The owner authorized a Fast Track on `agent/issue-107-shared-node-versions`: a repository-root library of whole immutable Node package versions, separate per-consumer accepted pins/reviews, reduced generated path overhead and a separately implemented migration for existing projects. PLAN contains the architecture/recovery map and execution checklist. Phase 1 covers normal authoring and Parent/Reference maintenance; onboarding storage/workspace/recovery changes are explicitly Phase 2 after the owner tests Phase 1. Automatic unused-version pruning is deferred until onboarding/recovery reachability is accounted for. Generic reinitialization remains #106. The eventual PR stays Draft; no merge is authorized.
 
 The Resource rename/reconcile path has now also passed an extensive real owner test: unique renames were detected correctly, interactive confirmation preserved stable Resource identity, and ambiguous byte-identical candidates were surfaced as explicit numbered choices instead of being guessed.
 
-## Current review candidate — portable candidate stores (#103)
+## Accepted portable candidate stores (#103 / PR #105)
 
 Draft PR #105 is complete on `agent/issue-103-portable-package-stores`, based on accepted PR #104. The Fast Track is closed for owner review; PLAN records the checklist and exact implementation verification. Source/Reference and Parent candidates share 16-character digest directory tokens with verified collision extension and legacy full-digest recovery. The full package digest remains identity. After successful durable package/pin publication, shared cleanup removes only the consumed candidate/provenance/receipt; failure preserves scratch and accepted packages remain available offline.
 

@@ -1,8 +1,42 @@
 # Plan
 
+## Active Fast Track: shared Node versions — Issue #107, Phase 1
+
+**Fast Track status — ACTIVE / OWNER-AUTHORIZED**
+
+Purpose: retain whole immutable Node package versions once per Git working tree, keep consumer acceptance explicit, reduce generated path overhead, and migrate existing projects without re-onboarding. The owner authorized implementation on 2026-10-05 and will test Phase 1 before Phase 2.
+
+Scope: normal build/check, published version history, Parent/Reference adoption and updates, candidate/review lifecycle, readable version inventory, separately implemented migration, package Resource layout, documentation and Windows verification. Onboarding Evidence, frozen Catalogs, handoffs, workspace/reset migration are **Phase 2**, not this review candidate. Generic reinit/identity remapping remains #106. Keep the PR Draft; do not merge.
+
+Implementation contract / recovery map:
+
+- Use `<worktree>/.context/versions/<verified-digest-prefix>/` for whole packages. Full identity remains in `.context/package.json`; compact names are locators, with collision extension and full verification. No sequential allocation ledger; context.yaml stays regenerable.
+- Normal publication retains the previous verified package and new package; imports install once in that library. Exact pins remain independent for every consumer and Reference stays non-normative/non-transitive. Reads support legacy consumer-local sources until explicit migration.
+- Centralize package scratch, but scope reviews and transport provenance by consumer. Cleanup may remove only its transaction; accepted versions and other consumers' input survive.
+- Preserve document subdirectories inside packages. Use a compact verified origin namespace and a common Resource-closure base (including the authoring Node root) to avoid repeating needless repository prefixes without rewriting exact authored Markdown. Bind full origin/path mapping in authenticated package content; preserve legacy reads and Resource rename baselines.
+- Migration lives in a removable `storage_migration.py`, separate from the runtime resolver. Default to read-only preview; explicit apply verifies/copies old exact packages before removing verified owned wrappers. Preserve pins and interrupted-run retry; do not migrate onboarding state in Phase 1.
+- History inventory shows Node/name/version/full identity, current consumers and retained history. Automatic pruning is deferred: Phase 2 must first make onboarding/recovery reachability explicit.
+
+- [x] Reconcile accepted PR #105 baseline (`28ce62ef7aca4960bcf238b8d2221b7e445aa236`), reconstruct current storage/package/Resource/review boundaries, create the Phase-1 branch and persist scope.
+- [ ] Implement one verified package-location/install contract and legacy resolution; prove shared versions, collisions/tampering and offline loading.
+- [ ] Route normal Parent/Reference installation and package scratch through root storage, preserving consumer-specific review/provenance and acceptance cleanup.
+- [ ] Retain published local versions at normal build and expose a human-readable repository version inventory.
+- [ ] Shorten new Resource layouts while preserving closure, full origin mapping, exact package identity and Resource move/status behavior; keep old packages readable.
+- [ ] Implement separate preview/apply migration with idempotent retry, verification-before-removal and unchanged pins; prove duplicate legacy stores and unavailable providers.
+- [ ] Add end-to-end normal Authoring/Parent/Reference, deep Node hierarchy, history retention, migration interruption and Windows regressions; run existing onboarding tests as compatibility checks without changing its workflow.
+- [ ] Update accepted architecture/operator docs, migration instructions, Framework Development Rule, STATE/CHANGELOG; regenerate self-hosted Context provider-first.
+- [ ] Pass complete tests, build/check, propagation health, diff hygiene and exact-head Linux/Windows CI; publish one Draft PR with concise owner-test instructions.
+- [ ] Close Phase-1 Fast Track for owner testing and record exact head/results/remaining Phase-2 onboarding work.
+
+Current checkpoint: implementation is starting from clean accepted main. Resume with the shared package store first, then adapt callers; no product code has changed yet. Decisions and any focused failures are checkpointed here as each block completes.
+
+## Accepted baseline: PR #105 / Issue #103
+
+PR #105 was owner-tested (real Windows propagation succeeds at the original checkout location) and squash-merged to main as `28ce62ef7aca4960bcf238b8d2221b7e445aa236`. The reviewed final head `4fa2e4f78e408162610511db1c8f1bcf79501b9e` passed Actions run `37233194691`: 379 deterministic tests, self-host zero-drift verification and all eight native Windows checks. The two #103 blocks below are historical completed checkpoints, not active review work.
+
 ## Active owner-test correction: Windows warning headroom — Issue #103 / PR #105
 
-**Fast Track status — CLOSED / OWNER REVIEW PENDING**
+**Fast Track status — ACCEPTED / MERGED IN PR #105**
 
 Purpose: let existing 251-unit accepted package paths propagate without treating the conservative 240-unit headroom target as an actual file API failure.
 
@@ -17,7 +51,7 @@ Closing checkpoint: all 379 deterministic tests, self-host build/check, all four
 
 ## Active Fast Track: portable package scratch lifecycle — Issue #103
 
-**Fast Track status — CLOSED / OWNER REVIEW PENDING**
+**Fast Track status — ACCEPTED / MERGED IN PR #105**
 
 Purpose: reduce ContextCanon-owned Windows path depth, fail before risky package/output writes, and manage the complete local candidate lifecycle without weakening exact package identity or the durable offline store.
 
