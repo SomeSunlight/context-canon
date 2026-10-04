@@ -9,7 +9,7 @@ compiler_version: "0.7.0"
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.16-draft"
+  version: "0.3.18-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -80,11 +80,12 @@ resources:
   - {"source": "docs/maintenance.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"}
   - {"source": "docs/onboarding-cli.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md"}
   - {"source": "docs/onboarding.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"}
+  - {"source": "docs/windows-paths.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/windows-paths.md"}
   - {"source": "nodes/internal/framework-development/docs/external-sources.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md"}
   - {"source": "nodes/internal/framework-development/docs/onboarding-design.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md"}
   - {"source": "nodes/library/foundation/docs/composition.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "1219bd2fa5679589ff5e19b3ea9565a859de196851e51fc96746accaff517819"
-  package_digest: "f6ac377d792af2e61ccd4033daeb1ea0a39a3a91f45a121df6ec6f01f173af54"
+  normalized_digest: "e46f763ae629d7512402afe3bf67bc533566e9855f7d0e1dc025ebacbc25b088"
+  package_digest: "a860da9406035eef3c1030cf08c9d2d82034e24ace89be1ef3562635c95e7755"

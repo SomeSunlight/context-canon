@@ -153,6 +153,12 @@ contextcanon check --all .
 
 The exact package layout changes and therefore the package identity changes. ContextCanon's normal version discipline still applies, as do Parent propagation and immutable import update/review mechanisms for consumers of the changed package.
 
+## Local review scratch and Windows paths
+
+Candidate packages and Source/Parent review receipts are local scratch, automatically ignored during fetch/review. After successful durable package/pin acceptance, ContextCanon removes only the consumed transaction. Failed acceptance preserves the scratch; accepted `.context/sources/<full-digest>/` packages remain the offline boundary.
+
+Candidate directories normally use a verified 16-character digest prefix. Windows destination preflight reports risky final package/resource paths before writes, including cases where a top-level file works but a deep packaged link fails. See [Windows paths and local review scratch](windows-paths.md) for the compatibility budget, explicit long-path opt-in, existing-repository ignore repair and cleanup policy.
+
 ## Render and verify
 
 After the intended updates and propagation reviews are accepted:

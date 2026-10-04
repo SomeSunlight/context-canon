@@ -9,7 +9,9 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from .gitignore import ensure_candidate_gitignore
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
+from .path_budget import preflight_paths
 from .parser import ContextCanonError
 
 
@@ -394,8 +396,9 @@ def write_utf8(path: Path, text: str) -> None:
     """Atomically write UTF-8 without depending on shell redirection/codepages."""
 
     path = path.resolve()
+    preflight_paths(path.parent, [path.name, ".tmp-xxxxxxxx"], action="onboarding state/review publication")
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    fd, temporary_name = tempfile.mkstemp(prefix=".tmp-", dir=path.parent)
     temporary = Path(temporary_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
@@ -1018,6 +1021,7 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
     """Ignore transient onboarding artifacts while keeping compact accepted inventory state Git-visible."""
 
     project = _require_project_root_for_inventory(project_root)
+    ensure_candidate_gitignore(project)
     gitignore = project / ".gitignore"
     try:
         existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
@@ -1030,12 +1034,13 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
         workspace_rel = ""
 
     lines = [GITIGNORE_START]
-    if workspace_rel:
+    lines.append("**/contextcanon-onboarding/")
+    if workspace_rel and workspace_rel != DEFAULT_WORKSPACE_NAME:
         lines.append(f"/{workspace_rel}/")
     lines.extend([
-        "/.context/onboarding/*",
-        "!/.context/onboarding/inventory-state.json",
-        "!/.context/onboarding/inventory-acceptance.json",
+        "**/.context/onboarding/*",
+        "!**/.context/onboarding/inventory-state.json",
+        "!**/.context/onboarding/inventory-acceptance.json",
         GITIGNORE_END,
     ])
     block = "\n".join(lines)

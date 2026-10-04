@@ -2,13 +2,13 @@
   "changes": [],
   "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "b1e1e5b8c690519400799107c3cf76edeeee2c11bdae86dbc1d58e6c2d73c59a",
-    "package": "b174038d4fdcfce25b492d356ad3a4e408a78ed5a921b0586294ba95b76fa58d"
+    "normalized": "5dfa642bc1dca5586173dca95d8ff2d389da0f85fff9564d7afda181c6363e55",
+    "package": "49828437ff62d943315c20b5bb281542d4aba314c4ae8c7219d7b91a7360bd70"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "23d6eda7c00e2892198495eb2b03a3ba6ce59cf1e39190d16c06491240f39d5c",
+      "sha256": "3b1b6db8d87d6653cdaeb4a29214ab107591b0867bb0a912ac136734ce659e85",
       "size": 20750
     },
     {
@@ -42,14 +42,19 @@
       "size": 5262
     },
     {
+      "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/docs/windows-paths.md",
+      "sha256": "ad675e9bb6edc8404ee5c79a63484accc74d1cbbf69c8078dbc654617beddd13",
+      "size": 9309
+    },
+    {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md",
       "sha256": "829c18f4399b257cf2a1998f1abc2f51fc8ce5146646da560d6c4be3eb2b9ccf",
       "size": 24570
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md",
-      "sha256": "3b82a5ba093189a8bda01e51aec2b05c4c3c1e0313fee86f7b5db124985cca15",
-      "size": 16194
+      "sha256": "89accaef57bba7bb7a78590d4cccb228cf59d825aa118c58134afcbdf1bb99ff",
+      "size": 17483
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md",
@@ -68,8 +73,8 @@
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/tests-and-ci.md",
-      "sha256": "cd5d21f13d4c6d0886041fe8bfa2c59eec39b4896b1a12d8545c8e40940edd26",
-      "size": 5194
+      "sha256": "e7fdb464b2b22709bb7592d36860cab12f35e3538217fbccacc650b5fc3331ad",
+      "size": 5918
     },
     {
       "path": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/use-case-walkthrough.md",
@@ -133,7 +138,7 @@
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.16-draft"
+    "version": "0.3.18-draft"
   },
   "parents": [],
   "removed_rules": [],

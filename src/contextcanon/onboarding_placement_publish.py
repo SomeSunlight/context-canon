@@ -27,6 +27,7 @@ from .onboarding_reusable_contexts import (
 )
 from .outputs import expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, load_package
+from .path_budget import preflight_paths
 from .parser import ContextCanonError, parse_node
 
 
@@ -984,6 +985,13 @@ def build_placement_publication_preview(
         ).compile(root)
         if compiled.metadata.id != node_ids[node.key]:
             raise _error(f"semantic Parent preview changed stable Node identity for {node.name}")
+        preflight_paths(root, expected_outputs(compiled), action="onboarding Official Context preview")
+        for package in compiled.parent_packages + compiled.source_packages:
+            preflight_paths(
+                root / ".context" / "sources" / package.package_digest,
+                (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files)),
+                action="onboarding accepted import preview", node_root=root,
+            )
         compiled_by_key[node.key] = compiled
 
     deltas = tuple(
@@ -1132,8 +1140,11 @@ def _copy_exact_package(package_root: Path, target_root: Path, expected_digest: 
     package = load_package(package_root)
     if package.package_digest != expected_digest:
         raise _error(f"catalog package digest changed before publication: {package_root}")
-    staging = Path(tempfile.mkdtemp(prefix=f".{expected_digest[:12]}-", dir=(target_root / ".context" / "sources").parent if (target_root / ".context" / "sources").parent.exists() else target_root))
+    paths = (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files))
+    preflight_paths(destination, paths, action="onboarding accepted Context Import", node_root=target_root)
+    staging = Path(tempfile.mkdtemp(prefix=".tmp-", dir=(target_root / ".context" / "sources").parent if (target_root / ".context" / "sources").parent.exists() else target_root))
     try:
+        preflight_paths(staging, paths, action="onboarding Context Import staging", node_root=target_root)
         destination.parent.mkdir(parents=True, exist_ok=True)
         manifest_target = staging / PACKAGE_MANIFEST_PATH
         manifest_target.parent.mkdir(parents=True, exist_ok=True)
@@ -1166,11 +1177,14 @@ def _copy_compiled_package(compiled, target_root: Path) -> bool:
             raise _error(f"accepted Parent store path contains different package: {destination}")
         return False
 
+    files = artifact_files(compiled)
+    preflight_paths(destination, files, action="onboarding accepted Parent", node_root=target_root)
     store = destination.parent
     store.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix=f".{expected_digest[:12]}-", dir=store))
+    staging = Path(tempfile.mkdtemp(prefix=".tmp-", dir=store))
     try:
-        for rel, content in artifact_files(compiled).items():
+        preflight_paths(staging, files, action="onboarding Parent staging", node_root=target_root)
+        for rel, content in files.items():
             target = staging / Path(*PurePosixPath(rel).parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(content)

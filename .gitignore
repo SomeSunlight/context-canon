@@ -5,4 +5,10 @@ build/
 dist/
 .venv/
 **/.context/candidates/
-**/.context/onboarding/
+**/.context/parent-candidates/
+**/.context/source-reviews/
+**/.context/parent-reviews/
+**/contextcanon-onboarding/
+**/.context/onboarding/*
+!**/.context/onboarding/inventory-state.json
+!**/.context/onboarding/inventory-acceptance.json

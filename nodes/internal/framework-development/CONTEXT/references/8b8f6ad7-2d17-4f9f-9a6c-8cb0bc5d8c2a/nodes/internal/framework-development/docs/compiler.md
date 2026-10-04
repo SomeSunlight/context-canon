@@ -111,7 +111,7 @@ The deterministic core now handles:
 - versioned `.context/package.json` manifests containing the complete compiled state required by descendants;
 - full manifest/file/digest verification without needing `CONTEXT.src.md` from the Source;
 - consumer-local accepted packages under `.context/sources/<package-digest>/`;
-- candidate packages under `.context/candidates/<package-digest>/`;
+- candidate packages under `.context/candidates/<digest-prefix>/`;
 - exact immutable import pins using version, `normalized-digest`, and `package-digest`;
 - generic Git candidate retrieval with explicit `ref` and `node-path` for repositories containing multiple Nodes;
 - structural review of a candidate in the real consumer composition before acceptance;
@@ -168,7 +168,7 @@ This is reproducible accepted project state and should be retained with a projec
 Candidate packages live separately:
 
 ```text
-.context/candidates/<package-digest>/
+.context/candidates/<digest-prefix>/
 ```
 
 A candidate does not affect `build`. The supported update path is:
@@ -269,3 +269,7 @@ Compiler 0.4 deliberately still leaves several layers for later:
 The reviewed **first-adoption onboarding** path now sits above this deterministic compiler boundary: ContextCanon freezes exact evidence, generates the semantic assignment, validates the external reasoning model's proposal, binds a human review to exact evidence/proposal state, and publishes the first canonical Node only after explicit acceptance and deterministic staging/build checks.
 
 The next major validation is therefore not another missing onboarding trust mechanism. It is the larger real 1:1 onboarding test on a materially larger existing repository, which must test both the onboarding experience and the usefulness of the resulting ContextCanon structure in ordinary work.
+
+The shared `candidate_store.py` freezes both fetched reusable imports and locally compiled Parent candidates. Prefixes normally use 16 hex characters and extend on a verified collision; full package digests remain authoritative and historical full-digest directories remain readable. Both acceptance paths call the same narrowly scoped cleanup helper only after immutable package installation and atomic pin replacement succeed. Candidate provenance and review receipts are scratch; accepted packages are never pruned.
+
+`path_budget.py` checks Windows final and staged package/output destinations before writes: below 240 UTF-16 units is quiet, 240–259 warns, and 260 or more stops by default. The headroom band must not block existing accepted packages from propagating before shorter scratch can help; it is not a filesystem-success guarantee. Explicit `CONTEXTCANON_ALLOW_LONG_PATHS=1` also retains diagnostics as warnings above that limit for verified long-path toolchains. `gitignore.py` manages explicit recursive ignores for all four candidate/review scratch stores; onboarding separately manages recursive workspace/snapshot rules with durable inventory exceptions. See [Windows paths and local review scratch](../../../../docs/windows-paths.md) for operator recovery and policy.

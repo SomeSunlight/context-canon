@@ -52,7 +52,7 @@ A package is content-addressed by `package_digest`; its manifest is then indepen
 Temporary update candidates live separately under:
 
 ```text
-<consumer-node>/.context/candidates/<package-digest>/
+<consumer-node>/.context/candidates/<digest-prefix>/
 ```
 
 Candidates are not inheritance. Merely fetching one cannot change a normal build.
@@ -130,7 +130,7 @@ contextcanon source accept <source-node-id> <candidate-package> --node <consumer
 
 ### Fetch
 
-`source fetch` explicitly performs update discovery. When `ref` is an exact accepted commit SHA (the normal current-onboarding form), discovery reads the repository's current default branch rather than cloning that old accepted commit forever. Historical symbolic refs are followed directly. ContextCanon enters `node-path`, loads and fully verifies the immutable package already published there, copies only that immutable artifact to `.context/candidates/<package-digest>/`, and records the exact discovered Git commit in a sibling `<package-digest>.git.json` provenance record.
+`source fetch` explicitly performs update discovery. When `ref` is an exact accepted commit SHA (the normal current-onboarding form), discovery reads the repository's current default branch rather than cloning that old accepted commit forever. Historical symbolic refs are followed directly. ContextCanon enters `node-path`, loads and fully verifies the immutable package already published there, copies only that immutable artifact to `.context/candidates/<digest-prefix>/`, and records the exact discovered Git commit in a sibling `<package-digest>.git.json` provenance record.
 
 It does **not** modify `CONTEXT.src.md` or `.context/sources/`. The moving remote branch is used only long enough to discover one candidate; the persisted candidate immediately becomes content-addressed package bytes plus an exact Git commit.
 
@@ -183,7 +183,7 @@ remote moving state ──fetch once──> frozen candidate ──review──>
                                            └── never used by normal build                 └── normal/offline build uses this
 ```
 
-No package digest needs to be invented or looked up by the operator: `fetch` discovers the package and prints its exact local candidate path. If the Source repository disappears immediately afterwards, review and accept still work from that path. After acceptance, `.context/candidates/` and `.context/source-reviews/` are scratch/review state; the durable offline boundary is `.context/sources/<accepted-package-digest>/` plus the exact pin in `CONTEXT.src.md`.
+No package digest needs to be invented or looked up by the operator: `fetch` discovers the package and prints its exact local candidate path. If the Source repository disappears immediately afterwards, review and accept still work from that path. After successful immutable installation and atomic pin publication, ContextCanon removes the consumed managed candidate, its provenance sidecar and its matching review receipt. Failed acceptance preserves them, and explicit external candidate directories are never deleted. Both Source/Reference and Parent reviews are local scratch; the durable offline boundary is `.context/sources/<accepted-package-digest>/` plus the exact pin in `CONTEXT.src.md`.
 
 If no update is desired, do nothing. A newer remote commit has zero effect on `build` or `check` until this explicit loop reaches `accept`.
 
@@ -255,3 +255,10 @@ Compiler 0.7 keeps the established immutable-manifest, verification, offline pac
 The current reviewed first-adoption onboarding layer can also propose an existing reusable Source from a verified catalog and bind that proposal through human review to the exact Node ID, name, version, normalized digest, and package digest that were inspected. Final onboarding acceptance requires the same immutable package again and then pins it into normal offline consumer state.
 
 What remains unvalidated is primarily product/semantic experience rather than Source trust mechanics: the larger real-project test must show whether people and a strong reasoning model naturally recognize when project guidance should stay local, reuse an existing Source, or become a candidate reusable Node.
+
+
+## Portable local scratch
+
+Fetched candidates and local Parent candidates use a shared short-token store (`.context/candidates/` and `.context/parent-candidates/`). A token is normally the first 16 hex digest characters and extends on a verified collision. Loading always verifies the full digest, including for historical full-digest paths. Both candidate stores and both review-receipt stores are recursively ignored; receipts are disposable transaction records rather than accepted governance history. Shared cleanup runs only after durable acceptance and leaves other candidates and all accepted immutable packages intact.
+
+Before package materialization on Windows, final and staged destinations warn at 240–259 UTF-16 units and stop by default at 260 or more. The conservative 240-unit headroom target must not itself prevent existing accepted packages from propagating. Git discovery clones without checkout, inspects the tree and preflights it before checkout. A risky generated Resource target is diagnosed even if a top-level link remains usable. See [Windows paths and local review scratch](../../../../docs/windows-paths.md) for diagnostics, opt-in and existing-repository repair.

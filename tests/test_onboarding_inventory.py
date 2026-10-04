@@ -134,8 +134,8 @@ class OnboardingInventoryTests(unittest.TestCase):
         self.assertEqual(text.count("# >>> ContextCanon onboarding (managed)"), 1)
         self.assertIn("/contextcanon-onboarding/", text)
         self.assertIn("/.context/onboarding/*", text)
-        self.assertIn("!/.context/onboarding/inventory-state.json", text)
-        self.assertIn("!/.context/onboarding/inventory-acceptance.json", text)
+        self.assertIn("!**/.context/onboarding/inventory-state.json", text)
+        self.assertIn("!**/.context/onboarding/inventory-acceptance.json", text)
 
         (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
         workspace = repo / "contextcanon-onboarding"

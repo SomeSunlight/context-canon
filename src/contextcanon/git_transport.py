@@ -8,10 +8,13 @@ import subprocess
 import tempfile
 from pathlib import Path, PurePosixPath
 
+from .candidate_store import store_candidate
+from .gitignore import ensure_candidate_gitignore
 from .config import configured_source
 from .model import CompiledPackage, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError, find_repo_root, parse_node
+from .path_budget import preflight_paths
 
 
 CANDIDATE_PROVENANCE_SCHEMA = "contextcanon/git-candidate-provenance/v0"
@@ -118,8 +121,8 @@ def fetch_git_candidate(
             return candidate, persisted
 
         ref = discovery_ref if discovery_ref is not None else repository.ref
-        checkout_parent = Path(tempfile.mkdtemp(prefix="contextcanon-git-"))
-        checkout = checkout_parent / "repository"
+        checkout_parent = Path(tempfile.mkdtemp(prefix="ccg-"))
+        checkout = checkout_parent / "r"
         try:
             candidate_ref = _clone_location(repository.location, checkout, ref)
             candidate_root = _configured_candidate_node_root(checkout, source_config.node_path, source.name)
@@ -144,8 +147,8 @@ def fetch_git_candidate(
             shutil.rmtree(checkout_parent, ignore_errors=True)
 
     _validate_git_source(source, node_root)
-    checkout_parent = Path(tempfile.mkdtemp(prefix="contextcanon-git-"))
-    checkout = checkout_parent / "repository"
+    checkout_parent = Path(tempfile.mkdtemp(prefix="ccg-"))
+    checkout = checkout_parent / "r"
     try:
         if discovery_ref is None:
             candidate_ref = _clone(source, checkout)
@@ -208,7 +211,7 @@ def _clone_location(locator: str, destination: Path, ref: str | None) -> str:
     if ref and _GIT_SHA_RE.fullmatch(ref):
         command = ["git", "clone", "--quiet", "--no-checkout", locator, str(destination)]
     else:
-        command = ["git", "clone", "--quiet", "--depth", "1", "--single-branch"]
+        command = ["git", "clone", "--quiet", "--no-checkout", "--depth", "1", "--single-branch"]
         if ref:
             command.extend(["--branch", ref])
         command.extend([locator, str(destination)])
@@ -241,17 +244,28 @@ def _clone_location(locator: str, destination: Path, ref: str | None) -> str:
         if fetch.returncode != 0:
             detail = fetch.stderr.strip() or fetch.stdout.strip() or f"exit code {fetch.returncode}"
             raise ContextCanonError(f"Git Source fetch failed for exact ref {ref}: {detail}")
-        checkout = subprocess.run(
-            ["git", "-C", str(destination), "checkout", "--quiet", "FETCH_HEAD"],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=False,
-        )
-        if checkout.returncode != 0:
-            detail = checkout.stderr.strip() or checkout.stdout.strip() or f"exit code {checkout.returncode}"
-            raise ContextCanonError(f"Could not checkout exact Git Source ref {ref}: {detail}")
+
+    revision = "FETCH_HEAD" if ref and _GIT_SHA_RE.fullmatch(ref) else "HEAD"
+    listing = subprocess.run(
+        ["git", "-C", str(destination), "ls-tree", "-r", "--name-only", "-z", revision],
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        encoding="utf-8", errors="surrogateescape", check=False,
+    )
+    if listing.returncode != 0:
+        raise ContextCanonError(f"Could not inspect Git candidate checkout paths: {listing.stderr.strip()}")
+    preflight_paths(
+        destination, (path for path in listing.stdout.split("\0") if path),
+        action="Git Source candidate checkout",
+    )
+    checkout_options = ["-c", "core.longpaths=true"] if os.environ.get("CONTEXTCANON_ALLOW_LONG_PATHS") == "1" else []
+    checkout = subprocess.run(
+        ["git", *checkout_options, "-C", str(destination), "checkout", "--quiet", revision],
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, check=False,
+    )
+    if checkout.returncode != 0:
+        detail = checkout.stderr.strip() or checkout.stdout.strip() or f"exit code {checkout.returncode}"
+        raise ContextCanonError(f"Could not checkout Git Source candidate {revision}: {detail}")
 
     exact = subprocess.run(
         ["git", "-C", str(destination), "rev-parse", "HEAD"],
@@ -299,41 +313,12 @@ def _persist_candidate(
     candidate_root: Path,
     candidate: CompiledPackage,
 ) -> Path:
-    store = node_root / ".context" / "candidates"
-    store.mkdir(parents=True, exist_ok=True)
-    destination = store / candidate.package_digest
-
-    if destination.exists():
-        existing = load_package(destination)
-        if (
-            existing.metadata.id == candidate.metadata.id
-            and existing.normalized_digest == candidate.normalized_digest
-            and existing.package_digest == candidate.package_digest
-        ):
-            return destination
-        raise ContextCanonError(f"Candidate store path exists with different content: {destination}")
-
-    staging = Path(tempfile.mkdtemp(prefix=f".{candidate.package_digest[:12]}-", dir=store))
-    try:
-        manifest_target = staging / PACKAGE_MANIFEST_PATH
-        manifest_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(candidate_root / PACKAGE_MANIFEST_PATH, manifest_target)
-        for file in candidate.files:
-            target = staging / file.path
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(candidate_root / file.path, target)
-
-        staged = load_package(staging)
-        if (
-            staged.metadata.id != candidate.metadata.id
-            or staged.normalized_digest != candidate.normalized_digest
-            or staged.package_digest != candidate.package_digest
-        ):
-            raise ContextCanonError("Git Source candidate identity changed while staging")
-        os.replace(staging, destination)
-    finally:
-        if staging.exists():
-            shutil.rmtree(staging, ignore_errors=True)
+    files = {
+        relative: (candidate_root / relative).read_bytes()
+        for relative in (PACKAGE_MANIFEST_PATH, *(file.path for file in candidate.files))
+    }
+    destination = store_candidate(node_root, "candidates", candidate, files)
+    ensure_candidate_gitignore(node_root)
     return destination
 
 

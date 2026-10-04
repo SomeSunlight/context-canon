@@ -21,7 +21,8 @@ from .onboarding_proposal import (
     load_onboarding_proposal,
 )
 from .outputs import check_outputs, expected_outputs, write_outputs
-from .package import load_package
+from .package import PACKAGE_MANIFEST_PATH, load_package
+from .path_budget import preflight_paths
 from .parser import ContextCanonError
 from .sources import install_source_package
 
@@ -703,6 +704,13 @@ def _prepare_stage(
     source_text: str,
     source_bindings: list[tuple[str, Path, CompiledPackage, str]],
 ) -> None:
+    paths = ["CONTEXT.src.md", *(entry.path for entry in snapshot.entries)]
+    for _item_id, _package_root, package, _locator in source_bindings:
+        paths.extend(
+            f".context/sources/{package.package_digest}/{rel}"
+            for rel in (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files))
+        )
+    preflight_paths(stage, paths, action="legacy onboarding acceptance staging")
     stage.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(stage / "CONTEXT.src.md", source_text)
     for entry in snapshot.entries:

@@ -10,10 +10,13 @@ import tempfile
 import time
 from pathlib import Path
 
+from .candidate_store import candidate_path, cleanup_accepted_candidate, store_candidate
+from .gitignore import ensure_candidate_gitignore
+from .path_budget import preflight_paths
 from .compiler import Compiler
 from .diff import ContextDiff, diff_compiled
 from .config import CONFIG_FILENAME, config_path, upsert_local_source
-from .git_transport import load_candidate_provenance
+from .git_transport import candidate_provenance_path, load_candidate_provenance
 from .links import markdown_link_target, markdown_target_locator
 from .model import CompiledNode, CompiledPackage, ParentRef, Rule, SourceRef
 from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, export_digest, load_package
@@ -353,6 +356,7 @@ def review_source_candidate(
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
+    ensure_candidate_gitignore(node_root)
     path = _review_path(node_root, candidate.package_digest)
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
@@ -469,6 +473,10 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     _install_package(node_root, candidate_root, candidate)
     accepted_ref = None if transport_candidate is None else (transport_candidate.get("candidate_ref") or None)
     _write_source_pin(node_root, source_id, candidate, accepted_ref=accepted_ref)
+    cleanup_accepted_candidate(
+        node_root, candidate_root, candidate.package_digest, receipt_path,
+        candidate_provenance_path(node_root, candidate.package_digest),
+    )
     return candidate
 
 
@@ -603,6 +611,7 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
+    ensure_candidate_gitignore(node_root)
     path = _parent_review_path(node_root, parent_ref.id)
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
@@ -708,7 +717,7 @@ def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> Co
     candidate_digest = candidate_receipt.get("package_digest")
     if not isinstance(candidate_digest, str):
         raise ContextCanonError(f"Invalid Parent candidate digest in {receipt_path}")
-    candidate_root = node_root / ".context" / "parent-candidates" / candidate_digest
+    candidate_root = candidate_path(node_root, "parent-candidates", candidate_digest)
     candidate = load_package(candidate_root)
     if candidate.metadata.id != parent_ref.id:
         raise ContextCanonError("Reviewed Parent candidate belongs to a different Node")
@@ -724,36 +733,14 @@ def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> Co
     _validate_parent_candidate_composition(compiler, compiled, binding_kind, binding_index, candidate)
     _install_package(node_root, candidate_root, candidate)
     _write_parent_pin(node_root, parent_ref.id, candidate)
+    cleanup_accepted_candidate(node_root, candidate_root, candidate.package_digest, receipt_path)
     return candidate
 
 def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> Path:
-    package = compiled_package(compiled_parent)
-    store = node_root / ".context" / "parent-candidates"
-    store.mkdir(parents=True, exist_ok=True)
-    destination = store / package.package_digest
-    if destination.exists():
-        existing = load_package(destination)
-        if (
-            existing.metadata.id == package.metadata.id
-            and existing.normalized_digest == package.normalized_digest
-            and existing.package_digest == package.package_digest
-        ):
-            return destination
-        raise ContextCanonError(f"Parent candidate store path exists with different content: {destination}")
-
-    temporary = Path(tempfile.mkdtemp(prefix=f".{package.package_digest[:12]}-", dir=store))
-    try:
-        for rel, content in artifact_files(compiled_parent).items():
-            target = temporary / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
-        staged = load_package(temporary)
-        if staged.normalized_digest != package.normalized_digest or staged.package_digest != package.package_digest:
-            raise ContextCanonError("Staged Parent candidate identity changed during review")
-        os.replace(temporary, destination)
-    finally:
-        if temporary.exists():
-            shutil.rmtree(temporary)
+    destination = store_candidate(
+        node_root, "parent-candidates", compiled_package(compiled_parent), artifact_files(compiled_parent),
+    )
+    ensure_candidate_gitignore(node_root)
     return destination
 
 
@@ -958,14 +945,17 @@ def _publish_package_directory(temporary: Path, destination: Path, candidate: Co
 
 def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledPackage) -> None:
     store = node_root / ".context" / "sources"
-    store.mkdir(parents=True, exist_ok=True)
     destination = store / candidate.package_digest
+    paths = (PACKAGE_MANIFEST_PATH, *(file.path for file in candidate.files))
+    preflight_paths(destination, paths, action="accepted immutable package installation", node_root=node_root)
 
     if _installed_package_matches(destination, candidate):
         return
 
-    temporary = Path(tempfile.mkdtemp(prefix=f".{candidate.package_digest[:12]}-", dir=store))
+    store.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix=".tmp-", dir=store))
     try:
+        preflight_paths(temporary, paths, action="accepted package staging", node_root=node_root)
         manifest_source = candidate_root / PACKAGE_MANIFEST_PATH
         manifest_destination = temporary / PACKAGE_MANIFEST_PATH
         manifest_destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1068,8 +1058,9 @@ def _atomic_write_text(path: Path, content: str) -> None:
     every failed path.
     """
 
+    preflight_paths(path.parent, [path.name, ".tmp-xxxxxxxx.tmp"], action="ContextCanon atomic state publication")
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    fd, temporary_name = tempfile.mkstemp(prefix=".tmp-", suffix=".tmp", dir=path.parent)
     temporary = Path(temporary_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:

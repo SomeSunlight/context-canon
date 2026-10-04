@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .path_budget import preflight_paths
 from .model import CompiledNode
 from .package import PACKAGE_MANIFEST_PATH
 from .render import render_node_readme
@@ -28,6 +29,7 @@ def expected_outputs(compiled: CompiledNode) -> dict[str, bytes]:
 def write_outputs(compiled: CompiledNode) -> list[str]:
     outputs = expected_outputs(compiled)
     root = compiled.parsed.root
+    preflight_paths(root, outputs, action="Official Context output publication")
     changed: list[str] = []
 
     context_dir = root / "CONTEXT"

@@ -113,7 +113,7 @@ class GitTransportTests(unittest.TestCase):
         self.assertEqual(candidate.package_digest, v2.package_digest)
         self.assertEqual(
             candidate_root,
-            consumer / ".context/candidates" / v2.package_digest,
+            consumer / ".context/candidates" / v2.package_digest[:16],
         )
         self.assertTrue((candidate_root / ".context/package.json").is_file())
 
@@ -159,7 +159,7 @@ class GitTransportTests(unittest.TestCase):
         self.assertEqual(provenance["candidate_ref"], candidate_ref)
         self.assertEqual(provenance["source_id"], "node-python")
         self.assertEqual(provenance["node_path"], "nodes/library/python-development")
-        self.assertEqual(candidate_root, consumer / ".context/candidates" / v2.package_digest)
+        self.assertEqual(candidate_root, consumer / ".context/candidates" / v2.package_digest[:16])
 
         # Discovery is candidate-only; even a newer remote snapshot does not
         # move the accepted consumer package.

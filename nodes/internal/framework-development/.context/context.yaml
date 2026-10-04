@@ -9,7 +9,7 @@ compiler_version: "0.7.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.16-draft"
+  version: "0.3.18-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -259,6 +259,7 @@ resources:
   - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md"}
   - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md"}
   - {"source": null, "published": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md"}
+  - {"source": "../../../docs/windows-paths.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/docs/windows-paths.md"}
   - {"source": "docs/architecture.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/architecture.md"}
   - {"source": "docs/compiler.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/compiler.md"}
   - {"source": "docs/concepts.md", "published": "CONTEXT/references/8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a/nodes/internal/framework-development/docs/concepts.md"}
@@ -276,5 +277,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "b1e1e5b8c690519400799107c3cf76edeeee2c11bdae86dbc1d58e6c2d73c59a"
-  package_digest: "b174038d4fdcfce25b492d356ad3a4e408a78ed5a921b0586294ba95b76fa58d"
+  normalized_digest: "5dfa642bc1dca5586173dca95d8ff2d389da0f85fff9564d7afda181c6363e55"
+  package_digest: "49828437ff62d943315c20b5bb281542d4aba314c4ae8c7219d7b91a7360bd70"

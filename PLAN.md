@@ -1,8 +1,44 @@
 # Plan
 
-## Active Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
+## Active owner-test correction: Windows warning headroom — Issue #103 / PR #105
 
-**Fast Track status — CLOSED / OWNER TEST PENDING**
+**Fast Track status — CLOSED / OWNER REVIEW PENDING**
+
+Purpose: let existing 251-unit accepted package paths propagate without treating the conservative 240-unit headroom target as an actual file API failure.
+
+Scope: warn at 240–259 UTF-16 units, retain default pre-write rejection at 260 and the existing explicit long-path opt-in; explain whole-checkout relocation and why rebuilding cannot shorten canonical accepted digests. General reinitialization/identity remapping (#106) and the owner-requested compact durable `sources`/packaged `references` locators with migration (#107) are independent follow-up work, without implementation here.
+
+- [x] Adjust the shared preflight policy and actionable diagnostic, with the migration rationale documented in code.
+- [x] Prove exact 251-unit Parent acceptance, warning/error boundaries, scratch preservation on errors and native Windows materialization.
+- [x] Update operator/framework documentation, PLAN/STATE/CHANGELOG and regenerate self-hosted Context.
+- [x] Pass focused/full tests, build/check, propagation health and exact-head Linux/Windows CI; update the existing Draft PR without merging.
+
+Closing checkpoint: all 379 deterministic tests, self-host build/check, all four local Parent/Child health checks and diff hygiene pass. Correction implementation head `ba8839301283b562d5a641eb55db7a6382c146b5` (tree `8205fa2d8f3a67ffe5cb35a6b557f273f1a7aa52`) passes GitHub Actions run `37233038203`: Linux full suite/self-host gate and all eight native Windows tests. The new fixture measures resolved Windows destinations and compares original native Resource bytes, so temporary-directory aliases and CRLF cannot distort its exact-length/preservation assertions. Gateway and Framework Development are `0.3.18-draft`. This PLAN/STATE closure changes no product/package behavior; final documentation-head CI is recorded on Draft PR #105. Do not merge without explicit owner approval. Future #106/#107 implementation remains separate.
+
+## Active Fast Track: portable package scratch lifecycle — Issue #103
+
+**Fast Track status — CLOSED / OWNER REVIEW PENDING**
+
+Purpose: reduce ContextCanon-owned Windows path depth, fail before risky package/output writes, and manage the complete local candidate lifecycle without weakening exact package identity or the durable offline store.
+
+Scope: Source/Reference and Parent candidate storage/acceptance, Windows destination preflight, all managed transient Git ignore rules including subtree onboarding, lifecycle regressions and operator documentation. Review receipts are local scratch; remove only the matching receipt after durable acceptance. Accepted `.context/sources/<full-digest>/` remains unchanged.
+
+- [x] Close the accepted #99/#104 merge baseline and reconstruct #103 package/review/ignore data flow.
+- [x] Share short collision-safe candidate storage with full package verification and legacy full-digest recovery.
+- [x] Preflight final and staged Windows package/output paths before mutation; report the longest path, budget, owned contribution and tool-dependent failure/workarounds.
+- [x] Manage explicit recursive candidate/review/onboarding ignores, preserve durable inventory files, and migrate managed blocks idempotently.
+- [x] Clean only the accepted transaction after the durable package and pin succeed; preserve scratch on failure and prove offline independence.
+- [x] Cover realistic deep Windows paths, prefix collisions/tampering, Git visibility at root/two subtrees, legacy recovery and non-Windows behavior.
+- [x] Update documentation/PLAN/STATE/CHANGELOG, regenerate self-hosted packages, and run the complete suite, build/check, propagation health and diff hygiene.
+- [x] Publish Draft PR #105 with exact-head Linux/native-Windows CI evidence. Do not merge.
+
+Focused checkpoint: all 378 deterministic tests pass, including 18 new lifecycle/path/ignore regressions. Native Windows path-budget/Git-visibility CI is added. Its first run exposed test-fixture encoding and Git-vs-platform separator assumptions; fixtures now explicitly use UTF-8 and compare Git paths in POSIX form. The new Git tree preflight also decodes Git paths explicitly as UTF-8. The corrected exact-head run `37222369211` is green on `8399215bdd117f46d1e1402de49b04f9c2049c2c`: Linux full suite/self-host health and all seven native Windows path-budget/Git-visibility tests pass.
+
+Closing checkpoint: Draft PR #105 is ready for owner review. All 378 deterministic tests pass, self-host build/check has zero drift, all four local Parent/Child edges are normatively current, and diff hygiene is clean. Gateway and Framework Development are `0.3.17-draft`; executable release remains `0.10.0`. The implementation tree is `aac64338c9798d76e6a10f5af29ce779151edacf`; this final PLAN/STATE closure changes no package/code behavior. Real Windows owner testing remains pending. Do not merge without explicit approval. No new general cleanup command or user path rewriting.
+
+## Accepted Fast Track: Parent / Reference onboarding — Issue #99 Phase 2
+
+**Fast Track status — ACCEPTED**
 
 Purpose: make onboarding emit the same single canonical Context Import relationship model already accepted in Phase 1, with an explicit owner-visible Parent/Reference choice and no new legacy Source/Parent publication split.
 
@@ -16,7 +52,7 @@ Purpose: make onboarding emit the same single canonical Context Import relations
 
 Boundary: Issue #103 (Windows path lengths, candidate stores, ignore rules and cleanup) remains separate.
 
-Closing checkpoint: 360/360 deterministic tests pass. Self-hosted `build --all .` and `check --all .` are clean, read-only propagation health reports all four local Parent/Child relationships normatively current, and diff hygiene passes. Root/subtree combinations, several Parents, per-target provenance, explicit STEP-07 choices, legacy recovery, STEP-07/08 reset, STEP-10 tamper/CLI-override rejection, repeated publication and manual-import equivalence are covered. Gateway and Framework Development packages advanced to `0.3.16-draft`. Draft PR #104 is the completed implementation candidate; real owner onboarding testing remains pending. Do not merge without explicit approval.
+Closing checkpoint: 360/360 deterministic tests pass. Self-hosted `build --all .` and `check --all .` are clean, read-only propagation health reports all four local Parent/Child relationships normatively current, and diff hygiene passes. Root/subtree combinations, several Parents, per-target provenance, explicit STEP-07 choices, legacy recovery, STEP-07/08 reset, STEP-10 tamper/CLI-override rejection, repeated publication and manual-import equivalence are covered. Gateway and Framework Development packages advanced to `0.3.16-draft`. The owner accepted PR #104 without another real onboarding run and squash-merged it as `8cd0aaada3e74fbfbc44638f62bfe6ec1e492991`. Issue #99 is closed; the practical Owner-Test is deliberately deferred to the next real onboarding.
 
 ## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
 
