@@ -16,7 +16,7 @@ Regression coverage uses actual names containing spaces, `#`, `%` and parenthese
 
 Self-hosting follows the repository's established provider-first local-version pattern: Development Workflow was rebuilt to `0.3.6-draft`, then its explicit local Parent version was synchronized into Framework Development, GitHub and GitHub Local before those Nodes were rebuilt. Their resulting versions are `0.3.15-draft`, `0.1.7-draft`, and `0.1.6-draft`. This internal self-host wiring is distinct from normal user-project immutable Parent pins, which continue to use ordinary propagation review.
 
-The deterministic suite passes 350/350 tests. The self-host refresh also passed `contextcanon check --all .` and `git diff --check`; the temporary refresh workflow has been removed. The remaining gate is the ordinary exact-head PR workflow after final documentation updates. PR #100 remains the accepted Parent/Reference baseline; #101 does not change those semantics.
+The deterministic suite passes 350/350 tests. The self-host refresh also passed `contextcanon check --all .` and `git diff --check`; the temporary refresh workflow has been removed. The ordinary PR workflow then passed on the documentation-complete candidate as well. The final PLAN checkpoint is documentation-only and must still receive its own exact-head normal CI run before the branch is presented for owner testing. PR #100 remains the accepted Parent/Reference baseline; #101 does not change those semantics.
 
 ## Accepted Fast Track — Parent / Reference Phase 1 (#99)
 
