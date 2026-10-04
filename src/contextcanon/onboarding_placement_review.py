@@ -512,6 +512,7 @@ def _initial_sources(
     owner_source_specs: Iterable[str],
     *,
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> tuple[PlacementReviewSource, ...]:
     result: list[PlacementReviewSource] = []
@@ -519,8 +520,9 @@ def _initial_sources(
     packages = _package_by_id(proposal)
     node_keys = {node.key for node in proposal.structure.nodes}
     why_by_spec = dict(owner_source_whys or {})
+    relationship_by_spec = dict(owner_source_relationships or {})
 
-    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage]] = {}
+    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage, RelationshipKind]] = {}
     nodes_by_key = {node.key: node for node in proposal.structure.nodes}
 
     def is_same_or_descendant(candidate_key: str, ancestor_key: str) -> bool:
@@ -542,15 +544,25 @@ def _initial_sources(
         package = packages.get(source_id)
         if package is None:
             raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
-        owner_pairs[(target, source_id)] = (spec, package)
+        relationship = relationship_by_spec.get(spec, "parent")
+        if relationship not in {"parent", "reference"}:
+            raise _error(f"owner-selected Context Import has unsupported relationship {relationship!r}")
+        owner_pairs[(target, source_id)] = (spec, package, relationship)
 
     # Evidence-derived suggestions that duplicate an already accepted STEP-07
     # relationship do not create a second decision in Placement.
     for reuse in proposal.source_reuses:
         pair = (reuse.target_node_key, reuse.source_node_id)
         if any(
-            source_id == reuse.source_node_id and is_same_or_descendant(reuse.target_node_key, owner_target)
-            for owner_target, source_id in owner_pairs
+            source_id == reuse.source_node_id
+            and (
+                owner_target == reuse.target_node_key
+                or (
+                    owner_relationship == "parent"
+                    and is_same_or_descendant(reuse.target_node_key, owner_target)
+                )
+            )
+            for (owner_target, source_id), (_, _, owner_relationship) in owner_pairs.items()
         ):
             continue
         seen.add(pair)
@@ -565,13 +577,14 @@ def _initial_sources(
                 source_version=reuse.source_version,
                 source_normalized_digest=reuse.source_normalized_digest,
                 source_package_digest=reuse.source_package_digest,
+                relationship="parent",
                 review_note="",
                 proposal_id=reuse.id,
                 relationship_why=reuse.reason,
             )
         )
 
-    for pair, (spec, package) in owner_pairs.items():
+    for pair, (spec, package, relationship) in owner_pairs.items():
         if pair in seen:
             continue
         seen.add(pair)
@@ -588,6 +601,7 @@ def _initial_sources(
                 source_version=package.metadata.version,
                 source_normalized_digest=package.normalized_digest,
                 source_package_digest=package.package_digest,
+                relationship=relationship,
                 review_note="",
                 proposal_id=None,
                 relationship_why=why,
