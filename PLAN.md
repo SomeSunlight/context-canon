@@ -1,8 +1,8 @@
 # Plan
 
-## Active Fast Track: URL-safe Markdown links — Issue #101
+## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
 
-**Fast Track status — ACTIVE**
+**Fast Track status — OWNER-TESTED / MERGE-READY**
 
 Purpose: make every ContextCanon-generated repository-local Markdown link safe for valid repository paths containing spaces or Markdown/URI-sensitive characters, without changing the underlying filesystem/semantic locator.
 
@@ -20,7 +20,7 @@ Purpose: make every ContextCanon-generated repository-local Markdown link safe f
 
 Design constraint: raw filesystem paths and ContextCanon locators are semantic truth. Percent encoding belongs only to Markdown presentation. ContextCanon decodes encoded local link destinations before using them as filesystem paths; repeated normalization/rendering is tested so `%20` never becomes `%2520`. A literal percent sign in a real filename remains distinguishable by rendering as `%25`.
 
-Current checkpoint: Draft PR #102 has completed the implementation and self-host refresh. Development Workflow is `0.3.6-draft`; Framework Development `0.3.15-draft`; GitHub `0.1.7-draft`; GitHub Local `0.1.6-draft`. The refresh workflow ran 350/350 deterministic tests, `contextcanon check --all .`, and `git diff --check` successfully before committing the generated packages. The temporary refresh workflow has been removed. The documentation-complete candidate already passed the normal PR workflow; this final PLAN checkpoint is intentionally documentation-only and is subject to one last exact-head normal CI run before owner testing.
+Owner-test closure: PR #102 was tested in a real project with repository paths containing spaces and the generated Markdown now percent-encodes the sensitive path components correctly. The remaining broken deep links were traced to the separate Windows path-length problem tracked in #103 rather than to #101. Development Workflow is `0.3.6-draft`; Framework Development `0.3.15-draft`; GitHub `0.1.7-draft`; GitHub Local `0.1.6-draft`. The implementation and self-host refresh pass 350/350 deterministic tests, `contextcanon check --all .`, `git diff --check`, and the normal PR workflow. PR #102 is owner-approved for squash merge after the final exact-head gate.
 
 ## Accepted Fast Track: subtree onboarding — Issues #92 and #91
 
