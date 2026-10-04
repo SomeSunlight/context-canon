@@ -567,6 +567,9 @@ def _parse_assignments(
     text: str,
     structure: HumanStructurePlan,
     packages: tuple[CompiledPackage, ...],
+    *,
+    enclosing_parent_node_id: str | None = None,
+    reject_existing_parent_duplicate: bool = True,
 ) -> tuple[ReusableContextAssignment, ...]:
     body = _between(text, ASSIGNMENTS_START, ASSIGNMENTS_END, "Assignments")
     target_by_label = {(node.name, node.path): node for node in structure.nodes}
@@ -617,6 +620,19 @@ def _parse_assignments(
         if not why or why == "-":
             raise _error("Every reusable Context assignment needs a real Why rationale")
         package = candidates[0]
+        relationship = (match.groupdict().get("relationship") or "Parent").lower()
+        if relationship not in {"parent", "reference"}:
+            raise _error(f"Unsupported reusable Context relationship {relationship!r}")
+        if (
+            reject_existing_parent_duplicate
+            and enclosing_parent_node_id is not None
+            and target.path == "."
+            and package.metadata.id == enclosing_parent_node_id
+        ):
+            raise _error(
+                f"{package.metadata.name} is already the enclosing Parent of the onboarding root; "
+                "do not add it again as an Assignment"
+            )
         identity = (target.key, package.metadata.id)
         if identity in seen:
             raise _error(f"Duplicate reusable Context assignment for {target.name} and {package.metadata.name}")
@@ -631,6 +647,7 @@ def _parse_assignments(
                 source_version=package.metadata.version,
                 source_normalized_digest=package.normalized_digest,
                 source_package_digest=package.package_digest,
+                relationship=relationship,  # type: ignore[arg-type]
                 why=why,
             )
         )
@@ -666,6 +683,32 @@ def _normalized_payload(
         ],
         "assignments": [assignment.to_dict() for assignment in assignments],
     }
+
+
+def _legacy_normalized_payload(
+    evidence_digest: str,
+    structure_digest: str,
+    decision: str,
+    locations: tuple[str, ...],
+    roots: tuple[Path, ...],
+    packages: tuple[CompiledPackage, ...],
+    assignments: tuple[ReusableContextAssignment, ...],
+) -> dict[str, object]:
+    payload = _normalized_payload(
+        evidence_digest,
+        structure_digest,
+        decision,
+        locations,
+        roots,
+        packages,
+        assignments,
+    )
+    payload["schema"] = LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA
+    payload["assignments"] = [
+        {key: value for key, value in assignment.to_dict().items() if key != "relationship"}
+        for assignment in assignments
+    ]
+    return payload
 
 
 def _digest(payload: dict[str, object]) -> str:
