@@ -32,9 +32,42 @@ jobs:
         shell: bash
         run: |
           python -m pip install -e .
+          python -m unittest discover -s tests -v
           contextcanon build nodes/library/development-workflow
-          contextcanon propagate --all . --yes
-          contextcanon build --all .
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          provider = Path("nodes/library/development-workflow/CONTEXT.src.md").read_text(encoding="utf-8")
+          match = re.search(r'ctx:node\\s+[^>]*version="([^"]+)"', provider)
+          if match is None:
+              raise SystemExit("Development Workflow version not found")
+          version = match.group(1)
+
+          source_line = re.compile(
+              r'(- \\[Development Workflow\\]\\([^\\n]+\\) — `)[^\\`]+(` — `relationship=parent`)'
+          )
+          source_comment = re.compile(
+              r'(ctx:source\\s+id="c4c94726-3cc7-4df6-b779-72bbf9c06f40"\\s+version=")[^"]+(")'
+          )
+          for raw in (
+              "nodes/internal/framework-development/CONTEXT.src.md",
+              "nodes/library/github/CONTEXT.src.md",
+              "nodes/library/github-local/CONTEXT.src.md",
+          ):
+              path = Path(raw)
+              text = path.read_text(encoding="utf-8")
+              text, visible_count = source_line.subn(rf'\\g<1>{version}\\g<2>', text, count=1)
+              text, comment_count = source_comment.subn(rf'\\g<1>{version}\\g<2>', text, count=1)
+              if visible_count != 1 or comment_count != 1:
+                  raise SystemExit(f"{raw}: Development Workflow import was not updated exactly once")
+              path.write_text(text, encoding="utf-8")
+              print(f"{raw}: Development Workflow Parent advanced to {version}")
+          PY
+          contextcanon build nodes/internal/framework-development
+          contextcanon build nodes/library/github
+          contextcanon build nodes/library/github-local
+          contextcanon build .
           python -m unittest discover -s tests -v
           contextcanon check --all .
           git diff --check
