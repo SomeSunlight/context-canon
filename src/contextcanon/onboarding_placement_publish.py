@@ -44,10 +44,12 @@ _SKELETON_SENTENCES = (
 
 @dataclass(frozen=True)
 class SourceGitProvenance:
+    target_node_key: str
     source_node_id: str
     source_name: str
     source_version: str
     source_package_digest: str
+    relationship: str
     origin: str
     locator: str
     ref: str
@@ -58,7 +60,9 @@ class SourceGitProvenance:
 
     def to_dict(self) -> dict[str, str]:
         return {
+            "target_node_key": self.target_node_key,
             "source_node_id": self.source_node_id,
+            "relationship": self.relationship,
             "locator": self.locator,
             "ref": self.ref,
             "node_path": self.node_path,
@@ -294,10 +298,12 @@ def _frozen_catalog_provenance(
     ):
         raise _error(f"frozen reusable Source provenance is malformed: {path}")
     return SourceGitProvenance(
+        target_node_key=source.target_node_key,
         source_node_id=source.source_node_id,
         source_name=source.source_name,
         source_version=source.source_version,
         source_package_digest=source.source_package_digest,
+        relationship=source.relationship,
         origin=source.origin,
         locator=locator,
         ref=ref,
@@ -319,10 +325,12 @@ def _git_provenance(
     repository_text = _try_git(package_root, "rev-parse", "--show-toplevel")
     if repository_text is None:
         return SourceGitProvenance(
+            target_node_key=source.target_node_key,
             source_node_id=source.source_node_id,
             source_name=source.source_name,
             source_version=source.source_version,
             source_package_digest=source.source_package_digest,
+            relationship=source.relationship,
             origin=source.origin,
             locator=str(package_root.resolve()),
             ref="",
@@ -350,10 +358,12 @@ def _git_provenance(
         if '"' in origin or '"' in node_path:
             raise _error("Source Git provenance contains unsupported quote characters")
         return SourceGitProvenance(
+            target_node_key=source.target_node_key,
             source_node_id=source.source_node_id,
             source_name=source.source_name,
             source_version=source.source_version,
             source_package_digest=source.source_package_digest,
+            relationship=source.relationship,
             origin=source.origin,
             locator=origin,
             ref=exact,
@@ -363,10 +373,12 @@ def _git_provenance(
             discovery_ref=branch or exact,
         )
     return SourceGitProvenance(
+        target_node_key=source.target_node_key,
         source_node_id=source.source_node_id,
         source_name=source.source_name,
         source_version=source.source_version,
         source_package_digest=source.source_package_digest,
+        relationship=source.relationship,
         origin=source.origin,
         locator=str(repository),
         ref=exact or "",
@@ -794,12 +806,18 @@ def _accepted_ordinary_sources(
     review: OnboardingPlacementReview,
     *,
     enclosing_parent_node_id: str | None = None,
+    root_node_key: str | None = None,
 ) -> tuple[PlacementReviewSource, ...]:
     return tuple(
         source
         for source in review.sources
         if source.decision == "accept"
-        and source.source_node_id != enclosing_parent_node_id
+        and not (
+            enclosing_parent_node_id is not None
+            and root_node_key is not None
+            and source.target_node_key == root_node_key
+            and source.source_node_id == enclosing_parent_node_id
+        )
     )
 
 
@@ -839,14 +857,21 @@ def build_placement_publication_preview(
         if enclosing_parent_root is not None
         else None
     )
+    root_node_key = next(
+        (node.key for node in proposal.structure.nodes if node.path == "."),
+        None,
+    )
     ordinary_sources = _accepted_ordinary_sources(
         review,
         enclosing_parent_node_id=(
             enclosing_parent.metadata.id if enclosing_parent is not None else None
         ),
+        root_node_key=root_node_key,
     )
     provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
-    provenance_by_id = {item.source_node_id: item for item in provenance}
+    provenance_by_id = {
+        (item.target_node_key, item.source_node_id): item for item in provenance
+    }
     items_by_node = _accepted_by_node(review)
     sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
@@ -1235,12 +1260,15 @@ def _acceptance_payload(
     review: OnboardingPlacementReview,
     node_digests: dict[str, dict[str, str]],
 ) -> dict[str, object]:
-    source_by_id = {source.source_node_id: source for source in preview.sources}
+    source_by_import = {
+        (source.target_node_key, source.source_node_id): source for source in preview.sources
+    }
     accepted_sources = []
     for source in review.sources:
-        if source.decision != "accept" or source.source_node_id not in source_by_id:
+        key = (source.target_node_key, source.source_node_id)
+        if source.decision != "accept" or key not in source_by_import:
             continue
-        provenance = source_by_id[source.source_node_id]
+        provenance = source_by_import[key]
         entry = {**source.to_dict(), "discovery": {**provenance.to_dict(), "kind": provenance.kind, "discovery_ref": provenance.discovery_ref}}
         if provenance.kind == "git":
             entry["git"] = provenance.to_dict()
