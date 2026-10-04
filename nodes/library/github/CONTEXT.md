@@ -8,11 +8,11 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** GitHub  
-**Context version:** `0.1.6-draft`
+**Context version:** `0.1.7-draft`
 
 **Resulting imported Contexts:**
 
-- **Development Workflow** — `0.3.5-draft` — direct Parent Context — [inspect accepted carrier](../development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.6-draft` — direct Parent Context — [inspect accepted carrier](../development-workflow/CONTEXT.md)
 
 ## Local Overview
 
@@ -53,6 +53,10 @@ When the project owner resumes work after a short conversational interruption, e
 #### `CCW-012` — Mark machine-significant Markdown explicitly
 
 When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.
+
+#### `CCW-015` — Render repository-local Markdown links URL-safely
+
+When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.
 
 ### Proportional verification
 

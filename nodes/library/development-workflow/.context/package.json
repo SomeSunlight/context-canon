@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
-    "package": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029"
+    "normalized": "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae",
+    "package": "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "10e0087ab4c8cbe85b4687fe03a8060cd3f0d7c3b7ede23939bcc69c04ba0811",
-      "size": 7301
+      "sha256": "750c03f48cfcade409f3a9b1ed762bc7667e5315b0955a5c0dcdb198af93b422",
+      "size": 7642
     },
     {
       "path": "CONTEXT/README.md",
@@ -31,7 +31,7 @@
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
-    "version": "0.3.5-draft"
+    "version": "0.3.6-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -95,6 +95,16 @@
       "statement": "When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.",
       "title": "Mark machine-significant Markdown explicitly",
       "why": "Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior."
+    },
+    {
+      "group": "Transparent machine semantics",
+      "id": "CCW-015",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.",
+      "title": "Render repository-local Markdown links URL-safely",
+      "why": "Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions."
     },
     {
       "group": "Proportional verification",

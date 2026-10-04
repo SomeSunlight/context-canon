@@ -1,9 +1,9 @@
 # GitHub — Local Context Source
-<!-- ctx:node id="ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc" name="GitHub" version="0.1.6-draft" -->
+<!-- ctx:node id="ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc" name="GitHub" version="0.1.7-draft" -->
 
 ## Context Imports
-- [Development Workflow](../development-workflow/) — `0.3.5-draft` — `relationship=parent`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.5-draft" -->
+- [Development Workflow](../development-workflow/) — `0.3.6-draft` — `relationship=parent`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.6-draft" -->
 
 ## Local Overview
 
