@@ -619,7 +619,7 @@ def _render_topics(items: list[PlacementReviewItem], project_root: Path, node_ro
 
 def _render_sources(
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[str, SourceGitProvenance],
+    provenance_by_id: dict[tuple[str, str], SourceGitProvenance],
     config_locator: str,
 ) -> str:
     lines: list[str] = []
@@ -661,7 +661,7 @@ def _render_node_source(
     node_root: Path,
     items: list[PlacementReviewItem],
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[str, SourceGitProvenance],
+    provenance_by_id: dict[tuple[str, str], SourceGitProvenance],
 ) -> str:
     overviews = [item for item in items if item.kind == "overview"]
     states = [item for item in items if item.kind in {"state", "unresolved"}]
@@ -1444,7 +1444,7 @@ def publish_placement_review(
                 raise _error(f"internal error: accepted Source target {key} has no publication delta")
             target_root = delta.source_path.parent
             for source in sources:
-                provenance = provenance_by_id[source.source_node_id]
+                provenance = provenance_by_id[(source.target_node_key, source.source_node_id)]
                 root = roots.get(source.source_node_id)
                 if root is None:
                     raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
