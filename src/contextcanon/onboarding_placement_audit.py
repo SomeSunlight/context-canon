@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
+from .links import markdown_link_target
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSourceEdit
 from .onboarding_placement_split_review import placement_source_edit_filename
@@ -128,7 +129,7 @@ def render_placement_source_audit(
             proposal_item = next((item for item in proposal.items if item.id == owner_item_id), None)
             if proposal_item is None:
                 raise ContextCanonError(f"Source audit edit {edit.proposal_id} references missing proposal item {owner_item_id}")
-            control_target = f"STEP-10-source-edits/{placement_source_edit_filename(edit)}"
+            control_target = markdown_link_target(f"STEP-10-source-edits/{placement_source_edit_filename(edit)}")
             lines.extend([
                 f"### {edit.proposal_id} — lines {edit.start_line}-{edit.end_line}",
                 "",

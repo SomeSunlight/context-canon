@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
+from .links import markdown_link_target
 from .model import CompiledPackage
 from .onboarding_placement import (
     PLACEMENT_ACTIONS,
@@ -224,7 +225,8 @@ def _fresh_authoring_id() -> str:
 
 
 def _node_entry_link(node_path: str) -> str:
-    return "../CONTEXT.md" if node_path == "." else f"../{node_path}/CONTEXT.md"
+    raw = "../CONTEXT.md" if node_path == "." else f"../{node_path}/CONTEXT.md"
+    return markdown_link_target(raw)
 
 
 def _evidence_excerpt(reference: EvidenceReference, snapshot: EvidenceSnapshot) -> list[str]:

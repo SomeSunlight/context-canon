@@ -9,7 +9,7 @@ compiler_version: "0.7.0"
 node:
   id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
   name: "Development Workflow"
-  version: "0.3.5-draft"
+  version: "0.3.6-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -34,6 +34,7 @@ local:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "group": "Recoverable planning"}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "group": "Recoverable planning"}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "group": "Transparent machine semantics"}
+    - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "group": "Transparent machine semantics"}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "group": "Proportional verification"}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
@@ -56,6 +57,7 @@ official:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -90,5 +92,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2"
-  package_digest: "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029"
+  normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
+  package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"

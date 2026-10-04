@@ -1,5 +1,27 @@
 # Plan
 
+## Owner-tested Fast Track: URL-safe Markdown links — Issue #101
+
+**Fast Track status — OWNER-TESTED / MERGE-READY**
+
+Purpose: make every ContextCanon-generated repository-local Markdown link safe for valid repository paths containing spaces or Markdown/URI-sensitive characters, without changing the underlying filesystem/semantic locator.
+
+- [x] Start from accepted PR #100 / Parent-Reference baseline and keep #101 isolated in Draft PR #102.
+- [x] Add reusable Rule `CCW-015` to Development Workflow first: repository-local Markdown destinations are URI-safe presentation of raw filesystem paths.
+- [x] Introduce one shared encode/decode contract in `links.py`: percent-encode generated local Markdown destinations; decode local Markdown targets exactly once before filesystem resolution.
+- [x] Apply the contract to Official Context rendering, Context Import parsing/writing/normalization, Resource closure and generated Resource bridges.
+- [x] Apply the contract to onboarding publication/review/split-review/audit surfaces and teach the semantic placement instruction the same rule.
+- [x] Add integration regressions for spaces, `#`, `%`, parentheses, already-safe paths, encoded Resource closure, Context Imports, Official Context and onboarding Parent links.
+- [x] Run the deterministic suite after the link scanner fix: 350/350 tests pass.
+- [x] Rebuild Development Workflow so its new Rule becomes an immutable package/version.
+- [x] Promote the newer Development Workflow Parent into Framework Development, GitHub and GitHub Local and rebuild every affected self-hosted Node. The repository's self-host library uses explicit local version declarations rather than immutable consumer pins, so this internal refresh follows the established provider-first/version-sync pattern from #100; normal user-project Parent updates still use `propagate`.
+- [x] Audit every Python Markdown writer for remaining dynamic repository-local targets. Dynamic repository paths now go through the shared helper; remaining generated links use fixed ContextCanon-owned ASCII filenames/anchors.
+- [x] Run the final exact-head normal CI / `contextcanon check --all .` / zero-drift gate after durable documentation updates, then leave PR #102 Draft for owner testing. Do not merge without explicit owner approval.
+
+Design constraint: raw filesystem paths and ContextCanon locators are semantic truth. Percent encoding belongs only to Markdown presentation. ContextCanon decodes encoded local link destinations before using them as filesystem paths; repeated normalization/rendering is tested so `%20` never becomes `%2520`. A literal percent sign in a real filename remains distinguishable by rendering as `%25`.
+
+Owner-test closure: PR #102 was tested in a real project with repository paths containing spaces and the generated Markdown now percent-encodes the sensitive path components correctly. The remaining broken deep links were traced to the separate Windows path-length problem tracked in #103 rather than to #101. Development Workflow is `0.3.6-draft`; Framework Development `0.3.15-draft`; GitHub `0.1.7-draft`; GitHub Local `0.1.6-draft`. The implementation and self-host refresh pass 350/350 deterministic tests, `contextcanon check --all .`, `git diff --check`, and the normal PR workflow. PR #102 is owner-approved for squash merge after the final exact-head gate.
+
 ## Accepted Fast Track: subtree onboarding — Issues #92 and #91
 
 Purpose: allow a later project subtree inside an already onboarded Git repository to become its own ContextCanon hierarchy without re-onboarding the whole repository, while inheriting the nearest accepted enclosing Context Node.
@@ -26,7 +48,7 @@ Owner-test correctness follow-ups: #97 makes split STEP-10 validation errors ide
 
 ## Active Fast Track: explicit Parent / Reference relationships — Issue #99
 
-**Fast Track status — OWNER-TESTED / MERGE-READY**
+**Fast Track status — ACCEPTED**
 
 Purpose: remove the public semantic duplication between normative ordinary Sources and semantic Parents. Phase 1 changes only normal authoring/compiler/package/build/inspect/maintenance behavior; onboarding STEP 07 remains compatible and intentionally unchanged.
 
@@ -45,7 +67,7 @@ Design constraint: `Source` may remain an internal package/discovery/provenance 
 
 Exit: a user can explain the model in two sentences — Parent Context applies and propagates through the semantic graph; Reference Context is useful background here, its Rules do not apply, and it is not inherited by Children.
 
-Fast Track owner-test closure: PR #100 has now been exercised repeatedly in a real disposable hierarchy with Parent→Reference→Parent changes and downstream propagation. The final UX includes a read-only propagation status, repository-wide health checking, cause-first propagation explanations, one canonical Parent/Reference authoring format, and fail-fast rejection of invalid relationship values such as `relationship=relation`. The complete deterministic suite passes 346/346 tests; the self-host health gate reports all four local Parent/Child relationships normatively current, generated output is clean, and `git diff --check` passes. The owner has explicitly approved the implementation for squash merge after the final exact-head gate. Markdown-link encoding for repository paths containing spaces/special characters is intentionally split into follow-up Issue #101 and does not block #99.
+Accepted checkpoint: PR #100 was owner-approved and squash-merged to `main` as `b50f4e313a7ece010cbc2d94f143dab63dcbbe59`. Before merge it had been exercised repeatedly in a real disposable hierarchy with Parent→Reference→Parent changes and downstream propagation. The final UX includes a read-only propagation status, repository-wide health checking, cause-first propagation explanations, one canonical Parent/Reference authoring format, and fail-fast rejection of invalid relationship values such as `relationship=relation`. The complete deterministic suite passes 346/346 tests; the self-host health gate reports all four local Parent/Child relationships normatively current, generated output is clean, and `git diff --check` passes. The owner has explicitly approved the implementation for squash merge after the final exact-head gate. Markdown-link encoding for repository paths containing spaces/special characters is intentionally split into follow-up Issue #101 and does not block #99.
 
 
 ## Active development block: editable owner-test installs — Issue #75

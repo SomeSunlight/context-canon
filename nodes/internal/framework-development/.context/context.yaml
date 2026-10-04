@@ -9,7 +9,7 @@ compiler_version: "0.7.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.14-draft"
+  version: "0.3.15-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -25,11 +25,11 @@ sources:
     package_digest: "eed463681e455b3574b273000dcf8772184b056c48b3b41661c24eed9e7e3c46"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.5-draft"
+    version: "0.3.6-draft"
     relationship: "parent"
     locator: "../../library/development-workflow/"
-    normalized_digest: "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2"
-    package_digest: "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029"
+    normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
+    package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
 
 # Direct informational References. Their Rules are not effective and they are not exported to Children.
 references: []
@@ -43,9 +43,9 @@ imports:
     package_digest: "eed463681e455b3574b273000dcf8772184b056c48b3b41661c24eed9e7e3c46"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.5-draft"
-    normalized_digest: "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2"
-    package_digest: "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029"
+    version: "0.3.6-draft"
+    normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
+    package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -98,6 +98,7 @@ official:
     - {"id": "CCW-003", "title": "Keep recovery-critical knowledge in the repository", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -275,5 +276,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "e3746eea2ccfc89802b28e520e86764304e01d1c886ee818eace2d0d7de0ec65"
-  package_digest: "e94d4c80813615c3143cec556c19c8a490a1f765d87e6d0a8cc3043af4dd246e"
+  normalized_digest: "5c6369649bcb1a80f5f62dd21644bd50ca791ab67f4450f85085dd4f1c9dc9f6"
+  package_digest: "2f3c8479218f0e806cb71914c65f599f1f7383b18cc918d3e9c0ddefa49203a2"

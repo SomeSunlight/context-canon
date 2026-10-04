@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 
+from .links import markdown_link_target
 from .model import CompiledNode, CompiledPackage, PackageDependency, Rule, SourceRef
 from .parser import ContextCanonError, parse_node
 
@@ -155,7 +156,8 @@ def _source_carrier_link(compiled: CompiledNode, ref: SourceRef, package: Compil
     target = (compiled.parsed.root / ref.locator).resolve()
     if target.name != "CONTEXT.md":
         target = target / "CONTEXT.md"
-    return os.path.relpath(target, compiled.parsed.root).replace(os.sep, "/")
+    rel = os.path.relpath(target, compiled.parsed.root).replace(os.sep, "/")
+    return markdown_link_target(rel)
 
 
 def _import_carriers(compiled: CompiledNode, dependency: PackageDependency) -> list[tuple[str, str]]:
@@ -230,14 +232,14 @@ def _append_topics(
 
 def _render_target_line(compiled: CompiledNode, topic, target, repo_root: Path) -> str:
     if target.kind == "resource":
-        return f"- [`{target.locator}`]({target.locator})"
+        return f"- [`{target.locator}`]({markdown_link_target(target.locator)})"
     if topic.origin_node_id == compiled.metadata.id:
         target_root = (compiled.parsed.root / target.locator).resolve()
         if target_root.name == "CONTEXT.md":
             target_root = target_root.parent
         rel = os.path.relpath(target_root / "CONTEXT.md", compiled.parsed.root).replace(os.sep, "/")
         target_node = parse_node(target_root, repo_root)
-        return f"- [{target_node.metadata.name}]({rel})"
+        return f"- [{target_node.metadata.name}]({markdown_link_target(rel)})"
     name = target.target_node_name or "Context Node"
     node_id = target.target_node_id or target.locator
     return f"- **Context Node:** {name} (`{node_id}`) — inherited navigation target; not materialized into this package"

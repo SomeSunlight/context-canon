@@ -2,14 +2,14 @@
   "changes": [],
   "compiler_version": "0.7.0",
   "digests": {
-    "normalized": "9deb7eac7dc88b029681ce57dadf8ef3cef2f027fc12558f5110ba6a533ff32d",
-    "package": "4a5ed6e82a93d34a7995b4fa6fd1b95bfcaf7ec78df7651f61b4d388b2512c91"
+    "normalized": "87361046e4d09c35d95c77b8478a733e4a973e346c1f35e3cfe5156bad97bc31",
+    "package": "67ced1bbc616b5cdda2db0976a359bb4b935c065333d4469acbf1b069b00db4c"
   },
   "files": [
     {
       "path": "CONTEXT.md",
-      "sha256": "61681f10a2a71a21c4a3067c152c2a1ffd1e55e51636529d9e6cc271d6448010",
-      "size": 8470
+      "sha256": "ff6b72373af702e18d996912f716a49de57c353ba1f57647cc9d28d9faa35dc5",
+      "size": 8811
     },
     {
       "path": "CONTEXT/README.md",
@@ -36,16 +36,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
-      "package_digest": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029",
-      "version": "0.3.5-draft",
+      "normalized_digest": "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae",
+      "package_digest": "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de",
+      "version": "0.3.6-draft",
       "why": null
     }
   ],
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.5-draft"
+    "version": "0.1.6-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -109,6 +109,16 @@
       "statement": "When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.",
       "title": "Mark machine-significant Markdown explicitly",
       "why": "Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior."
+    },
+    {
+      "group": "Transparent machine semantics",
+      "id": "CCW-015",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.",
+      "title": "Render repository-local Markdown links URL-safely",
+      "why": "Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions."
     },
     {
       "group": "Proportional verification",
@@ -226,10 +236,10 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "2569d89b6d105194539c50fd4a71a6780cadfc967b3787604174ab90fcdf70c2",
-      "package_digest": "a97532c6c06aff41b0cb1c8b8678c3eb653a478787e5fa8f6251520a33db1029",
+      "normalized_digest": "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae",
+      "package_digest": "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de",
       "relationship": "parent",
-      "version": "0.3.5-draft",
+      "version": "0.3.6-draft",
       "why": null
     }
   ],

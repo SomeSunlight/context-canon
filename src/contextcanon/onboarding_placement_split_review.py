@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Mapping
 
+from .links import markdown_link_target
 from .onboarding_placement import OnboardingPlacementProposal, PlacementItem, PlacementSourceEdit
 from .onboarding_placement_review import (
     PLACEMENT_REVIEW_SCHEMA,
@@ -103,7 +104,8 @@ def placement_source_edit_path(
 
 
 def _finding_node_link(node_path: str) -> str:
-    return "../../CONTEXT.md" if node_path == "." else f"../../{node_path}/CONTEXT.md"
+    raw = "../../CONTEXT.md" if node_path == "." else f"../../{node_path}/CONTEXT.md"
+    return markdown_link_target(raw)
 
 
 def _quote_markdown(lines: Iterable[str]) -> list[str]:
