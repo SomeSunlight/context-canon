@@ -329,7 +329,7 @@ Required:
                 self.assertIn('Continuing with a warning', str(caught.warning))
                 destination = child / '.context/sources' / accepted.package_digest / DEEP
                 self.assertEqual(_length(destination), 251)
-                self.assertEqual(destination.read_bytes(), b'# Workflow\n')
+                self.assertEqual(destination.read_bytes(), resource.read_bytes())
                 self.assertFalse(candidate.exists())
                 self.assertFalse(receipt.exists())
                 self.assertTrue((child / '.context/sources' / old.package_digest).is_dir())
