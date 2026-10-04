@@ -164,7 +164,7 @@ def _render_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
         lines.extend(
             [
                 "No reusable Source packages were supplied for this placement run.",
-                "Return empty `source_edits` and `source_reuses` arrays when neither applies. Do not invent reusable Source identities.",
+                "Return an empty `source_edits` array when no mutable prose cleanup applies. Reusable Parent/Reference relationships belong exclusively to STEP 07; do not invent or re-decide them here.",
                 "",
             ]
         )
