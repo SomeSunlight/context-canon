@@ -462,18 +462,17 @@ def _managed_block_body(text: str, name: str) -> str:
     end = _MARKER_END[name]
     if text.count(start) != 1 or text.count(end) != 1:
         return ""
-    a = text.index(start) + len(start)
-    b = text.index(end, a)
-    return text[a:b].strip()
+    first = text.index(start) + len(start)
+    last = text.index(end, first)
+    return text[first:last].strip()
 
 
 def _replace_parent_section(text: str, body: str) -> str:
-    """Fold one structural Parent into the same canonical Context Imports block.
+    """Fold structural Parent publication into the canonical Context Imports block.
 
-    Older onboarding wrote structural Parents through a second managed marker even
-    though both mechanisms rendered under Context Imports. New publication keeps
-    only the normal Context-Import block; legacy parent markers/headings are cleanup
-    input only.
+    The separate parent marker is read only for cleanup of historical onboarding
+    output. New authoring writes one sources managed block containing every Context
+    Import, regardless of whether it is Parent or Reference.
     """
 
     existing_imports = _managed_block_body(text, "sources")
@@ -496,19 +495,20 @@ def _replace_parent_section(text: str, body: str) -> str:
             raise _error(
                 "Parent Context Node section contains unmanaged content; preserve it elsewhere before publication"
             )
-        text = (text[:heading.start()].rstrip() + "\\n\\n" + text[end:].lstrip("\\n")).rstrip() + "\\n"
+        text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
 
     structural = body.strip()
     if structural and existing_imports:
-        match = re.search(r\'ctx:source id="([^"]+)"\', structural)
+        match = re.search(r'ctx:source id="([^"]+)"', structural)
         if match is not None and re.search(
-            rf\'ctx:source id="{re.escape(match.group(1))}"\', existing_imports
+            rf'ctx:source id="{re.escape(match.group(1))}"', existing_imports
         ):
             raise _error(
                 "the structural Parent is also selected as an additional Context Import; "
                 "remove the duplicate STEP-07 assignment"
             )
-    combined = "\\n\\n".join(part for part in (structural, existing_imports) if part)
+
+    combined = "\n\n".join(part for part in (structural, existing_imports) if part)
     return _replace_managed_section(
         text,
         "Context Imports",
