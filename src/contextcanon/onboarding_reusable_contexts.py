@@ -857,24 +857,29 @@ def render_reusable_contexts(
     )
     return "\n".join(lines)
 
-def _initial_text(evidence_digest: str, structure: HumanStructurePlan) -> str:
-    return render_reusable_contexts(evidence_digest, structure, "pending", (), (), ())
+def _initial_text(evidence_digest: str, structure: HumanStructurePlan, enclosing_parent=None) -> str:
+    return render_reusable_contexts(
+        evidence_digest, structure, "pending", (), (), (), enclosing_parent=enclosing_parent
+    )
 
 
-def _parse_bound_text(path: Path, evidence_digest: str, structure: HumanStructurePlan) -> tuple[str, tuple[str, ...]]:
+def _parse_bound_text(
+    path: Path, evidence_digest: str, structure: HumanStructurePlan
+) -> tuple[str, tuple[str, ...], str]:
     text = path.read_text(encoding="utf-8")
     header = _HEADER_RE.search(text)
     if header is None:
         raise _error(f"{path} is missing its ContextCanon binding header")
-    if header.group("schema") != REUSABLE_CONTEXTS_SCHEMA:
-        raise _error(f"unsupported schema {header.group('schema')!r}")
+    schema = header.group("schema")
+    if schema not in {REUSABLE_CONTEXTS_SCHEMA, LEGACY_REUSABLE_CONTEXTS_SCHEMA}:
+        raise _error(f"unsupported schema {schema!r}")
     if header.group("evidence") != evidence_digest:
         raise _error("Evidence digest differs from this onboarding snapshot")
     if header.group("structure") != structure.structure_digest:
         raise _error(
             "Accepted project Context structure changed; recreate/review STEP-07-reusable-contexts.md against the new structure"
         )
-    return text, _catalog_locations(text)
+    return text, _catalog_locations(text), schema
 
 
 def refresh_reusable_contexts(
@@ -884,11 +889,12 @@ def refresh_reusable_contexts(
     structure: HumanStructurePlan,
 ) -> tuple[ReusableContextsPlan, bool]:
     path = path.resolve()
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
     created = False
     if not path.exists():
-        write_utf8(path, _initial_text(evidence_digest, structure))
+        write_utf8(path, _initial_text(evidence_digest, structure, enclosing_parent))
         created = True
-    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    text, locations, human_schema = _parse_bound_text(path, evidence_digest, structure)
     decision = _decision(text)
 
     # Once STEP 07 is accepted and unchanged, rerunning the command is idempotent:
@@ -912,7 +918,14 @@ def refresh_reusable_contexts(
             ), created
 
     roots, packages = discover_catalog(locations) if locations else ((), ())
-    assignments = _parse_assignments(text, structure, packages)
+    assignments = _parse_assignments(
+        text,
+        structure,
+        packages,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+    )
     canonical = render_reusable_contexts(
         evidence_digest,
         structure,
@@ -920,6 +933,7 @@ def refresh_reusable_contexts(
         locations,
         packages,
         assignments,
+        enclosing_parent=enclosing_parent,
     )
     write_utf8(path, canonical)
     payload = _normalized_payload(
@@ -972,7 +986,11 @@ def load_accepted_reusable_contexts(
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise _error(f"machine state is unreadable: {state_path}") from exc
-    if state.get("schema") != REUSABLE_CONTEXTS_STATE_SCHEMA:
+    state_schema = state.get("schema")
+    if state_schema not in {
+        REUSABLE_CONTEXTS_STATE_SCHEMA,
+        LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA,
+    }:
         raise _error("unsupported reusable Context machine state")
     if state.get("evidence_digest") != evidence_digest or state.get("structure_digest") != structure.structure_digest:
         raise _error("reusable Context machine state does not match this Evidence/Structure")
@@ -984,9 +1002,20 @@ def load_accepted_reusable_contexts(
     if current_sha != state.get("human_file_sha256"):
         raise _error("STEP-07-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
 
-    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    text, locations, human_schema = _parse_bound_text(path, evidence_digest, structure)
+    if state_schema == REUSABLE_CONTEXTS_STATE_SCHEMA and human_schema != REUSABLE_CONTEXTS_SCHEMA:
+        raise _error("canonical reusable Context state is bound to a legacy human review schema")
     roots, packages = _accepted_catalog_from_state(snapshot_root, state) if locations else ((), ())
-    assignments = _parse_assignments(text, structure, packages)
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
+    assignments = _parse_assignments(
+        text,
+        structure,
+        packages,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+        reject_existing_parent_duplicate=state_schema != LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA,
+    )
 
     state_rows = state.get("catalog_packages", [])
     if not isinstance(state_rows, list):
@@ -999,7 +1028,12 @@ def load_accepted_reusable_contexts(
     if len(original_roots) != len(packages):
         raise _error("reusable Context machine state Catalog package count is inconsistent")
 
-    payload = _normalized_payload(
+    payload_factory = (
+        _legacy_normalized_payload
+        if state_schema == LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA
+        else _normalized_payload
+    )
+    payload = payload_factory(
         evidence_digest,
         structure.structure_digest,
         "accept",
