@@ -16,6 +16,7 @@ from contextcanon.cli import main
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence
 from contextcanon.onboarding_placement import (
+    LEGACY_PLACEMENT_PROPOSAL_SCHEMA,
     PLACEMENT_PROPOSAL_SCHEMA,
     _nonblank_line_numbers,
     load_onboarding_placement_proposal,
@@ -103,7 +104,7 @@ class OnboardingPlacementTests(unittest.TestCase):
         structure_proposal = load_onboarding_structure_proposal(workspace.structure_proposal_path, prepared.snapshot_root)
         structure = load_structure_markdown(workspace.structure_path, structure_proposal)
         return {
-            "schema": PLACEMENT_PROPOSAL_SCHEMA,
+            "schema": LEGACY_PLACEMENT_PROPOSAL_SCHEMA,
             "evidence_digest": prepared.evidence_digest,
             "structure_digest": structure.structure_digest,
             "items": [
