@@ -110,6 +110,18 @@ contextcanon onboard reusable-contexts .context/onboarding/<evidence-digest>
 
 The generated PLAN gives the exact command variant required by the current checkpoint.
 
+STEP 07 requires an explicit relationship on each additional reusable Assignment:
+
+```text
+My Project (.) ← Development Workflow (0.3.6-draft) [Parent]
+Why: Workflow rules govern this project.
+
+My Project (.) ← Knowledge Archive (1.0.0) [Reference]
+Why: Informational context; its rules do not govern this project.
+```
+
+Existing enclosing Parents are shown separately; do not assign them again. Parent Rules apply and propagate to semantic Children. Reference Rules do not apply, and the relationship is not inherited. An empty additional Assignment list is valid.
+
 ## STEP 08–12 — place meaning and publish
 
 Generate the placement task:
@@ -139,6 +151,10 @@ contextcanon onboard placement-publish .context/onboarding/<evidence-digest>
 ```
 
 STEP 09 is validation-only and intentionally creates no separate review document. STEP 10 is the human placement gate; STEP 11 is the deterministic publication preview; STEP 12 is the explicit publication action.
+
+The new STEP-08 proposal uses `contextcanon/onboarding-placement-proposal/v2`: `items` and optional `source_edits`, without `source_reuses`. STEP 07 owns reusable Parent/Reference decisions. STEP 10 and preview/publication preserve those choices exactly; change them through `onboard reset <snapshot> --from 7`, then repeat STEP 07 onward. Reset from STEP 08 or STEP 10 preserves the exact accepted STEP-07 choice and frozen packages. Legacy v1 placement proposals and untyped historical STEP-07 states remain readable with Parent semantics.
+
+Published sources contain only canonical `Context Imports`, explicit `relationship=parent|reference`, and `ctx:source` metadata for all structural and additional imports.
 
 ## Git persistence during onboarding
 

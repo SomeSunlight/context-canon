@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 from .links import markdown_link_target
-from .model import CompiledPackage
+from .model import CompiledPackage, RelationshipKind
 from .onboarding_placement import (
     PLACEMENT_ACTIONS,
     PLACEMENT_KINDS,
@@ -19,6 +19,7 @@ from .onboarding_placement import (
     PlacementSourceEdit,
 )
 from .onboarding_proposal import EvidenceReference, EvidenceSnapshot, load_evidence_snapshot
+from .onboarding_reusable_contexts import ReusableContextAssignment
 from .parser import ContextCanonError
 
 
@@ -46,14 +47,15 @@ _ITEM_HEADING_RE = re.compile(r"^## (?P<id>[^ ]+) — (?P<title>.+)$")
 _ITEM_COMMENT_RE = re.compile(
     r'^<!-- cc:placement-item id="(?P<id>[^"]+)" authoring-id="(?P<authoring>[^"]+)" -->$'
 )
-_SOURCE_HEADING_RE = re.compile(r"^## Source (?P<id>[^ ]+) — (?P<title>.+)$")
+_SOURCE_HEADING_RE = re.compile(r"^## (?:Context Import|Source) (?P<id>[^ ]+) — (?P<title>.+)$")
 _SOURCE_COMMENT_RE = re.compile(
     r'^<!-- cc:placement-source id="(?P<id>[^"]+)" origin="(?P<origin>[^"]+)" '
+    r'(?:relationship="(?P<relationship>parent|reference)" )?'
     r'source-id="(?P<source_id>[^"]+)" version="(?P<version>[^"]+)" '
     r'normalized-digest="(?P<normalized>[0-9a-f]{64})" package-digest="(?P<package>[0-9a-f]{64})" -->$'
 )
 _DESTINATION_RE = re.compile(r"^Destination: `(?P<key>[^`]+)`(?:\s+—.*)?$")
-_SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin): `(?P<value>[^`]+)`$")
+_SIMPLE_VALUE_RE = re.compile(r"^(?P<label>Decision|Kind|Action|Wording|Origin|Relationship): `(?P<value>[^`]+)`$")
 _PATH_RE = re.compile(r"`([^`]+)`")
 _AUTHORING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _SOURCE_EDIT_COMMENT_RE = re.compile(
@@ -127,6 +129,7 @@ class PlacementReviewSource:
     source_version: str
     source_normalized_digest: str
     source_package_digest: str
+    relationship: RelationshipKind
     review_note: str
     proposal_id: str | None
     relationship_why: str = ""
@@ -142,6 +145,7 @@ class PlacementReviewSource:
             "source_version": self.source_version,
             "source_normalized_digest": self.source_normalized_digest,
             "source_package_digest": self.source_package_digest,
+            "relationship": self.relationship,
             "review_note": self.review_note,
             "proposal_id": self.proposal_id,
             "relationship_why": self.relationship_why,
@@ -509,6 +513,7 @@ def _initial_sources(
     owner_source_specs: Iterable[str],
     *,
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> tuple[PlacementReviewSource, ...]:
     result: list[PlacementReviewSource] = []
@@ -516,8 +521,9 @@ def _initial_sources(
     packages = _package_by_id(proposal)
     node_keys = {node.key for node in proposal.structure.nodes}
     why_by_spec = dict(owner_source_whys or {})
+    relationship_by_spec = dict(owner_source_relationships or {})
 
-    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage]] = {}
+    owner_pairs: dict[tuple[str, str], tuple[str, CompiledPackage, RelationshipKind]] = {}
     nodes_by_key = {node.key: node for node in proposal.structure.nodes}
 
     def is_same_or_descendant(candidate_key: str, ancestor_key: str) -> bool:
@@ -539,15 +545,25 @@ def _initial_sources(
         package = packages.get(source_id)
         if package is None:
             raise _error(f"owner-selected Source {source_id} was not supplied in the exact catalog")
-        owner_pairs[(target, source_id)] = (spec, package)
+        relationship = relationship_by_spec.get(spec, "parent")
+        if relationship not in {"parent", "reference"}:
+            raise _error(f"owner-selected Context Import has unsupported relationship {relationship!r}")
+        owner_pairs[(target, source_id)] = (spec, package, relationship)
 
     # Evidence-derived suggestions that duplicate an already accepted STEP-07
     # relationship do not create a second decision in Placement.
     for reuse in proposal.source_reuses:
         pair = (reuse.target_node_key, reuse.source_node_id)
         if any(
-            source_id == reuse.source_node_id and is_same_or_descendant(reuse.target_node_key, owner_target)
-            for owner_target, source_id in owner_pairs
+            source_id == reuse.source_node_id
+            and (
+                owner_target == reuse.target_node_key
+                or (
+                    owner_relationship == "parent"
+                    and is_same_or_descendant(reuse.target_node_key, owner_target)
+                )
+            )
+            for (owner_target, source_id), (_, _, owner_relationship) in owner_pairs.items()
         ):
             continue
         seen.add(pair)
@@ -562,13 +578,14 @@ def _initial_sources(
                 source_version=reuse.source_version,
                 source_normalized_digest=reuse.source_normalized_digest,
                 source_package_digest=reuse.source_package_digest,
+                relationship="parent",
                 review_note="",
                 proposal_id=reuse.id,
                 relationship_why=reuse.reason,
             )
         )
 
-    for pair, (spec, package) in owner_pairs.items():
+    for pair, (spec, package, relationship) in owner_pairs.items():
         if pair in seen:
             continue
         seen.add(pair)
@@ -585,6 +602,7 @@ def _initial_sources(
                 source_version=package.metadata.version,
                 source_normalized_digest=package.normalized_digest,
                 source_package_digest=package.package_digest,
+                relationship=relationship,
                 review_note="",
                 proposal_id=None,
                 relationship_why=why,
@@ -598,6 +616,7 @@ def render_placement_review(
     *,
     owner_source_specs: Iterable[str] = (),
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> str:
     snapshot = load_evidence_snapshot(snapshot_root)
@@ -635,6 +654,7 @@ def render_placement_review(
         proposal,
         owner_source_specs,
         owner_source_whys=owner_source_whys,
+        owner_source_relationships=owner_source_relationships,
         preaccepted_owner_sources=preaccepted_owner_sources,
     )
     lines = [
@@ -644,7 +664,7 @@ def render_placement_review(
         "",
         "Destination names link to the human-facing canonical `CONTEXT.md` entry for quick inspection; the stable Node key remains the parsed review identity.",
         "",
-        "Item, Source-edit and reusable-Source decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted. When the LLM omitted a rewrite for one unambiguous mutable range, ContextCanon may expose a review-only optional Source edit that defaults to `reject`; it exists only so the owner can edit that exact range without reconstructing it later.",
+        "Item, Source-edit and Context-Import decisions are `pending`, `accept`, or `reject`. ContextCanon never publishes a pending review. Frozen source excerpts are read-only; text between `cc:source-after` markers is editable and becomes the reviewed replacement if that Source edit is accepted. When the LLM omitted a rewrite for one unambiguous mutable range, ContextCanon may expose a review-only optional Source edit that defaults to `reject`; it exists only so the owner can edit that exact range without reconstructing it later.",
         "",
         "## Editable control glossary",
         "",
@@ -669,9 +689,9 @@ def render_placement_review(
     for review_item in review_items:
         lines.extend(_render_item(by_id[review_item.proposal_id], review_item, proposal, snapshot, source_edits))
 
-    lines.extend(["# Reusable Sources", ""])
+    lines.extend(["# Context Imports", ""])
     if not sources:
-        lines.append("No reusable Source is currently proposed or owner-selected.")
+        lines.append("No additional reusable Context Import is currently proposed or owner-selected.")
         lines.append("")
     else:
         nodes = {node.key: node for node in proposal.structure.nodes}
@@ -680,13 +700,14 @@ def render_placement_review(
             target = nodes[source.target_node_key]
             lines.extend(
                 [
-                    f"## Source {source.review_id} — {source.source_name}",
-                    f'<!-- cc:placement-source id="{source.review_id}" origin="{source.origin}" source-id="{source.source_node_id}" version="{source.source_version}" normalized-digest="{source.source_normalized_digest}" package-digest="{source.source_package_digest}" -->',
+                    f"## Context Import {source.review_id} — {source.source_name}",
+                    f'<!-- cc:placement-source id="{source.review_id}" origin="{source.origin}" relationship="{source.relationship}" source-id="{source.source_node_id}" version="{source.source_version}" normalized-digest="{source.source_normalized_digest}" package-digest="{source.source_package_digest}" -->',
                     "",
                     f"Destination: `{target.key}` — [**{target.name}**]({_node_entry_link(target.path)}) (`{target.path}`)",
                     f"Decision: `{source.decision}`",
                     f"Origin: `{source.origin}`",
-                    f"Why this Source applies: {source.relationship_why or '-'}",
+                    f"Relationship: `{source.relationship}`",
+                    f"Why this Context Import applies: {source.relationship_why or '-'}",
                     f"Review note: {source.review_note or '-'}",
                     "",
                     f"Exact package: `{source.source_version}` · `{source.source_package_digest}`",
@@ -702,7 +723,7 @@ def render_placement_review(
             else:
                 lines.extend(
                     [
-                        "This Source was selected explicitly by the project owner. When it came from STEP 07, that relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
+                        "This Context Import was selected explicitly by the project owner in STEP 07. Its Parent/Reference relationship is already accepted here and is shown only for compact traceability; it is design input, not a claim derived from frozen project Evidence.",
                         "",
                     ]
                 )
@@ -919,6 +940,8 @@ def _load_monolithic_placement_review(
     seen: set[str] = set()
     authoring_ids: set[str] = set()
     for start, end in _section_blocks(lines, "## "):
+        if _SOURCE_HEADING_RE.match(lines[start]) is not None:
+            continue
         heading = _ITEM_HEADING_RE.match(lines[start])
         if heading is None:
             continue
@@ -1062,7 +1085,7 @@ def _load_monolithic_placement_review(
     packages = _package_by_id(proposal)
     parsed_sources: list[PlacementReviewSource] = []
     source_ids: set[str] = set()
-    for start, end in _section_blocks(lines, "## Source "):
+    for start, end in _section_blocks(lines, "## "):
         heading = _SOURCE_HEADING_RE.match(lines[start])
         if heading is None:
             continue
@@ -1108,10 +1131,30 @@ def _load_monolithic_placement_review(
         if proposal_id is not None and proposal_id not in {reuse.id for reuse in proposal.source_reuses}:
             raise _error(f"Source {review_id} is not present in the placement proposal")
         note = _find_line(block, "Review note: ", "Review note")
-        why_line = next((entry for entry in block if entry.startswith("Why this Source applies: ")), None)
-        relationship_why = "" if why_line is None else why_line[len("Why this Source applies: "):].strip()
+        why_line = next(
+            (
+                entry
+                for entry in block
+                if entry.startswith("Why this Context Import applies: ")
+                or entry.startswith("Why this Source applies: ")
+            ),
+            None,
+        )
+        relationship_why = "" if why_line is None else why_line.split(": ", 1)[1].strip()
         if relationship_why == "-":
             relationship_why = ""
+        relationship = attrs.group("relationship")
+        visible_relationship = (
+            _simple_value(block, "Relationship")
+            if any(entry.startswith("Relationship: ") for entry in block)
+            else None
+        )
+        if relationship is not None and visible_relationship != relationship:
+            raise _error(f"Context Import {review_id} Relationship differs from its machine metadata")
+        if relationship is None:
+            relationship = visible_relationship or "parent"
+        if relationship not in {"parent", "reference"}:
+            raise _error(f"Source {review_id} has unsupported relationship {relationship!r}")
         parsed_sources.append(
             PlacementReviewSource(
                 review_id=review_id,
@@ -1123,6 +1166,7 @@ def _load_monolithic_placement_review(
                 source_version=package.metadata.version,
                 source_normalized_digest=package.normalized_digest,
                 source_package_digest=package.package_digest,
+                relationship=relationship,
                 review_note="" if note == "-" else note,
                 proposal_id=proposal_id,
                 relationship_why=relationship_why,
@@ -1144,6 +1188,7 @@ def _create_or_load_monolithic_placement_review(
     *,
     owner_source_specs: Iterable[str] = (),
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> tuple[OnboardingPlacementReview, bool]:
     path = path.resolve()
@@ -1160,6 +1205,7 @@ def _create_or_load_monolithic_placement_review(
             snapshot_root,
             owner_source_specs=owner_source_specs,
             owner_source_whys=owner_source_whys,
+            owner_source_relationships=owner_source_relationships,
             preaccepted_owner_sources=preaccepted_owner_sources,
         ),
         encoding="utf-8",
@@ -1167,6 +1213,28 @@ def _create_or_load_monolithic_placement_review(
     )
     return _load_monolithic_placement_review(path, proposal, snapshot_root), True
 
+
+
+def validate_step07_imports(
+    review: OnboardingPlacementReview, assignments: tuple[ReusableContextAssignment, ...]
+) -> None:
+    expected = {
+        (entry.target_node_key, entry.source_node_id): (
+            entry.source_package_digest, entry.relationship, entry.why
+        )
+        for entry in assignments
+    }
+    actual = {
+        (entry.target_node_key, entry.source_node_id): (
+            entry.source_package_digest, entry.relationship, entry.relationship_why
+        )
+        for entry in review.sources if entry.decision == "accept"
+    }
+    if actual != expected or len(review.sources) != len(expected):
+        raise _error(
+            "STEP-10 Context Imports differ from the accepted STEP-07 choices. "
+            "Reset from STEP 07 to change relationships, or from STEP 10 to recreate their trace."
+        )
 
 
 def load_placement_review(
@@ -1184,6 +1252,7 @@ def create_or_load_placement_review(
     *,
     owner_source_specs: Iterable[str] = (),
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> tuple[OnboardingPlacementReview, bool]:
     from .onboarding_placement_split_review import create_or_load_split_placement_review
@@ -1194,5 +1263,6 @@ def create_or_load_placement_review(
         snapshot_root,
         owner_source_specs=owner_source_specs,
         owner_source_whys=owner_source_whys,
+        owner_source_relationships=owner_source_relationships,
         preaccepted_owner_sources=preaccepted_owner_sources,
     )

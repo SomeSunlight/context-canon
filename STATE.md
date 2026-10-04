@@ -1,12 +1,22 @@
 # Current State
 
-The accepted product baseline now includes the explicit Parent / Reference relationship model from PR #100, owner-approved and squash-merged to `main` as `b50f4e313a7ece010cbc2d94f143dab63dcbbe59`. That accepted baseline includes canonical `Context Imports`, read-only propagation status, repository-wide propagation health checking, cause-first propagation review, and fail-fast relationship validation.
+The accepted baseline is `main` at `8344731e645d3fc54bf492a225e6448a7de9698a`, including owner-tested PR #100 (Parent / Reference Phase 1) and PR #102 (URL-safe Markdown links). That accepted baseline includes canonical `Context Imports`, read-only propagation status, repository-wide propagation health checking, cause-first propagation review, and fail-fast relationship validation.
 
 The Resource rename/reconcile path has now also passed an extensive real owner test: unique renames were detected correctly, interactive confirmation preserved stable Resource identity, and ambiguous byte-identical candidates were surfaced as explicit numbered choices instead of being guessed.
 
-## Owner-tested Fast Track — URL-safe Markdown links (#101)
+## Current review candidate — onboarding Parent / Reference (#99 Phase 2)
 
-Issue #101 is implemented and owner-tested in PR #102. Real-project testing confirmed that repository paths containing spaces are rendered with the intended URL-safe Markdown destinations. Real project Nodes may live in directories such as `01 F1` and `02 F2`; valid repository paths no longer need renaming merely to keep ContextCanon-generated Markdown portable.
+Branch `agent/issue-99-onboarding-parent-reference` and Draft PR #104 complete the same relationship model in onboarding. STEP 07 distinguishes existing enclosing Parents, additional Parents and References with explicit `[Parent]` / `[Reference]` Assignments. Exact packages and relationship kind are fixed input to STEP 08 v2; new placement proposals have no `source_reuses`. STEP 10 verifies its trace against STEP 07 and refuses a changed kind, target, package or rationale.
+
+Every published import uses one canonical `Context Imports` section and managed block, with `ctx:source` and explicit `relationship=parent|reference`. Structural/enclosing Parents use that same authoring and compiler semantics. Publication supports several Parents, does not duplicate the enclosing Parent, preserves the relationship per target when one package is used differently at several Nodes, and is idempotent. References stay informational and do not propagate; Parents behave like manually authored canonical imports.
+
+Reset from STEP 08 onward preserves the accepted STEP-07 state and frozen packages. Reset from STEP 07 rolls back publication and removes that review/state/Catalog so a new relationship may be chosen. Historical untyped STEP-07 state remains readable as Parent with its original review/package identity.
+
+The completed candidate passes 360/360 deterministic tests, self-host `build --all .` and `check --all .`, all four local Parent/Child propagation-health checks and diff hygiene. Gateway and Framework Development packages are now `0.3.16-draft`; the executable release version remains `0.10.0` with Git runtime provenance. Owner testing remains pending; PR #104 must stay Draft and must not be merged without explicit approval. Issue #103 and future chat interpretation remain outside this change.
+
+## Accepted Fast Track — URL-safe Markdown links (#101)
+
+Issue #101 was owner-tested and squash-merged in PR #102 at `8344731e645d3fc54bf492a225e6448a7de9698a`. Real-project testing confirmed that repository paths containing spaces are rendered with the intended URL-safe Markdown destinations. Real project Nodes may live in directories such as `01 F1` and `02 F2`; valid repository paths no longer need renaming merely to keep ContextCanon-generated Markdown portable.
 
 The reusable Development Workflow now owns Rule `CCW-015`: repository-local Markdown destinations are a URL-safe presentation of real filesystem paths. The implementation uses one deterministic link contract in `links.py`: raw filesystem/ContextCanon locators remain semantic truth; generated local Markdown destinations percent-encode spaces and URI/Markdown-sensitive filename characters; ContextCanon decodes local Markdown targets exactly once before filesystem resolution.
 
@@ -16,7 +26,7 @@ Regression coverage uses actual names containing spaces, `#`, `%` and parenthese
 
 Self-hosting follows the repository's established provider-first local-version pattern: Development Workflow was rebuilt to `0.3.6-draft`, then its explicit local Parent version was synchronized into Framework Development, GitHub and GitHub Local before those Nodes were rebuilt. Their resulting versions are `0.3.15-draft`, `0.1.7-draft`, and `0.1.6-draft`. This internal self-host wiring is distinct from normal user-project immutable Parent pins, which continue to use ordinary propagation review.
 
-The deterministic suite passes 350/350 tests. The self-host refresh also passed `contextcanon check --all .` and `git diff --check`; the temporary refresh workflow is removed and the normal PR workflow is green. Owner testing additionally isolated a separate Windows path-length problem: deep materialized paths can make otherwise correctly encoded links unusable in some tools. That follow-up is tracked in #103 and does not block #101. PR #102 is owner-approved for squash merge after its final exact-head gate. PR #100 remains the accepted Parent/Reference baseline; #101 does not change those semantics.
+The deterministic suite passes 350/350 tests. The self-host refresh also passed `contextcanon check --all .` and `git diff --check`; the temporary refresh workflow is removed and the normal PR workflow is green. Owner testing additionally isolated a separate Windows path-length problem: deep materialized paths can make otherwise correctly encoded links unusable in some tools. That follow-up is tracked in #103 and does not block #101. PR #102 is accepted in `main`. PR #100 remains the accepted Parent/Reference baseline; #101 does not change those semantics.
 
 ## Accepted Fast Track — Parent / Reference Phase 1 (#99)
 

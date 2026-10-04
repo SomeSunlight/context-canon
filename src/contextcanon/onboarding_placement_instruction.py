@@ -17,7 +17,7 @@ from .onboarding_structure import HumanStructurePlan, load_onboarding_structure_
 from .parser import ContextCanonError
 
 
-PLACEMENT_INSTRUCTION_SCHEMA = "contextcanon/onboarding-placement-instruction/v1"
+PLACEMENT_INSTRUCTION_SCHEMA = "contextcanon/onboarding-placement-instruction/v2"
 
 
 @dataclass(frozen=True)
@@ -139,18 +139,20 @@ def _render_accepted_reusable_contexts(
         ])
         return lines
     lines.extend([
-        "The project owner already accepted these composition relationships in STEP 07. Treat them as fixed input for placement, not as Source suggestions to rediscover. A reusable Context attached to a project Node also reaches that Node's semantic descendants through the accepted Parent chain. Do not duplicate its generic Rules/Topics locally merely because the same project prose mentions them.",
+        "The project owner already accepted these Context Import relationships in STEP 07. Treat both the package identity and the Parent/Reference relationship as fixed input for placement; this pass must not reclassify them.",
+        "",
+        "**Parent** is normative: its Rules apply at the target and its effective Context propagates through semantic Children. **Reference** is informational: its Rules do not apply and the relationship does not propagate. Do not treat a Reference as inherited governance.",
         "",
     ])
     for assignment in assignments:
         lines.extend([
-            f"- `{assignment.target_node_key}` — **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`)",
+            f"- `{assignment.target_node_key}` — **{assignment.target_name}** (`{assignment.target_path}`) ← **{assignment.source_name}** (`{assignment.source_version}`) [{assignment.relationship.title()}]",
             f"  Why: {assignment.why}",
-            f"  Exact Source: `{assignment.source_node_id}` · `{assignment.source_package_digest}`",
+            f"  Exact package: `{assignment.source_node_id}` · `{assignment.source_package_digest}`",
         ])
     lines.extend([
         "",
-        "Do not emit a `source_reuses` entry for one of these already accepted relationships, or for the same Source redundantly at one of its descendant Nodes. `source_reuses` is reserved for a genuinely new Evidence-derived relationship that STEP 07 did not already establish.",
+        "STEP 07 is the reusable-relationship human gate. Do not emit or invent an additional reusable relationship in this pass. Parent inheritance may suppress duplicate generic guidance in descendants; Reference does not.",
         "",
     ])
     return lines
@@ -162,7 +164,7 @@ def _render_catalog(packages: tuple[CompiledPackage, ...]) -> list[str]:
         lines.extend(
             [
                 "No reusable Source packages were supplied for this placement run.",
-                "Return empty `source_edits` and `source_reuses` arrays when neither applies. Do not invent reusable Source identities.",
+                "Return an empty `source_edits` array when no mutable prose cleanup applies. Reusable Parent/Reference relationships belong exclusively to STEP 07; do not invent or re-decide them here.",
                 "",
             ]
         )
@@ -221,10 +223,10 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "11. Treat `README.md` as human/customer first-contact orientation and navigation rather than the default store for volatile state, future plan, detailed architecture, or every implementation invariant. Its durable project summary should be short and human-facing, but short does not mean prose-only: preserve a compact table, small diagram, list, or example when that is the clearest first-contact explanation. Exact supported versions/platforms normally belong in root `state` or a narrower Node. If the existing README identity line mixes the durable project idea with exact OS/runtime versions, normally keep a simpler versionless first-contact sentence in README and maintain the exact compatibility matrix as State. Use `state` for current local situation, `plan` for future work, `overview` for stable Node responsibility, Rules for durable governance, and Topics/Resources for genuinely useful deeper task material.",
         "12. Treat familiar filenames as role hints, not semantic authorities. `CONTRIBUTING.md` should primarily serve humans who want to contribute: motivation, coarse contribution areas, contribution process, and other genuinely contributor-facing orientation may remain there, while project-wide technical implementation rules and detailed specifications should normally move to the owning Context Nodes instead of remaining as a second canonical specification. Architecture notes, implementation/configuration, CI, tests, security policy, state/planning text, and imported documentation likewise follow their actual semantic role. In particular, do **not** keep `architecture.md` as a Topic/Resource merely because its filename says architecture: promote its durable responsibilities/invariants into the owning Nodes when that is the better maintenance surface. Harness-specific files such as `.goosehints`, `AGENTS.md`, `CLAUDE.md`, and similar files are adapter/projection surfaces, not semantic ownership boundaries: inspect them for project-wide meaning, promote harness-independent meaning into canonical Context Nodes, and retain only genuinely harness-specific mechanics or representation at the edge. Make such adapters as thin as the harness safely allows. A non-Markdown harness adapter is not rewritten by `source_edits`; classify/promote its general meaning correctly without inventing an unsupported rewrite. It is acceptable for a later reviewed cleanup to reduce a conventional document to a short orientation/reference or remove it when no independent procedural, explanatory, diagrammatic, or authority value remains. Conventional files can be stale; prefer direct implementation/configuration/CI/test evidence for current behavior when it clearly conflicts with prose.",
         "13. Preserve project state, planning, important local development constraints, and unresolved contradictions explicitly. A volatile version/value supported only by release history or other historical prose is not proven current merely because it is the newest historical mention: phrase it as `last documented ...` or emit an unresolved question when currentness matters. Before returning, check that the better structure did not silently drop high-value semantics visible elsewhere in the same frozen Evidence.",
-        "14. Compare likely generic practices with every supplied reusable Source package and the accepted STEP-07 assignments before proposing a duplicate local Rule. A Source attached to an ancestor is already effective in its semantic descendants through Parent composition. Project-specific deltas may still remain local. Return `source_reuses` only for a genuinely new Evidence-derived relationship not already established by the human reusable-Context gate or inherited from one of its assignments.",
+        "14. Compare likely generic practices with every supplied reusable Context package and the accepted STEP-07 imports before proposing a duplicate local Rule. An accepted **Parent** at an ancestor is normative in semantic descendants; an accepted **Reference** is informational only at its direct target and must not suppress descendant Rules as inherited governance. Project-specific deltas may still remain local. STEP 07 is the only reusable-relationship gate in a new onboarding run, so do not propose additional reusable imports here.",
         "15. A Source may be useful even when it is independent of other Sources. Do not infer Foundation or any other transitive dependency unless it is actually present in the supplied package semantics.",
-        "16. Use only frozen Evidence as evidence about this project. Do not use the live repository, web search, chat history, or model memory to fill project gaps. An explicit owner-selected Source, when supplied later by the human review workflow, is design input and is deliberately not something you must pretend to derive from Evidence.",
-        "17. Every placement item and Evidence-derived Source reuse must cite exact Evidence path/hash/line ranges supporting the proposal. Those exact excerpts are also the deterministic basis for a future duplicate-cleanup review: semantic cleanup may propose shorter orientation wording, but ContextCanon must never guess which original bytes were reviewed.",
+        "16. Use only frozen Evidence as evidence about this project. Do not use the live repository, web search, chat history, or model memory to fill project gaps. Explicit owner-selected Context Imports from STEP 07 are design input and are deliberately not something you must pretend to derive from Evidence.",
+        "17. Every placement item must cite exact Evidence path/hash/line ranges supporting the proposal. Those exact excerpts are also the deterministic basis for a future duplicate-cleanup review: semantic cleanup may propose shorter orientation wording, but ContextCanon must never guess which original bytes were reviewed.",
         "18. Before returning, run two final audits. **Readability/redundancy:** every Overview/State/Plan item is one bullet-sized fact; stable Overview does not repeat volatile versions already represented as State; every Source After replacement at a still-useful human location carries a real gist plus its Context link rather than a pointer-only sentence; useful presentation structure has not been needlessly flattened (tables stay tabular when the matrix helps, ordered flows stay ordered, diagrams stay visual when that is clearer, and an explanatory example survives when it materially aids comprehension); no Source After replacement hides several independent claims inside a snake sentence; and every shared edit names all promoted findings whose meaning it summarizes. **Zero semantic loss per Source edit:** enumerate the substantive facts in that exact frozen `start_line..end_line`. Every fact removed from A must either still be present in A′ or be represented by one or more `linked_item_ids` whose Evidence cites the relevant removed source range. Do not rely on the same fact happening to occur elsewhere in another document or duplicate passage.",
         "19. Do not create, edit, move, or delete project files. Return a proposal only. ContextCanon will render an evidence-rich review before any canonical placement or cleanup is designed.",
         "",
@@ -236,12 +238,11 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "",
         "```json",
         "{",
-        '  "schema": "contextcanon/onboarding-placement-proposal/v1",',
+        '  "schema": "contextcanon/onboarding-placement-proposal/v2",',
         f'  "evidence_digest": "{evidence_digest}",',
         f'  "structure_digest": "{structure_digest}",',
         '  "items": [],',
-        '  "source_edits": [],',
-        '  "source_reuses": []',
+        '  "source_edits": []',
         "}",
         "```",
         "",
@@ -296,24 +297,7 @@ def _render_contract(evidence_digest: str, structure_digest: str) -> list[str]:
         "",
         "`source_edits` is the proposed A → A′ side of promotion. Use only mutable `.md` Evidence that is not listed as fixed Markdown. Every **non-blank** edited line must be covered by Evidence cited by the linked promoted items; blank Markdown separator lines may sit inside one contiguous edit range without their own Evidence citation. Linked IDs must all be `promote` items and must not be `unresolved` findings, because an unanswered question cannot justify deleting uncertain source meaning. One source range may be linked to several findings, but source edits in one file must never overlap. `replacement` may be empty only when removing the range entirely is clearly better than leaving orientation. If no promoted mutable prose needs cleanup, return an empty array.",
         "",
-        "Every `source_reuses` entry contains exactly:",
-        "",
-        "```json",
-        "{",
-        '  "id": "S-001",',
-        '  "target_node_key": "N-001",',
-        '  "source_node_id": "<exact catalog Node ID>",',
-        '  "source_name": "<exact catalog name>",',
-        '  "source_version": "<exact catalog version>",',
-        '  "source_normalized_digest": "<exact catalog digest>",',
-        '  "source_package_digest": "<exact catalog digest>",',
-        '  "reason": "Why this package replaces duplicated local guidance at this Node",',
-        '  "confidence": "high",',
-        '  "evidence": [{"path": "CONTRIBUTING.md", "sha256": "...", "start_line": 1, "end_line": 5}]',
-        "}",
-        "```",
-        "",
-        "If no supplied Source package is a justified match, return an empty `source_reuses` array. Do not invent one.",
+        "Reusable Context relationships are not part of the STEP-08 output contract. They were already decided in STEP 07; preserve those accepted Parent/Reference semantics as fixed design input.",
         "",
     ]
 

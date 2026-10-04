@@ -30,6 +30,7 @@ from .onboarding_placement_review import (
     ReviewDecisionProgress,
     create_or_load_placement_review,
     load_placement_review,
+    validate_step07_imports,
 )
 from .onboarding_reusable_contexts import load_accepted_reusable_contexts, refresh_reusable_contexts
 from .onboarding_placement_publish import (
@@ -1599,6 +1600,7 @@ def main(argv: list[str] | None = None) -> int:
                 catalog_inputs = tuple(args.catalog_package)
                 explicit_owner = tuple(args.owner_source) if hasattr(args, "owner_source") else ()
                 owner_source_whys: dict[str, str] = {}
+                owner_source_relationships = {}
                 preaccepted_owner_sources = False
                 accepted_reusable_assignments = ()
 
@@ -1609,7 +1611,13 @@ def main(argv: list[str] | None = None) -> int:
                     catalog_inputs=catalog_inputs,
                     owner_source_specs=explicit_owner,
                 )
-                if not catalog_inputs and workspace.reusable_contexts_path.is_file():
+                if workspace.reusable_contexts_path.is_file():
+                    if catalog_inputs or explicit_owner:
+                        raise ContextCanonError(
+                            "STEP 07 owns reusable Context Imports for this run; "
+                            "do not override them with --catalog-package or --owner-source. "
+                            "Reset from STEP 07 to change the accepted choices."
+                        )
                     reusable = load_accepted_reusable_contexts(
                         workspace.reusable_contexts_path,
                         snapshot,
@@ -1620,6 +1628,7 @@ def main(argv: list[str] | None = None) -> int:
                     catalog = tuple(Path(path) for path in catalog_inputs)
                     remembered_owner = reusable.owner_source_specs
                     owner_source_whys = reusable.owner_source_whys
+                    owner_source_relationships = reusable.owner_source_relationships
                     accepted_reusable_assignments = reusable.assignments
                     preaccepted_owner_sources = True
                 elif not catalog_inputs and remembered_catalog:
@@ -1708,8 +1717,11 @@ def main(argv: list[str] | None = None) -> int:
                         snapshot,
                         owner_source_specs=owner_for_review,
                         owner_source_whys=owner_source_whys,
+                        owner_source_relationships=owner_source_relationships,
                         preaccepted_owner_sources=preaccepted_owner_sources,
                     )
+                    if preaccepted_owner_sources:
+                        validate_step07_imports(review, accepted_reusable_assignments)
                     verb = "created" if created else "loaded"
                     write_utf8(
                         workspace.placement_audit_path,
@@ -1718,14 +1730,14 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{verb} onboarding placement review {review.review_digest}")
                     print(f"Review file: {review_path}")
                     print(f"Source audit: {workspace.placement_audit_path}")
-                    print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Sources: {len(review.sources)} · complete: {review.is_complete}")
+                    print(f"Items: {len(review.items)} · Source edits: {len(review.source_edits)} · Context Imports: {len(review.sources)} · complete: {review.is_complete}")
                     print()
                     _print_placement_review_progress(review)
                     next_action = (
                         f"Review `{workspace.placement_audit_path.name}` for source-by-source semantic loss, then run `contextcanon onboard placement-preview {_snapshot_cli(snapshot)}` after checking the exact command in PLAN.md."
                         if review.is_complete else
                         f"Inspect `{workspace.placement_audit_path.name}` source-by-source, then use `{workspace.placement_path.name}` as the index and edit its linked finding files under `{workspace.placement_dir_path.name}/`. "
-                        f"Set every item/Source-edit/Source Decision to `accept` or `reject`, then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`; it validates the split human gate, refreshes the index, and regenerates the audit."
+                        f"Set every item/Source-edit/Context-Import Decision to `accept` or `reject`, then rerun `contextcanon onboard placement-review {_snapshot_cli(snapshot)}`; it validates the split human gate, refreshes the index, and regenerates the audit."
                     )
                     update_workspace_checkpoint(
                         workspace, snapshot, stage="human placement review",
@@ -1741,6 +1753,8 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
 
                 review = load_placement_review(review_path, proposal, snapshot)
+                if preaccepted_owner_sources:
+                    validate_step07_imports(review, accepted_reusable_assignments)
                 project = Path(args.project) if args.project is not None else None
                 preview = build_placement_publication_preview(
                     proposal,

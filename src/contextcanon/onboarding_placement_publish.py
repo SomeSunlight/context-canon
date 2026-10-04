@@ -15,6 +15,7 @@ from typing import Iterable
 from .compiler import Compiler
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
 from .links import markdown_link_target
+from .model import RelationshipKind
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_placement import OnboardingPlacementProposal
 from .onboarding_placement_review import (OnboardingPlacementReview, PlacementReviewItem, PlacementReviewSource, PlacementReviewSourceEdit)
@@ -44,10 +45,12 @@ _SKELETON_SENTENCES = (
 
 @dataclass(frozen=True)
 class SourceGitProvenance:
+    target_node_key: str
     source_node_id: str
     source_name: str
     source_version: str
     source_package_digest: str
+    relationship: RelationshipKind
     origin: str
     locator: str
     ref: str
@@ -58,7 +61,9 @@ class SourceGitProvenance:
 
     def to_dict(self) -> dict[str, str]:
         return {
+            "target_node_key": self.target_node_key,
             "source_node_id": self.source_node_id,
+            "relationship": self.relationship,
             "locator": self.locator,
             "ref": self.ref,
             "node_path": self.node_path,
@@ -294,10 +299,12 @@ def _frozen_catalog_provenance(
     ):
         raise _error(f"frozen reusable Source provenance is malformed: {path}")
     return SourceGitProvenance(
+        target_node_key=source.target_node_key,
         source_node_id=source.source_node_id,
         source_name=source.source_name,
         source_version=source.source_version,
         source_package_digest=source.source_package_digest,
+        relationship=source.relationship,
         origin=source.origin,
         locator=locator,
         ref=ref,
@@ -319,10 +326,12 @@ def _git_provenance(
     repository_text = _try_git(package_root, "rev-parse", "--show-toplevel")
     if repository_text is None:
         return SourceGitProvenance(
+            target_node_key=source.target_node_key,
             source_node_id=source.source_node_id,
             source_name=source.source_name,
             source_version=source.source_version,
             source_package_digest=source.source_package_digest,
+            relationship=source.relationship,
             origin=source.origin,
             locator=str(package_root.resolve()),
             ref="",
@@ -350,10 +359,12 @@ def _git_provenance(
         if '"' in origin or '"' in node_path:
             raise _error("Source Git provenance contains unsupported quote characters")
         return SourceGitProvenance(
+            target_node_key=source.target_node_key,
             source_node_id=source.source_node_id,
             source_name=source.source_name,
             source_version=source.source_version,
             source_package_digest=source.source_package_digest,
+            relationship=source.relationship,
             origin=source.origin,
             locator=origin,
             ref=exact,
@@ -363,10 +374,12 @@ def _git_provenance(
             discovery_ref=branch or exact,
         )
     return SourceGitProvenance(
+        target_node_key=source.target_node_key,
         source_node_id=source.source_node_id,
         source_name=source.source_name,
         source_version=source.source_version,
         source_package_digest=source.source_package_digest,
+        relationship=source.relationship,
         origin=source.origin,
         locator=str(repository),
         ref=exact or "",
@@ -408,7 +421,7 @@ def _strip_managed_block(text: str, name: str) -> str:
         raise _error(f"CONTEXT.src.md has malformed managed {name} placement block")
     if starts == 0:
         return text
-    pattern = re.compile(rf"\n?{re.escape(start)}\n.*?\n{re.escape(end)}\n?", re.DOTALL)
+    pattern = re.compile(rf"\n?{re.escape(start)}\n.*?{re.escape(end)}\n?", re.DOTALL)
     return pattern.sub("\n", text, count=1)
 
 
@@ -457,9 +470,26 @@ def _replace_managed_section(
     return result.rstrip() + "\n"
 
 
-def _replace_parent_section(text: str, body: str) -> str:
-    """Publish structural Parents inside the canonical Context Imports section."""
+def _managed_block_body(text: str, name: str) -> str:
+    start = _MARKER_START[name]
+    end = _MARKER_END[name]
+    if text.count(start) != 1 or text.count(end) != 1:
+        return ""
+    first = text.index(start) + len(start)
+    last = text.index(end, first)
+    return text[first:last].strip()
 
+
+def _replace_parent_section(text: str, body: str) -> str:
+    """Fold structural Parent publication into the canonical Context Imports block.
+
+    The separate parent marker is read only for cleanup of historical onboarding
+    output. New authoring writes one sources managed block containing every Context
+    Import, regardless of whether it is Parent or Reference.
+    """
+
+    existing_imports = _managed_block_body(text, "sources")
+    text = _strip_managed_block(text, "sources")
     text = _strip_managed_block(text, "parent")
 
     matches: list[re.Match[str]] = []
@@ -480,29 +510,25 @@ def _replace_parent_section(text: str, body: str) -> str:
             )
         text = (text[:heading.start()].rstrip() + "\n\n" + text[end:].lstrip("\n")).rstrip() + "\n"
 
-    if not body.strip():
-        return text.rstrip() + "\n"
+    structural = body.strip()
+    if structural and existing_imports:
+        match = re.search(r'ctx:source id="([^"]+)"', structural)
+        if match is not None and re.search(
+            rf'ctx:source id="{re.escape(match.group(1))}"', existing_imports
+        ):
+            raise _error(
+                "the structural Parent is also selected as an additional Context Import; "
+                "remove the duplicate STEP-07 assignment"
+            )
 
-    source_heading = re.search(r"(?m)^## Sources[ \t]*$", text)
-    context_heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
-    if source_heading is not None and context_heading is not None:
-        raise _error("CONTEXT.src.md contains both ## Context Imports and legacy ## Sources")
-    if source_heading is not None:
-        text = text[:source_heading.start()] + "## Context Imports" + text[source_heading.end():]
-
-    block = f"{_MARKER_START['parent']}\n{body.rstrip()}\n{_MARKER_END['parent']}"
-    heading = re.search(r"(?m)^## Context Imports[ \t]*$", text)
-    if heading is None:
-        return text.rstrip() + f"\n\n## Context Imports\n\n{block}\n"
-
-    next_heading = re.compile(r"(?m)^## .+$").search(text, heading.end())
-    end = next_heading.start() if next_heading else len(text)
-    existing = text[heading.end():end].strip()
-    combined = block if not existing else block + "\n\n" + existing
-    result = text[:heading.end()] + "\n\n" + combined
-    if end < len(text):
-        result += "\n\n" + text[end:].lstrip("\n")
-    return result.rstrip() + "\n"
+    combined = "\n\n".join(part for part in (structural, existing_imports) if part)
+    return _replace_managed_section(
+        text,
+        "Context Imports",
+        "sources",
+        combined,
+        aliases=("Sources",),
+    )
 
 def _safe_line(value: object, label: str) -> str:
     text = str(value).strip()
@@ -594,7 +620,6 @@ def _render_topics(items: list[PlacementReviewItem], project_root: Path, node_ro
 
 def _render_sources(
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[str, SourceGitProvenance],
     config_locator: str,
 ) -> str:
     lines: list[str] = []
@@ -603,7 +628,7 @@ def _render_sources(
         if any(char in name for char in "]\n\r"):
             raise _error(f"Source {source.review_id} name cannot be represented safely")
         lines.append(
-            f"- [{name}]({markdown_link_target(config_locator)}) — `{source.source_version}` — `relationship=parent`"
+            f"- [{name}]({markdown_link_target(config_locator)}) — `{source.source_version}` — `relationship={source.relationship}`"
         )
         if source.relationship_why:
             lines.append(f"  Why: {_safe_line(source.relationship_why, f'Source {source.review_id} relationship Why')}")
@@ -636,7 +661,6 @@ def _render_node_source(
     node_root: Path,
     items: list[PlacementReviewItem],
     sources: list[PlacementReviewSource],
-    provenance_by_id: dict[str, SourceGitProvenance],
 ) -> str:
     overviews = [item for item in items if item.kind == "overview"]
     states = [item for item in items if item.kind in {"state", "unresolved"}]
@@ -668,7 +692,7 @@ def _render_node_source(
         text,
         "Context Imports",
         "sources",
-        _render_sources(sources, provenance_by_id, config_locator),
+        _render_sources(sources, config_locator),
         aliases=("Sources",),
     )
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
@@ -781,12 +805,18 @@ def _accepted_ordinary_sources(
     review: OnboardingPlacementReview,
     *,
     enclosing_parent_node_id: str | None = None,
+    root_node_key: str | None = None,
 ) -> tuple[PlacementReviewSource, ...]:
     return tuple(
         source
         for source in review.sources
         if source.decision == "accept"
-        and source.source_node_id != enclosing_parent_node_id
+        and not (
+            enclosing_parent_node_id is not None
+            and root_node_key is not None
+            and source.target_node_key == root_node_key
+            and source.source_node_id == enclosing_parent_node_id
+        )
     )
 
 
@@ -826,14 +856,18 @@ def build_placement_publication_preview(
         if enclosing_parent_root is not None
         else None
     )
+    root_node_key = next(
+        (node.key for node in proposal.structure.nodes if node.path == "."),
+        None,
+    )
     ordinary_sources = _accepted_ordinary_sources(
         review,
         enclosing_parent_node_id=(
             enclosing_parent.metadata.id if enclosing_parent is not None else None
         ),
+        root_node_key=root_node_key,
     )
     provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
-    provenance_by_id = {item.source_node_id: item for item in provenance}
     items_by_node = _accepted_by_node(review)
     sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
@@ -858,10 +892,13 @@ def build_placement_publication_preview(
                 root,
                 items_by_node.get(node.key, []),
                 sources_by_node.get(node.key, []),
-                provenance_by_id,
             )
         else:
-            after = before
+            # Rebuild the one managed import block even without local findings:
+            # it may contain a structural Parent from a previous publication.
+            after = _replace_managed_section(
+                before, "Context Imports", "sources", "", aliases=("Sources",)
+            )
         node_before[node.key] = before
         node_ids[node.key] = parsed.metadata.id
         source_overrides[root] = after
@@ -1037,14 +1074,14 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
             ])
         lines.append("")
 
-    lines.extend(["## Accepted reusable Source state", ""])
+    lines.extend(["## Accepted reusable Context Imports", ""])
     if not preview.sources:
-        lines.extend(["No reusable Source is accepted in the current review.", ""])
+        lines.extend(["No additional reusable Context Import is accepted in the current review.", ""])
     for source in preview.sources:
         lines.extend(
             [
-                f"- **{source.source_name}** — origin: `{source.origin}`",
-                f"  - Source Node: `{source.source_node_id}`",
+                f"- **{source.source_name}** — **{source.relationship.title()}** · origin: `{source.origin}`",
+                f"  - Context Node: `{source.source_node_id}`",
                 f"  - version: `{source.source_version}`",
                 f"  - package: `{source.source_package_digest}`",
                 f"  - discovery: `{source.kind}` `{source.locator}`" + (f" @ `{source.discovery_ref}`" if source.discovery_ref else ""),
@@ -1222,12 +1259,15 @@ def _acceptance_payload(
     review: OnboardingPlacementReview,
     node_digests: dict[str, dict[str, str]],
 ) -> dict[str, object]:
-    source_by_id = {source.source_node_id: source for source in preview.sources}
+    source_by_import = {
+        (source.target_node_key, source.source_node_id): source for source in preview.sources
+    }
     accepted_sources = []
     for source in review.sources:
-        if source.decision != "accept" or source.source_node_id not in source_by_id:
+        key = (source.target_node_key, source.source_node_id)
+        if source.decision != "accept" or key not in source_by_import:
             continue
-        provenance = source_by_id[source.source_node_id]
+        provenance = source_by_import[key]
         entry = {**source.to_dict(), "discovery": {**provenance.to_dict(), "kind": provenance.kind, "discovery_ref": provenance.discovery_ref}}
         if provenance.kind == "git":
             entry["git"] = provenance.to_dict()
@@ -1390,20 +1430,18 @@ def publish_placement_review(
             if document.changed:
                 _atomic_write(document.source_path, document.after.encode("utf-8"))
 
-        ordinary_source_ids = {source.source_node_id for source in preview.sources}
+        import_keys = {(source.target_node_key, source.source_node_id) for source in preview.sources}
         accepted_sources_by_node = _sources_by_node(
             source
             for source in review.sources
-            if source.decision == "accept" and source.source_node_id in ordinary_source_ids
+            if source.decision == "accept" and (source.target_node_key, source.source_node_id) in import_keys
         )
-        provenance_by_id = {source.source_node_id: source for source in preview.sources}
         for key, sources in accepted_sources_by_node.items():
             delta = delta_by_key.get(key)
             if delta is None:
                 raise _error(f"internal error: accepted Source target {key} has no publication delta")
             target_root = delta.source_path.parent
             for source in sources:
-                provenance = provenance_by_id[source.source_node_id]
                 root = roots.get(source.source_node_id)
                 if root is None:
                     raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
@@ -1443,7 +1481,11 @@ def publish_placement_review(
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
-                if compiled.parent_package is None or compiled.parent_package.package_digest != parent_pin.parent_package_digest:
+                if not any(
+                    parent.metadata.id == parent_pin.parent_node_id
+                    and parent.package_digest == parent_pin.parent_package_digest
+                    for parent in compiled.semantic_parent_packages
+                ):
                     raise _error(f"published Parent pin for {delta.name} does not match reviewed preview")
             compiled_by_key[delta.key] = compiled
             compiled_nodes.append(compiled)
@@ -1468,9 +1510,10 @@ def publish_placement_review(
                 "package_digest": compiled.package_digest,
                 "source_sha256": _sha256_bytes(delta.source_path.read_bytes()),
             }
-            if compiled.parent_package is not None:
-                state["parent_node_id"] = compiled.parent_package.metadata.id
-                state["parent_package_digest"] = compiled.parent_package.package_digest
+            parent_pin = parent_by_child.get(delta.key)
+            if parent_pin is not None:
+                state["parent_node_id"] = parent_pin.parent_node_id
+                state["parent_package_digest"] = parent_pin.parent_package_digest
             node_digests[delta.key] = state
 
         for source in preview.sources:

@@ -8,6 +8,7 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 
 ### Added
 
+- Onboarding now uses the same explicit Parent / Reference Context Imports as normal authoring. STEP 07 distinguishes existing enclosing Parents, additional Parents and References; STEP 08 v2 cannot invent imports; STEP 10, preview, publication and reset/recovery preserve the accepted relationship and exact package. New publication writes one canonical import section/block for structural and reusable imports. Historical untyped states remain readable as Parents.
 - Explicit **Parent / Reference** semantics for reusable Context imports: Parent is normative and transitive through semantic Parent/Child relationships; Reference is informational, its Rules do not apply, and the relationship is not inherited.
 - Package schema v3 plus compiler format 0.7 record direct reusable-import relationship kind while retaining the existing immutable package/provenance infrastructure.
 - A direct Reference section in generated Official Context and explicit `references` machine state keep informational Context structurally separate from effective Rules.
@@ -20,6 +21,7 @@ ContextCanon **0.10.0** is the current review candidate. It builds on the accept
 
 ### Fixed
 
+- Onboarding publication supports multiple Parents and keeps per-target relationship provenance when the same package is imported differently at different Nodes. Reset from STEP 07 also removes the accepted reusable machine state and frozen Catalog, while later resets preserve it. STEP 10 rejects a changed relationship or inconsistent visible/machine Relationship field.
 - Generated repository-local Markdown link destinations are now URL-safe across Official Context rendering, Context Imports, Resource bridges/closure and onboarding review/publication surfaces. Raw filesystem/ContextCanon locators remain semantic truth; encoded local targets are decoded before filesystem resolution, including paths with spaces, `#`, `%`, and parentheses.
 - STEP-10 split-review validation errors now identify the concrete P finding and Markdown file that failed validation, and the progress block is visually separated from the ordinary item-count line.
 - Subtree placement no longer publishes an accepted reusable Context a second time as an ordinary Source when that exact Node is already the enclosing semantic Parent; the accepted STEP-07/10 trace remains valid while publication keeps only the Parent relationship.

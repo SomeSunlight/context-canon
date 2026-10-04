@@ -8,15 +8,19 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from .model import CompiledPackage
+from .compiler import Compiler
+from .model import CompiledPackage, RelationshipKind
+from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_structure import HumanStructurePlan
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError
 from .onboarding_workspace import write_utf8
 
 
-REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v0"
-REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v0"
+LEGACY_REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v0"
+REUSABLE_CONTEXTS_SCHEMA = "contextcanon/onboarding-reusable-contexts/v1"
+LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v0"
+REUSABLE_CONTEXTS_STATE_SCHEMA = "contextcanon/onboarding-reusable-contexts-state/v1"
 REUSABLE_CONTEXTS_STATE_NAME = "reusable-contexts.json"
 FROZEN_CATALOG_DIR_NAME = "reusable-context-packages"
 FROZEN_PROVENANCE_REL = ".context/onboarding-provenance.json"
@@ -36,11 +40,13 @@ _HEADER_RE = re.compile(
 )
 _ASSIGN_RE = re.compile(
     r'^- \*\*(?P<target>.+?)\*\* \(`(?P<path>[^`]+)`\) ← '
-    r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)$'
+    r'\*\*(?P<source>.+?)\*\* \(`(?P<version>[^`]+)`\)'
+    r'(?: \[(?P<relationship>Parent|Reference)\])?$'
 )
 _PLAIN_ASSIGN_RE = re.compile(
     r'^(?:- )?(?P<target>.+) \((?P<path>.+)\) ← '
-    r'(?P<source>.+) \((?P<version>.+)\)$'
+    r'(?P<source>.+) \((?P<version>.+)\)'
+    r'(?: \[(?P<relationship>Parent|Reference)\])?$'
 )
 @dataclass(frozen=True)
 class ReusableContextAssignment:
@@ -52,6 +58,7 @@ class ReusableContextAssignment:
     source_version: str
     source_normalized_digest: str
     source_package_digest: str
+    relationship: RelationshipKind
     why: str
 
     @property
@@ -68,6 +75,7 @@ class ReusableContextAssignment:
             "source_version": self.source_version,
             "source_normalized_digest": self.source_normalized_digest,
             "source_package_digest": self.source_package_digest,
+            "relationship": self.relationship,
             "why": self.why,
         }
 
@@ -98,6 +106,10 @@ class ReusableContextsPlan:
     @property
     def owner_source_whys(self) -> dict[str, str]:
         return {assignment.owner_spec: assignment.why for assignment in self.assignments}
+
+    @property
+    def owner_source_relationships(self) -> dict[str, RelationshipKind]:
+        return {assignment.owner_spec: assignment.relationship for assignment in self.assignments}
 
 
 def _error(message: str) -> ContextCanonError:
@@ -144,6 +156,21 @@ def _decision(text: str) -> str:
     if len(matches) != 1 or matches[0] not in {"pending", "accept"}:
         raise _error("Decision must appear exactly once and be `pending` or `accept`")
     return matches[0]
+
+
+def _enclosing_parent_package(snapshot_root: Path):
+    root = snapshot_root.resolve()
+    if not (root.parent.name == "onboarding" and root.parent.parent.name == ".context"):
+        # Compatibility for lightweight unit/scripting snapshots. Only canonical
+        # .context/onboarding/<digest> snapshots can have a meaningful enclosing
+        # project Parent.
+        return None
+    project = project_root_from_snapshot(root)
+    parent_root = find_enclosing_context_root(project)
+    if parent_root is None:
+        return None
+    repository = resolve_onboarding_scope(project).repository_root
+    return Compiler(repository).compile(parent_root)
 
 
 def _candidate_manifest_paths(location: Path) -> list[Path]:
@@ -546,6 +573,10 @@ def _parse_assignments(
     text: str,
     structure: HumanStructurePlan,
     packages: tuple[CompiledPackage, ...],
+    *,
+    enclosing_parent_node_id: str | None = None,
+    reject_existing_parent_duplicate: bool = True,
+    require_relationship: bool = True,
 ) -> tuple[ReusableContextAssignment, ...]:
     body = _between(text, ASSIGNMENTS_START, ASSIGNMENTS_END, "Assignments")
     target_by_label = {(node.name, node.path): node for node in structure.nodes}
@@ -566,9 +597,11 @@ def _parse_assignments(
         if match is None:
             raise _error(
                 f"Cannot parse Assignment line {line!r}. Expected raw text like "
-                "'<project name> (<path>) ← <reusable Context name> (<version>)'. "
+                "'<project name> (<path>) ← <reusable Context name> (<version>) [Parent|Reference]'. "
                 "Do not add Markdown bold markers or backticks; a leading list dash is optional."
             )
+        if require_relationship and match.group("relationship") is None:
+            raise _error(f"Assignment {line!r} needs an explicit [Parent] or [Reference] choice")
         target = target_by_label.get((match.group("target"), match.group("path")))
         if target is None:
             raise _error(
@@ -596,6 +629,19 @@ def _parse_assignments(
         if not why or why == "-":
             raise _error("Every reusable Context assignment needs a real Why rationale")
         package = candidates[0]
+        relationship = (match.groupdict().get("relationship") or "Parent").lower()
+        if relationship not in {"parent", "reference"}:
+            raise _error(f"Unsupported reusable Context relationship {relationship!r}")
+        if (
+            reject_existing_parent_duplicate
+            and enclosing_parent_node_id is not None
+            and target.path == "."
+            and package.metadata.id == enclosing_parent_node_id
+        ):
+            raise _error(
+                f"{package.metadata.name} is already the enclosing Parent of the onboarding root; "
+                "do not add it again as an Assignment"
+            )
         identity = (target.key, package.metadata.id)
         if identity in seen:
             raise _error(f"Duplicate reusable Context assignment for {target.name} and {package.metadata.name}")
@@ -610,6 +656,7 @@ def _parse_assignments(
                 source_version=package.metadata.version,
                 source_normalized_digest=package.normalized_digest,
                 source_package_digest=package.package_digest,
+                relationship=relationship,  # type: ignore[arg-type]
                 why=why,
             )
         )
@@ -647,6 +694,32 @@ def _normalized_payload(
     }
 
 
+def _legacy_normalized_payload(
+    evidence_digest: str,
+    structure_digest: str,
+    decision: str,
+    locations: tuple[str, ...],
+    roots: tuple[Path, ...],
+    packages: tuple[CompiledPackage, ...],
+    assignments: tuple[ReusableContextAssignment, ...],
+) -> dict[str, object]:
+    payload = _normalized_payload(
+        evidence_digest,
+        structure_digest,
+        decision,
+        locations,
+        roots,
+        packages,
+        assignments,
+    )
+    payload["schema"] = LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA
+    payload["assignments"] = [
+        {key: value for key, value in assignment.to_dict().items() if key != "relationship"}
+        for assignment in assignments
+    ]
+    return payload
+
+
 def _digest(payload: dict[str, object]) -> str:
     data = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(data).hexdigest()
@@ -659,6 +732,7 @@ def render_reusable_contexts(
     locations: tuple[str, ...],
     packages: tuple[CompiledPackage, ...],
     assignments: tuple[ReusableContextAssignment, ...],
+    enclosing_parent=None,
 ) -> str:
     lines = [
         "# STEP 07 — Reusable Contexts",
@@ -666,7 +740,7 @@ def render_reusable_contexts(
         "",
         "Your project now has its own Context shelves. This step asks one simple question: **should any already-curated reusable Context also apply here?** For example, a shared Development Workflow or GitHub Local Context can be attached where it belongs instead of copying those rules into this project by hand.",
         "",
-        "You choose the relationship; ContextCanon keeps the exact reusable package identity and carries the accepted composition into later placement. If no reusable Context applies, leaving Assignments empty is valid.",
+        "You choose the relationship explicitly. **Parent** is normative: its Rules apply here and its effective Context propagates to semantic Children. **Reference** is informational: its Rules do not apply and the relationship is not inherited by Children. ContextCanon keeps that exact choice through preview and publication.",
         "",
         "> **Important:** every editing/copy instruction in this file refers to the **raw Markdown text**, not to the rendered preview.",
         "",
@@ -691,19 +765,42 @@ def render_reusable_contexts(
             "",
             "> **END EDITABLE Catalog locations.**",
             "",
+            "## Existing Parents — generated",
+            "",
+        ]
+    )
+    if enclosing_parent is None:
+        lines.append("No enclosing Parent exists for this onboarding scope.")
+    else:
+        root_node = next((node for node in structure.nodes if node.path == "."), None)
+        root_label = root_node.name if root_node is not None else "Onboarding root"
+        lines.extend(
+            [
+                f"{root_label} (.) ← {enclosing_parent.metadata.name} ({enclosing_parent.metadata.version}) [Parent]",
+                "Why: This is the already accepted nearest enclosing Context; its Rules govern this subtree.",
+                "",
+                "This relationship already exists. **Do not copy it into Assignments below.** ContextCanon publishes it once as the root's canonical Parent import.",
+            ]
+        )
+    lines.extend(
+        [
+            "",
             "## Assignments",
             "",
-            "An Assignment means: **this project Context Node uses this reusable Context**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it uses on the right.",
+            "An Assignment means: **this project Context Node imports this reusable Context as either Parent or Reference**. Keep the list sparse: add only relationships that should really exist. The arrow reads from the project Node on the left to the reusable Context it imports on the right.",
             "",
-            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, then put `Why: ...` on the next line. Indentation is optional.",
+            "Use the generated raw-text lists at the bottom. For a project Node, copy everything after `Copy:` to the end of that raw Markdown line. For a reusable Context, copy everything after `Copy:` up to but not including ` — exact package`. Join those two fragments with ` ← `, append exactly ` [Parent]` or ` [Reference]`, then put `Why: ...` on the next line. Indentation is optional.",
             "",
             "There is deliberately **no Markdown formatting syntax to preserve** in an Assignment: no list dash, no bold markers and no backticks.",
             "",
             "Assignment syntax: **read-only help — do not edit here.**",
             "",
             "```text",
-            "<project name> (<project path>) ← <reusable Context name> (<version>)",
-            "Why: <why this reusable Context belongs here>",
+            "<project name> (<project path>) ← <reusable Context name> (<version>) [Parent]",
+            "Why: <why this reusable Context governs this Node>",
+            "",
+            "<project name> (<project path>) ← <reusable Context name> (<version>) [Reference]",
+            "Why: <why this reusable Context is useful information here>",
             "```",
             "",
             "> ✏️ **EDIT HERE — reusable-Context Assignments and Decision start below.**",
@@ -717,7 +814,7 @@ def render_reusable_contexts(
     for assignment in assignments:
         lines.extend(
             [
-                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version})",
+                f"{assignment.target_name} ({assignment.target_path}) ← {assignment.source_name} ({assignment.source_version}) [{assignment.relationship.title()}]",
                 f"Why: {assignment.why}",
             ]
         )
@@ -728,7 +825,7 @@ def render_reusable_contexts(
             "",
             "> **END EDITABLE reusable-Context Assignments.**",
             "",
-            "Set `Decision` to `accept` when the Catalog and assignments describe the reusable Context you really want this project to inherit. An empty assignment list is valid when none applies.",
+            "Set `Decision` to `accept` when every Assignment has the intended Parent/Reference meaning. An empty assignment list is valid when no additional reusable Context applies.",
             "",
             "## Available project Context Nodes — generated",
             "",
@@ -769,24 +866,29 @@ def render_reusable_contexts(
     )
     return "\n".join(lines)
 
-def _initial_text(evidence_digest: str, structure: HumanStructurePlan) -> str:
-    return render_reusable_contexts(evidence_digest, structure, "pending", (), (), ())
+def _initial_text(evidence_digest: str, structure: HumanStructurePlan, enclosing_parent=None) -> str:
+    return render_reusable_contexts(
+        evidence_digest, structure, "pending", (), (), (), enclosing_parent=enclosing_parent
+    )
 
 
-def _parse_bound_text(path: Path, evidence_digest: str, structure: HumanStructurePlan) -> tuple[str, tuple[str, ...]]:
+def _parse_bound_text(
+    path: Path, evidence_digest: str, structure: HumanStructurePlan
+) -> tuple[str, tuple[str, ...], str]:
     text = path.read_text(encoding="utf-8")
     header = _HEADER_RE.search(text)
     if header is None:
         raise _error(f"{path} is missing its ContextCanon binding header")
-    if header.group("schema") != REUSABLE_CONTEXTS_SCHEMA:
-        raise _error(f"unsupported schema {header.group('schema')!r}")
+    schema = header.group("schema")
+    if schema not in {REUSABLE_CONTEXTS_SCHEMA, LEGACY_REUSABLE_CONTEXTS_SCHEMA}:
+        raise _error(f"unsupported schema {schema!r}")
     if header.group("evidence") != evidence_digest:
         raise _error("Evidence digest differs from this onboarding snapshot")
     if header.group("structure") != structure.structure_digest:
         raise _error(
             "Accepted project Context structure changed; recreate/review STEP-07-reusable-contexts.md against the new structure"
         )
-    return text, _catalog_locations(text)
+    return text, _catalog_locations(text), schema
 
 
 def refresh_reusable_contexts(
@@ -796,11 +898,12 @@ def refresh_reusable_contexts(
     structure: HumanStructurePlan,
 ) -> tuple[ReusableContextsPlan, bool]:
     path = path.resolve()
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
     created = False
     if not path.exists():
-        write_utf8(path, _initial_text(evidence_digest, structure))
+        write_utf8(path, _initial_text(evidence_digest, structure, enclosing_parent))
         created = True
-    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    text, locations, human_schema = _parse_bound_text(path, evidence_digest, structure)
     decision = _decision(text)
 
     # Once STEP 07 is accepted and unchanged, rerunning the command is idempotent:
@@ -824,7 +927,15 @@ def refresh_reusable_contexts(
             ), created
 
     roots, packages = discover_catalog(locations) if locations else ((), ())
-    assignments = _parse_assignments(text, structure, packages)
+    assignments = _parse_assignments(
+        text,
+        structure,
+        packages,
+        require_relationship=human_schema != LEGACY_REUSABLE_CONTEXTS_SCHEMA,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+    )
     canonical = render_reusable_contexts(
         evidence_digest,
         structure,
@@ -832,6 +943,7 @@ def refresh_reusable_contexts(
         locations,
         packages,
         assignments,
+        enclosing_parent=enclosing_parent,
     )
     write_utf8(path, canonical)
     payload = _normalized_payload(
@@ -884,7 +996,11 @@ def load_accepted_reusable_contexts(
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise _error(f"machine state is unreadable: {state_path}") from exc
-    if state.get("schema") != REUSABLE_CONTEXTS_STATE_SCHEMA:
+    state_schema = state.get("schema")
+    if state_schema not in {
+        REUSABLE_CONTEXTS_STATE_SCHEMA,
+        LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA,
+    }:
         raise _error("unsupported reusable Context machine state")
     if state.get("evidence_digest") != evidence_digest or state.get("structure_digest") != structure.structure_digest:
         raise _error("reusable Context machine state does not match this Evidence/Structure")
@@ -896,9 +1012,21 @@ def load_accepted_reusable_contexts(
     if current_sha != state.get("human_file_sha256"):
         raise _error("STEP-07-reusable-contexts.md changed after validation; rerun `contextcanon onboard reusable-contexts`")
 
-    text, locations = _parse_bound_text(path, evidence_digest, structure)
+    text, locations, human_schema = _parse_bound_text(path, evidence_digest, structure)
+    if state_schema == REUSABLE_CONTEXTS_STATE_SCHEMA and human_schema != REUSABLE_CONTEXTS_SCHEMA:
+        raise _error("canonical reusable Context state is bound to a legacy human review schema")
     roots, packages = _accepted_catalog_from_state(snapshot_root, state) if locations else ((), ())
-    assignments = _parse_assignments(text, structure, packages)
+    enclosing_parent = _enclosing_parent_package(snapshot_root)
+    assignments = _parse_assignments(
+        text,
+        structure,
+        packages,
+        require_relationship=human_schema != LEGACY_REUSABLE_CONTEXTS_SCHEMA,
+        enclosing_parent_node_id=(
+            enclosing_parent.metadata.id if enclosing_parent is not None else None
+        ),
+        reject_existing_parent_duplicate=state_schema != LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA,
+    )
 
     state_rows = state.get("catalog_packages", [])
     if not isinstance(state_rows, list):
@@ -911,7 +1039,12 @@ def load_accepted_reusable_contexts(
     if len(original_roots) != len(packages):
         raise _error("reusable Context machine state Catalog package count is inconsistent")
 
-    payload = _normalized_payload(
+    payload_factory = (
+        _legacy_normalized_payload
+        if state_schema == LEGACY_REUSABLE_CONTEXTS_STATE_SCHEMA
+        else _normalized_payload
+    )
+    payload = payload_factory(
         evidence_digest,
         structure.structure_digest,
         "accept",
