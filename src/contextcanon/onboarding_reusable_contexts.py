@@ -160,15 +160,12 @@ def _decision(text: str) -> str:
 
 def _enclosing_parent_package(snapshot_root: Path):
     root = snapshot_root.resolve()
-    try:
-        project = project_root_from_snapshot(root)
-    except ContextCanonError:
-        # Lightweight unit/scripting callers historically supplied a synthetic
-        # snapshot directory outside .context/onboarding. Such a path cannot
-        # have an enclosing project Parent, so preserve that compatibility.
-        if not (root.parent.name == "onboarding" and root.parent.parent.name == ".context"):
-            return None
-        raise
+    if not (root.parent.name == "onboarding" and root.parent.parent.name == ".context"):
+        # Compatibility for lightweight unit/scripting snapshots. Only canonical
+        # .context/onboarding/<digest> snapshots can have a meaningful enclosing
+        # project Parent.
+        return None
+    project = project_root_from_snapshot(root)
     parent_root = find_enclosing_context_root(project)
     if parent_root is None:
         return None
