@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 from .links import markdown_link_target
+from .model import RelationshipKind
 from .onboarding_placement import OnboardingPlacementProposal, PlacementItem, PlacementSourceEdit
 from .onboarding_placement_review import (
     PLACEMENT_REVIEW_SCHEMA,
@@ -381,7 +382,7 @@ def _render_index(
         "",
         f"- Findings — {_status_counts(item.decision for item in review.items)}",
         f"- Source edits — {_status_counts(edit.decision for edit in review.source_edits)}",
-        f"- Reusable Sources — {_status_counts(source.decision for source in review.sources)}",
+        f"- Context Imports — {_status_counts(source.decision for source in review.sources)}",
         f"- Complete: `{str(review.is_complete).lower()}`",
         "",
         "## Editable control glossary",
@@ -464,24 +465,25 @@ def _render_index(
                 f"`{edit.path}` {edit.start_line}–{edit.end_line} | {linked} |"
             )
 
-    lines.extend(["", "## Reusable Sources", ""])
+    lines.extend(["", "## Context Imports", ""])
     if not review.sources:
-        lines.extend(["No reusable Source is currently proposed or owner-selected.", ""])
+        lines.extend(["No additional reusable Context Import is currently proposed or owner-selected.", ""])
     else:
         by_reuse = {reuse.id: reuse for reuse in proposal.source_reuses}
         for source in review.sources:
             target = nodes[source.target_node_key]
             lines.extend(
                 [
-                    f"## Source {source.review_id} — {source.source_name}",
+                    f"## Context Import {source.review_id} — {source.source_name}",
                     f'<!-- cc:placement-source id="{source.review_id}" origin="{source.origin}" '
-                    f'source-id="{source.source_node_id}" version="{source.source_version}" '
+                    f'relationship="{source.relationship}" source-id="{source.source_node_id}" version="{source.source_version}" '
                     f'normalized-digest="{source.source_normalized_digest}" package-digest="{source.source_package_digest}" -->',
                     "",
                     f"Destination: `{target.key}` — [**{target.name}**]({_node_entry_link(target.path)}) (`{target.path}`)",
                     f"Decision: `{source.decision}`",
                     f"Origin: `{source.origin}`",
-                    f"Why this Source applies: {source.relationship_why or '-'}",
+                    f"Relationship: `{source.relationship}`",
+                    f"Why this Context Import applies: {source.relationship_why or '-'}",
                     f"Review note: {source.review_note or '-'}",
                     "",
                     f"Exact package: `{source.source_version}` · `{source.source_package_digest}`",
@@ -494,8 +496,8 @@ def _render_index(
             else:
                 lines.extend(
                     [
-                        "This Source was selected explicitly by the project owner. When it came from STEP 07, "
-                        "that relationship is already accepted here and is shown only for compact traceability; "
+                        "This Context Import was selected explicitly by the project owner in STEP 07. "
+                        "Its Parent/Reference relationship is already accepted here and is shown only for compact traceability; "
                         "it is design input, not a claim derived from frozen project Evidence.",
                         "",
                     ]
@@ -509,6 +511,7 @@ def _initial_review(
     *,
     owner_source_specs: Iterable[str],
     owner_source_whys: Mapping[str, str] | None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None,
     preaccepted_owner_sources: bool,
 ) -> OnboardingPlacementReview:
     snapshot = load_evidence_snapshot(snapshot_root)
@@ -546,6 +549,7 @@ def _initial_review(
         proposal,
         owner_source_specs,
         owner_source_whys=owner_source_whys,
+        owner_source_relationships=owner_source_relationships,
         preaccepted_owner_sources=preaccepted_owner_sources,
     )
     return _normalize_review(proposal, items, source_edits, sources)
@@ -865,6 +869,7 @@ def create_or_load_split_placement_review(
     *,
     owner_source_specs: Iterable[str] = (),
     owner_source_whys: Mapping[str, str] | None = None,
+    owner_source_relationships: Mapping[str, RelationshipKind] | None = None,
     preaccepted_owner_sources: bool = False,
 ) -> tuple[OnboardingPlacementReview, bool]:
     path = path.resolve()
@@ -926,6 +931,7 @@ def create_or_load_split_placement_review(
         snapshot_root,
         owner_source_specs=owner_source_specs,
         owner_source_whys=owner_source_whys,
+        owner_source_relationships=owner_source_relationships,
         preaccepted_owner_sources=preaccepted_owner_sources,
     )
     _write_split_layout(path, proposal, review, snapshot_root, creating=True)
