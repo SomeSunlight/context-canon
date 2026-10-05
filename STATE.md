@@ -1,5 +1,9 @@
 # Current State
 
+## Active Phase-2 Fast Track (#107)
+
+The owner explicitly authorized beginning onboarding storage/migration on 2026-10-05 before Phase 1 is merged. Work is isolated on `agent/issue-107-onboarding-versions`, stacked on owner-tested PR #108 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; accepted `main` is unchanged. PR #108 remains separate and unmerged, with its Linux retry affected by GitHub's runner-allocation incident. The [Phase-2 plan](plans/issue-107-phase-2.md) is the active recovery map. First reconstruct frozen input/ownership and reset boundaries, then implement coherent tested blocks with remote checkpoints. A separate Draft PR will target the Phase-1 branch until the owner merges it; then reconcile/rebase the accepted baseline before continuing. No merge, pruning or unrelated feature scope is authorized.
+
 The accepted baseline is `main` at `28ce62ef7aca4960bcf238b8d2221b7e445aa236`, including owner-tested PR #105 (portable candidates, scoped cleanup and Windows warning headroom), PR #104 (Parent / Reference onboarding Phase 2), PR #100 and PR #102. The owner successfully propagated the real Windows project without relocating its normal PyCharm checkout. Final reviewed head `4fa2e4f78e408162610511db1c8f1bcf79501b9e` passed Actions run `37233194691`, including 379 deterministic tests and eight native Windows checks.
 
 ## Owner-accepted shared Node versions — PR #108 merge gate (#107 Phase 1)
