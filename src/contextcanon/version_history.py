@@ -38,7 +38,13 @@ def version_inventory(repo_root: Path) -> tuple[VersionEntry, ...]:
             packages.append((path, package))
     users: dict[str, list[str]] = {}
     for root in discover_nodes(repo_root):
-        parsed = parse_node(root, repo_root)
+        try:
+            parsed = parse_node(root, repo_root)
+        except ContextCanonError:
+            # A local Node build must not fail after publication merely because
+            # an unrelated sibling has unfinished authoring. check --all owns
+            # that diagnostic; this inventory never authorizes history pruning.
+            continue
         label = root.relative_to(repo_root).as_posix() or "."
         for ref in (*parsed.parents, *parsed.sources):
             if ref.is_pinned:
@@ -52,7 +58,10 @@ def version_inventory(repo_root: Path) -> tuple[VersionEntry, ...]:
                 # current publication binding and never enters the library.
                 continue
             users.setdefault(package_key(current), []).append(f"{label} [current publication]")
-    entries = [VersionEntry(path, package, tuple(sorted(users.get(package_key(package), []))))
+            for ref in (*current.parents, *current.sources):
+                relation = (ref.relationship or "parent").title()
+                users.setdefault(package_key(ref), []).append(f"{label} [published {relation}]")
+    entries = [VersionEntry(path, package, tuple(sorted(set(users.get(package_key(package), [])))))
                for path, package in packages]
     return tuple(sorted(entries, key=lambda entry: (entry.package.metadata.name.casefold(),
                                                    entry.package.metadata.id, entry.package.metadata.version,
@@ -64,14 +73,16 @@ def render_inventory(repo_root: Path, *, relative_to: Path | None = None) -> str
     lines = ["# Node versions", "", "> GENERATED INVENTORY — DO NOT EDIT.", "",
              "Complete immutable Node packages retained in this Git working tree. "
              "Current imports stay pinned until separately reviewed acceptance.", "",
-             "| Node | Version | Used by | Package |", "| --- | --- | --- | --- |"]
+             "| Node | Node ID | Version | Used by | Package |", "| --- | --- | --- | --- | --- |"]
     for entry in version_inventory(repo_root):
         rel = os.path.relpath(entry.path / "CONTEXT.md", base).replace(os.sep, "/")
         name = entry.package.metadata.name.replace("|", "\\|")
         users = "; ".join(entry.used_by).replace("|", "\\|") or "retained history"
-        lines.append(f"| {name} | {entry.package.metadata.version} | {users} | [inspect]({markdown_link_target(rel)}) |")
+        node_id = entry.package.metadata.id.replace("|", "\\|")
+        lines.append(f"| {name} | {node_id} | {entry.package.metadata.version} | {users} | [inspect]({markdown_link_target(rel)}) |")
     lines.extend(["", "Full Node identity, semantic digest and exact package digest live in each "
                   "verified package manifest. Directory names are compact locators.", "",
+                  "Incomplete authoring is diagnosed by check --all and omitted from this consumer inventory. "
                   "Retained history may still support reviews or onboarding recovery. "
                   "This view is not permission to delete an apparently unused version.", ""])
     return "\n".join(lines)

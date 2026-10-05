@@ -3,13 +3,13 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.7.0"
+compiler_version: "0.8.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "63b92022-db1a-4875-be99-017726cbfce7"
   name: "GitHub Local"
-  version: "0.1.6-draft"
+  version: "0.1.7-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,11 +18,11 @@ parents: []
 sources:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.6-draft"
+    version: "0.3.7-draft"
     relationship: "parent"
     locator: "../development-workflow/"
-    normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
-    package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
+    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
+    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
 
 # Direct informational References. Their Rules are not effective and they are not exported to Children.
 references: []
@@ -31,9 +31,9 @@ references: []
 imports:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.6-draft"
-    normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
-    package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
+    version: "0.3.7-draft"
+    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
+    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -77,29 +77,29 @@ targets:
   - topic: "CCW-TOPIC-CHANGE-WORKFLOW"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCW-TOPIC-VERSION-PROVENANCE"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
     target_node_id: null
     target_node_name: null
   - topic: "GHL-TOPIC-PROVIDER"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/63b92022-db1a-4875-be99-017726cbfce7/nodes/library/github-local/docs/provider.md"
+    locator: "CONTEXT/references/n984d6955e19f92e/docs/provider.md"
     target_node_id: null
     target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "docs/provider.md", "published": "CONTEXT/references/63b92022-db1a-4875-be99-017726cbfce7/nodes/library/github-local/docs/provider.md"}
-  - {"source": null, "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"}
-  - {"source": null, "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md"}
+  - {"source": "docs/provider.md", "published": "CONTEXT/references/n984d6955e19f92e/docs/provider.md"}
+  - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "87361046e4d09c35d95c77b8478a733e4a973e346c1f35e3cfe5156bad97bc31"
-  package_digest: "67ced1bbc616b5cdda2db0976a359bb4b935c065333d4469acbf1b069b00db4c"
+  normalized_digest: "4ad030512c9a4753e8400eecabb744f9b9dc2d7575ca9f3f654a5658423e11ab"
+  package_digest: "87f1416dc0e178c740d1975a25fa9f815576bbde224de3ad248f9579cf9e83ec"

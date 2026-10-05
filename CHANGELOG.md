@@ -6,6 +6,11 @@ All notable ContextCanon changes will be documented here.
 
 ContextCanon **0.10.0** is the current development release in accepted `main`. It builds on the accepted 0.9.9 onboarding baseline and adds first-class stable Topic Resource identity plus reviewed rename/move maintenance. The 0.9.1–0.9.9 entries below record the incremental owner-test fixes that led to the accepted onboarding baseline.
 
+### Changed
+
+- Issue #107 Phase 1 owner-test candidate: each consuming Git working tree retains complete immutable Node versions once in `.context/versions/`; normal publication keeps previous/current history and exact Parent/Reference pins stay per consumer. Normal package/review scratch moves to root scopes, independently of Child nesting.
+- Package v4 authenticates full Resource origin mapping while shorter generated namespaces and Node-relative directories preserve exact Markdown closures and legacy package reads. `versions list` and the generated history index expose retained versions. Separate preview-first `versions migrate` relocates verified legacy accepted stores without provider access, preserves exact pins/packages, moves only owned carrier URLs and resumes interrupted cleanup/review rebinding. Onboarding storage migration and safe history pruning remain Phase 2.
+
 ### Added
 
 - Onboarding now uses the same explicit Parent / Reference Context Imports as normal authoring. STEP 07 distinguishes existing enclosing Parents, additional Parents and References; STEP 08 v2 cannot invent imports; STEP 10, preview, publication and reset/recovery preserve the accepted relationship and exact package. New publication writes one canonical import section/block for structural and reusable imports. Historical untyped states remain readable as Parents.

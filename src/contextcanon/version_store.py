@@ -38,7 +38,10 @@ def package_key(package: CompiledPackage | PackageDependency | SourceRef | Paren
 
 
 def library_root(node_root: Path) -> Path:
-    return find_repo_root(node_root) / ".context" / "versions"
+    machine = find_repo_root(node_root) / ".context"
+    if machine.is_symlink() or (machine / "versions").is_symlink():
+        raise ContextCanonError(f"Version library is a symbolic link: {machine / 'versions'}")
+    return machine / "versions"
 
 
 def package_location(store: Path, key: str, *, lengths=TOKEN_LENGTHS) -> Path:
@@ -138,6 +141,8 @@ def scratch_root(node_root: Path, name: str, *, create: bool = False) -> Path:
     if name not in {"candidates", "parent-candidates", "source-reviews", "parent-reviews"}:
         raise ValueError(f"Unknown review store: {name}")
     repo = find_repo_root(node_root)
+    if (repo / ".context").is_symlink() or (repo / ".context" / name).is_symlink():
+        raise ContextCanonError(f"Review store is a symbolic link: {repo / '.context' / name}")
     source = node_root / "CONTEXT.src.md"
     owner = parse_node(node_root, repo).metadata.id if source.is_file() else node_root.relative_to(repo).as_posix()
     node_path = node_root.relative_to(repo).as_posix()

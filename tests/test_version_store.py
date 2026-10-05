@@ -165,6 +165,16 @@ class VersionStoreTests(unittest.TestCase):
             self.assertEqual(main(["versions", "list", str(root)]), 0)
         self.assertIn("P1 [current publication]", result.getvalue())
 
+    def test_single_node_build_does_not_depend_on_unfinished_sibling_authoring(self):
+        good, unfinished = self.repo / "good", self.repo / "unfinished"
+        node(good, "good")
+        unfinished.mkdir()
+        (unfinished / "CONTEXT.src.md").write_text("work in progress", encoding="utf-8")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", str(good)]), 0)
+            self.assertEqual(main(["check", str(good)]), 0)
+        self.assertEqual(len(version_inventory(self.repo)), 1)
+
     def test_deep_nodes_have_shallow_shared_storage_and_node_relative_resources(self):
         provider = self.repo.joinpath(*[f"F{index}" for index in range(10)])
         node(provider, "c4c94726-3cc7-4df6-b779-72bbf9c06f40", topic=True)

@@ -8,6 +8,8 @@ It is deliberately small:
 - [`onboarding-cli.md`](onboarding-cli.md) — compact onboarding command map, including reset/restart from any numbered step.
 - [`maintenance.md`](maintenance.md) — normal operation after onboarding: Source updates, propagation review, build, and check.
 - [`cli.md`](cli.md) — compact command map for everyday ContextCanon use.
+- [`node-versions.md`](node-versions.md) — shared complete Node version history, shorter paths and explicit legacy migration.
+- [`windows-paths.md`](windows-paths.md) — destination budgets, portable package storage and review scratch.
 - [`windows.md`](windows.md) — important Windows filesystem-lock guidance, including recurring `WinError 5` failures and real-time scanner exclusions.
 
 Most technical design and implementation documentation belongs to the [ContextCanon Framework Development Node](../nodes/internal/framework-development/) and is authored below its [`docs/`](../nodes/internal/framework-development/docs/) directory. User-facing entry documentation stays here so a normal operator does not need to search implementation Nodes merely to learn what to do next.

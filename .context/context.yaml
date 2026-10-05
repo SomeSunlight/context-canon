@@ -3,13 +3,13 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.7.0"
+compiler_version: "0.8.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.18-draft"
+  version: "0.3.20-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -46,25 +46,31 @@ targets:
   - topic: "CCG-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"
+    locator: "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCG-TOPIC-ONBOARDING"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md"
+    locator: "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCG-TOPIC-MAINTENANCE"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"
+    locator: "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCG-TOPIC-MAINTENANCE"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"
+    locator: "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CCG-TOPIC-MAINTENANCE"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCG-TOPIC-DEVELOPMENT"
@@ -76,16 +82,17 @@ targets:
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "docs/cli.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/cli.md"}
-  - {"source": "docs/maintenance.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/maintenance.md"}
-  - {"source": "docs/onboarding-cli.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding-cli.md"}
-  - {"source": "docs/onboarding.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/onboarding.md"}
-  - {"source": "docs/windows-paths.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/docs/windows-paths.md"}
-  - {"source": "nodes/internal/framework-development/docs/external-sources.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/external-sources.md"}
-  - {"source": "nodes/internal/framework-development/docs/onboarding-design.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/internal/framework-development/docs/onboarding-design.md"}
-  - {"source": "nodes/library/foundation/docs/composition.md", "published": "CONTEXT/references/a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11/nodes/library/foundation/docs/composition.md"}
+  - {"source": "docs/cli.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md"}
+  - {"source": "docs/maintenance.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md"}
+  - {"source": "docs/node-versions.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md"}
+  - {"source": "docs/onboarding-cli.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md"}
+  - {"source": "docs/onboarding.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md"}
+  - {"source": "docs/windows-paths.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/windows-paths.md"}
+  - {"source": "nodes/internal/framework-development/docs/external-sources.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/external-sources.md"}
+  - {"source": "nodes/internal/framework-development/docs/onboarding-design.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/onboarding-design.md"}
+  - {"source": "nodes/library/foundation/docs/composition.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/library/foundation/docs/composition.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "e46f763ae629d7512402afe3bf67bc533566e9855f7d0e1dc025ebacbc25b088"
-  package_digest: "a860da9406035eef3c1030cf08c9d2d82034e24ace89be1ef3562635c95e7755"
+  normalized_digest: "ce32b79d50b1fa22c71335acdaf4aa8d030decba4316fe2a738f0fb086660b9e"
+  package_digest: "740b20263165be6caf730b3239339be3c487f2d993cfe964764e01479c0bdf97"
