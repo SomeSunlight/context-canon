@@ -10,7 +10,7 @@ Accepted `main`: `28ce62ef7aca4960bcf238b8d2221b7e445aa236` (owner-tested PR #10
 
 | Main point | Status | Detail / next action |
 | --- | --- | --- |
-| Restore a usable plan and review the interrupted work (#109) | Locally verified; publication pending | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
+| Restore a usable plan and review the interrupted work (#109) | Complete; owner test pending | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
 | Shared versions and migration (#107 Phase 1) | Implemented; owner test pending | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
 | Onboarding storage and reset/recovery (#107 Phase 2) | Deferred until Phase-1 owner testing | [Phase-2 checklist](plans/issue-107-phase-2.md) |
 | Safe unused-version pruning | Deferred; complete reachability required | [Phase-2 prerequisite](plans/issue-107-phase-2.md) |
@@ -25,7 +25,7 @@ Purpose: make the plan resumable after a lost Work chat, independently verify PR
 - [x] Preserve and separate overview, Phase-1 detail, deferred Phase-2 work and history.
 - [x] Verify the published implementation and record remaining work or test limitations.
 - [x] Document the internal-project migration/test sequence, checkpoints and rollback.
-- [ ] Publish the documentation on PR #108 and confirm final verification.
+- [x] Publish the documentation on PR #108 and confirm final verification.
 - [ ] Owner tests and approves Phase 1; then finish the exact-head merge gate.
 
 ## Resuming after an interruption

@@ -51,7 +51,7 @@ Complete-binding preview checkpoint: one additional end-to-end regression reprod
 - [x] Independently verify PR #108, complete migration bindings and Linux/Windows evidence; record gaps.
 - [x] Publish concrete internal-project owner tests and rollback guidance.
 - [x] Prepare and locally verify the documentation checkpoint for PR #108.
-- [ ] Confirm publication and exact documentation-head CI on PR #108.
+- [x] Confirm publication and exact documentation-head CI on PR #108.
 - [ ] Owner completes the real internal-project test and explicitly approves Phase 1.
 
 Phase 2 is tracked in [issue-107-phase-2.md](issue-107-phase-2.md).
@@ -63,3 +63,5 @@ Published product head `448d2c1488adf584130760a8c9db50b3a888a3ed` is complete fo
 The internal-project test is [issue-107-owner-test.md](issue-107-owner-test.md). Later documentation-only changes do not alter executable/package behavior. Final local/CI results are recorded below when complete.
 
 Local recovery verification (#109): all 394 deterministic tests pass again. Self-host `build --all .` reports no changes, `check --all .` is clean with all four local Parent/Child edges current, original PLAN text is preserved verbatim in its split locations, and documentation links/diff hygiene pass. No product-source or generated-package changes were needed.
+
+Publication checkpoint (#109): documentation head `c45137001fd9b7c7af0aebd5a1f94947a1399b2a` passes Actions run [37264734527](https://github.com/SomeSunlight/context-canon/actions/runs/37264734527), including the complete Linux suite/self-host gate and native Windows job. Recovery review and owner-test documentation are complete. This closure changes only planning status; the exact final closure-head run is linked on PR #108. Resume with the real internal-project owner test, not another implementation block. No merge or Phase-2 start is authorized.
