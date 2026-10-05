@@ -1,16 +1,16 @@
 # Shared Node Versions — Phase 1 (#107 / PR #108)
 
-Status: implementation complete; owner testing pending. Start at [PLAN.md](../PLAN.md) for the current next action.
+Status: implementation complete and owner accepted on 2026-10-05, including the Resource-move correction #110. Prepare the exact-head merge gate for the owner's squash merge. Start at [PLAN.md](../PLAN.md) for the current next action.
 
 The dated checkpoints below preserve the implementation history. Earlier resume instructions are superseded by the final checkpoint.
 
 ## Owner-test candidate: shared Node versions — Issue #107, Phase 1
 
-**Fast Track status — COMPLETE FOR OWNER TESTING / DRAFT PR #108**
+**Fast Track status — CLOSED / OWNER-ACCEPTED PHASE 1**
 
 Purpose: retain whole immutable Node package versions once per Git working tree, keep consumer acceptance explicit, reduce generated path overhead, and migrate existing projects without re-onboarding. The owner authorized implementation on 2026-10-05 and will test Phase 1 before Phase 2.
 
-Scope: normal build/check, published version history, Parent/Reference adoption and updates, candidate/review lifecycle, readable version inventory, separately implemented migration, package Resource layout, documentation and Windows verification. Onboarding Evidence, frozen Catalogs, handoffs, workspace/reset migration are **Phase 2**, not this review candidate. Generic reinit/identity remapping remains #106. Keep the PR Draft; do not merge.
+Scope: normal build/check, published version history, Parent/Reference adoption and updates, candidate/review lifecycle, readable version inventory, separately implemented migration, package Resource layout, documentation and Windows verification. Onboarding Evidence, frozen Catalogs, handoffs, workspace/reset migration are **Phase 2**, not this review candidate. Generic reinit/identity remapping remains #106. The owner will squash-merge PR #108 after complete current-head verification; #107 stays open for Phase 2.
 
 Implementation contract / recovery map:
 
@@ -52,7 +52,7 @@ Complete-binding preview checkpoint: one additional end-to-end regression reprod
 - [x] Publish concrete internal-project owner tests and rollback guidance.
 - [x] Prepare and locally verify the documentation checkpoint for PR #108.
 - [x] Confirm publication and exact documentation-head CI on PR #108.
-- [ ] Owner completes the real internal-project test and explicitly approves Phase 1.
+- [x] Owner completes the real internal-project test and explicitly approves Phase 1, including the corrected propagation.
 
 Phase 2 is tracked in [issue-107-phase-2.md](issue-107-phase-2.md).
 
@@ -65,3 +65,9 @@ The internal-project test is [issue-107-owner-test.md](issue-107-owner-test.md).
 Local recovery verification (#109): all 394 deterministic tests pass again. Self-host `build --all .` reports no changes, `check --all .` is clean with all four local Parent/Child edges current, original PLAN text is preserved verbatim in its split locations, and documentation links/diff hygiene pass. No product-source or generated-package changes were needed.
 
 Publication checkpoint (#109): documentation head `c45137001fd9b7c7af0aebd5a1f94947a1399b2a` passes Actions run [37264734527](https://github.com/SomeSunlight/context-canon/actions/runs/37264734527), including the complete Linux suite/self-host gate and native Windows job. Recovery review and owner-test documentation are complete. This closure changes only planning status; the exact final closure-head run is linked on PR #108. Resume with the real internal-project owner test, not another implementation block. No merge or Phase-2 start is authorized.
+
+## Owner acceptance and merge gate (2026-10-05)
+
+The owner reports successful migration, history browsing and corrected propagation, substantial path reduction, and explicitly accepts Phase 1 for an owner-performed squash merge. Onboarding long paths are expected deferred Phase-2 scope. Old Child-local Parent candidates use the legacy scratch layout; preserve possibly pending reviews until a targeted reachability/cleanup follow-up distinguishes them from abandoned candidates.
+
+Executable correction head `63da510fad05607faa7b57fbe2f929b51c2887f5` passed all 396 Linux tests/self-host verification and 25 Windows tests. Documentation head `d66893304e0e0ec3e292487c45d62c6f79475f60` then passed Windows but its Linux job was cancelled. The complete exact-current-head gate must therefore finish before PR readiness is confirmed; final evidence is maintained on PR #108. After the owner merges, reconcile the actual accepted baseline and then start the separate Phase-2 checklist. Earlier draft/owner-test-pending statements are historical.

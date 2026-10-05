@@ -1,6 +1,6 @@
 # Resource Move Review — Owner-test Correction (#110)
 
-PR #108 remains Draft. The owner reports successful migration and a useful history index, followed by `KeyError: 'moved'` during the final Parent review, before acceptance of the affected Child.
+The owner confirms the correction works and accepted Phase 1 on 2026-10-05. PR #108 is being prepared for the owner's squash merge after exact-head verification. The original report was successful migration and a useful history index, followed by `KeyError: 'moved'` during the final Parent review, before acceptance of the affected Child.
 
 Purpose: complete the CLI representation of the already-supported deterministic Resource move; do not change identities, package binding, acceptance, migration or onboarding.
 
@@ -9,7 +9,7 @@ Purpose: complete the CLI representation of the already-supported deterministic 
 - [x] Prove interactive refusal preserves the old Child pin, acceptance completes, and subsequent build/check is clean; cover Source-update review too.
 - [x] Update PLAN/STATE/CHANGELOG and pass focused/full tests plus self-host checks.
 - [x] Publish the correction on PR #108 and confirm exact-head Linux/Windows CI.
-- [ ] Owner reruns propagation/build/check and approves the corrected Phase-1 result.
+- [x] Owner reports successful resumed maintenance and approves the corrected Phase-1 result.
 
 Resume at the first unfinished item. Earlier applied edges in a multi-edge propagation remain accepted if a later review fails; the reported one-edge failure occurred before the affected Child acceptance.
 
@@ -19,4 +19,4 @@ Focused checkpoint: all 30 shared-store/propagation/configuration tests pass, in
 
 Local review candidate: all 396 deterministic tests pass. Self-host build reports no generated changes; check is clean with all four local Parent/Child relationships current, and diff hygiene passes. No package/Resource migration is needed. Exact-head CI and publication are the next gate; real owner acceptance remains pending.
 
-Publication checkpoint: correction head `63da510fad05607faa7b57fbe2f929b51c2887f5` passes Actions run [37362883992](https://github.com/SomeSunlight/context-canon/actions/runs/37362883992): Linux complete 396-test suite/self-host check and all 25 native Windows tests, including the new move review regressions. The correction is ready for the owner to pull and rerun propagation/build/check. This status closure changes no executable or package behavior; final closure-head CI is linked on PR #108. No repeat migration, reinstall, merge or Phase-2 implementation is authorized/required by this fix.
+Publication checkpoint: correction head `63da510fad05607faa7b57fbe2f929b51c2887f5` passes Actions run [37362883992](https://github.com/SomeSunlight/context-canon/actions/runs/37362883992): Linux complete 396-test suite/self-host check and all 25 native Windows tests, including the new move review regressions. The owner subsequently confirmed the correction works and accepted Phase 1. No repeat migration or reinstall is needed. Final merge-head CI is linked on PR #108; close #110 with the owner's merge. Onboarding storage remains separate Phase 2.

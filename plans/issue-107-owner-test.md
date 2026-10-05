@@ -139,5 +139,4 @@ Report:
 4. Whether final `check --all` and propagation status are clean, and whether a second build is stable.
 5. Any provider-update or offline failure separately from pure relocation.
 
-The project can stay confidential; command output and a small redacted path/error example are enough for diagnosis. Phase 1 is implemented, but this real owner test and explicit approval are still outstanding. Phase 2 and pruning remain deferred.
-
+The project can stay confidential; command output and a small redacted path/error example are enough for diagnosis. On 2026-10-05 the owner reported successful migration/history browsing, successfully resumed propagation after the #110 Resource-move correction, and accepted Phase 1 for a squash merge. This sequence remains a reusable operator guide. Exact-current-head merge verification is recorded on PR #108; onboarding migration is the next phase after merge, and pruning remains deferred.

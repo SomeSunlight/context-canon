@@ -4,7 +4,7 @@ Unscheduled work only. This snapshot was read from GitHub on 2026-10-05 (#109); 
 
 | Issue | Title | Planning position |
 | --- | --- | --- |
-| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Phase 1 implemented in PR #108; Phase 2 deferred |
+| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Phase 1 owner accepted in PR #108; onboarding Phase 2 next after merge |
 | [#106](https://github.com/SomeSunlight/context-canon/issues/106) | Define safe project reinitialization and optional identity remapping for project copies | Separate future design |
 | [#95](https://github.com/SomeSunlight/context-canon/issues/95) | Expose canonical Evidence line counts to semantic handoffs | Unscheduled; inspect issue before implementation |
 | [#94](https://github.com/SomeSunlight/context-canon/issues/94) | Separate visible onboarding artifacts from hidden machine state | Unscheduled; inspect issue before implementation |
@@ -40,5 +40,8 @@ Unscheduled work only. This snapshot was read from GitHub on 2026-10-05 (#109); 
 - #66 version 0.9.9/final PR #54 verification box: superseded by the accepted 0.10.0 baseline; the issue remains open and may need status reconciliation.
 - Optional semantic contradiction analysis: still a future design question. Preserve explicit human conflict resolution; do not infer Parent precedence. Relate any new block to #41 or create a specific issue before implementation.
 
-The [unchanged historical record](archive/implementation-history-through-pr-105.md) retains all original checkboxes and decisions. The deferred [#107 Phase-2 plan](issue-107-phase-2.md) contains the active unchecked storage/recovery prerequisites.
+The [unchanged historical record](archive/implementation-history-through-pr-105.md) retains all original checkboxes and decisions. The [#107 Phase-2 plan](issue-107-phase-2.md) contains the next unchecked storage/recovery prerequisites.
 
+## Legacy review-candidate cleanup follow-up (#107)
+
+The owner found old Child-local `.context/parent-candidates/<full-digest>` trees after successful migration. Phase-1 migration relocates accepted `.context/sources` packages and preserves old review candidates so pending reviews remain recoverable; new normal scratch is already scoped at the Git root. Safe cleanup must distinguish pending/retained review and recovery inputs from abandoned candidates, preview what will be removed, and preserve accepted shared versions. This is recorded follow-up work, not a Phase-1 merge blocker or permission to delete every legacy candidate directory.
