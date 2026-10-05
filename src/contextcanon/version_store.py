@@ -140,6 +140,9 @@ def install_version(node_root: Path, package_root: Path, package: CompiledPackag
 def scratch_root(node_root: Path, name: str, *, create: bool = False) -> Path:
     if name not in {"candidates", "parent-candidates", "source-reviews", "parent-reviews"}:
         raise ValueError(f"Unknown review store: {name}")
+    # find_repo_root resolves Windows 8.3 aliases too; scope ownership must use
+    # that same spelling, including when the prospective Node has no source.
+    node_root = node_root.resolve()
     repo = find_repo_root(node_root)
     if (repo / ".context").is_symlink() or (repo / ".context" / name).is_symlink():
         raise ContextCanonError(f"Review store is a symbolic link: {repo / '.context' / name}")

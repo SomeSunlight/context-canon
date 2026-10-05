@@ -34,6 +34,8 @@ Review-candidate checkpoint (2026-10-05): all 393 deterministic tests pass, incl
 
 Resume with final review-candidate publication to Draft PR #108, exact-head Actions checks, and PLAN/STATE closure after green Linux/native-Windows CI. Keep #107 open for Phase 2; do not merge. Phase 2 must route onboarding Evidence/frozen packages/workspaces/publication/reset/recovery through the shared library without borrowing normal acceptance cleanup or weakening frozen bindings; only after this may safe pruning account for all pins, retained package dependencies, pending reviews, onboarding and recovery roots.
 
+Native Windows checkpoint: implementation head `9441f2a7f0ee43c6e3a6443089733eb522a8c6e8` passes the complete Linux suite/self-host gate in Actions run `37250207414`. Windows passes 21/22 tests but exposes inconsistent Windows 8.3 versus resolved temp-root spelling in `scratch_root` when the prospective consumer has no source. The resolver now canonicalizes the Node path before deriving scope ownership, matching `find_repo_root`; focused regressions pass. Resume with corrected exact-head Linux/Windows CI, then closure. No package or semantic change is needed for this correction.
+
 ## Accepted baseline: PR #105 / Issue #103
 
 PR #105 was owner-tested (real Windows propagation succeeds at the original checkout location) and squash-merged to main as `28ce62ef7aca4960bcf238b8d2221b7e445aa236`. The reviewed final head `4fa2e4f78e408162610511db1c8f1bcf79501b9e` passed Actions run `37233194691`: 379 deterministic tests, self-host zero-drift verification and all eight native Windows checks. The two #103 blocks below are historical completed checkpoints, not active review work.
