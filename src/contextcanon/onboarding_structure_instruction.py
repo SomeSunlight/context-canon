@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from .compiler import Compiler
+from .onboarding_storage import enclosing_parent
 from .model import CompiledPackage
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .package import compiled_package
@@ -26,12 +26,8 @@ class OnboardingStructureInstruction:
 
 
 def _enclosing_parent_package(snapshot_root: Path) -> CompiledPackage | None:
-    project = project_root_from_snapshot(snapshot_root)
-    parent_root = find_enclosing_context_root(project)
-    if parent_root is None:
-        return None
-    repository = resolve_onboarding_scope(project).repository_root
-    return compiled_package(Compiler(repository, legacy_carriers=True).compile(parent_root))
+    frozen = enclosing_parent(snapshot_root)
+    return frozen[0] if frozen is not None else None
 
 
 def _render_enclosing_parent(package: CompiledPackage | None) -> list[str]:

@@ -41,7 +41,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
-from .onboarding_storage import SCOPE_MARKER, default_workspace, run_path, scope_root
+from .onboarding_storage import SCOPE_MARKER, default_workspace, require_project, run_path, scope_root
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
@@ -148,6 +148,16 @@ def _managed_state(project_root: Path, extra_paths: Iterable[str] = (), snapshot
             path = node_root / rel
             project_rel = path.relative_to(project).as_posix()
             result[project_rel] = path.read_bytes() if path.is_file() else None
+        # Before publication, the actual generated tree may still use the old
+        # Resource layout. Snapshot its bytes too: the new compiler's expected
+        # paths alone cannot describe files that write_outputs will retire.
+        context = node_root / "CONTEXT"
+        if context.is_dir():
+            for path in context.rglob("*"):
+                if path.is_symlink():
+                    raise _error(f"unsafe generated Context path in reset snapshot: {path}")
+                if path.is_file():
+                    result[path.relative_to(project).as_posix()] = path.read_bytes()
         source_store = node_root / ".context" / "sources"
         if source_store.is_dir():
             for path in source_store.rglob("*"):
@@ -203,6 +213,7 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
             return delegate(argv)
         project_arg = Path(argv[index + 1])
     project = (project_arg or project_root_from_snapshot(snapshot)).resolve()
+    require_project(snapshot, project)
     extra_paths: tuple[str, ...] = ()
     if argv[1] == "placement-publish":
         extras = [
@@ -433,6 +444,8 @@ def _resolve_reset_target(
     else:
         project = resolve_onboarding_scope(resolved).project_root
     snapshot = explicit_snapshot or _discover_snapshot(project)
+    if snapshot is not None:
+        require_project(snapshot, project)
     if from_step >= 4 and snapshot is None:
         raise _error(
             "could not determine the frozen Evidence snapshot for this project; "
@@ -503,8 +516,7 @@ def _remove_owned_workspace(workspace: Path) -> list[str]:
     return removed
 
 
-def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[str]:
-    root = _machine_root(project)
+def _owned_machine_entries(project: Path, root: Path) -> list[Path]:
     if not root.exists():
         return []
     owned = []
@@ -525,6 +537,14 @@ def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[s
             owned.append(path)
         else:
             raise _error(f"refusing to discard unrecognized onboarding state: {path}")
+    return owned
+
+
+def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[str]:
+    root = _machine_root(project)
+    if not root.exists():
+        return []
+    owned = _owned_machine_entries(project, root)
     removed = []
     for path in owned:
         if keep_inventory_state and path.name in {INVENTORY_STATE_NAME, SCOPE_MARKER}:
@@ -551,6 +571,7 @@ def _reset_preflight(
     from_step: int,
     workspace_root: Path | None,
 ) -> dict[str, object]:
+    _owned_machine_entries(project, _machine_root(project))
     workspace = workspace_root.resolve() if workspace_root is not None else default_workspace(project)
     selected_steps: list[int] = []
     project_files: list[str] = []

@@ -4,9 +4,11 @@
 
 Branch `agent/issue-107-onboarding-versions` now implements shallow authenticated new onboarding runs/workspaces, shared exact reusable and enclosing-Parent packages, run-owned provenance, compact preview/publication and interruption-resumable reset journals. Other scopes and shared immutable versions survive a reset; old readers remain compatible. See [the contract](docs/onboarding-storage.md) and [the active checklist](plans/issue-107-phase-2.md).
 
-Validation: **407 deterministic tests pass**, all six self-hosted Nodes have zero generated drift and all four local Parent/Child edges are normatively current. Native Windows/hosted exact-head verification remains a final candidate gate.
+Validation: **410 deterministic tests pass**, all six self-hosted Nodes have zero generated drift and all four local Parent/Child edges are normatively current. Native Windows/hosted exact-head verification remains a final candidate gate.
 
-Next unchecked block is **D**, explicit active-run preview/apply migration plus old single-pass acceptance staging; owner instructions, affected self-host regeneration and hosted Linux/Windows verification follow. This checkpoint is published on the separate stacked branch. PR #108 and accepted `main` are unchanged. No merge is authorized.
+The instruction-reader/ownership audit also freezes STEP-04/08 input, rejects a conflicting project override and checks foreign state before resetting human workspace files. Windows CI includes all 14 new onboarding-storage regressions.
+
+Next unchecked block is **D**, [explicit active-run preview/apply migration plus old single-pass acceptance staging](plans/issue-107-phase-2-migration.md); owner instructions, affected self-host regeneration and hosted Linux/Windows verification follow. This checkpoint is published on the separate stacked branch. PR #108 and accepted `main` are unchanged. No merge is authorized.
 
 ## Active Phase-2 Fast Track (#107)
 

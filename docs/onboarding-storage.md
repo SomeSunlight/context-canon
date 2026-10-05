@@ -20,7 +20,7 @@ The enclosing Parent is frozen once per run into the same library, with its exac
 
 ## Publication, reset and Git visibility
 
-Preview and publication use the normal compact compiler and the same shared packages. Reset restores canonical/generated files, reviewed source transformations and the run's acceptance record. Nested runs address their owned acceptance record with a restricted `@run/placement-acceptance.json` journal locator; arbitrary external paths are not claimed. Old project-relative v1 journals remain readable.
+Preview and publication use the normal compact compiler and the same shared packages. Reset restores canonical/generated files, reviewed source transformations and the run's acceptance record. Nested runs address their owned acceptance record with a restricted `@run/placement-acceptance.json` journal locator; arbitrary external paths are not claimed. Old project-relative v1 journals remain readable. Journaling captures the actual generated Resource tree as well as the new compiler's expected files, so reset restores a prior layout byte-for-byte.
 
 A reset verifies a whole journal record before changing it, atomically marks reversal in progress, then atomically persists each reversed record. Retry accepts only the recorded after bytes or the exact before bytes of an in-progress reversal. Other edits remain refusal conditions. Journal paths cannot escape the project or the one owned run acceptance file.
 

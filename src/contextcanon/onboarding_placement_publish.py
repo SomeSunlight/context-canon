@@ -13,7 +13,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
-from .onboarding_storage import enclosing_parent, provenance_path
+from .onboarding_storage import enclosing_parent, provenance_path, require_project
 from .version_store import install_version, library_root, package_key, store_package, version_path
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
 from .links import markdown_link_target
@@ -854,6 +854,7 @@ def build_placement_publication_preview(
 ) -> PlacementPublicationPreview:
     snapshot = load_evidence_snapshot(snapshot_root)
     project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    require_project(snapshot_root, project)
     scope = resolve_onboarding_scope(project)
     repository = scope.repository_root
     documents = _expected_document_deltas(snapshot, project, review)
@@ -1358,6 +1359,7 @@ def publish_placement_review(
     if not preview.review_complete or not review.is_complete:
         raise _error("review still contains pending decisions; publication requires a complete human review")
     project = preview.project_root
+    require_project(snapshot_root, project)
     repository = resolve_onboarding_scope(project).repository_root
     snapshot = load_evidence_snapshot(snapshot_root)
     expected_documents = _expected_document_deltas(snapshot, project, review)

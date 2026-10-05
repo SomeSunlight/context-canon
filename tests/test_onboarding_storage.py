@@ -12,15 +12,18 @@ from unittest.mock import patch
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence, project_root_from_snapshot
 from contextcanon.onboarding_proposal import load_evidence_snapshot
-from contextcanon.onboarding_reset import _restore_change, record_transition, reset_onboarding
+from contextcanon.onboarding_reset import _restore_change, record_transition, reset_onboarding, run_journaled
 from contextcanon.onboarding_storage import (
     RUN_MARKER, SCOPE_MARKER, default_workspace, enclosing_parent,
     freeze_package, provenance_path, scope_root,
 )
 from contextcanon.onboarding_reusable_contexts import load_accepted_reusable_contexts
+from contextcanon.onboarding_structure_instruction import build_onboarding_structure_instruction
+from contextcanon.onboarding_placement_instruction import build_onboarding_placement_instruction
 from contextcanon.onboarding_workspace import open_inventory_workspace, open_onboarding_workspace
 from contextcanon.package import compiled_package, load_package
 from contextcanon.outputs import write_outputs
+from contextcanon.outputs import expected_outputs
 from contextcanon.parser import ContextCanonError
 from contextcanon.version_store import library_root
 import tests.test_onboarding_relationships as relationships
@@ -122,10 +125,34 @@ class OnboardingStorageTests(unittest.TestCase):
         prepared = [prepare_onboarding_evidence(project) for project in projects]
         foreign = scope_root(projects[0]) / "owner-notes.txt"
         foreign.write_text("Preserve me.", encoding="utf-8")
+        workspace = open_onboarding_workspace(prepared[0].snapshot_root, create=True)
+        workspace.reusable_contexts_path.write_text("Pending human decisions.\n", encoding="utf-8")
+        before = {path: path.read_bytes() for path in workspace.root.rglob("*") if path.is_file()}
         with self.assertRaisesRegex(ContextCanonError, "unrecognized onboarding state"):
             reset_onboarding(projects[0], from_step=1)
         self.assertEqual(foreign.read_text(), "Preserve me.")
         self.assertTrue(prepared[1].manifest_path.is_file())
+        self.assertTrue(all(path.read_bytes() == data for path, data in before.items()))
+
+    def test_project_override_cannot_reset_another_owned_run(self):
+        repo = self.repo()
+        projects = [self.project(repo, name) for name in ("a", "b")]
+        prepared = [prepare_onboarding_evidence(project) for project in projects]
+        with self.assertRaisesRegex(ContextCanonError, "belongs to"):
+            reset_onboarding(prepared[0].snapshot_root, from_step=1, project_root=projects[1])
+        self.assertTrue(all(item.manifest_path.exists() for item in prepared))
+
+    def test_legacy_journal_path_cannot_escape_selected_project(self):
+        repo = self.repo()
+        project = self.project(repo, "project")
+        prepared = prepare_onboarding_evidence(project)
+        sentinel = repo / "owner.md"
+        sentinel.write_bytes(b"Owner's file.")
+        record_transition(prepared.snapshot_root, project, step=12, command=["test"],
+                          before={"../owner.md": None}, after={"../owner.md": sentinel.read_bytes()})
+        with self.assertRaisesRegex(ContextCanonError, "unsafe reset journal path"):
+            reset_onboarding(prepared.snapshot_root, from_step=12)
+        self.assertEqual(sentinel.read_bytes(), b"Owner's file.")
 
     def test_real_scope_collision_extends_locator_and_authenticates_full_scope(self):
         repo = self.repo()
@@ -172,7 +199,8 @@ class OnboardingStorageTests(unittest.TestCase):
 
     def test_frozen_enclosing_parent_survives_provider_edit_and_removal(self):
         helper, case = self.fixture(subtree=True)
-        repo, _, prepared, _, _, _ = case
+        repo, _, prepared, workspace, _, _ = case
+        initial_instruction = build_onboarding_structure_instruction(prepared.snapshot_root)
         first = enclosing_parent(prepared.snapshot_root)
         source = repo / "CONTEXT.src.md"
         source.write_text(source.read_text().replace("Apply Enclosing constraints.", "Changed provider."), encoding="utf-8")
@@ -181,6 +209,9 @@ class OnboardingStorageTests(unittest.TestCase):
         second = enclosing_parent(prepared.snapshot_root)
         self.assertEqual(first[0].package_digest, second[0].package_digest)
         self.assertEqual(first[1], second[1])
+        self.assertEqual(build_onboarding_structure_instruction(prepared.snapshot_root).text, initial_instruction.text)
+        placement = build_onboarding_placement_instruction(prepared.snapshot_root, workspace.structure_proposal_path, workspace.structure_path)
+        self.assertEqual(placement.enclosing_parent_package.package_digest, first[0].package_digest)
 
     def test_subtree_publication_reset_restores_run_acceptance_and_preserves_shared_versions(self):
         helper, case = self.fixture(subtree=True)
@@ -222,3 +253,23 @@ class OnboardingStorageTests(unittest.TestCase):
         self.assertEqual((project / "one.md").read_bytes(), b"old one")
         self.assertFalse((project / "two.md").exists())
         self.assertFalse((prepared.snapshot_root / "onboarding-reset-journal.json").exists())
+
+    def test_reset_restores_prior_generated_resource_layout_byte_for_byte(self):
+        repo = self.repo()
+        versions.node(repo, "11111111-1111-4111-8111-111111111111", topic=True)
+        # Reproduce the earlier compiler's full-ID Resource namespace.
+        with patch.object(Compiler, "_resource_namespace", staticmethod(lambda identity: identity)), patch("contextcanon.render._resource_namespace", lambda identity: identity):
+            legacy = Compiler(repo, legacy_carriers=True).compile(repo)
+        write_outputs(legacy)
+        before = {repo / rel: (repo / rel).read_bytes() for rel in expected_outputs(legacy) if (repo / rel).is_file()}
+        prepared = prepare_onboarding_evidence(repo)
+        open_onboarding_workspace(prepared.snapshot_root, create=True)
+        def publish(_argv):
+            write_outputs(Compiler(repo).compile(repo))
+            return 0
+        self.assertEqual(run_journaled(["onboard", "placement-publish", str(prepared.snapshot_root)], publish), 0)
+        self.assertNotEqual((repo / ".context/package.json").read_bytes(), before[repo / ".context/package.json"])
+        reset_onboarding(prepared.snapshot_root, from_step=12)
+        self.assertTrue(all(path.is_file() and path.read_bytes() == data for path, data in before.items()))
+        expected_context = {path for path in before if repo / "CONTEXT" in path.parents}
+        self.assertEqual({path for path in (repo / "CONTEXT").rglob("*") if path.is_file()}, expected_context)

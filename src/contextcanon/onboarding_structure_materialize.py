@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from .compiler import Compiler
+from .onboarding_storage import require_project
 from .onboarding_structure import (
     HumanStructureNode,
     HumanStructurePlan,
@@ -293,6 +294,7 @@ def preview_structure_materialization(
     proposal = load_onboarding_structure_proposal(proposal_path, snapshot_root)
     plan = load_structure_markdown(structure_path, proposal)
     project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    require_project(snapshot_root, project)
     scope = resolve_onboarding_scope(project)
     repository = scope.repository_root
 

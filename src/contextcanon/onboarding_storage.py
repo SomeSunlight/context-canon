@@ -158,7 +158,13 @@ def default_workspace(project: Path) -> Path:
     old = project / "contextcanon-onboarding"
     if project == repository or old.exists():
         return old
-    return repository / ("contextcanon-onboarding-" + scope_root(project).name)
+    return repository / ("contextcanon-onboarding-" + scope_root(project, legacy=False).name)
+
+
+def require_project(snapshot: Path, project: Path) -> None:
+    owned = project_from_run(snapshot.resolve())
+    if owned is not None and owned != project.resolve():
+        raise ContextCanonError(f"Onboarding run belongs to {owned}, not requested project {project}")
 
 
 def provenance_path(snapshot: Path, package) -> Path:
@@ -209,6 +215,8 @@ def enclosing_parent(snapshot: Path):
         value = _json(record)
         if value == {"schema": "contextcanon/onboarding-enclosing-parent/v1", "binding": None}:
             return None
+        if set(value) != {"schema", "binding", "node_path"} or value["schema"] != "contextcanon/onboarding-enclosing-parent/v1":
+            raise ContextCanonError("Invalid frozen enclosing Parent state")
         binding = binding_from_row(value.get("binding", {}))
         node_path = value.get("node_path")
         if not isinstance(node_path, str) or PurePosixPath(node_path).is_absolute() or ".." in PurePosixPath(node_path).parts or "\\" in node_path or ":" in node_path:
