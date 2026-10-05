@@ -373,7 +373,7 @@ def accept_onboarding_review(
     stage = Path(tempfile.mkdtemp(prefix=".onboarding-accept-", dir=staging_parent))
     try:
         _prepare_stage(stage, snapshot, source_text, source_bindings)
-        staged_compiled = Compiler(project_root).compile(stage)
+        staged_compiled = Compiler(project_root, legacy_carriers=True).compile(stage)
     finally:
         if stage.exists():
             shutil.rmtree(stage)
@@ -396,12 +396,12 @@ def accept_onboarding_review(
 
     try:
         for _item_id, package_root, package, _locator in source_bindings:
-            installed = install_source_package(project_root, package_root)
+            installed = install_source_package(project_root, package_root, legacy_store=True)
             if installed.package_digest != package.package_digest:
                 raise ContextCanonError("Installed Source package identity changed during onboarding acceptance")
 
         _atomic_write_text(source_path, source_text)
-        compiled = Compiler(project_root).compile(project_root)
+        compiled = Compiler(project_root, legacy_carriers=True).compile(project_root)
         changed = tuple(write_outputs(compiled))
         drift = check_outputs(compiled)
         if drift:

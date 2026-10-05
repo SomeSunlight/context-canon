@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.compiler import Compiler
+from contextcanon.version_store import version_path
 from contextcanon.onboarding_placement import LEGACY_PLACEMENT_PROPOSAL_SCHEMA, load_onboarding_placement_proposal
 from contextcanon.onboarding_placement_publish import build_placement_publication_preview, publish_placement_review
 from contextcanon.onboarding_placement_review import create_or_load_placement_review, load_placement_review
@@ -438,10 +439,9 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
             },
         )
         self.assertIn("CCW-TOPIC-CHANGE-WORKFLOW", {topic.id for topic in goose.inherited_topics})
-        workflow_resource = (
-            "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/"
-            "nodes/library/development-workflow/docs/change-workflow.md"
-        )
+        workflow_resource = next(origin.path for origin in goose.resource_origins.values()
+                                 if origin.node_id == 'c4c94726-3cc7-4df6-b779-72bbf9c06f40'
+                                 and origin.repo_path.endswith('docs/change-workflow.md'))
         self.assertEqual(goose.resources[workflow_resource], WORKFLOW_RESOURCE.encode("utf-8"))
 
         ansible = Compiler(repo).compile(repo / "bootstrap/ansible")
@@ -463,7 +463,7 @@ class RealAiWorkstationParentMigrationTests(unittest.TestCase):
         # package, proving the complete effective workflow travelled through the
         # immutable Parent chain rather than via a live Source checkout.
         shutil.rmtree(workflow_root)
-        shutil.rmtree(repo / ".context/sources" / workflow.package_digest)
+        shutil.rmtree(version_path(repo, workflow))
         offline_goose = Compiler(repo).compile(repo / "compose/goose")
         self.assertIn("CCW-006", {rule.id for rule in offline_goose.inherited_rules})
         self.assertEqual(offline_goose.resources[workflow_resource], WORKFLOW_RESOURCE.encode("utf-8"))

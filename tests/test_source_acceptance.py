@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextcanon.version_store import version_path, package_key, scratch_root
+
 import shutil
 import sys
 import tempfile
@@ -109,7 +111,7 @@ class SourceAcceptanceTests(unittest.TestCase):
 
         accepted = accept_source_candidate(consumer, "node-python", candidate)
         self.assertEqual(accepted.package_digest, v2.package_digest)
-        self.assertTrue((consumer / ".context/sources" / v2.package_digest / ".context/package.json").is_file())
+        self.assertTrue((version_path(consumer, v2) / ".context/package.json").is_file())
 
         source_text = (consumer / "CONTEXT.src.md").read_text(encoding="utf-8")
         self.assertIn("— `2.0.0`", source_text)
@@ -157,7 +159,7 @@ class SourceAcceptanceTests(unittest.TestCase):
         _, v2, candidate = self.make_provider("2.0.0", "Prefer explicit Python v2.")
         consumer = self.make_consumer(v1)
 
-        package_destination = consumer / ".context" / "sources" / v2.package_digest
+        package_destination = version_path(consumer, v2)
         real_replace = sources_module.os.replace
         attempts = {"package": 0}
 
@@ -168,7 +170,7 @@ class SourceAcceptanceTests(unittest.TestCase):
             return real_replace(src, dst)
 
         with patch("contextcanon.sources.os.replace", side_effect=flaky_replace), patch(
-            "contextcanon.sources.time.sleep", return_value=None
+            "contextcanon.version_store.time.sleep", return_value=None
         ):
             package = sources_module.load_package(candidate)
             sources_module._install_package(consumer, candidate, package)
@@ -188,7 +190,7 @@ class SourceAcceptanceTests(unittest.TestCase):
         # exercises only publication of the canonical Source pin. A failed pin
         # swap may leave an unreferenced immutable package, but must never
         # damage or partially update CONTEXT.src.md.
-        self.install_package(consumer, v2)
+        sources_module._install_package(consumer, candidate, sources_module.load_package(candidate))
         source_path = consumer / "CONTEXT.src.md"
         original = source_path.read_bytes()
 
@@ -197,12 +199,12 @@ class SourceAcceptanceTests(unittest.TestCase):
                 accept_source_candidate(consumer, "node-python", candidate)
 
         self.assertEqual(source_path.read_bytes(), original)
-        self.assertEqual(list(consumer.glob(".CONTEXT.src.md.*.tmp")), [])
+        self.assertEqual(list(consumer.glob(".cc-*")), [])
 
         compiled = Compiler(consumer).compile(consumer)
         self.assertEqual(compiled.source_packages[0].metadata.version, "1.0.0")
         self.assertEqual(compiled.source_packages[0].package_digest, v1.package_digest)
-        self.assertTrue((consumer / ".context/sources" / v2.package_digest).is_dir())
+        self.assertTrue(version_path(consumer, v2).is_dir())
 
 
 if __name__ == "__main__":

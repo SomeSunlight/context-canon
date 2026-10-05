@@ -43,7 +43,7 @@ def _enclosing_parent_context(snapshot_root: Path) -> HandoffParentContext | Non
     if parent_root is None:
         return None
     repository = resolve_onboarding_scope(project).repository_root
-    compiled = Compiler(repository).compile(parent_root)
+    compiled = Compiler(repository, legacy_carriers=True).compile(parent_root)
     return HandoffParentContext(
         node_id=compiled.metadata.id,
         name=compiled.metadata.name,

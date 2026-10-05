@@ -134,6 +134,13 @@ class PackageFile:
 
 
 @dataclass(frozen=True)
+class ResourceOrigin:
+    path: str
+    node_id: str
+    repo_path: str
+
+
+@dataclass(frozen=True)
 class CompiledPackage:
     """Portable, immutable compiled Context state used across repository boundaries."""
 
@@ -148,6 +155,7 @@ class CompiledPackage:
     package_digest: str
     imports: tuple[PackageDependency, ...] = ()
     parents: tuple[PackageDependency, ...] = ()
+    resource_origins: tuple[ResourceOrigin, ...] = ()
 
     @property
     def parent(self) -> PackageDependency | None:
@@ -190,6 +198,7 @@ class ParsedNode:
 @dataclass
 class CompiledNode:
     parsed: ParsedNode
+    legacy_carriers: bool | None = None
     # All composition semantics consume immutable compiled packages. Local
     # Source Nodes are compiled first and immediately projected to this same
     # boundary; pinned external Sources are loaded directly into it.
@@ -203,6 +212,7 @@ class CompiledNode:
     inherited_topics: list[Topic] = field(default_factory=list)
     local_topics: list[Topic] = field(default_factory=list)
     resources: dict[str, bytes] = field(default_factory=dict)
+    resource_origins: dict[str, ResourceOrigin] = field(default_factory=dict)
     normalized_digest: str = ""
     package_digest: str = ""
     official_markdown: str = ""

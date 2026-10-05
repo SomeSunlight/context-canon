@@ -7,7 +7,6 @@ import re
 import shutil
 import subprocess
 import tempfile
-import time
 from pathlib import Path
 
 from .candidate_store import candidate_path, cleanup_accepted_candidate, store_candidate
@@ -23,6 +22,7 @@ from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, ex
 from .package_diff import diff_packages
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .versioning import ensure_node_version_advanced
+from .version_store import install_version, version_path, review_path, scratch_root, store_package
 
 REVIEW_SCHEMA = "contextcanon/source-review/v0"
 PARENT_REVIEW_SCHEMA = "contextcanon/parent-review/v0"
@@ -118,8 +118,7 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     )
     preview.compile(node_root)
 
-    destination = node_root / ".context" / "sources" / candidate.package_digest
-    existed = destination.exists()
+    destination = version_path(node_root, candidate)
     _install_package(node_root, package_root, candidate)
     try:
         upsert_local_source(repo_root, candidate.metadata.id, package_root)
@@ -127,8 +126,8 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
         Compiler(repo_root).compile(node_root)
     except Exception:
         _atomic_write_text(source_path, before)
-        if not existed and destination.exists():
-            shutil.rmtree(destination, ignore_errors=True)
+        # A newly installed, unreferenced immutable version is safe to retain.
+        # Another consumer may already use it; rollback must not delete shared bytes.
         if config_before is None:
             config.unlink(missing_ok=True)
         else:
@@ -357,7 +356,7 @@ def review_source_candidate(
         "diff": result.to_dict(),
     }
     ensure_candidate_gitignore(node_root)
-    path = _review_path(node_root, candidate.package_digest)
+    path = _review_path(node_root, candidate.package_digest, source_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(path, json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     return result, path
@@ -415,7 +414,7 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     node_root = node_root.resolve()
     candidate_root = candidate_root.resolve()
     candidate = load_package(candidate_root)
-    receipt_path = _review_path(node_root, candidate.package_digest)
+    receipt_path = _review_path(node_root, candidate.package_digest, source_id)
     if not receipt_path.is_file():
         raise ContextCanonError(
             f"Source candidate {candidate.package_digest} has no review receipt; run 'contextcanon source review' first"
@@ -475,7 +474,7 @@ def accept_source_candidate(node_root: Path, source_id: str, candidate_root: Pat
     _write_source_pin(node_root, source_id, candidate, accepted_ref=accepted_ref)
     cleanup_accepted_candidate(
         node_root, candidate_root, candidate.package_digest, receipt_path,
-        candidate_provenance_path(node_root, candidate.package_digest),
+        candidate_provenance_path(node_root, candidate.package_digest, source_id),
     )
     return candidate
 
@@ -607,7 +606,7 @@ def review_parent_candidate(node_root: Path, parent_id: str | None = None) -> tu
             "normalized_digest": candidate.normalized_digest,
             "package_digest": candidate.package_digest,
         },
-        "candidate_path": candidate_root.relative_to(node_root).as_posix(),
+        "candidate_path": os.path.relpath(candidate_root, node_root).replace(os.sep, "/"),
         "structural_validation": "passed",
         "diff": result.to_dict(),
     }
@@ -717,7 +716,8 @@ def accept_parent_candidate(node_root: Path, parent_id: str | None = None) -> Co
     candidate_digest = candidate_receipt.get("package_digest")
     if not isinstance(candidate_digest, str):
         raise ContextCanonError(f"Invalid Parent candidate digest in {receipt_path}")
-    candidate_root = candidate_path(node_root, "parent-candidates", candidate_digest)
+    candidate_root = candidate_path(node_root, "parent-candidates", candidate_digest, node_id=parent_ref.id,
+                                    normalized_digest=candidate_receipt.get("normalized_digest"))
     candidate = load_package(candidate_root)
     if candidate.metadata.id != parent_ref.id:
         raise ContextCanonError("Reviewed Parent candidate belongs to a different Node")
@@ -745,11 +745,12 @@ def _store_parent_candidate(node_root: Path, compiled_parent: CompiledNode) -> P
 
 
 def _parent_review_path(node_root: Path, parent_id: str) -> Path:
-    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", parent_id):
-        token = parent_id
-    else:
-        token = "sha256-" + hashlib.sha256(parent_id.encode("utf-8")).hexdigest()
-    return node_root / ".context" / "parent-reviews" / f"{token}.json"
+    token = parent_id if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", parent_id) else "sha256-" + hashlib.sha256(parent_id.encode("utf-8")).hexdigest()
+    legacy = node_root / ".context" / "parent-reviews" / f"{token}.json"
+    if legacy.exists():
+        return legacy
+    scratch_root(node_root, "parent-reviews", create=True)
+    return review_path(node_root, "parent-reviews", parent_id, match_field="parent_id", match_value=parent_id)
 
 def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: CompiledPackage) -> str:
     path = node_root / "CONTEXT.src.md"
@@ -814,7 +815,7 @@ def _write_parent_pin(node_root: Path, parent_id: str, candidate: CompiledPackag
     _atomic_write_text(path, _render_parent_pin_text(node_root, parent_id, candidate))
 
 
-def install_source_package(node_root: Path, package_root: Path) -> CompiledPackage:
+def install_source_package(node_root: Path, package_root: Path, *, legacy_store: bool = False) -> CompiledPackage:
     """Verify and install one immutable Source package without changing pins.
 
     This is shared by onboarding acceptance, where the canonical Source entry
@@ -824,7 +825,16 @@ def install_source_package(node_root: Path, package_root: Path) -> CompiledPacka
     node_root = node_root.resolve()
     package_root = package_root.resolve()
     package = load_package(package_root)
-    _install_package(node_root, package_root, package)
+    if legacy_store:
+        # Phase-1 compatibility only: onboarding owns/journals the old paths.
+        # Phase 2 removes this option when onboarding uses shared versions.
+        store = node_root / ".context/sources"
+        files = {rel: (package_root / rel).read_bytes()
+                 for rel in (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files))}
+        store_package(store, package, files, action="legacy onboarding package installation",
+                      node_root=node_root, destination=store / package.package_digest)
+    else:
+        _install_package(node_root, package_root, package)
     return package
 
 
@@ -879,7 +889,7 @@ def _validated_candidate_provenance(
     source_ref: SourceRef,
     candidate: CompiledPackage,
 ) -> dict[str, str] | None:
-    provenance = load_candidate_provenance(node_root, candidate.package_digest)
+    provenance = load_candidate_provenance(node_root, candidate.package_digest, source_ref.id)
     if provenance is None:
         return None
     if provenance["source_id"] != source_ref.id:
@@ -898,8 +908,16 @@ def _validated_candidate_provenance(
         )
     return provenance
 
-def _review_path(node_root: Path, candidate_package_digest: str) -> Path:
-    return node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"
+def _review_path(node_root: Path, candidate_package_digest: str, source_id: str) -> Path:
+    legacy = node_root / ".context" / "source-reviews" / f"{candidate_package_digest}.json"
+    if legacy.exists():
+        record = json.loads(legacy.read_text(encoding="utf-8"))
+        if record.get("source_id") == source_id:
+            return legacy
+    scratch_root(node_root, "source-reviews", create=True)
+    return review_path(node_root, "source-reviews", source_id + ":" + candidate_package_digest,
+                       match_field="candidate.package_digest", match_value=candidate_package_digest,
+                       extra_match={"source_id": source_id})
 
 
 def _source_hash(node_root: Path) -> str:
@@ -909,70 +927,8 @@ def _source_hash(node_root: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _installed_package_matches(destination: Path, candidate: CompiledPackage) -> bool:
-    if not destination.exists():
-        return False
-    existing = load_package(destination)
-    if (
-        existing.metadata.id == candidate.metadata.id
-        and existing.normalized_digest == candidate.normalized_digest
-        and existing.package_digest == candidate.package_digest
-    ):
-        return True
-    raise ContextCanonError(f"Accepted Source store path exists with different content: {destination}")
-
-
-def _publish_package_directory(temporary: Path, destination: Path, candidate: CompiledPackage) -> None:
-    # Windows can transiently deny a directory rename while a scanner/indexer
-    # has just-opened package files. Keep the publication atomic: retry only
-    # the final rename, and accept an appearing destination only after exact
-    # package verification proves that another writer published the same bytes.
-    retry_delays = (0.05, 0.10, 0.20, 0.40, 0.80)
-    for attempt in range(len(retry_delays) + 1):
-        try:
-            os.replace(temporary, destination)
-            return
-        except (PermissionError, FileExistsError) as exc:
-            if _installed_package_matches(destination, candidate):
-                return
-            if attempt == len(retry_delays):
-                raise ContextCanonError(
-                    f"Could not publish immutable package {candidate.metadata.name} {candidate.metadata.version} "
-                    f"to {destination} after retrying a temporary filesystem lock: {exc}"
-                ) from exc
-            time.sleep(retry_delays[attempt])
-
-
 def _install_package(node_root: Path, candidate_root: Path, candidate: CompiledPackage) -> None:
-    store = node_root / ".context" / "sources"
-    destination = store / candidate.package_digest
-    paths = (PACKAGE_MANIFEST_PATH, *(file.path for file in candidate.files))
-    preflight_paths(destination, paths, action="accepted immutable package installation", node_root=node_root)
-
-    if _installed_package_matches(destination, candidate):
-        return
-
-    store.mkdir(parents=True, exist_ok=True)
-    temporary = Path(tempfile.mkdtemp(prefix=".tmp-", dir=store))
-    try:
-        preflight_paths(temporary, paths, action="accepted package staging", node_root=node_root)
-        manifest_source = candidate_root / PACKAGE_MANIFEST_PATH
-        manifest_destination = temporary / PACKAGE_MANIFEST_PATH
-        manifest_destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(manifest_source, manifest_destination)
-        for file in candidate.files:
-            source = candidate_root / file.path
-            target = temporary / file.path
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-
-        staged = load_package(temporary)
-        if staged.normalized_digest != candidate.normalized_digest or staged.package_digest != candidate.package_digest:
-            raise ContextCanonError("Staged Source package identity changed during acceptance")
-        _publish_package_directory(temporary, destination, candidate)
-    finally:
-        if temporary.exists():
-            shutil.rmtree(temporary)
+    install_version(node_root, candidate_root, candidate)
 
 
 def _render_source_pin_text(
@@ -1058,9 +1014,9 @@ def _atomic_write_text(path: Path, content: str) -> None:
     every failed path.
     """
 
-    preflight_paths(path.parent, [path.name, ".tmp-xxxxxxxx.tmp"], action="ContextCanon atomic state publication")
+    preflight_paths(path.parent, [path.name, ".cc-xxxxxxxx"], action="ContextCanon atomic state publication")
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(prefix=".tmp-", suffix=".tmp", dir=path.parent)
+    fd, temporary_name = tempfile.mkstemp(prefix=".cc-", dir=path.parent)
     temporary = Path(temporary_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:

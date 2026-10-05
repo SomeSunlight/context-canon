@@ -9,6 +9,8 @@ import re
 from .links import markdown_link_target
 from .model import CompiledNode, CompiledPackage, PackageDependency, Rule, SourceRef
 from .parser import ContextCanonError, parse_node
+from .version_store import version_path
+from .resource_layout import ORIGINS_PATH, resource_namespace
 
 
 def render_official(compiled: CompiledNode, repo_root: Path) -> str:
@@ -31,7 +33,7 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
     ])
     if len(compiled.parent_packages) == 1:
         parent = compiled.parent_packages[0]
-        parent_link = _accepted_package_link(parent)
+        parent_link = _accepted_package_link(compiled, parent)
         lines.extend([
             f"**Parent Context Node:** [{parent.metadata.name}]({parent_link}) — `{parent.metadata.version}`  ",
             f"**Accepted Parent package:** `{parent.package_digest}`",
@@ -40,7 +42,7 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
     elif compiled.parent_packages:
         lines.extend(["**Parent Context Nodes:**", ""])
         for parent in compiled.parent_packages:
-            parent_link = _accepted_package_link(parent)
+            parent_link = _accepted_package_link(compiled, parent)
             lines.append(
                 f"- [{parent.metadata.name}]({parent_link}) — `{parent.metadata.version}` — package `{parent.package_digest}`"
             )
@@ -146,13 +148,20 @@ def render_official(compiled: CompiledNode, repo_root: Path) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _accepted_package_link(package: CompiledPackage) -> str:
-    return f".context/sources/{package.package_digest}/CONTEXT.md"
+def _accepted_package_link(compiled: CompiledNode, package: CompiledPackage) -> str:
+    from .model import PackageDependency
+    dependency = PackageDependency(package.metadata.id, package.metadata.name, package.metadata.version,
+                                   package.normalized_digest, package.package_digest)
+    legacy = compiled.parsed.root / ".context/sources" / package.package_digest
+    if compiled.legacy_carriers is True or (compiled.legacy_carriers is None and legacy.is_dir()):
+        return f".context/sources/{package.package_digest}/CONTEXT.md"
+    target = version_path(compiled.parsed.root, dependency) / "CONTEXT.md"
+    return markdown_link_target(os.path.relpath(target, compiled.parsed.root).replace(os.sep, "/"))
 
 
 def _source_carrier_link(compiled: CompiledNode, ref: SourceRef, package: CompiledPackage) -> str:
     if ref.is_pinned:
-        return _accepted_package_link(package)
+        return _accepted_package_link(compiled, package)
     target = (compiled.parsed.root / ref.locator).resolve()
     if target.name != "CONTEXT.md":
         target = target / "CONTEXT.md"
@@ -163,7 +172,7 @@ def _source_carrier_link(compiled: CompiledNode, ref: SourceRef, package: Compil
 def _import_carriers(compiled: CompiledNode, dependency: PackageDependency) -> list[tuple[str, str]]:
     result: list[tuple[str, str]] = []
     for parent in compiled.parent_packages:
-        link = _accepted_package_link(parent)
+        link = _accepted_package_link(compiled, parent)
         if dependency.id == parent.metadata.id:
             result.append(("direct Parent Context Node", link))
         elif any(item.id == dependency.id for item in parent.imports):
@@ -245,10 +254,7 @@ def _render_target_line(compiled: CompiledNode, topic, target, repo_root: Path) 
     return f"- **Context Node:** {name} (`{node_id}`) — inherited navigation target; not materialized into this package"
 
 
-def _resource_namespace(node_id: str) -> str:
-    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", node_id):
-        return node_id
-    return "sha256-" + hashlib.sha256(node_id.encode("utf-8")).hexdigest()
+_resource_namespace = resource_namespace
 
 def render_adapters(compiled: CompiledNode) -> dict[str, str]:
     result: dict[str, str] = {}
@@ -453,15 +459,15 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
         lines.append("targets: []")
 
     lines.extend(["", "# Mapping from author-facing Resource paths to generated package paths."])
-    published_resources = [path for path in compiled.resources if path != "CONTEXT/README.md"]
+    published_resources = [path for path in compiled.resources if path.startswith("CONTEXT/references/")]
     if published_resources:
         lines.append("resources:")
         local_prefix = f"CONTEXT/references/{_resource_namespace(compiled.metadata.id)}/"
         for published in published_resources:
             source_rel = None
             if published.startswith(local_prefix):
-                repo_rel = published[len(local_prefix):]
-                source_abs = repo_root / repo_rel
+                origin = compiled.resource_origins[published]
+                source_abs = repo_root / origin.repo_path
                 source_rel = os.path.relpath(source_abs, compiled.parsed.root).replace(os.sep, "/")
             lines.append("  - " + q({"source": source_rel, "published": published}))
     else:

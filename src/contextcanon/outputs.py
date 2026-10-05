@@ -3,6 +3,7 @@ from __future__ import annotations
 from .path_budget import preflight_paths
 from .model import CompiledNode
 from .package import PACKAGE_MANIFEST_PATH
+from .resource_layout import ORIGINS_PATH
 from .render import render_node_readme
 
 
@@ -58,6 +59,10 @@ def write_outputs(compiled: CompiledNode) -> list[str]:
                 changed.append("removed CONTEXT/")
             except OSError:
                 pass
+
+    if ORIGINS_PATH not in outputs and (root / ORIGINS_PATH).is_file():
+        (root / ORIGINS_PATH).unlink()
+        changed.append(f"removed {ORIGINS_PATH}")
 
     for rel, content in outputs.items():
         destination = root / rel

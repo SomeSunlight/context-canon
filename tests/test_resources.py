@@ -166,13 +166,13 @@ Optional:
         self.assertRegex(target.resource_id or "", r"^RESOURCE-[0-9A-F]{12}$")
         self.assertIn("ctx:resource", (repo / "CONTEXT.src.md").read_text(encoding="utf-8"))
 
-    def test_package_v3_round_trip_and_path_only_v1_compatibility(self) -> None:
+    def test_package_v4_round_trip_and_path_only_v1_compatibility(self) -> None:
         identified = self.make_single_resource_repo()
         write_outputs(Compiler(identified).compile(identified))
         package = load_package(identified)
         self.assertEqual(package.topics[0].targets[0].resource_id, "RESOURCE-TABLE")
         manifest = json.loads((identified / ".context/package.json").read_text(encoding="utf-8"))
-        self.assertEqual(manifest["schema"], "contextcanon/package/v3")
+        self.assertEqual(manifest["schema"], "contextcanon/package/v4")
 
         legacy = self.make_single_resource_repo(resource_id=None)
         write_outputs(Compiler(legacy).compile(legacy))

@@ -61,6 +61,8 @@ from .onboarding_structure_materialize import (
 from .onboarding_workspace import open_inventory_workspace, open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
+from .version_history import publish_outputs, render_inventory
+from .version_store import library_root
 from .package import compiled_package, export_digest
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .resources import (
@@ -1186,6 +1188,14 @@ def main(argv: list[str] | None = None) -> int:
         help="read-only check for pending normative Parent propagation; exit 1 when updates are pending",
     )
 
+    versions_parser = sub.add_parser("versions", help="inspect retained Node versions or migrate legacy package stores")
+    versions_sub = versions_parser.add_subparsers(dest="versions_command", required=True)
+    versions_list = versions_sub.add_parser("list", help="show retained versions and their current consumers")
+    versions_list.add_argument("path", nargs="?", default=".")
+    versions_migrate = versions_sub.add_parser("migrate", help="preview legacy package relocation (explicit --apply performs it)")
+    versions_migrate.add_argument("path", nargs="?", default=".")
+    versions_migrate.add_argument("--apply", action="store_true", help="verify, share and relocate legacy accepted packages")
+
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
     parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
     parent_review = parent_sub.add_parser("review", help="compile one live Parent explicitly and review its immutable candidate snapshot")
@@ -2253,7 +2263,7 @@ def main(argv: list[str] | None = None) -> int:
                     cache_label = location.relative_to(node_root).as_posix()
                 except ValueError:
                     cache_label = str(location)
-                provenance = load_candidate_provenance(node_root, candidate.package_digest)
+                provenance = load_candidate_provenance(node_root, candidate.package_digest, source_id)
 
                 migrated = None
                 if args.source_command == "update":
@@ -2430,6 +2440,15 @@ def main(argv: list[str] | None = None) -> int:
             _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
             return 0
 
+        if args.command == "versions":
+            repo = find_repo_root(Path(args.path).resolve())
+            if args.versions_command == "list":
+                print(render_inventory(repo))
+            else:
+                from .storage_migration import migrate_versions
+                print(migrate_versions(repo, apply=args.apply))
+            return 0
+
         repo_root, node_roots = _targets(Path(args.path), args.all)
         if not node_roots:
             raise ContextCanonError(f"No Context Nodes found under {repo_root}")
@@ -2439,9 +2458,10 @@ def main(argv: list[str] | None = None) -> int:
             label = node_root.relative_to(repo_root).as_posix() or "."
             try:
                 if args.command == "build":
+                    library_root(node_root).mkdir(parents=True, exist_ok=True)
                     _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
                     compiled = Compiler(repo_root).compile(node_root)
-                    changed = write_outputs(compiled)
+                    changed = publish_outputs(compiled)
                     suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
                     print(f"built {label}{suffix}")
                 else:

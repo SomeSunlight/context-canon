@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextcanon.version_store import version_path, package_key, scratch_root
+
 import json
 import shutil
 import subprocess
@@ -75,7 +77,7 @@ class SourceAdoptionTests(unittest.TestCase):
         self.assertEqual(repository.kind, "local")
         self.assertEqual(repository.resolve_local(self.consumer), self.provider.resolve())
         self.assertEqual(source_config.node_path, "nodes/library/python-development")
-        self.assertTrue((self.consumer / ".context/sources" / self.v2.package_digest).is_dir())
+        self.assertTrue(version_path(self.consumer, self.v2).is_dir())
 
         again, second_changed = adopt_source_package(self.consumer, self.package_root)
         self.assertFalse(second_changed)

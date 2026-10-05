@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextcanon.version_store import version_path, package_key, scratch_root
+
 import shutil
 import sys
 import unittest
@@ -74,7 +76,7 @@ class SourceUpdateLoopTests(unittest.TestCase):
 
         # The accepted content-addressed package is the offline boundary.
         self.assertTrue(
-            (consumer / ".context" / "sources" / v2.package_digest / ".context" / "package.json").is_file()
+            (version_path(consumer, v2) / ".context" / "package.json").is_file()
         )
 
 

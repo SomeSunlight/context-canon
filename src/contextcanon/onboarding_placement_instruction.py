@@ -78,7 +78,7 @@ def _enclosing_parent_package(snapshot_root: Path) -> tuple[CompiledPackage, Pat
     if parent_root is None:
         return None
     repository = resolve_onboarding_scope(project).repository_root
-    return compiled_package(Compiler(repository).compile(parent_root)), parent_root
+    return compiled_package(Compiler(repository, legacy_carriers=True).compile(parent_root)), parent_root
 
 
 def _render_enclosing_parent_context(

@@ -16,6 +16,7 @@ from .compiler import discover_nodes
 from .links import local_markdown_targets
 from .model import CompiledPackage
 from .package import load_package
+from .resource_layout import legacy_namespace
 from .parser import ContextCanonError, find_repo_root, parse_node
 
 
@@ -262,10 +263,7 @@ def register_resources(node_root: Path) -> RegisterResult:
     return RegisterResult(node_root, len(added_ids), tuple(added_ids))
 
 
-def _namespace(node_id: str) -> str:
-    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", node_id):
-        return node_id
-    return "sha256-" + hashlib.sha256(node_id.encode("utf-8")).hexdigest()
+_namespace = legacy_namespace
 
 
 def _published_path(repo_root: Path, record: ResourceRecord) -> str:
@@ -319,7 +317,8 @@ def _package_dependencies(
             if target not in files:
                 continue
             if target != root_package_path:
-                repo_path = _strip_namespace(target)
+                origin = next((item for item in package.resource_origins if item.path == target), None)
+                repo_path = origin.repo_path if origin else _strip_namespace(target)
                 if repo_path is not None:
                     dependencies.add(repo_path)
             if target not in seen and PurePosixPath(target).suffix.lower() == ".md":
@@ -349,7 +348,10 @@ def _baseline_for_record(repo_root: Path, record: ResourceRecord) -> _Baseline |
                 break
 
     if package_path is None:
-        candidate = _published_path(repo_root, record)
+        repo_rel = record.path.relative_to(repo_root).as_posix()
+        mapped = next((origin.path for origin in package.resource_origins
+                       if origin.node_id == record.node_id and origin.repo_path == repo_rel), None)
+        candidate = mapped or _published_path(repo_root, record)
         if any(file.path == candidate for file in package.files):
             package_path = candidate
 
@@ -363,7 +365,8 @@ def _baseline_for_record(repo_root: Path, record: ResourceRecord) -> _Baseline |
     if not content_path.is_file():
         return None
     content = content_path.read_bytes()
-    repo_path = _strip_namespace(package_path)
+    origin = next((item for item in package.resource_origins if item.path == package_path), None)
+    repo_path = origin.repo_path if origin else _strip_namespace(package_path)
     if repo_path is None:
         return None
     return _Baseline(

@@ -16,12 +16,15 @@ from .model import (
     RuleChange,
     RuleModification,
     RuleRemoval,
+    ResourceOrigin,
     Topic,
     TopicTarget,
 )
 from .parser import ContextCanonError
+from .resource_layout import ORIGINS_PATH, ORIGINS_SCHEMA, legacy_namespace
 
-PACKAGE_SCHEMA = "contextcanon/package/v3"
+PACKAGE_SCHEMA = "contextcanon/package/v4"
+RELATIONSHIP_PACKAGE_SCHEMA = "contextcanon/package/v3"
 PREVIOUS_PACKAGE_SCHEMA = "contextcanon/package/v2"
 OLDER_PACKAGE_SCHEMA = "contextcanon/package/v1"
 LEGACY_PACKAGE_SCHEMA = "contextcanon/package/v0"
@@ -258,6 +261,7 @@ def compiled_package(compiled: CompiledNode) -> CompiledPackage:
         package_digest=compiled.package_digest,
         imports=tuple(compiled.imported_contexts),
         parents=package_parent_dependencies(compiled),
+        resource_origins=tuple(compiled.resource_origins[path] for path in sorted(compiled.resource_origins)),
     )
 
 
@@ -314,7 +318,7 @@ def load_package(package_root: Path) -> CompiledPackage:
 
     root = _dict(raw, "manifest")
     schema = root.get("schema")
-    if schema not in {PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, OLDER_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
+    if schema not in {PACKAGE_SCHEMA, RELATIONSHIP_PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, OLDER_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
         raise ContextCanonError(
             f"Unsupported Context package schema in {manifest_path}: {schema!r}"
         )
@@ -336,7 +340,7 @@ def load_package(package_root: Path) -> CompiledPackage:
         )
     _unique((parent.id for parent in parents), "package Parent Node ID")
     sources = tuple(
-        _parse_dependency(item, index, require_relationship=(schema == PACKAGE_SCHEMA))
+        _parse_dependency(item, index, require_relationship=(schema in {PACKAGE_SCHEMA, RELATIONSHIP_PACKAGE_SCHEMA}))
         for index, item in enumerate(_list(root.get("sources"), "sources"))
     )
     imports = tuple(
@@ -403,7 +407,40 @@ def load_package(package_root: Path) -> CompiledPackage:
         package_digest=expected_package_digest,
         imports=tuple(imports),
         parents=tuple(sorted(parents, key=lambda parent: (parent.id, parent.version, parent.normalized_digest, parent.package_digest))),
+        resource_origins=_load_resource_origins(actual_files, topics, metadata, sources, imports, schema),
     )
+
+
+def _load_resource_origins(files, topics, metadata, sources, imports, schema) -> tuple[ResourceOrigin, ...]:
+    resource_paths = {path for path in files if path.startswith("CONTEXT/references/")}
+    if ORIGINS_PATH in files:
+        try:
+            raw = json.loads(files[ORIGINS_PATH])
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ContextCanonError(f"Invalid authenticated Resource origin mapping: {exc}") from exc
+        if not isinstance(raw, dict) or raw.get("schema") != ORIGINS_SCHEMA:
+            raise ContextCanonError("Invalid Resource origin mapping schema")
+        origins = []
+        for item in _list(raw.get("resources"), "Resource origins"):
+            entry = _dict(item, "Resource origin")
+            path = _string(entry.get("path"), "Resource origin.path")
+            repo_path = _string(entry.get("repo_path"), "Resource origin.repo_path")
+            if path not in resource_paths or Path(repo_path).is_absolute() or ".." in Path(repo_path).parts:
+                raise ContextCanonError(f"Invalid Resource origin path: {path}")
+            origins.append(ResourceOrigin(path, _string(entry.get("node_id"), "Resource origin.node_id"), repo_path))
+        _unique((origin.path for origin in origins), "Resource origin path")
+        if {origin.path for origin in origins} != resource_paths:
+            raise ContextCanonError("Resource origin mapping does not match package Resource files")
+        return tuple(sorted(origins, key=lambda item: item.path))
+    if resource_paths and schema == PACKAGE_SCHEMA:
+        raise ContextCanonError("Package v4 Resource files require authenticated origin mapping")
+    # Old packages preserve repository-relative paths. Decode their namespace
+    # without rewriting accepted bytes or their legacy semantic normalization.
+    known_ids = {metadata.id, *(topic.origin_node_id for topic in topics),
+                 *(item.id for item in sources), *(item.id for item in imports)}
+    namespaces = {legacy_namespace(node_id): node_id for node_id in known_ids}
+    return tuple(ResourceOrigin(path, namespaces.get(path.split("/")[2], path.split("/")[2]),
+                                "/".join(path.split("/")[3:])) for path in sorted(resource_paths))
 
 
 def artifact_files(compiled: CompiledNode) -> dict[str, bytes]:
@@ -542,6 +579,8 @@ def _read_and_verify_files(package_root: Path, expected: tuple[PackageFile, ...]
     actual_paths: set[str] = set()
     if (package_root / "CONTEXT.md").is_file():
         actual_paths.add("CONTEXT.md")
+    if ORIGINS_PATH in expected_by_path and (package_root / ORIGINS_PATH).is_file():
+        actual_paths.add(ORIGINS_PATH)
     context_dir = package_root / "CONTEXT"
     if context_dir.exists():
         actual_paths.update(
@@ -734,7 +773,7 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
 def _parse_file(value: Any, index: int) -> PackageFile:
     item = _dict(value, f"files[{index}]")
     path = _string(item.get("path"), f"files[{index}].path")
-    if path != "CONTEXT.md" and not path.startswith("CONTEXT/"):
+    if path not in {"CONTEXT.md", ORIGINS_PATH} and not path.startswith("CONTEXT/"):
         raise ContextCanonError(f"Invalid package file path {path!r}; expected CONTEXT.md or CONTEXT/*")
     if ".." in Path(path).parts or Path(path).is_absolute():
         raise ContextCanonError(f"Invalid package file path {path!r}")

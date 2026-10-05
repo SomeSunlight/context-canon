@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import shutil
@@ -9,6 +10,7 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 from .candidate_store import store_candidate
+from .version_store import scratch_root, TOKEN_LENGTHS
 from .gitignore import ensure_candidate_gitignore
 from .config import configured_source
 from .model import CompiledPackage, SourceRef
@@ -322,12 +324,44 @@ def _persist_candidate(
     return destination
 
 
-def candidate_provenance_path(node_root: Path, package_digest: str) -> Path:
-    return node_root.resolve() / ".context" / "candidates" / f"{package_digest}.git.json"
+def candidate_provenance_path(node_root: Path, package_digest: str, source_id: str | None = None) -> Path:
+    parsed = parse_node(node_root, find_repo_root(node_root))
+    if source_id is None and len(parsed.sources) == 1:
+        source_id = parsed.sources[0].id
+    legacy = node_root.resolve() / ".context" / "candidates" / f"{package_digest}.git.json"
+    if legacy.exists():
+        record = json.loads(legacy.read_text(encoding="utf-8"))
+        if source_id is None or record.get("source_id") == source_id:
+            return legacy
+    store = scratch_root(node_root, "candidates", create=True)
+    if source_id is None:
+        matches = [path for path in store.glob("*.git.json")
+                   if json.loads(path.read_text(encoding="utf-8")).get("package_digest") == package_digest]
+        if len(matches) > 1:
+            raise ContextCanonError("Ambiguous candidate provenance; specify Source Node identity")
+        if matches:
+            return matches[0]
+    key = hashlib.sha256((str(source_id) + ":" + package_digest).encode("utf-8")).hexdigest()
+    first_free = None
+    for length in TOKEN_LENGTHS:
+        path = store / f"{key[:length]}.git.json"
+        if not path.exists():
+            if first_free is None:
+                first_free = path
+            continue
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (ValueError, OSError) as exc:
+            raise ContextCanonError(f"Invalid candidate provenance {path}: {exc}") from exc
+        if record.get("package_digest") == package_digest and record.get("source_id") == source_id:
+            return path
+    if first_free is None:
+        raise ContextCanonError(f"No free candidate provenance path for {package_digest}")
+    return first_free
 
 
-def load_candidate_provenance(node_root: Path, package_digest: str) -> dict[str, str] | None:
-    path = candidate_provenance_path(node_root, package_digest)
+def load_candidate_provenance(node_root: Path, package_digest: str, source_id: str | None = None) -> dict[str, str] | None:
+    path = candidate_provenance_path(node_root, package_digest, source_id)
     if not path.is_file():
         return None
     try:
@@ -371,7 +405,7 @@ def _persist_configured_candidate_provenance(
     candidate_ref: str,
     node_path: str,
 ) -> Path:
-    path = candidate_provenance_path(node_root, candidate.package_digest)
+    path = candidate_provenance_path(node_root, candidate.package_digest, source.id)
     payload = {
         "schema": CONFIGURED_CANDIDATE_PROVENANCE_SCHEMA,
         "source_id": source.id,
@@ -398,7 +432,7 @@ def _persist_candidate_provenance(
     candidate: CompiledPackage,
     candidate_ref: str,
 ) -> Path:
-    path = candidate_provenance_path(node_root, candidate.package_digest)
+    path = candidate_provenance_path(node_root, candidate.package_digest, source.id)
     payload = {
         "schema": CANDIDATE_PROVENANCE_SCHEMA,
         "source_id": source.id,

@@ -6,7 +6,7 @@ from .parser import ContextCanonError, find_repo_root
 
 
 TRANSIENT_STORE_RULES = tuple(f"**/.context/{name}/" for name in (
-    "candidates", "parent-candidates", "source-reviews", "parent-reviews",
+    "candidates", "parent-candidates", "source-reviews", "parent-reviews", "migration-trash",
 ))
 START = "# >>> ContextCanon candidate scratch (managed)"
 END = "# <<< ContextCanon candidate scratch (managed)"

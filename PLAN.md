@@ -10,7 +10,7 @@ Scope: normal build/check, published version history, Parent/Reference adoption 
 
 Implementation contract / recovery map:
 
-- Use `<worktree>/.context/versions/<verified-digest-prefix>/` for whole packages. Full identity remains in `.context/package.json`; compact names are locators, with collision extension and full verification. No sequential allocation ledger; context.yaml stays regenerable.
+- Use `<worktree>/.context/versions/<verified-digest-prefix>/` for whole packages. The directory key binds full Node ID + normalized digest + exact package digest; exact human package bytes alone can coincide for genuinely different Nodes. Full identity remains in `.context/package.json`; compact names are locators, with collision extension and full verification. No sequential allocation ledger; context.yaml stays regenerable.
 - Normal publication retains the previous verified package and new package; imports install once in that library. Exact pins remain independent for every consumer and Reference stays non-normative/non-transitive. Reads support legacy consumer-local sources until explicit migration.
 - Centralize package scratch, but scope reviews and transport provenance by consumer. Cleanup may remove only its transaction; accepted versions and other consumers' input survive.
 - Preserve document subdirectories inside packages. Use a compact verified origin namespace and a common Resource-closure base (including the authoring Node root) to avoid repeating needless repository prefixes without rewriting exact authored Markdown. Bind full origin/path mapping in authenticated package content; preserve legacy reads and Resource rename baselines.
@@ -18,17 +18,17 @@ Implementation contract / recovery map:
 - History inventory shows Node/name/version/full identity, current consumers and retained history. Automatic pruning is deferred: Phase 2 must first make onboarding/recovery reachability explicit.
 
 - [x] Reconcile accepted PR #105 baseline (`28ce62ef7aca4960bcf238b8d2221b7e445aa236`), reconstruct current storage/package/Resource/review boundaries, create the Phase-1 branch and persist scope.
-- [ ] Implement one verified package-location/install contract and legacy resolution; prove shared versions, collisions/tampering and offline loading.
-- [ ] Route normal Parent/Reference installation and package scratch through root storage, preserving consumer-specific review/provenance and acceptance cleanup.
-- [ ] Retain published local versions at normal build and expose a human-readable repository version inventory.
-- [ ] Shorten new Resource layouts while preserving closure, full origin mapping, exact package identity and Resource move/status behavior; keep old packages readable.
-- [ ] Implement separate preview/apply migration with idempotent retry, verification-before-removal and unchanged pins; prove duplicate legacy stores and unavailable providers.
+- [x] Implement one verified package-location/install contract and legacy resolution; prove shared versions, collisions/tampering and offline loading.
+- [x] Route normal Parent/Reference installation and package scratch through root storage, preserving consumer-specific review/provenance and acceptance cleanup.
+- [x] Retain published local versions at normal build and expose a human-readable repository version inventory.
+- [x] Shorten new Resource layouts while preserving closure, full origin mapping, exact package identity and Resource move/status behavior; keep old packages readable.
+- [x] Implement separate preview/apply migration with idempotent retry, verification-before-removal and unchanged pins; prove duplicate legacy stores and unavailable providers.
 - [ ] Add end-to-end normal Authoring/Parent/Reference, deep Node hierarchy, history retention, migration interruption and Windows regressions; run existing onboarding tests as compatibility checks without changing its workflow.
 - [ ] Update accepted architecture/operator docs, migration instructions, Framework Development Rule, STATE/CHANGELOG; regenerate self-hosted Context provider-first.
 - [ ] Pass complete tests, build/check, propagation health, diff hygiene and exact-head Linux/Windows CI; publish one Draft PR with concise owner-test instructions.
 - [ ] Close Phase-1 Fast Track for owner testing and record exact head/results/remaining Phase-2 onboarding work.
 
-Current checkpoint: implementation is starting from clean accepted main. Resume with the shared package store first, then adapt callers; no product code has changed yet. Decisions and any focused failures are checkpointed here as each block completes.
+Implementation checkpoint (2026-10-05): all 392 deterministic tests pass. `version_store.py` owns shared immutable installations and consumer-scoped root scratch; `version_history.py` retains previous/current publication and renders inventory; package v4 binds `.context/resource-origins.json` as exact package content; `storage_migration.py` is removable and preview-first. Migration preserves exact pins and packages, moves only owned legacy carrier URLs, and narrowly rebinds already-valid frozen review hashes after that mechanical locator change; CRLF, stale-review refusal and interrupted link/cleanup recovery are covered. Different Node IDs with identical human bytes are a real complete-binding collision case, explicitly tested. Existing onboarding uses its legacy carriers/install transaction until Phase 2; only generic format compatibility changes are present. Resume with architecture/operator docs, Framework storage Rule, provider-first self-host regeneration and final Linux/native-Windows gates. Draft PR #108 is not ready for owner testing yet.
 
 ## Accepted baseline: PR #105 / Issue #103
 
