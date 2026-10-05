@@ -1,8 +1,8 @@
 # Plan
 
-## Active Fast Track: shared Node versions — Issue #107, Phase 1
+## Owner-test candidate: shared Node versions — Issue #107, Phase 1
 
-**Fast Track status — ACTIVE / OWNER-AUTHORIZED**
+**Fast Track status — COMPLETE FOR OWNER TESTING / DRAFT PR #108**
 
 Purpose: retain whole immutable Node package versions once per Git working tree, keep consumer acceptance explicit, reduce generated path overhead, and migrate existing projects without re-onboarding. The owner authorized implementation on 2026-10-05 and will test Phase 1 before Phase 2.
 
@@ -25,8 +25,8 @@ Implementation contract / recovery map:
 - [x] Implement separate preview/apply migration with idempotent retry, verification-before-removal and unchanged pins; prove duplicate legacy stores and unavailable providers.
 - [x] Add end-to-end normal Authoring/Parent/Reference, deep Node hierarchy, history retention, migration interruption and Windows regressions; run existing onboarding tests as compatibility checks without changing its workflow.
 - [x] Update accepted architecture/operator docs, migration instructions, Framework Development Rule, STATE/CHANGELOG; regenerate self-hosted Context provider-first.
-- [ ] Pass complete tests, build/check, propagation health, diff hygiene and exact-head Linux/Windows CI; publish one Draft PR with concise owner-test instructions.
-- [ ] Close Phase-1 Fast Track for owner testing and record exact head/results/remaining Phase-2 onboarding work.
+- [x] Pass complete tests, build/check, propagation health, diff hygiene and exact-head Linux/Windows CI; publish one Draft PR with concise owner-test instructions.
+- [x] Close Phase-1 Fast Track for owner testing and record exact head/results/remaining Phase-2 onboarding work.
 
 Implementation checkpoint (2026-10-05): all 392 deterministic tests pass. `version_store.py` owns shared immutable installations and consumer-scoped root scratch; `version_history.py` retains previous/current publication and renders inventory; package v4 binds `.context/resource-origins.json` as exact package content; `storage_migration.py` is removable and preview-first. Migration preserves exact pins and packages, moves only owned legacy carrier URLs, and narrowly rebinds already-valid frozen review hashes after that mechanical locator change; CRLF, stale-review refusal and interrupted link/cleanup recovery are covered. Different Node IDs with identical human bytes are a real complete-binding collision case, explicitly tested. Existing onboarding uses its legacy carriers/install transaction until Phase 2; only generic format compatibility changes are present. Resume with architecture/operator docs, Framework storage Rule, provider-first self-host regeneration and final Linux/native-Windows gates. Draft PR #108 is not ready for owner testing yet.
 
@@ -35,6 +35,18 @@ Review-candidate checkpoint (2026-10-05): all 393 deterministic tests pass, incl
 Resume with final review-candidate publication to Draft PR #108, exact-head Actions checks, and PLAN/STATE closure after green Linux/native-Windows CI. Keep #107 open for Phase 2; do not merge. Phase 2 must route onboarding Evidence/frozen packages/workspaces/publication/reset/recovery through the shared library without borrowing normal acceptance cleanup or weakening frozen bindings; only after this may safe pruning account for all pins, retained package dependencies, pending reviews, onboarding and recovery roots.
 
 Native Windows checkpoint: implementation head `9441f2a7f0ee43c6e3a6443089733eb522a8c6e8` passes the complete Linux suite/self-host gate in Actions run `37250207414`. Windows passes 21/22 tests but exposes inconsistent Windows 8.3 versus resolved temp-root spelling in `scratch_root` when the prospective consumer has no source. The resolver now canonicalizes the Node path before deriving scope ownership, matching `find_repo_root`; focused regressions pass. Resume with corrected exact-head Linux/Windows CI, then closure. No package or semantic change is needed for this correction.
+
+Phase-1 closing checkpoint: corrected implementation head `65990b8db27913e9bf415e3bceed306767d4f28e` (tree `47f23fcbd0c57b0e0adb7ae2eab469c5f65fdd36`) passes Actions run `37250407876`: Linux full suite of 393 tests plus self-host zero-drift gate, and all 22 native Windows shared-history/migration/path/Git tests. The owner may now install/test Draft PR #108. This final PLAN/STATE closure changes no code or package behavior; final documentation-head CI is recorded on the PR. No merge is authorized, and #107 remains open for onboarding Phase 2.
+
+Phase-2 recovery plan — start only after Phase-1 owner testing:
+
+- [ ] Reconstruct onboarding Evidence, frozen reusable Catalog, semantic handoffs, placement publication and reset-journal ownership; record exact frozen bindings before any storage change.
+- [ ] Reuse the shared whole-Node library for frozen reusable packages, preserving complete reviewed identity and per-target Parent/Reference kind. Scope Evidence/run state at the Git root by onboarding project/run, with full immutable identity in authoritative metadata and short locators.
+- [ ] Adapt STEP 07/08/10, preview/publication and handoffs to those same frozen locations without introducing a parallel import model or fetching live inputs during recovery.
+- [ ] Make publication rollback/reset aware of shared-root ownership and reachability: retain another Node/run's packages and all prior accepted inputs; resume interrupted transactions deterministically.
+- [ ] Keep active-run migration separate and preview-first; verify/copy old frozen inputs before changing journals/bindings or retiring narrowly owned legacy wrappers. Continue reading old states where safe.
+- [ ] Test normal-root/subtree/simultaneous/deep onboarding, exact preview/publication bindings and reset/recovery from STEP 07 onward on Linux/Windows; document and self-host, then prepare a separately owner-tested Draft candidate.
+- [ ] Before any history-pruning feature, enumerate current pins, dependencies of retained versions, pending reviews, onboarding frozen inputs and recovery receipts. The Phase-1 inventory alone is deliberately insufficient deletion authority.
 
 ## Accepted baseline: PR #105 / Issue #103
 

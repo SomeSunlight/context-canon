@@ -2,11 +2,11 @@
 
 The accepted baseline is `main` at `28ce62ef7aca4960bcf238b8d2221b7e445aa236`, including owner-tested PR #105 (portable candidates, scoped cleanup and Windows warning headroom), PR #104 (Parent / Reference onboarding Phase 2), PR #100 and PR #102. The owner successfully propagated the real Windows project without relocating its normal PyCharm checkout. Final reviewed head `4fa2e4f78e408162610511db1c8f1bcf79501b9e` passed Actions run `37233194691`, including 379 deterministic tests and eight native Windows checks.
 
-## Active development — shared Node versions (#107 Phase 1)
+## Owner-test candidate — shared Node versions (#107 Phase 1)
 
 The owner-authorized Fast Track is implemented on `agent/issue-107-shared-node-versions`, Draft PR #108. Each consuming Git working tree keeps complete immutable versions once in `.context/versions/`; exact Parent/Reference pins stay per consumer. Normal publication retains previous/current history, normal scratch is consumer-scoped at the root, and package v4 binds full Resource origins while shortening generated namespaces/base paths. `versions list` and the generated index expose history; separate removable `storage_migration.py` provides preview/apply and verified interruption recovery without changing accepted meaning. See `docs/node-versions.md` and the PLAN recovery map.
 
-All 393 deterministic tests, self-host build/check, four local Parent/Child health edges and diff hygiene pass. Exact-head Linux/native-Windows verification remains before owner testing. Current Nodes: Gateway 0.3.20-draft; Framework Development 0.3.19-draft; Foundation 0.2.4-draft; Development Workflow 0.3.7-draft; GitHub 0.1.8-draft; GitHub Local 0.1.7-draft. Compiler format 0.8/package v4; executable release remains 0.10.0.
+All 393 deterministic tests, self-host build/check, four local Parent/Child health edges and diff hygiene pass. Corrected implementation head `65990b8db27913e9bf415e3bceed306767d4f28e` passes Actions run `37250407876`: Linux full suite/self-host and all 22 native Windows tests. Phase 1 is ready for owner testing; final documentation-head CI is recorded on Draft PR #108. Current Nodes: Gateway 0.3.20-draft; Framework Development 0.3.19-draft; Foundation 0.2.4-draft; Development Workflow 0.3.7-draft; GitHub 0.1.8-draft; GitHub Local 0.1.7-draft. Compiler format 0.8/package v4; executable release remains 0.10.0.
 
 Onboarding storage/workspace/reset migration is explicitly Phase 2 after owner testing; current process compatibility is retained. Automatic unused-version pruning is deferred until all retained package/review/onboarding/recovery references are accounted for. Generic reinitialization stays #106. Keep #107 open and PR #108 Draft; no merge is authorized.
 
