@@ -124,6 +124,32 @@ class VersionStoreTests(unittest.TestCase):
         self.assertNotEqual(package_key(packages[0]), package_key(packages[1]))
         self.assertEqual([load_package(path).metadata.id for path in paths], ["different-id-0", "different-id-1"])
 
+    def test_reference_review_does_not_substitute_another_node_with_identical_candidate_bytes(self):
+        a, b, child = self.repo / "a", self.repo / "b", self.repo / "child"
+        node(a, "node-a")
+        first = Compiler(self.repo).compile(a)
+        write_outputs(first)
+        node(b, "node-b", version="2.0.0")
+        other = Compiler(self.repo).compile(b)
+        write_outputs(other)
+        consumer(child, compiled_package(first), relationship="reference")
+        source = child / "CONTEXT.src.md"
+        source.write_text(source.read_text(encoding="utf-8") + f'''
+- [{other.metadata.name}](../b) — `2.0.0` — `relationship=reference`
+  <!-- ctx:source id="node-b" version="2.0.0" normalized-digest="{other.normalized_digest}" package-digest="{other.package_digest}" -->
+''', encoding="utf-8")
+        for provider, compiled in ((a, first), (b, other)):
+            install_version(child, provider, compiled_package(compiled))
+        node(a, "node-a", version="2.0.0")
+        candidate = Compiler(self.repo).compile(a)
+        write_outputs(candidate)
+        self.assertEqual(candidate.package_digest, other.package_digest)
+        review_source_candidate(child, "node-a", a)
+        accept_source_candidate(child, "node-a", a)
+        actual = Compiler(self.repo).compile(child)
+        self.assertEqual([package.metadata.id for package in actual.source_packages], ["node-a", "node-b"])
+        self.assertEqual(actual.inherited_rules, [])
+
     def test_real_token_collision_extends_and_tampering_fails(self):
         root = self.repo / "provider"
         seen = {}

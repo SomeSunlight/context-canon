@@ -22,7 +22,7 @@ from .package import PACKAGE_MANIFEST_PATH, artifact_files, compiled_package, ex
 from .package_diff import diff_packages
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .versioning import ensure_node_version_advanced
-from .version_store import install_version, version_path, review_path, scratch_root, store_package
+from .version_store import install_version, version_path, review_path, scratch_root, store_package, package_key
 
 REVIEW_SCHEMA = "contextcanon/source-review/v0"
 PARENT_REVIEW_SCHEMA = "contextcanon/parent-review/v0"
@@ -114,7 +114,7 @@ def adopt_source_package(node_root: Path, package_root: Path) -> tuple[CompiledP
     preview = Compiler(
         repo_root,
         source_overrides={node_root: after},
-        package_overrides={(node_root, candidate.package_digest): (candidate, resources)},
+        package_overrides={(node_root, package_key(candidate)): (candidate, resources)},
     )
     preview.compile(node_root)
 
@@ -399,7 +399,7 @@ def preview_source_candidate_effect(
     preview_compiled = Compiler(
         repo_root,
         source_overrides={node_root: preview_source},
-        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+        package_overrides={(node_root, package_key(candidate)): (candidate, candidate_resources)},
     ).compile(node_root)
     return diff_compiled(current_compiled, preview_compiled)
 
@@ -654,7 +654,7 @@ def preview_parent_candidate_effect(node_root: Path, parent_id: str | None = Non
     preview_compiled = Compiler(
         repo_root,
         source_overrides={node_root: preview_source},
-        package_overrides={(node_root, candidate.package_digest): (candidate, candidate_resources)},
+        package_overrides={(node_root, package_key(candidate)): (candidate, candidate_resources)},
     ).compile(node_root)
     effect = diff_compiled(current_compiled, preview_compiled)
     if binding_kind == "source":

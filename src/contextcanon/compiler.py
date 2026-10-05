@@ -18,7 +18,7 @@ from .package import (
     render_package_manifest,
     semantic_digest_for_node,
 )
-from .version_store import accepted_package_path
+from .version_store import accepted_package_path, package_key
 from .resource_layout import ORIGINS_PATH, resource_namespace, render_origins
 from .model import ResourceOrigin
 from .parser import ContextCanonError, parse_node
@@ -78,8 +78,10 @@ class Compiler:
             path.resolve(): content for path, content in (file_overrides or {}).items()
         }
         self._package_overrides = {
-            (root.resolve(), digest): value
-            for (root, digest), value in (package_overrides or {}).items()
+            # Normalize legacy digest-keyed preview callers at this boundary;
+            # an override can only replace its own complete Node binding.
+            (root.resolve(), package_key(value[0])): value
+            for (root, _identity), value in (package_overrides or {}).items()
         }
 
     def compile(self, node_root: Path) -> CompiledNode:
@@ -239,7 +241,7 @@ class Compiler:
                 f"{node_root}: internal error: pinned {relation} {dependency.name} has incomplete digests"
             )
 
-        override = self._package_overrides.get((node_root.resolve(), dependency.package_digest))
+        override = self._package_overrides.get((node_root.resolve(), package_key(dependency)))
         if override is not None:
             package, supplied_resources = override
             exported_paths = {file.path for file in exported_resource_files(package)}
