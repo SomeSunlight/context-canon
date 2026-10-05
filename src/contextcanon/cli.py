@@ -274,6 +274,8 @@ _HUMAN_CHANGE_NOUNS = {
     "resource": ("resource", "resources"),
 }
 
+_HUMAN_CHANGE_SYMBOLS = {"added": "+", "removed": "-", "modified": "~", "moved": "R"}
+
 
 def _human_change_summary(diff, *, include_categories: set[str] | None = None, exclude_categories: set[str] | None = None) -> str:
     include = include_categories
@@ -284,11 +286,11 @@ def _human_change_summary(diff, *, include_categories: set[str] | None = None, e
             continue
         key = (entry.category, entry.change)
         counts[key] = counts.get(key, 0) + 1
-    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    action = {"added": "added", "removed": "removed", "modified": "changed", "moved": "moved"}
     parts: list[str] = []
     for category in ("parent", "source", "change", "rule", "topic", "resource"):
         singular, plural = _HUMAN_CHANGE_NOUNS[category]
-        for change in ("added", "removed", "modified"):
+        for change in ("added", "removed", "modified", "moved"):
             count = counts.get((category, change), 0)
             if count:
                 parts.append(f"{count} {singular if count == 1 else plural} {action[change]}")
@@ -316,7 +318,6 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
         "topic": "Topics",
         "resource": "Resources",
     }
-    symbols = {"added": "+", "removed": "-", "modified": "~"}
     grouped: dict[str, list[object]] = {}
     for entry in diff.entries:
         if entry.category in exclude:
@@ -329,9 +330,11 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
         print(f"{headings[category]}:")
         for entry in entries:
             detail = ""
-            if entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
+            if entry.change == "moved" and entry.before and entry.after:
+                detail = f" [{entry.before['path']} -> {entry.after['path']}]"
+            elif entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
                 detail = " [" + ", ".join(entry.changed_fields) + "]"
-            print(f"  {symbols[entry.change]} {_human_entry_label(entry)}{detail}")
+            print(f"  {_HUMAN_CHANGE_SYMBOLS[entry.change]} {_human_entry_label(entry)}{detail}")
             if entry.category in {"source", "parent"} and entry.change == "modified":
                 before = entry.before or {}
                 after = entry.after or {}
@@ -775,11 +778,10 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print(f"  Parent normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
         print(f"  Parent package digest: {result.before_package_digest} -> {result.after_package_digest}")
         print("  Exact changed identities:")
-        symbols = {"added": "+", "removed": "-", "modified": "~"}
         for entry in result.entries:
             if entry.category == "node":
                 continue
-            print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+            print(f"    {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
         try:
             receipt_label = receipt.relative_to(child_root).as_posix()
         except ValueError:
@@ -2382,11 +2384,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  Source normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
                 print(f"  Source package digest: {result.before_package_digest} -> {result.after_package_digest}")
                 print("  Exact changed identities:")
-                symbols = {"added": "+", "removed": "-", "modified": "~"}
                 for entry in result.entries:
                     if entry.category == "node":
                         continue
-                    print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+                    print(f"    {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
                 print("  Candidate discovery:")
                 if provenance is not None and provenance.get("candidate_ref"):
                     print(f"    Git commit: {provenance['candidate_ref']}")

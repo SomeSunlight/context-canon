@@ -26,6 +26,8 @@ ContextCanon **0.10.0** is the current development release in accepted `main`. I
 
 ### Fixed
 
+- Guided Parent propagation and Source-update reviews now count and render identified Resource moves, including old/new paths and technical identities, instead of failing with `KeyError: 'moved'` before acceptance. Review refusal/resumption and Parent/Reference offline acceptance are regression-tested (#110).
+
 - Windows package/output materialization now preflights final and staged absolute paths: warn at 240–259 UTF-16 units and stop by default at 260 or more, with longest-path/action/owned-layout diagnostics, quantified whole-checkout relocation guidance and explicit warning-preserving long-path opt-in. The headroom warning band lets existing 251-unit accepted packages propagate without reinitialization. Candidate Git checkouts are inspected before checkout; project/Resource paths are preserved.
 - Source/Reference and Parent candidate packages share short collision-safe digest directory tokens, with full identity verification and historical full-digest recovery. Successful acceptance cleans only the consumed candidate/provenance/receipt; failure preserves review scratch and accepted offline packages are never pruned.
 - Candidate and Source/Parent review scratch stores receive explicit recursive managed ignores. Onboarding ignores migrate idempotently to every subtree while compact inventory state stays trackable. Native Windows CI covers path budgets/materialization and Git visibility.

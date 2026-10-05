@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from contextcanon.cli import main
 from contextcanon.compiler import Compiler
+from contextcanon.config import upsert_local_mapping
 from contextcanon.outputs import check_outputs, write_outputs
 from contextcanon.package import artifact_files, compiled_package, load_package
 from contextcanon.parser import ContextCanonError
@@ -382,3 +383,82 @@ class VersionStoreTests(unittest.TestCase):
             scratch_root(a, "parent-reviews", create=True)
             with self.assertRaisesRegex(ContextCanonError, "scope token collision"):
                 scratch_root(b, "parent-reviews", create=True)
+
+    def move_provider_resource(self, provider):
+        source = provider / "CONTEXT.src.md"
+        (provider / "docs/guide.md").rename(provider / "docs/renamed guide #1.md")
+        source.write_text(
+            source.read_text(encoding="utf-8")
+            .replace("docs/guide.md", "docs/renamed guide #1.md")
+            .replace('version="1.0.0"', 'version="2.0.0"'),
+            encoding="utf-8",
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", str(provider)]), 0)
+        return load_package(provider)
+
+    def test_guided_propagation_reviews_resource_move_before_acceptance_and_can_resume(self):
+        provider, first = self.provider(topic=True)
+        old = compiled_package(first)
+        child = self.repo / "03 F2"
+        consumer(child, old, node_id="feature")
+        install_version(child, provider, old)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", "--all", str(self.repo)]), 0)
+        before_source = (child / "CONTEXT.src.md").read_bytes()
+        new = self.move_provider_resource(provider)
+        old_path = old.topics[0].targets[0].locator
+        new_path = new.topics[0].targets[0].locator
+
+        for answer in ("n", "y"):
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output), patch("builtins.input", return_value=answer) as prompt:
+                self.assertEqual(main(["propagate", "--all", str(self.repo)]), 0)
+            self.assertEqual(prompt.call_count, 1)
+            rendered = output.getvalue()
+            self.assertIn("1 resource moved", rendered)
+            self.assertIn(f"R provider#GUIDE-DOC [{old_path} -> {new_path}]", rendered)
+            self.assertIn("R resource: provider#GUIDE-DOC", rendered)
+            accepted = Compiler(self.repo).compile(child).source_packages[0]
+            self.assertEqual(accepted.package_digest, old.package_digest if answer == "n" else new.package_digest)
+            if answer == "n":
+                self.assertEqual((child / "CONTEXT.src.md").read_bytes(), before_source)
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", "--all", str(self.repo)]), 0)
+            self.assertEqual(main(["check", "--all", str(self.repo)]), 0)
+        self.assertEqual(Compiler(self.repo).compile(child).inherited_rules[0].statement, "Apply policy.")
+
+    def test_guided_source_update_reviews_resource_moves_for_parents_and_references(self):
+        provider, first = self.provider(topic=True)
+        old = compiled_package(first)
+        children = {}
+        for relationship in ("parent", "reference"):
+            child = self.repo / relationship
+            consumer(child, old, node_id=relationship, relationship=relationship)
+            install_version(child, provider, old)
+            children[relationship] = child
+        upsert_local_mapping(self.repo, "provider", provider, ".")
+        new = self.move_provider_resource(provider)
+
+        for relationship, child in children.items():
+            with self.subTest(relationship=relationship):
+                before_source = (child / "CONTEXT.src.md").read_bytes()
+                for answer in ("n", "y"):
+                    output = io.StringIO()
+                    with contextlib.redirect_stdout(output), patch("builtins.input", return_value=answer) as prompt:
+                        self.assertEqual(main(["source", "update", "Policy", "--node", str(child)]), 0)
+                    self.assertEqual(prompt.call_count, 1)
+                    self.assertIn("1 resource moved", output.getvalue())
+                    self.assertIn("R provider#GUIDE-DOC [", output.getvalue())
+                    self.assertIn("R resource: provider#GUIDE-DOC", output.getvalue())
+                    accepted = Compiler(self.repo).compile(child).source_packages[0]
+                    self.assertEqual(accepted.package_digest, old.package_digest if answer == "n" else new.package_digest)
+                    if answer == "n":
+                        self.assertEqual((child / "CONTEXT.src.md").read_bytes(), before_source)
+                self.assertEqual(bool(Compiler(self.repo).compile(child).inherited_rules), relationship == "parent")
+
+        shutil.rmtree(provider)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", "--all", str(self.repo)]), 0)
+            self.assertEqual(main(["check", "--all", str(self.repo)]), 0)
