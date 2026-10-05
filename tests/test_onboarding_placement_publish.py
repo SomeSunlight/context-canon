@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextcanon.version_store import version_path
 
 import json
 import subprocess
@@ -297,7 +298,7 @@ class PlacementPublicationTests(unittest.TestCase):
         parsed_child = parse_node(child_root, repo)
         self.assertIsNotNone(parsed_child.parent)
         self.assertEqual(parsed_child.parent.id, root_id)
-        parent_store = child_root / ".context" / "sources" / parsed_child.parent.package_digest
+        parent_store = version_path(child_root, parsed_child.parent)
         self.assertTrue(parent_store.is_dir())
         accepted_parent = load_package(parent_store)
         self.assertEqual(accepted_parent.metadata.id, root_id)

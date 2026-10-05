@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from contextcanon.cli import _owner_specs_for_review
 from contextcanon.compiler import Compiler
+from contextcanon.onboarding_storage import SCOPE_MARKER, scope_root
 from contextcanon.onboarding import prepare_onboarding_evidence
 from contextcanon.onboarding_inventory import INVENTORY_COLUMNS, prepare_from_inventory, refresh_inventory
 from contextcanon.onboarding_reset import RESET_JOURNAL_NAME, reset_onboarding, run_journaled
@@ -177,8 +178,8 @@ class OnboardingResetTests(unittest.TestCase):
         result = reset_onboarding(repo, from_step=3)
 
         self.assertTrue(workspace.inventory_path.is_file())
-        self.assertTrue((repo / ".context" / "onboarding" / "inventory-state.json").is_file())
-        self.assertFalse((repo / ".context" / "onboarding" / "inventory-acceptance.json").exists())
+        self.assertTrue((scope_root(repo) / "inventory-state.json").is_file())
+        self.assertFalse((scope_root(repo) / "inventory-acceptance.json").exists())
         self.assertFalse(prepared.snapshot_root.exists())
         self.assertIn("contextcanon onboard prepare", result["next_action"])
         refreshed = refresh_inventory(repo, workspace.inventory_path)

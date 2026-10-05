@@ -5,11 +5,14 @@ import json
 import re
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from .compiler import Compiler
 from .model import CompiledPackage, RelationshipKind
+from .onboarding_storage import RUN_MARKER, binding_from_row, enclosing_parent, freeze_package, provenance_path
+from .version_store import package_key, version_path
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_structure import HumanStructurePlan
 from .package import PACKAGE_MANIFEST_PATH, load_package
@@ -161,17 +164,16 @@ def _decision(text: str) -> str:
 
 def _enclosing_parent_package(snapshot_root: Path):
     root = snapshot_root.resolve()
-    if not (root.parent.name == "onboarding" and root.parent.parent.name == ".context"):
-        # Compatibility for lightweight unit/scripting snapshots. Only canonical
-        # .context/onboarding/<digest> snapshots can have a meaningful enclosing
-        # project Parent.
+    if not _shared_snapshot(root):
         return None
-    project = project_root_from_snapshot(root)
-    parent_root = find_enclosing_context_root(project)
-    if parent_root is None:
-        return None
-    repository = resolve_onboarding_scope(project).repository_root
-    return Compiler(repository, legacy_carriers=True).compile(parent_root)
+    frozen = enclosing_parent(root)
+    return frozen[0] if frozen is not None else None
+
+
+def _shared_snapshot(root: Path) -> bool:
+    return (root / RUN_MARKER).is_file() or (
+        root.parent.name == "onboarding" and root.parent.parent.name == ".context"
+    )
 
 
 def _candidate_manifest_paths(location: Path) -> list[Path]:
@@ -185,7 +187,7 @@ def _candidate_manifest_paths(location: Path) -> list[Path]:
             continue
         rel_parts = manifest.relative_to(location).parts
         # Ignore accepted/candidate package caches inside another Node.
-        if "sources" in rel_parts and ".context" in rel_parts:
+        if any(name in rel_parts for name in ("sources", "versions", "onboarding", "parent-candidates", "source-reviews", "parent-reviews")) and ".context" in rel_parts:
             continue
         if "candidates" in rel_parts and ".context" in rel_parts:
             continue
@@ -208,7 +210,7 @@ def discover_catalog(locations: tuple[str, ...]) -> tuple[tuple[Path, ...], tupl
             package = load_package(root)
             previous = by_id.get(package.metadata.id)
             if previous is not None:
-                if previous[1].package_digest != package.package_digest:
+                if package_key(previous[1]) != package_key(package):
                     raise _error(
                         f"Catalog contains more than one package version for {package.metadata.name} "
                         f"({package.metadata.id}); narrow the Catalog location before accepting the run"
@@ -416,7 +418,9 @@ def _freeze_catalog(
     for root, package in zip(roots, packages):
         destination = _frozen_package_root(snapshot_root, package.package_digest)
         provenance = _catalog_provenance(root, package)
-        result.append(_write_frozen_package(destination, root, package, provenance))
+        result.append(freeze_package(snapshot_root, root, package, provenance)
+                      if _shared_snapshot(snapshot_root.resolve()) else
+                      _write_frozen_package(destination, root, package, provenance))
     return tuple(result)
 
 
@@ -436,6 +440,7 @@ def _recover_historical_package(
     snapshot_root: Path,
     original_root: Path,
     expected_digest: str,
+    expected_binding=None,
 ) -> Path | None:
     repository_text = _git_text(original_root, "rev-parse", "--show-toplevel")
     if repository_text is None:
@@ -467,8 +472,8 @@ def _recover_historical_package(
             continue
 
         destination = _frozen_package_root(snapshot_root, expected_digest)
-        temporary = destination.with_name(destination.name + ".tmp")
-        for target_root in (destination, temporary):
+        temporary = Path(tempfile.mkdtemp(prefix=".recover-", dir=snapshot_root.parent)) if _shared_snapshot(snapshot_root) else destination.with_name(destination.name + ".tmp")
+        for target_root in ((temporary,) if _shared_snapshot(snapshot_root) else (destination, temporary)):
             preflight_paths(target_root, (PACKAGE_MANIFEST_PATH, FROZEN_PROVENANCE_REL, *paths), action="onboarding historical package recovery")
         if temporary.exists():
             shutil.rmtree(temporary)
@@ -505,8 +510,10 @@ def _recover_historical_package(
             provenance_path = temporary / FROZEN_PROVENANCE_REL
             write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
             verified = load_package(temporary)
-            if verified.package_digest != expected_digest:
+            if verified.package_digest != expected_digest or (expected_binding is not None and package_key(verified) != package_key(expected_binding)):
                 continue
+            if _shared_snapshot(snapshot_root):
+                return freeze_package(snapshot_root, temporary, verified, provenance)
             destination.parent.mkdir(parents=True, exist_ok=True)
             if destination.exists():
                 shutil.rmtree(destination)
@@ -536,27 +543,29 @@ def _accepted_catalog_from_state(
         if not isinstance(original_path, str) or not isinstance(expected_digest, str):
             raise _error("reusable Context machine state has an incomplete Catalog package entry")
 
-        destination = _frozen_package_root(snapshot_root, expected_digest)
+        binding = binding_from_row(row)
+        shared = _shared_snapshot(snapshot_root.resolve())
+        central = version_path(project_root_from_snapshot(snapshot_root), binding) if shared else None
+        destination = central if central is not None and central.exists() else _frozen_package_root(snapshot_root, expected_digest)
         if not destination.is_dir():
             original_root = Path(original_path).expanduser().resolve()
 
             # Legacy STEP-07 state recorded exact identity but not package bytes.
             # Prefer recovery from Git history because it yields exact provenance
             # even when the current checkout has moved on or was temporarily restored.
-            recovered = _recover_historical_package(snapshot_root, original_root, expected_digest)
-            if recovered is None:
+            recovered = _recover_historical_package(snapshot_root, original_root, expected_digest, binding)
+            if recovered is not None:
+                destination = recovered
+            else:
                 current: CompiledPackage | None = None
                 try:
                     current = load_package(original_root)
                 except ContextCanonError:
                     current = None
                 if current is not None and current.package_digest == expected_digest:
-                    _write_frozen_package(
-                        destination,
-                        original_root,
-                        current,
-                        _catalog_provenance(original_root, current),
-                    )
+                    provenance = _catalog_provenance(original_root, current)
+                    destination = (freeze_package(snapshot_root, original_root, current, provenance) if shared else
+                                   _write_frozen_package(destination, original_root, current, provenance))
                 else:
                     raise _error(
                         "Accepted reusable Context package bytes are not frozen and the exact historical package "
@@ -567,8 +576,14 @@ def _accepted_catalog_from_state(
                     )
 
         package = load_package(destination)
-        if package.package_digest != expected_digest:
-            raise _error(f"Frozen reusable package digest mismatch at {destination}")
+        if package_key(package) != package_key(binding) or package.metadata.version != binding.version:
+            raise _error(f"Frozen reusable package binding mismatch at {destination}")
+        if shared and destination != central:
+            provenance_file = destination / FROZEN_PROVENANCE_REL
+            if not provenance_file.is_file():
+                raise _error(f"Frozen reusable package has no exact provenance: {destination}")
+            provenance = json.loads(provenance_file.read_text(encoding="utf-8"))
+            destination = freeze_package(snapshot_root, destination, package, provenance)
         frozen_roots.append(destination)
         packages.append(package)
 
@@ -969,6 +984,8 @@ def refresh_reusable_contexts(
         payload["frozen_catalog_packages"] = [
             {
                 "package_digest": package.package_digest,
+                "id": package.metadata.id,
+                "normalized_digest": package.normalized_digest,
                 "path": str(root),
             }
             for root, package in zip(effective_roots, packages)

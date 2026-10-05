@@ -1,5 +1,13 @@
 # Current State
 
+## Phase-2 runtime checkpoint — 2026-10-05
+
+Branch `agent/issue-107-onboarding-versions` now implements shallow authenticated new onboarding runs/workspaces, shared exact reusable and enclosing-Parent packages, run-owned provenance, compact preview/publication and interruption-resumable reset journals. Other scopes and shared immutable versions survive a reset; old readers remain compatible. See [the contract](docs/onboarding-storage.md) and [the active checklist](plans/issue-107-phase-2.md).
+
+Validation: **407 deterministic tests pass**, all six self-hosted Nodes have zero generated drift and all four local Parent/Child edges are normatively current. Native Windows/hosted exact-head verification remains a final candidate gate.
+
+Next unchecked block is **D**, explicit active-run preview/apply migration plus old single-pass acceptance staging; owner instructions, affected self-host regeneration and hosted Linux/Windows verification follow. This checkpoint is published on the separate stacked branch. PR #108 and accepted `main` are unchanged. No merge is authorized.
+
 ## Active Phase-2 Fast Track (#107)
 
 The owner explicitly authorized beginning onboarding storage/migration on 2026-10-05 before Phase 1 is merged. Work is isolated on `agent/issue-107-onboarding-versions`, stacked on owner-tested PR #108 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; accepted `main` is unchanged. PR #108 remains separate and unmerged, with its Linux retry affected by GitHub's runner-allocation incident. The [Phase-2 plan](plans/issue-107-phase-2.md) is the active recovery map. First reconstruct frozen input/ownership and reset boundaries, then implement coherent tested blocks with remote checkpoints. A separate Draft PR will target the Phase-1 branch until the owner merges it; then reconcile/rebase the accepted baseline before continuing. No merge, pruning or unrelated feature scope is authorized.

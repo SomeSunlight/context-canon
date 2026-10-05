@@ -178,7 +178,7 @@ class OnboardingRelationshipTests(unittest.TestCase):
                         f'normalized-digest="{a.source_normalized_digest}" package-digest="{a.source_package_digest}" -->'
                         for a in accepted.assignments
                     ), encoding="utf-8")
-                shutil.copytree(project / ".context" / "sources", manual / ".context" / "sources")
+                # The manual consumer uses the same repository-wide exact versions.
                 self.assertEqual(root_rules, {r.id for r in Compiler(repo).compile(manual).inherited_rules})
 
     def test_subtree_existing_parent_alone_plus_parent_or_reference(self):

@@ -13,6 +13,8 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
+from .onboarding_storage import enclosing_parent, provenance_path
+from .version_store import install_version, library_root, package_key, store_package, version_path
 from .config import CONFIG_FILENAME, config_path, upsert_git_source, upsert_local_mapping
 from .links import markdown_link_target
 from .model import RelationshipKind
@@ -277,8 +279,10 @@ def _try_git(root: Path, *args: str) -> str | None:
 def _frozen_catalog_provenance(
     source: PlacementReviewSource,
     package_root: Path,
+    snapshot_root: Path | None = None,
 ) -> SourceGitProvenance | None:
-    path = package_root / FROZEN_PROVENANCE_REL
+    scoped = provenance_path(snapshot_root, load_package(package_root)) if snapshot_root is not None else None
+    path = scoped if scoped is not None and scoped.is_file() else package_root / FROZEN_PROVENANCE_REL
     if not path.is_file():
         return None
     try:
@@ -287,7 +291,7 @@ def _frozen_catalog_provenance(
         raise _error(f"frozen reusable Source provenance is unreadable: {path}") from exc
     if value.get("schema") != FROZEN_PROVENANCE_SCHEMA:
         raise _error(f"unsupported frozen reusable Source provenance: {path}")
-    if value.get("package_digest") != source.source_package_digest:
+    if value.get("package_digest") != source.source_package_digest or (scoped is not None and path == scoped and (value.get("node_id") != source.source_node_id or value.get("normalized_digest") != source.source_normalized_digest)):
         raise _error(f"frozen reusable Source provenance does not match {source.source_name}")
 
     kind = value.get("kind")
@@ -320,8 +324,9 @@ def _git_provenance(
     source: PlacementReviewSource,
     package_root: Path,
     package: CompiledPackage,
+    snapshot_root: Path | None = None,
 ) -> SourceGitProvenance:
-    frozen = _frozen_catalog_provenance(source, package_root)
+    frozen = _frozen_catalog_provenance(source, package_root, snapshot_root)
     if frozen is not None:
         return frozen
     repository_text = _try_git(package_root, "rev-parse", "--show-toplevel")
@@ -394,6 +399,7 @@ def _source_provenance(
     sources: Iterable[PlacementReviewSource],
     proposal: OnboardingPlacementProposal,
     catalog_package_roots: Iterable[Path],
+    snapshot_root: Path | None = None,
 ) -> tuple[SourceGitProvenance, ...]:
     roots = _catalog_roots(catalog_package_roots)
     package_by_id = {package.metadata.id: package for package in proposal.catalog_packages}
@@ -409,7 +415,7 @@ def _source_provenance(
             or package.package_digest != source.source_package_digest
         ):
             raise _error(f"accepted Source {source.source_name} no longer matches the reviewed exact package")
-        result.append(_git_provenance(source, root, package))
+        result.append(_git_provenance(source, root, package, snapshot_root))
     return tuple(result)
 
 
@@ -851,12 +857,9 @@ def build_placement_publication_preview(
     scope = resolve_onboarding_scope(project)
     repository = scope.repository_root
     documents = _expected_document_deltas(snapshot, project, review)
-    enclosing_parent_root = find_enclosing_context_root(project)
-    enclosing_parent = (
-        Compiler(repository, legacy_carriers=True).compile(enclosing_parent_root)
-        if enclosing_parent_root is not None
-        else None
-    )
+    frozen_parent = enclosing_parent(snapshot_root)
+    enclosing_package = frozen_parent[0] if frozen_parent is not None else None
+    enclosing_parent_root = frozen_parent[2] if frozen_parent is not None else None
     root_node_key = next(
         (node.key for node in proposal.structure.nodes if node.path == "."),
         None,
@@ -864,11 +867,11 @@ def build_placement_publication_preview(
     ordinary_sources = _accepted_ordinary_sources(
         review,
         enclosing_parent_node_id=(
-            enclosing_parent.metadata.id if enclosing_parent is not None else None
+            enclosing_package.metadata.id if enclosing_package is not None else None
         ),
         root_node_key=root_node_key,
     )
-    provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots)
+    provenance = _source_provenance(ordinary_sources, proposal, catalog_package_roots, snapshot_root)
     items_by_node = _accepted_by_node(review)
     sources_by_node = _sources_by_node(ordinary_sources)
     node_by_key = {node.key: node for node in proposal.structure.nodes}
@@ -917,7 +920,7 @@ def build_placement_publication_preview(
         if package_root is None:
             raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
         package = load_package(package_root)
-        package_overrides[(target_root.resolve(), source.source_package_digest)] = (
+        package_overrides[(target_root.resolve(), package_key(package))] = (
             package,
             _package_resource_bytes(package_root, package),
         )
@@ -927,13 +930,13 @@ def build_placement_publication_preview(
     for node in ordered_nodes:
         root = _node_root(project, node.path).resolve()
         if node.parent_key is None:
-            if node.path == "." and enclosing_parent is not None and enclosing_parent_root is not None:
+            if node.path == "." and enclosing_package is not None and enclosing_parent_root is not None:
                 body, locator = _render_enclosing_parent_body(
-                    enclosing_parent, root, enclosing_parent_root
+                    enclosing_package, root, enclosing_parent_root
                 )
                 source_overrides[root] = _replace_parent_section(source_overrides[root], body)
-                package_overrides[(root, enclosing_parent.package_digest)] = _compiled_package_override(
-                    enclosing_parent
+                package_overrides[(root, package_key(enclosing_package))] = (
+                    enclosing_package, {path: data for path, data in frozen_parent[1].items() if path.startswith("CONTEXT/references/")}
                 )
                 parent_pins.append(
                     PlacementParentPin(
@@ -941,12 +944,12 @@ def build_placement_publication_preview(
                         child_name=node.name,
                         child_path=node.path,
                         parent_key="@enclosing",
-                        parent_name=enclosing_parent.metadata.name,
+                        parent_name=enclosing_package.metadata.name,
                         parent_path=locator,
-                        parent_node_id=enclosing_parent.metadata.id,
-                        parent_version=enclosing_parent.metadata.version,
-                        parent_normalized_digest=enclosing_parent.normalized_digest,
-                        parent_package_digest=enclosing_parent.package_digest,
+                        parent_node_id=enclosing_package.metadata.id,
+                        parent_version=enclosing_package.metadata.version,
+                        parent_normalized_digest=enclosing_package.normalized_digest,
+                        parent_package_digest=enclosing_package.package_digest,
                         locator=locator,
                     )
                 )
@@ -960,7 +963,7 @@ def build_placement_publication_preview(
             parent_root = _node_root(project, parent.path).resolve()
             body, locator = _render_parent_body(parent, compiled_parent, root, parent_root)
             source_overrides[root] = _replace_parent_section(source_overrides[root], body)
-            package_overrides[(root, compiled_parent.package_digest)] = _compiled_package_override(compiled_parent)
+            package_overrides[(root, package_key(compiled_parent))] = _compiled_package_override(compiled_parent)
             parent_pins.append(
                 PlacementParentPin(
                     child_key=node.key,
@@ -982,13 +985,13 @@ def build_placement_publication_preview(
             source_overrides=source_overrides,
             file_overrides=file_overrides,
             package_overrides=package_overrides,
-         legacy_carriers=True).compile(root)
+        ).compile(root)
         if compiled.metadata.id != node_ids[node.key]:
             raise _error(f"semantic Parent preview changed stable Node identity for {node.name}")
         preflight_paths(root, expected_outputs(compiled), action="onboarding Official Context preview")
         for package in compiled.parent_packages + compiled.source_packages:
             preflight_paths(
-                root / ".context" / "sources" / package.package_digest,
+                version_path(root, package),
                 (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files)),
                 action="onboarding accepted import preview", node_root=root,
             )
@@ -1131,75 +1134,20 @@ def render_placement_publication_preview(preview: PlacementPublicationPreview) -
 
 
 def _copy_exact_package(package_root: Path, target_root: Path, expected_digest: str) -> bool:
-    destination = target_root / ".context" / "sources" / expected_digest
-    if destination.exists():
-        package = load_package(destination)
-        if package.package_digest != expected_digest:
-            raise _error(f"accepted Source store path contains different package: {destination}")
-        return False
     package = load_package(package_root)
     if package.package_digest != expected_digest:
         raise _error(f"catalog package digest changed before publication: {package_root}")
-    paths = (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files))
-    preflight_paths(destination, paths, action="onboarding accepted Context Import", node_root=target_root)
-    staging = Path(tempfile.mkdtemp(prefix=".tmp-", dir=(target_root / ".context" / "sources").parent if (target_root / ".context" / "sources").parent.exists() else target_root))
-    try:
-        preflight_paths(staging, paths, action="onboarding Context Import staging", node_root=target_root)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        manifest_target = staging / PACKAGE_MANIFEST_PATH
-        manifest_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(package_root / PACKAGE_MANIFEST_PATH, manifest_target)
-        for file in package.files:
-            source = package_root / Path(*PurePosixPath(file.path).parts)
-            target = staging / Path(*PurePosixPath(file.path).parts)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-        staged = load_package(staging)
-        if staged.package_digest != package.package_digest or staged.normalized_digest != package.normalized_digest:
-            raise _error("Source package identity changed while staging publication")
-        os.replace(staging, destination)
-    finally:
-        if staging.exists():
-            shutil.rmtree(staging, ignore_errors=True)
-    return True
+    existed = version_path(target_root, package).exists()
+    install_version(target_root, package_root, package)
+    return not existed
 
 
 def _copy_compiled_package(compiled, target_root: Path) -> bool:
-    expected_digest = compiled.package_digest
-    destination = target_root / ".context" / "sources" / expected_digest
-    if destination.exists():
-        package = load_package(destination)
-        if (
-            package.metadata.id != compiled.metadata.id
-            or package.normalized_digest != compiled.normalized_digest
-            or package.package_digest != expected_digest
-        ):
-            raise _error(f"accepted Parent store path contains different package: {destination}")
-        return False
-
-    files = artifact_files(compiled)
-    preflight_paths(destination, files, action="onboarding accepted Parent", node_root=target_root)
-    store = destination.parent
-    store.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix=".tmp-", dir=store))
-    try:
-        preflight_paths(staging, files, action="onboarding Parent staging", node_root=target_root)
-        for rel, content in files.items():
-            target = staging / Path(*PurePosixPath(rel).parts)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
-        staged = load_package(staging)
-        if (
-            staged.metadata.id != compiled.metadata.id
-            or staged.normalized_digest != compiled.normalized_digest
-            or staged.package_digest != expected_digest
-        ):
-            raise _error("Parent package identity changed while staging publication")
-        os.replace(staging, destination)
-    finally:
-        if staging.exists():
-            shutil.rmtree(staging, ignore_errors=True)
-    return True
+    package = compiled_package(compiled)
+    existed = version_path(target_root, package).exists()
+    store_package(library_root(target_root), package, artifact_files(compiled),
+                  action="onboarding accepted Parent", node_root=target_root)
+    return not existed
 
 
 def _publication_order(preview: PlacementPublicationPreview) -> list[PlacementNodeDelta]:
@@ -1459,9 +1407,7 @@ def publish_placement_review(
                 root = roots.get(source.source_node_id)
                 if root is None:
                     raise _error(f"accepted Source {source.source_name} requires exact catalog package root")
-                destination = target_root / ".context" / "sources" / source.source_package_digest
-                if _copy_exact_package(root, target_root, source.source_package_digest):
-                    new_package_dirs.append(destination)
+                _copy_exact_package(root, target_root, source.source_package_digest)
 
         parent_by_child = {parent.child_key: parent for parent in preview.parents}
         compiled_by_key: dict[str, object] = {}
@@ -1470,8 +1416,10 @@ def publish_placement_review(
             parent_pin = parent_by_child.get(delta.key)
             if parent_pin is not None:
                 if parent_pin.parent_key == "@enclosing":
-                    enclosing_root = (delta.source_path.parent / parent_pin.locator).resolve()
-                    compiled_parent = Compiler(repository, legacy_carriers=True).compile(enclosing_root)
+                    frozen_parent = enclosing_parent(snapshot_root)
+                    if frozen_parent is None:
+                        raise _error("Frozen enclosing Parent is missing")
+                    compiled_parent = frozen_parent[0]
                 else:
                     compiled_parent = compiled_by_key.get(parent_pin.parent_key)
                     if compiled_parent is None:
@@ -1487,11 +1435,10 @@ def publish_placement_review(
                     raise _error(
                         f"Parent {parent_pin.parent_name} changed between publication preview and publication"
                     )
-                destination = delta.source_path.parent / ".context" / "sources" / compiled_parent.package_digest
-                if _copy_compiled_package(compiled_parent, delta.source_path.parent):
-                    new_package_dirs.append(destination)
+                if parent_pin.parent_key != "@enclosing":
+                    _copy_compiled_package(compiled_parent, delta.source_path.parent)
 
-            compiled = Compiler(repository, legacy_carriers=True).compile(delta.source_path.parent)
+            compiled = Compiler(repository).compile(delta.source_path.parent)
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
@@ -1513,7 +1460,7 @@ def publish_placement_review(
         for compiled in compiled_nodes:
             write_outputs(compiled)
 
-        verifier = Compiler(repository, legacy_carriers=True)
+        verifier = Compiler(repository)
         node_digests: dict[str, dict[str, str]] = {}
         for delta in preview.nodes:
             compiled = verifier.compile(delta.source_path.parent)

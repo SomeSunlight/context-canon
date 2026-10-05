@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
+from .onboarding_storage import enclosing_parent
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
 from .package import artifact_files
@@ -38,19 +39,17 @@ class HandoffParentContext:
 
 
 def _enclosing_parent_context(snapshot_root: Path) -> HandoffParentContext | None:
-    project = project_root_from_snapshot(snapshot_root)
-    parent_root = find_enclosing_context_root(project)
-    if parent_root is None:
+    frozen = enclosing_parent(snapshot_root)
+    if frozen is None:
         return None
-    repository = resolve_onboarding_scope(project).repository_root
-    compiled = Compiler(repository, legacy_carriers=True).compile(parent_root)
+    package, files, _ = frozen
     return HandoffParentContext(
-        node_id=compiled.metadata.id,
-        name=compiled.metadata.name,
-        version=compiled.metadata.version,
-        normalized_digest=compiled.normalized_digest,
-        package_digest=compiled.package_digest,
-        files=tuple(sorted(artifact_files(compiled).items())),
+        node_id=package.metadata.id,
+        name=package.metadata.name,
+        version=package.metadata.version,
+        normalized_digest=package.normalized_digest,
+        package_digest=package.package_digest,
+        files=tuple(sorted(files.items())),
     )
 
 

@@ -3,9 +3,11 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
+import tempfile
 import re
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Callable, Iterable
 
 from .compiler import Compiler, discover_nodes
@@ -39,6 +41,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
+from .onboarding_storage import SCOPE_MARKER, default_workspace, run_path, scope_root
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
@@ -122,14 +125,21 @@ def _write_journal(snapshot_root: Path, records: list[dict[str, object]]) -> Non
         path.unlink(missing_ok=True)
         return
     payload = {"schema": RESET_JOURNAL_SCHEMA, "records": records}
-    write_utf8(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".journal-", delete=False) as handle:
+        temporary = Path(handle.name)
+        handle.write((json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+    try:
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
-def _managed_state(project_root: Path, extra_paths: Iterable[str] = ()) -> dict[str, bytes | None]:
+def _managed_state(project_root: Path, extra_paths: Iterable[str] = (), snapshot: Path | None = None) -> dict[str, bytes | None]:
     project = project_root.resolve()
     repository = resolve_onboarding_scope(project).repository_root
     result: dict[str, bytes | None] = {}
-    compiler = Compiler(repository, legacy_carriers=True)
+    compiler = Compiler(repository)
     for node_root in discover_nodes(project):
         source = node_root / "CONTEXT.src.md"
         result[source.relative_to(project).as_posix()] = source.read_bytes() if source.is_file() else None
@@ -144,7 +154,7 @@ def _managed_state(project_root: Path, extra_paths: Iterable[str] = ()) -> dict[
                 if path.is_file():
                     result[path.relative_to(project).as_posix()] = path.read_bytes()
     for rel in extra_paths:
-        path = project / rel
+        path = _change_path(project, {"path": rel}, snapshot)
         result[rel] = path.read_bytes() if path.is_file() else None
     return result
 
@@ -206,41 +216,61 @@ def run_journaled(argv: list[str], delegate: Callable[[list[str]], int]) -> int:
         try:
             extras.append(acceptance.resolve().relative_to(project).as_posix())
         except ValueError:
-            # An explicitly external acceptance path remains outside project reset scope.
-            pass
+            if acceptance.resolve() == snapshot / "placement-acceptance.json":
+                extras.append("@run/placement-acceptance.json")
+            # Explicitly external acceptance paths remain outside reset scope.
         extra_paths = tuple(extras)
-    before = _managed_state(project, extra_paths)
+    before = _managed_state(project, extra_paths, snapshot)
     result = delegate(argv)
     if result != 0:
         return result
-    after = _managed_state(project, extra_paths)
+    after = _managed_state(project, extra_paths, snapshot)
     step = 6 if argv[1] == "structure-materialize" else 12
     record_transition(snapshot, project, step=step, command=list(argv), before=before, after=after)
     return result
 
 
-def _verify_after(project: Path, change: dict[str, object]) -> None:
-    path = project / str(change["path"])
-    expected_exists = bool(change["after_exists"])
-    if not expected_exists:
-        if path.exists() or path.is_symlink():
-            raise _error(f"refusing reset because a recorded absent path now exists: {change['path']}")
+def _change_path(project: Path, change: dict[str, object], snapshot: Path | None = None) -> Path:
+    rel = change.get("path")
+    if not isinstance(rel, str) or not rel or "\\" in rel or ":" in rel or PurePosixPath(rel).is_absolute() or any(part in {"", ".", ".."} for part in rel.split("/")):
+        raise _error("unsafe reset journal path")
+    if rel.startswith("@run/"):
+        if rel != "@run/placement-acceptance.json" or snapshot is None or project_root_from_snapshot(snapshot) != project:
+            raise _error("reset journal points outside its owned run")
+        path = snapshot / "placement-acceptance.json"
+    else:
+        path = project / rel
+    if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
+        raise _error(f"unsafe reset journal path: {rel}")
+    return path
+
+
+def _verify_after(project: Path, change: dict[str, object], snapshot: Path | None = None, *, resuming: bool = False) -> None:
+    path = _change_path(project, change, snapshot)
+    current = path.read_bytes() if path.is_file() else None
+    if resuming and current == _unb64(change.get("before")):
         return
-    if not path.is_file():
-        raise _error(f"refusing reset because recorded managed file is missing: {change['path']}")
-    expected = str(change["after_sha256"])
-    if _sha(path.read_bytes()) != expected:
+    if not bool(change["after_exists"]):
+        if path.exists():
+            raise _error(f"refusing reset because a recorded absent path now exists: {change['path']}")
+    elif current is None or _sha(current) != str(change["after_sha256"]):
         raise _error(f"refusing reset because managed file changed after ContextCanon recorded it: {change['path']}")
 
 
-def _restore_change(project: Path, change: dict[str, object]) -> None:
-    path = project / str(change["path"])
+def _restore_change(project: Path, change: dict[str, object], snapshot: Path | None = None) -> None:
+    path = _change_path(project, change, snapshot)
     before = _unb64(change.get("before"))
     if before is None:
         path.unlink(missing_ok=True)
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(before)
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".restore-", delete=False) as handle:
+        temporary = Path(handle.name)
+        handle.write(before)
+    try:
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _prune_empty(project: Path, paths: Iterable[Path]) -> None:
@@ -265,14 +295,18 @@ def _restore_journal(snapshot_root: Path, project: Path, from_step: int) -> tupl
     restored: list[str] = []
     for record in reversed(selected):
         changes = list(record.get("changes", []))
+        resuming = record.get("reset_in_progress") is True
         for change in changes:
-            _verify_after(project, change)
+            _verify_after(project, change, snapshot_root, resuming=resuming)
+        if not resuming:
+            record["reset_in_progress"] = True
+            _write_journal(snapshot_root, records)
         for change in reversed(changes):
-            _restore_change(project, change)
+            _restore_change(project, change, snapshot_root)
             restored.append(str(change["path"]))
-        _prune_empty(project, [project / str(change["path"]) for change in changes])
-    remaining = [record for record in records if int(record.get("step", 999)) < from_step]
-    _write_journal(snapshot_root, remaining)
+        _prune_empty(project, [_change_path(project, change, snapshot_root) for change in changes])
+        records.remove(record)
+        _write_journal(snapshot_root, records)
     return [int(record["step"]) for record in selected], restored
 
 
@@ -317,7 +351,7 @@ def _remove_legacy_skeletons(project: Path) -> list[str]:
 
 
 def _workspace_root(snapshot_root: Path, workspace: Path | None) -> Path:
-    return workspace.resolve() if workspace is not None else project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
+    return workspace.resolve() if workspace is not None else default_workspace(project_root_from_snapshot(snapshot_root))
 
 
 def _reset_workspace(workspace_root: Path, from_step: int) -> list[str]:
@@ -350,7 +384,7 @@ def _rewrite_plan_after_reset(workspace_root: Path, snapshot_root: Path, from_st
     return None
 
 def _machine_root(project: Path) -> Path:
-    return project / ".context" / "onboarding"
+    return scope_root(project)
 
 
 def _snapshot_from_acceptance(project: Path) -> Path | None:
@@ -364,7 +398,7 @@ def _snapshot_from_acceptance(project: Path) -> Path | None:
     digest = payload.get("evidence_digest") if isinstance(payload, dict) else None
     if not isinstance(digest, str) or not digest:
         raise _error(f"inventory acceptance has no evidence_digest: {acceptance}")
-    candidate = _machine_root(project) / digest
+    candidate = run_path(project, digest)
     return candidate if candidate.is_dir() else None
 
 
@@ -428,6 +462,9 @@ def _reset_semantic(
         frozen_catalog = snapshot / "reusable-context-packages"
         if frozen_catalog.is_dir():
             shutil.rmtree(frozen_catalog)
+        provenance = snapshot / "catalog-provenance"
+        if provenance.is_dir():
+            shutil.rmtree(provenance)
 
     if 10 in selected_steps:
         acceptance = snapshot / "placement-acceptance.json"
@@ -470,25 +507,41 @@ def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[s
     root = _machine_root(project)
     if not root.exists():
         return []
-    removed: list[str] = []
-    if keep_inventory_state:
-        for path in list(root.iterdir()):
-            if path.name == INVENTORY_STATE_NAME:
-                continue
-            if path.is_dir() and not path.is_symlink():
-                shutil.rmtree(path)
-                removed.append(path.name + "/")
-            else:
-                path.unlink(missing_ok=True)
-                removed.append(path.name)
-        return sorted(removed)
-    shutil.rmtree(root)
-    parent = root.parent
-    try:
-        parent.rmdir()
-    except OSError:
-        pass
-    return [".context/onboarding/"]
+    owned = []
+    for path in root.iterdir():
+        if path.name in {INVENTORY_STATE_NAME, INVENTORY_ACCEPTANCE_NAME, SCOPE_MARKER}:
+            if path.is_symlink() or not path.is_file():
+                raise _error(f"unsafe onboarding state: {path}")
+            owned.append(path)
+        elif path.is_dir() and (path / SCOPE_MARKER).is_file():
+            # A legacy root-level run may coexist with new project scopes.
+            # Reset only its old files; the other scopes are never descendants
+            # of this run's ownership even though they share the root directory.
+            continue
+        elif path.is_dir() and (path / "manifest.json").is_file():
+            evidence = load_evidence_snapshot(path)
+            if project_root_from_snapshot(path) != project or not evidence.evidence_digest.startswith(path.name):
+                raise _error(f"onboarding run belongs to another project: {path}")
+            owned.append(path)
+        else:
+            raise _error(f"refusing to discard unrecognized onboarding state: {path}")
+    removed = []
+    for path in owned:
+        if keep_inventory_state and path.name in {INVENTORY_STATE_NAME, SCOPE_MARKER}:
+            continue
+        if path.is_dir():
+            shutil.rmtree(path)
+            removed.append(path.name + "/")
+        else:
+            path.unlink()
+            removed.append(path.name)
+    if not keep_inventory_state:
+        for directory in (root, root.parent):
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+    return sorted(removed)
 
 
 def _reset_preflight(
@@ -498,7 +551,7 @@ def _reset_preflight(
     from_step: int,
     workspace_root: Path | None,
 ) -> dict[str, object]:
-    workspace = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    workspace = workspace_root.resolve() if workspace_root is not None else default_workspace(project)
     selected_steps: list[int] = []
     project_files: list[str] = []
     workspace_files: list[str] = []

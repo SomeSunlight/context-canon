@@ -11,22 +11,22 @@ Exit: coherent implemented candidate, focused checkpoint tests, full determinist
 ## A. Reconstruct and settle the storage contract
 
 - [x] Create the isolated stacked branch and record the owner's authorization/scope before executable changes.
-- [ ] Read applicable framework/onboarding contracts and map current Evidence, Catalog, handoff, workspace, publication and reset-journal readers/writers.
-- [ ] Record exact frozen identities and ownership boundaries; prototype measured root-scoped paths, identical Evidence in separate scopes and complete-binding package collisions before choosing layouts/schema changes.
-- [ ] Publish this planning/contract checkpoint so a lost chat can resume from repository state.
+- [x] Read applicable framework/onboarding contracts and map current Evidence, Catalog, handoff, workspace, publication and reset-journal readers/writers.
+- [x] Record exact frozen identities and ownership boundaries; prototype measured root-scoped paths, identical Evidence in separate scopes and complete-binding package collisions before choosing layouts/schema changes.
+- [x] Publish this planning/contract checkpoint so a lost chat can resume from repository state.
 
 ## B. Shared library and shallow run storage
 
-- [ ] Introduce one verified onboarding storage/resolution boundary with explicit repository/project/run ownership, short collision-checked locators and legacy reads. Derive the original project scope from authenticated metadata, not directory depth.
-- [ ] Freeze reusable packages/enclosing Parents through the shared whole-Node library; keep provenance and mutable review decisions scoped to their run, not as mutations inside a shared immutable package. Use full Node ID + normalized/package digests for Catalog/preview identity.
-- [ ] Route Evidence/new default workspaces and STEP 07/08/10 readers/writers through that boundary; preserve frozen input bytes, portable handoffs, project-relative paths and custom workspace behavior.
-- [ ] Checkpoint focused deep/simultaneous/subtree/frozen-input/identity regressions and publish the block.
+- [x] Introduce one verified onboarding storage/resolution boundary with explicit repository/project/run ownership, short collision-checked locators and legacy reads. Derive the original project scope from authenticated metadata, not directory depth.
+- [x] Freeze reusable packages/enclosing Parents through the shared whole-Node library; keep provenance and mutable review decisions scoped to their run, not as mutations inside a shared immutable package. Use full Node ID + normalized/package digests for Catalog/preview identity.
+- [x] Route Evidence/new default workspaces and STEP 07/08/10 readers/writers through that boundary; preserve frozen input bytes, portable handoffs, project-relative paths and custom workspace behavior.
+- [x] Checkpoint focused deep/simultaneous/subtree/frozen-input/identity regressions and publish the block.
 
 ## C. Publication and reset/recovery
 
-- [ ] Use the same shared package bindings in preview/publication and keep each target's Parent/Reference choice unchanged; never fetch live providers during frozen recovery.
-- [ ] Make rollback/reset ownership explicit for shared-root state: preserve another Node/run's packages, accepted pins and prior accepted inputs; deterministic retry must survive interrupted writes/deletions.
-- [ ] Test failure before/after publication, resets from STEP 07 onward, offline providers, simultaneous runs and legacy journal compatibility; checkpoint and publish.
+- [x] Use the same shared package bindings in preview/publication and keep each target's Parent/Reference choice unchanged; never fetch live providers during frozen recovery.
+- [x] Make rollback/reset ownership explicit for shared-root state: preserve another Node/run's packages, accepted pins and prior accepted inputs; deterministic retry must survive interrupted writes/deletions.
+- [x] Test failure before/after publication, resets from STEP 07 onward, offline providers, simultaneous runs and legacy journal compatibility; checkpoint and publish.
 
 ## D. Separate active-run migration
 
@@ -46,3 +46,11 @@ Exit: coherent implemented candidate, focused checkpoint tests, full determinist
 Resume at the first unchecked item. Read root CONTEXT, applicable Topics, STATE and this plan; verify this Phase-2 branch rather than writing to PR #108. Publish meaningful checkpoints during the night so recovery does not depend on scratch or this chat. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR.
 
 Before any future pruning feature, enumerate current pins, retained-version dependencies, pending reviews, frozen onboarding inputs and recovery receipts. The Phase-1 inventory alone is insufficient deletion authority.
+
+## Runtime checkpoint — 2026-10-05
+
+Storage contract: [docs/onboarding-storage.md](../docs/onboarding-storage.md). New project scopes/runs and subtree workspaces live at the Git root with authenticated collision-checked tokens. Full package bindings share immutable versions; provenance and review state remain per run. Enclosing Parent packages are frozen, not reopened during recovery. Preview/publication use the compact compiler. Reset journals include run-owned acceptance state and survive a partial reversal. Shared versions survive reset; foreign files and sibling scopes are protected.
+
+Added 11 focused storage regressions, including deep Windows-budget preflight, identical Evidence/scope separation, real token collision, full-binding/equal-byte packages, offline Catalogs, changed/removed enclosing Parent, Parent/Reference publication/reset and interrupted-reset retry. Existing end-to-end tests now assert shared locators and retained immutable history. **407 deterministic tests pass**; self-host `check --all .` reports zero drift for all six Nodes and all four local Parent/Child edges are normatively current. Native Windows/hosted exact-head checks remain the final candidate gate.
+
+Resume at **D**: explicit active-run migration and legacy single-pass acceptance staging. Preserve reviewed payload digests and human file hashes; never broadly rewrite old snapshot paths inside proposals or prose. Keep custom/legacy workspaces usable and preserve exact old acceptance bytes for reset. After this block, finish operator/canonical documentation and the final exact-head Linux/Windows gate before owner tests. No Draft PR, owner acceptance or merge is implied by this runtime checkpoint.

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextcanon.version_store import version_path
 
 import json
 import subprocess
@@ -221,7 +222,7 @@ class OnboardingSubtreeTests(unittest.TestCase):
         self.assertIn("A-001", {rule.id for rule in [*compiled.inherited_rules, *compiled.local_rules]})
         self.assertIn("A-FOUNDATIONS", {topic.id for topic in [*compiled.inherited_topics, *compiled.local_topics]})
         self.assertTrue(
-            (subtree / ".context" / "sources" / compiled.parent_package.package_digest).is_dir()
+            (version_path(subtree, compiled.parent_package)).is_dir()
         )
 
         self.assertEqual(main(["check", "--all", str(repo)]), 0)

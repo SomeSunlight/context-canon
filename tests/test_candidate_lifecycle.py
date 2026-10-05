@@ -437,7 +437,7 @@ class GitIgnoreLifecycleTests(unittest.TestCase):
             ensure_onboarding_gitignore(repo, repo / 'contextcanon-onboarding')
             self.assertEqual((repo / '.gitignore').read_bytes(), before)
             self.assertEqual(before.decode().count(GITIGNORE_START), 1)
-            self.assertNotIn('\n/.context/onboarding/', before.decode())
+            self.assertNotIn('\n/.context/onboarding/\n', before.decode())
             visible = {'.gitignore'}
             hidden = set()
             for local in (Path('.'), Path('P1'), Path('projects/P2')):

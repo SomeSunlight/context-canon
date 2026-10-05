@@ -1371,7 +1371,7 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     prepared = prepare_onboarding_evidence(Path(args.project), explicit_paths=args.include)
                     inventory_counts = {}
-                label = prepared.snapshot_root.relative_to(prepared.project_root).as_posix()
+                label = str(prepared.snapshot_root)
                 print(f"prepared onboarding evidence {prepared.evidence_digest}")
                 print(f"Evidence snapshot: {label}")
                 print(f"Included files: {len(prepared.included)}")
@@ -1382,8 +1382,9 @@ def main(argv: list[str] | None = None) -> int:
                         + ", ".join(f"{name}={inventory_counts[name]}" for name in sorted(inventory_counts))
                     )
                     print("Durable inventory restore state (keep in Git):")
-                    print("  .context/onboarding/inventory-state.json")
-                    print("  .context/onboarding/inventory-acceptance.json")
+                    from .onboarding_storage import scope_root
+                    print(f"  {scope_root(prepared.project_root) / 'inventory-state.json'}")
+                    print(f"  {scope_root(prepared.project_root) / 'inventory-acceptance.json'}")
                 return 0
 
             if args.onboard_command == "reset":

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .gitignore import ensure_candidate_gitignore
+from .onboarding_storage import default_workspace
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .path_budget import preflight_paths
 from .parser import ContextCanonError
@@ -428,7 +429,7 @@ def _quote_cli(value: str) -> str:
 
 def _workspace_option(workspace: OnboardingWorkspace, snapshot_root: Path) -> list[str]:
     try:
-        default = (project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
+        default = default_workspace(project_root_from_snapshot(snapshot_root)).resolve()
     except ContextCanonError:
         return ["--workspace", str(workspace.root)]
     return [] if workspace.root.resolve() == default else ["--workspace", str(workspace.root)]
@@ -828,8 +829,11 @@ def update_workspace_checkpoint(
     completed = _completed_steps(stage, placement_review_complete)
     text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs, completed=completed)
 
+    from .onboarding_proposal import load_evidence_snapshot
+    evidence_identity = load_evidence_snapshot(snapshot_root).evidence_digest
     lines = [
-        f"- Evidence: `{snapshot_root.resolve().name}`",
+        f"- Evidence: `{evidence_identity}`",
+        f"- Evidence snapshot: `{_snapshot_label(snapshot_root)}`",
         f"- Snapshot: `{_snapshot_label(snapshot_root)}`",
         f"- Stage: **{stage}**",
     ]
@@ -859,7 +863,7 @@ def update_workspace_checkpoint(
 
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
-    return project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
+    return default_workspace(project_root_from_snapshot(snapshot_root))
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
@@ -1022,6 +1026,8 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
 
     project = _require_project_root_for_inventory(project_root)
     ensure_candidate_gitignore(project)
+    from .gitignore import ensure_onboarding_store_gitignore
+    ensure_onboarding_store_gitignore(project)
     gitignore = project / ".gitignore"
     try:
         existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
@@ -1038,7 +1044,12 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
     if workspace_rel and workspace_rel != DEFAULT_WORKSPACE_NAME:
         lines.append(f"/{workspace_rel}/")
     lines.extend([
-        "**/.context/onboarding/*",
+        "**/.context/onboarding/**",
+        "!**/.context/onboarding/",
+        "!**/.context/onboarding/*/",
+        "!**/.context/onboarding/*/.scope.json",
+        "!**/.context/onboarding/*/inventory-state.json",
+        "!**/.context/onboarding/*/inventory-acceptance.json",
         "!**/.context/onboarding/inventory-state.json",
         "!**/.context/onboarding/inventory-acceptance.json",
         GITIGNORE_END,
@@ -1109,7 +1120,7 @@ def open_inventory_workspace(
     """Open/create the visible workspace before an Evidence snapshot exists."""
 
     project = _require_project_root_for_inventory(project_root)
-    root = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    root = workspace_root.resolve() if workspace_root is not None else default_workspace(project)
     workspace = OnboardingWorkspace(root)
     ensure_onboarding_gitignore(project, root)
 
