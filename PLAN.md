@@ -6,13 +6,13 @@ This is the recovery index, not the implementation diary. Read [STATE.md](STATE.
 
 Accepted `main`: `28ce62ef7aca4960bcf238b8d2221b7e445aa236` (owner-tested PR #105).
 
-[Draft PR #108](https://github.com/SomeSunlight/context-canon/pull/108), branch `agent/issue-107-shared-node-versions`, implements #107 Phase 1: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. The owner reports successful migration/history browsing; the final propagation review exposed Resource-move rendering defect #110. The correction below is active; final owner acceptance is pending. Keep the PR Draft and unmerged until explicit owner approval.
+[Draft PR #108](https://github.com/SomeSunlight/context-canon/pull/108), branch `agent/issue-107-shared-node-versions`, implements #107 Phase 1: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. The owner reports successful migration/history browsing; the final propagation review exposed Resource-move rendering defect #110. The correction below is published and CI-green; final owner acceptance is pending. Keep the PR Draft and unmerged until explicit owner approval.
 
 | Main point | Status | Detail / next action |
 | --- | --- | --- |
 | Restore a usable plan and review the interrupted work (#109) | Complete; owner test pending | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
-| Resource-move review correction (#110) | Locally verified; publication pending | [Correction checklist](plans/issue-110-resource-move-review.md) |
-| Shared versions and migration (#107 Phase 1) | Migration owner-tested; propagation correction active | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
+| Resource-move review correction (#110) | Fixed; owner retest pending | [Correction checklist](plans/issue-110-resource-move-review.md) |
+| Shared versions and migration (#107 Phase 1) | Migration owner-tested; corrected propagation awaiting owner retest | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
 | Onboarding storage and reset/recovery (#107 Phase 2) | Deferred until Phase-1 owner testing | [Phase-2 checklist](plans/issue-107-phase-2.md) |
 | Safe unused-version pruning | Deferred; complete reachability required | [Phase-2 prerequisite](plans/issue-107-phase-2.md) |
 | Reinitialization / copied-project ID remapping (#106) | Separate open issue | [Backlog](plans/backlog.md) |
