@@ -27,7 +27,7 @@ import tests.test_onboarding_relationships as relationships
 
 
 class OnboardingMigrationTests(unittest.TestCase):
-    def case(self, *, subtree=False, stage=7, custom=False, choices=None, crlf=False):
+    def case(self, *, subtree=False, stage=7, custom=False, choices=None, crlf=False, handoff4=False):
         helper = relationships.OnboardingRelationshipTests()
         self.addCleanup(helper.doCleanups)
         case = helper.make_case(subtree=subtree)
@@ -39,6 +39,8 @@ class OnboardingMigrationTests(unittest.TestCase):
                 guide = node / "guide.md"
                 guide.write_bytes(guide.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
                 write_outputs(Compiler(catalog).compile(node))
+        if handoff4:
+            helper.command(["onboard", "structure-instruction", str(prepared.snapshot_root)])
         accepted = helper.accept_imports(case, choices or [("Project (.)", "Workflow", "parent"), ("Project (.)", "Knowledge", "reference")])
         if stage >= 8:
             helper.placement(case)
@@ -622,6 +624,71 @@ class OnboardingMigrationTests(unittest.TestCase):
                 with self.assertRaises(ContextCanonError):
                     migrate_onboarding(project, apply=True)
                 self.assertEqual(self.snapshot(repo), before)
+
+    def test_handoff_file_diagnostics_name_step_root_and_unknown_or_missing_paths_without_mutation(self):
+        for subtree in (False, True):
+            for step in (4, 8):
+                for kind in ("unknown", "missing", "mixed"):
+                    with self.subTest(subtree=subtree, step=step, kind=kind):
+                        _, case, _ = self.case(subtree=subtree, stage=8, handoff4=True)
+                        repo, project, _, workspace, _, _ = case
+                        relative, _ = handoff_relative_paths(step)
+                        root = workspace.root / relative
+                        control = root / ".contextcanon-handoff"
+                        (control / "RESULT.json").write_bytes(b'{"review": "keep this exact result"}\r\n')
+                        if kind in ("unknown", "mixed"):
+                            (control / "RESULT-anonymized.json").write_bytes(b"Private exchange copy")
+                            (root / "extra notes.md").write_bytes(b"Owner notes")
+                            (root / "empty backup").mkdir()
+                        if kind in ("missing", "mixed"):
+                            (control / "PLAN.md").unlink()
+                        before = self.snapshot(repo)
+                        directories = {p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_dir()}
+                        for apply in (False, True):
+                            with self.subTest(apply=apply):
+                                with self.assertRaises(ContextCanonError) as caught:
+                                    migrate_onboarding(project, apply=apply)
+                                message = str(caught.exception)
+                                self.assertIn(f"STEP {step:02d} handoff", message)
+                                self.assertIn(str(root), message)
+                                self.assertIn("No files were changed", message)
+                                self.assertIn("Keep the handoff and its RESULT.json", message)
+                                if kind in ("unknown", "mixed"):
+                                    self.assertIn("Unrecognized files (relative to this handoff):\n"
+                                                  "  - .contextcanon-handoff/RESULT-anonymized.json\n"
+                                                  "  - extra notes.md\n", message)
+                                    self.assertIn("preserve them outside this handoff", message)
+                                else:
+                                    self.assertNotIn("Unrecognized files", message)
+                                if kind in ("missing", "mixed"):
+                                    self.assertIn("Missing required files (relative to this handoff):\n"
+                                                  "  - .contextcanon-handoff/PLAN.md\n", message)
+                                    self.assertIn("original handoff ZIP or a backup", message)
+                                else:
+                                    self.assertNotIn("Missing required files", message)
+                                self.assertNotIn("Private exchange copy", message)
+                                self.assertNotIn("Owner notes", message)
+                                self.assertEqual(self.snapshot(repo), before)
+                                self.assertEqual({p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_dir()},
+                                                 directories)
+                                self.assertFalse(_receipt_path(project).exists())
+
+    def test_handoff_result_bytes_survive_migration_for_both_steps_and_scopes(self):
+        for subtree in (False, True):
+            with self.subTest(subtree=subtree):
+                _, case, _ = self.case(subtree=subtree, stage=8, handoff4=True)
+                repo, project, prepared, workspace, _, _ = case
+                result_bytes = '{"owner_result": "Unchanged ✏️"}\r\n'.encode("utf-8")
+                for step in (4, 8):
+                    relative, _ = handoff_relative_paths(step)
+                    (workspace.root / relative / ".contextcanon-handoff/RESULT.json").write_bytes(result_bytes)
+                before = self.snapshot(repo)
+                migrate_onboarding(project)
+                self.assertEqual(self.snapshot(repo), before)
+                migrate_onboarding(project, apply=True)
+                for step in (4, 8):
+                    root = handoff_path(project, prepared.evidence_digest, step)
+                    self.assertEqual((root / ".contextcanon-handoff/RESULT.json").read_bytes(), result_bytes)
 
     def test_failed_atomic_activation_publication_keeps_legacy_routing_and_resumes(self):
         _, case, _ = self.case(subtree=True)

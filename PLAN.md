@@ -2,6 +2,15 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Active owner-test correction — handoff file diagnostics (#107)
+
+Purpose: the owner's migration in Itop now refuses `unknown/missing handoff files` without identifying the task or files. First make this refusal actionable without assuming its cause or claiming/deleting unrecognized content. Preserve frozen inputs, review decisions and result bytes; distinguish unknown files from missing required files and report STEP/root paths.
+
+- [x] Report sorted unknown and missing relative paths, selected handoff STEP/root, unchanged-state assurance, and distinct preserve/report versus restore guidance.
+- [x] Regress root/subtree, STEP 04/08 and preview/apply with unknown/missing/mixed files; preserve all remaining bytes/directories and avoid receipts. Retain successful RESULT.json migration and existing tampering guards; all 28 migration tests pass.
+- [x] Verify the bounded correction locally and prepare publication on Draft #111: 440 tests pass, six self-hosted Nodes have zero drift, all four normative edges are current, and diff hygiene is clean. Fresh exact-head Linux/native Windows evidence remains live PR metadata.
+- [ ] Obtain the actual owner-side handoff file names before expanding historical compatibility or changing migration ownership rules.
+
 ## Active owner-test correction — legacy frozen Catalog recovery (#107)
 
 Purpose: migration reaches an original Foundation authoring directory and rejects its authoring files as unknown immutable-package content. Distinguish isolated stores from live authoring roots, prefer exact retained packages, and reuse the existing Git-history recovery path for pre-freezing onboarding state. Snapshot/consumer/provider retained bytes take precedence; only full Node/version/normalized/package bindings may recover missing legacy bytes. Preview must not write into either repository or change provider checkouts, review files or accepted digests.

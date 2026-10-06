@@ -242,8 +242,25 @@ def _verify_handoff(root, payload, evidence, zip_path):
         if not isinstance(rows, list) or {r.get("path"): (r.get("sha256"), r.get("size")) for r in rows} != {rel: (_sha(data), len(data)) for rel, data in packaged.items()}:
             raise _error("frozen handoff Parent files changed")
         expected.update(parent["root"] + "/" + rel for rel in packaged)
-    if not expected <= set(files) or set(files) - expected - {control + "RESULT.json"}:
-        raise _error("unknown/missing handoff files; preserve those files before migration")
+    missing = sorted(expected - set(files))
+    unknown = sorted(set(files) - expected - {control + "RESULT.json"})
+    if missing or unknown:
+        details = []
+        if unknown:
+            details.append("Unrecognized files (relative to this handoff):\n" +
+                           "\n".join(f"  - {rel}" for rel in unknown))
+        if missing:
+            details.append("Missing required files (relative to this handoff):\n" +
+                           "\n".join(f"  - {rel}" for rel in missing))
+        guidance = ["No files were changed. Keep the handoff and its RESULT.json."]
+        if unknown:
+            guidance.append("If unrecognized files are ContextCanon artifacts, report their names. "
+                            "Otherwise, preserve them outside this handoff and retry; do not delete them.")
+        if missing:
+            guidance.append("Restore missing files from the original handoff ZIP or a backup. "
+                            "Do not regenerate frozen inputs from the current project or a newer Parent.")
+        raise _error(f"STEP {payload['step']:02d} handoff has unrecognized or missing files: {root}\n" +
+                     "\n".join([*details, *guidance]))
     if zip_path.exists():
         try:
             with zipfile.ZipFile(zip_path) as archive:

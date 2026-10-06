@@ -1,5 +1,13 @@
 # Current State
 
+## Owner-test finding — handoff file diagnostics (2026-10-06)
+
+After updating the tool, the owner ran migration in Itop and reached `unknown/missing handoff files`. That message identifies neither STEP 04/08 nor the task directory or offending files. Their names and cause are not known; do not infer another owner-copy problem or automatically accept/delete files.
+
+The bounded correction reports sorted unknown and missing paths separately, with the selected STEP and handoff root. Refusal remains read-only for preview and apply. Unknown files must be reported if they are ContextCanon artifacts or preserved outside the task if unrelated; missing required inputs must be restored from the original ZIP/backup rather than regenerated using current project/Parent state. Keep the handoff and its RESULT.json. Existing frozen Evidence/Parent/instruction and ZIP checks are unchanged. The next owner action is to retry the preview with the diagnostic update and provide the concrete names before any historical compatibility decision.
+
+All 28 migration tests and the full 440-test deterministic suite pass for this bounded diagnostic correction. Root/subtree and STEP 04/08 regressions verify unknown/missing/mixed-file refusal in preview/apply with unchanged bytes/directories and no receipt, plus exact RESULT.json preservation during successful migration. Six self-hosted Nodes have zero generated drift and all four normative edges are current. The preceding Catalog recovery candidate passed 438 Linux tests and 76 native Windows tests on `0ae7bda2c8f1cc36bd46b544678960b617b7bd64`; fresh exact-head hosted evidence for this correction belongs in Draft #111. #107 remains open; no Phase-2 merge is authorized.
+
 ## Owner-test correction — exact legacy Catalog recovery (2026-10-06)
 
 The owner's migration passed the workspace guard after removing three obsolete anonymized exchange copies, then reached the original Foundation authoring directory. The fallback wrongly rejected authoring files as immutable-store extras and omitted existing Git-history recovery for legacy review states that bind identity without complete frozen Catalog bytes.
