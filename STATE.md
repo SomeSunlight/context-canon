@@ -1,10 +1,18 @@
 # Current State
 
-## Owner-test finding — migration workspace diagnostics (2026-10-06)
+## Owner-test correction — exact legacy Catalog recovery (2026-10-06)
+
+The owner's migration passed the workspace guard after removing three obsolete anonymized exchange copies, then reached the original Foundation authoring directory. The fallback wrongly rejected authoring files as immutable-store extras and omitted existing Git-history recovery for legacy review states that bind identity without complete frozen Catalog bytes.
+
+Migration now prefers strict snapshot/consumer/provider retained packages. A missing legacy freeze reuses a read-only Git-history reader with the same package semantic/file/digest validator as normal filesystem loading. It reconstructs only the full accepted Node/version/normalized/package binding, keeps provenance exact, and writes nothing into either repository during preview. The current provider checkout is never switched/rebuilt; a live authoring fallback copies only manifest artifacts and requires the exact accepted binding and clean artifact provenance. Strict isolated-store foreign-file checks remain intact. Unrecoverable old bytes/provenance produce a named historical-package diagnostic rather than substituting the newer provider.
+
+All 25 focused migration regressions pass, including live authoring, advanced/removed providers, retained provider history, corrupt/unavailable Git data, partial immutable install/retirement retry, canonical Parent/Reference publication and exact legacy-v0 review preservation. A dedicated in-memory validator regression and the pre-existing ordinary Git-recovery regression are included in the native Windows gate. The full 437-test deterministic suite also passes, with zero generated drift for six Nodes and all four normative edges current. Exact-head hosted evidence belongs in Draft PR #111. Next owner action: update the editable code checkout and retry the same original preview/apply; no provider downgrade or STEP-07 re-acceptance is needed. Accepted main remains the PR #108 squash baseline; #111 stays Draft and #107 stays open.
+
+## Earlier owner-test finding — migration workspace diagnostics (2026-10-06)
 
 The owner's legacy snapshot reaches the workspace ownership check successfully, but unrecognized top-level files/directories block migration. The former error named only the workspace, so changing `--snapshot` appeared to be a possible remedy. The correction now lists sorted concrete blockers (directories have `/`), confirms the successful snapshot binding and unchanged state, and distinguishes reporting unsupported ContextCanon names from preserving unrelated files outside the workspace. Ownership/refusal behavior is unchanged; do not automatically claim, move or delete these entries.
 
-A regression verifies root/subtree, preview/apply and default/explicit-snapshot refusal, including hidden IDE and empty directories, with byte/directory equality and no receipt creation. All 20 focused migration tests and the 431-test deterministic suite pass locally, with zero generated drift and all four normative edges current. Fresh exact-head hosted evidence is recorded in Draft #111. Next obtain the owner's actual names; their origin is not yet known. The original baseline and completed implementation checkpoints below are historical. #107 stays open and no Phase-2 merge is authorized.
+A regression verifies root/subtree, preview/apply and default/explicit-snapshot refusal, including hidden IDE and empty directories, with byte/directory equality and no receipt creation. All 20 focused migration tests and the 431-test deterministic suite pass locally, with zero generated drift and all four normative edges current. Fresh exact-head hosted evidence is recorded in Draft #111. The owner subsequently identified three obsolete anonymized exchange copies and removed them; this guard now passes without a compatibility exception. The original baseline and completed implementation checkpoints below are historical. #107 stays open and no Phase-2 merge is authorized.
 
 ## Accepted Phase 1; Phase-2 owner test — 2026-10-06
 

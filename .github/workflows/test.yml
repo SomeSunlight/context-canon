@@ -67,4 +67,4 @@ jobs:
       - name: Install ContextCanon
         run: python -m pip install -e .
       - name: Windows shared versions, onboarding, path budget and Git visibility
-        run: python -m unittest tests.test_version_store tests.test_candidate_lifecycle.WindowsPathBudgetTests tests.test_candidate_lifecycle.GitIgnoreLifecycleTests tests.test_onboarding_storage tests.test_onboarding_migration tests.test_onboarding_handoff -v
+        run: python -m unittest tests.test_version_store tests.test_candidate_lifecycle.WindowsPathBudgetTests tests.test_candidate_lifecycle.GitIgnoreLifecycleTests tests.test_onboarding_storage tests.test_onboarding_migration tests.test_onboarding_handoff tests.test_package.CompiledPackageTests.test_in_memory_loader_uses_the_same_full_package_verification tests.test_onboarding_reusable_contexts.ReusableContextsTests.test_legacy_accepted_catalog_recovers_exact_package_from_git_history -v

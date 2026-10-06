@@ -21,19 +21,20 @@ from contextcanon.onboarding_workspace import OnboardingWorkspace, _snapshot_lab
 from contextcanon.onboarding_handoff import handoff_relative_paths
 from contextcanon.onboarding_storage import HANDOFF_MARKER, handoff_path
 from contextcanon.parser import ContextCanonError
-from contextcanon.version_store import library_root
+from contextcanon.version_store import library_root, store_package
+from contextcanon.outputs import write_outputs
 import tests.test_onboarding_relationships as relationships
 
 
 class OnboardingMigrationTests(unittest.TestCase):
-    def case(self, *, subtree=False, stage=7, custom=False):
+    def case(self, *, subtree=False, stage=7, custom=False, choices=None):
         helper = relationships.OnboardingRelationshipTests()
         self.addCleanup(helper.doCleanups)
         case = helper.make_case(subtree=subtree)
         repo, project, prepared, workspace, structure, catalog = case
         repo, project = repo.resolve(), project.resolve()
         case = repo, project, prepared, workspace, structure, catalog
-        accepted = helper.accept_imports(case, [("Project (.)", "Workflow", "parent"), ("Project (.)", "Knowledge", "reference")])
+        accepted = helper.accept_imports(case, choices or [("Project (.)", "Workflow", "parent"), ("Project (.)", "Knowledge", "reference")])
         if stage >= 8:
             helper.placement(case)
         if stage >= 12:
@@ -298,6 +299,188 @@ class OnboardingMigrationTests(unittest.TestCase):
         with self.assertRaises(ContextCanonError):
             migrate_onboarding(project, apply=True)
         self.assertEqual(self.snapshot(repo), before)
+
+    def remove_catalog_freezes(self, case, accepted):
+        _, _, prepared, _, _, _ = case
+        shutil.rmtree(prepared.snapshot_root / "reusable-context-packages")
+        shutil.rmtree(prepared.snapshot_root / "catalog-provenance")
+        for root in accepted.catalog_roots:
+            shutil.rmtree(root)
+
+    def commit_catalog(self, catalog, message):
+        subprocess.run(["git", "-C", str(catalog), "add", "."], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(catalog), "-c", "user.name=Migration Test",
+                        "-c", "user.email=migration@example.invalid", "commit", "-qm", message],
+                       check=True, capture_output=True)
+
+    def test_legacy_unfrozen_live_authoring_packages_ignore_unrelated_files(self):
+        _, case, accepted = self.case(stage=8)
+        repo, project, prepared, workspace, structure, catalog = case
+        self.remove_catalog_freezes(case, accepted)
+        (catalog / "workflow/owner-notes.md").write_bytes(b"Unrelated author notes")
+        before = self.snapshot(repo)
+        providers = self.snapshot(catalog)
+        preview = migrate_onboarding(project)
+        self.assertEqual(self.snapshot(repo), before)
+        self.assertEqual(self.snapshot(catalog), providers)
+        self.assertFalse(_receipt_path(project).exists())
+        result = migrate_onboarding(project, apply=True)
+        new = Path(result["snapshot"])
+        loaded = load_accepted_reusable_contexts(workspace.reusable_contexts_path, new,
+                                               prepared.evidence_digest, structure)
+        self.assertEqual(loaded.review_digest, accepted.review_digest)
+        self.assertEqual(loaded.catalog_packages, accepted.catalog_packages)
+        self.assertEqual(self.snapshot(catalog), providers)
+        self.assertEqual(Path(preview["snapshot"]), new)
+
+    def test_legacy_unfrozen_git_recovery_keeps_advanced_or_removed_provider_unchanged(self):
+        for removed in (False, True):
+            with self.subTest(removed=removed):
+                helper, case, accepted = self.case(subtree=True, stage=8)
+                repo, project, prepared, workspace, structure, catalog = case
+                subprocess.run(["git", "init", "-q", str(catalog)], check=True, capture_output=True)
+                self.commit_catalog(catalog, "Exact original catalog")
+                exact_ref = subprocess.run(["git", "-C", str(catalog), "rev-parse", "HEAD"],
+                                           check=True, capture_output=True, text=True).stdout.strip()
+                expected = {p.metadata.id: package_files(root, p)
+                            for root, p in zip(accepted.catalog_roots, accepted.catalog_packages)}
+                self.remove_catalog_freezes(case, accepted)
+                if removed:
+                    shutil.rmtree(catalog / "workflow")
+                    shutil.rmtree(catalog / "knowledge")
+                else:
+                    for node in (catalog / "workflow", catalog / "knowledge"):
+                        source = node / "CONTEXT.src.md"
+                        source.write_text(source.read_text().replace('version="1.0.0"', 'version="2.0.0"'),
+                                          encoding="utf-8")
+                        write_outputs(Compiler(catalog).compile(node))
+                self.commit_catalog(catalog, "Changed provider checkout")
+                head = subprocess.run(["git", "-C", str(catalog), "rev-parse", "HEAD"],
+                                      check=True, capture_output=True, text=True).stdout.strip()
+                before, providers = self.snapshot(repo), self.snapshot(catalog)
+                migrate_onboarding(project)
+                self.assertEqual(self.snapshot(repo), before)
+                self.assertEqual(self.snapshot(catalog), providers)
+                self.assertFalse(_receipt_path(project).exists())
+                if removed:
+                    with patch("contextcanon.onboarding_migration._retire_file", side_effect=OSError("stop retirement")):
+                        with self.assertRaisesRegex(OSError, "stop retirement"):
+                            migrate_onboarding(project, apply=True)
+                else:
+                    calls = []
+                    def partial_install(*args, **kwargs):
+                        calls.append(args)
+                        if len(calls) == 2:
+                            raise OSError("stop package copy")
+                        return store_package(*args, **kwargs)
+                    with patch("contextcanon.onboarding_migration.store_package", partial_install):
+                        with self.assertRaisesRegex(OSError, "stop package copy"):
+                            migrate_onboarding(project, apply=True)
+                result = migrate_onboarding(project, apply=True)
+                new, visible = Path(result["snapshot"]), OnboardingWorkspace(Path(result["workspace"]))
+                loaded = load_accepted_reusable_contexts(visible.reusable_contexts_path, new,
+                                                       prepared.evidence_digest, structure)
+                self.assertEqual(loaded.review_digest, accepted.review_digest)
+                self.assertEqual(loaded.catalog_packages, accepted.catalog_packages)
+                for root, package in zip(loaded.catalog_roots, loaded.catalog_packages):
+                    self.assertEqual(package_files(root, package), expected[package.metadata.id])
+                    provenance = json.loads(provenance_path(new, package).read_text())
+                    self.assertEqual(provenance["ref"], exact_ref)
+                helper.publish((repo, project, replace(prepared, snapshot_root=new), visible, structure, catalog))
+                self.assertEqual(self.snapshot(catalog), providers)
+                self.assertEqual(subprocess.run(["git", "-C", str(catalog), "rev-parse", "HEAD"],
+                                               check=True, capture_output=True, text=True).stdout.strip(), head)
+
+    def test_provider_retained_library_is_used_without_live_authoring_or_git_history(self):
+        _, case, accepted = self.case()
+        repo, project, prepared, workspace, structure, catalog = case
+        subprocess.run(["git", "init", "-q", str(catalog)], check=True, capture_output=True)
+        old_provenance = {p.metadata.id: provenance_path(prepared.snapshot_root, p).read_bytes()
+                          for p in accepted.catalog_packages}
+        for root, package in zip(accepted.catalog_roots, accepted.catalog_packages):
+            store_package(library_root(catalog), package, package_files(root, package),
+                          action="test retained provider", node_root=catalog)
+        self.remove_catalog_freezes(case, accepted)
+        for package in accepted.catalog_packages:
+            path = provenance_path(prepared.snapshot_root, package)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(old_provenance[package.metadata.id])
+        for node in (catalog / "workflow", catalog / "knowledge"):
+            shutil.rmtree(node)
+        before, providers = self.snapshot(repo), self.snapshot(catalog)
+        migrate_onboarding(project)
+        self.assertEqual(self.snapshot(repo), before)
+        result = migrate_onboarding(project, apply=True)
+        loaded = load_accepted_reusable_contexts(workspace.reusable_contexts_path, Path(result["snapshot"]),
+                                               prepared.evidence_digest, structure)
+        self.assertEqual(loaded.catalog_packages, accepted.catalog_packages)
+        self.assertEqual(self.snapshot(catalog), providers)
+
+    def test_unrecoverable_advanced_or_corrupt_history_refuses_before_any_mutation(self):
+        for corrupt_history in (False, True):
+            with self.subTest(corrupt_history=corrupt_history):
+                _, case, accepted = self.case()
+                repo, project, prepared, _, _, catalog = case
+                if corrupt_history:
+                    subprocess.run(["git", "init", "-q", str(catalog)], check=True, capture_output=True)
+                    (catalog / "workflow/CONTEXT.md").write_bytes(b"Corrupt historical artifact")
+                    self.commit_catalog(catalog, "Corrupt purported old package")
+                self.remove_catalog_freezes(case, accepted)
+                for node in (catalog / "workflow", catalog / "knowledge"):
+                    source = node / "CONTEXT.src.md"
+                    source.write_text(source.read_text().replace('version="1.0.0"', 'version="2.0.0"'), encoding="utf-8")
+                    write_outputs(Compiler(catalog).compile(node))
+                if corrupt_history:
+                    self.commit_catalog(catalog, "Only advanced valid packages")
+                before, providers = self.snapshot(repo), self.snapshot(catalog)
+                for apply in (False, True):
+                    with self.assertRaisesRegex(ContextCanonError, "exact accepted Catalog package/provenance cannot be recovered"):
+                        migrate_onboarding(project, apply=apply)
+                    self.assertEqual(self.snapshot(repo), before)
+                    self.assertEqual(self.snapshot(catalog), providers)
+                    self.assertFalse(_receipt_path(project).exists())
+
+    def test_legacy_v0_untyped_review_keeps_its_identity_through_git_recovery_and_publication(self):
+        helper, case, accepted = self.case(choices=[("Project (.)", "Workflow", "parent"),
+                                                   ("Project (.)", "Knowledge", "parent")])
+        repo, project, prepared, workspace, structure, catalog = case
+        path = workspace.reusable_contexts_path
+        text = path.read_text().replace("contextcanon/onboarding-reusable-contexts/v1",
+                                        "contextcanon/onboarding-reusable-contexts/v0").replace(" [Parent]", "")
+        path.write_text(text, encoding="utf-8")
+        state_path = prepared.snapshot_root / "reusable-contexts.json"
+        state = json.loads(state_path.read_text())
+        state["schema"] = "contextcanon/onboarding-reusable-contexts-state/v0"
+        for assignment in state["assignments"]:
+            assignment.pop("relationship")
+        payload = {key: value for key, value in state.items()
+                   if key not in {"review_digest", "human_file_sha256", "frozen_catalog_packages"}}
+        state["review_digest"] = hashlib.sha256(json.dumps(payload, ensure_ascii=False,
+                                                           sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        state["human_file_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        human = path.read_bytes()
+        subprocess.run(["git", "init", "-q", str(catalog)], check=True, capture_output=True)
+        self.commit_catalog(catalog, "Old accepted v0 catalog")
+        self.remove_catalog_freezes(case, accepted)
+        shutil.rmtree(catalog / "workflow")
+        shutil.rmtree(catalog / "knowledge")
+        self.commit_catalog(catalog, "Provider nodes moved on")
+        before = self.snapshot(repo)
+        migrate_onboarding(project)
+        self.assertEqual(self.snapshot(repo), before)
+        result = migrate_onboarding(project, apply=True)
+        new = Path(result["snapshot"])
+        self.assertEqual(path.read_bytes(), human)
+        migrated = json.loads((new / "reusable-contexts.json").read_text())
+        self.assertEqual(migrated["review_digest"], state["review_digest"])
+        self.assertEqual(migrated["human_file_sha256"], state["human_file_sha256"])
+        loaded = load_accepted_reusable_contexts(path, new, prepared.evidence_digest, structure)
+        self.assertEqual([a.relationship for a in loaded.assignments], ["parent", "parent"])
+        self.assertEqual(loaded.review_digest, state["review_digest"])
+        migrated_case = repo, project, replace(prepared, snapshot_root=new), workspace, structure, catalog
+        helper.placement(migrated_case)
+        helper.publish(migrated_case)
 
     def test_receipt_cannot_retire_an_unrelated_project_file(self):
         _, case, _ = self.case(subtree=True)

@@ -24,7 +24,7 @@ from .onboarding_workspace import (
     _checkpoint_stage, _checkpoint_review_complete, _completed_steps, _exact_commands,
     _snapshot_label, ensure_onboarding_gitignore, write_utf8,
 )
-from .package import PACKAGE_MANIFEST_PATH, load_package
+from .package import PACKAGE_MANIFEST_PATH, load_package, load_package_files
 from .parser import ContextCanonError
 from .path_budget import preflight_paths
 from .version_store import package_key, store_package, library_root, version_path
@@ -70,18 +70,75 @@ def _directories(root):
     return {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_dir()} if root.exists() else set()
 
 
-def _package(root, binding=None, *, provenance=False):
-    files = _tree(root)
+def _package(root, binding=None, *, provenance=False, authoring=False):
+    _normal_path(root)
+    _normal_path(root / PACKAGE_MANIFEST_PATH)
+    files = None if authoring else _tree(root)
     package = load_package(root)
     allowed = {PACKAGE_MANIFEST_PATH, *(f.path for f in package.files)}
     if provenance:
         allowed.add(PROVENANCE)
-    if set(files) - allowed:
+    if files is not None and set(files) - allowed:
         raise _error(f"unknown files inside immutable package: {root}")
+    if authoring:
+        # A live Node also owns CONTEXT.src.md, docs and harness files. Only
+        # verified manifest artifacts belong to its immutable package.
+        for rel in allowed:
+            _normal_path(root / rel)
+        files = {rel: (root / rel).read_bytes() for rel in allowed if (root / rel).is_file()}
+    contents = {rel: files[rel] for rel in allowed if rel != PROVENANCE and rel in files}
+    package = load_package_files(contents)
     if binding is not None and (package_key(package) != package_key(binding) or
                               package.metadata.name != binding.name or package.metadata.version != binding.version):
         raise _error(f"exact frozen package binding mismatch: {root}")
-    return package, {rel: files[rel] for rel in allowed if rel != PROVENANCE and rel in files}
+    return package, contents
+
+
+def _catalog_input(project, old, row):
+    from .onboarding_reusable_contexts import _catalog_provenance, _read_historical_package
+    binding = binding_from_row(row)
+    original = row.get("path")
+    if not isinstance(original, str) or not original:
+        raise _error("accepted Catalog has no original provider locator")
+    original = Path(original).expanduser().absolute()
+    retained = None
+    for root in (old / "reusable-context-packages" / binding.package_digest,
+                 version_path(project, binding), project / ".context/sources" / binding.package_digest):
+        if root.exists():
+            retained = _package(root, binding, provenance=True)
+            for path in (root / PROVENANCE, old / "catalog-provenance" / (package_key(binding) + ".json")):
+                if path.is_file():
+                    return (*retained, _json(path))
+            break
+    _normal_path(original)
+    if retained is None:
+        root = version_path(original, binding)
+        if root.exists():
+            retained = _package(root, binding)
+            path = old / "catalog-provenance" / (package_key(binding) + ".json")
+            if path.is_file():
+                return (*retained, _json(path))
+    # Legacy reviews could bind identity before catalog bytes were frozen.
+    # Reuse the existing Git reader, without creating a legacy freeze, staging
+    # directory or checkout during preview. Never substitute a newer provider.
+    historical = _read_historical_package(original, binding.package_digest, binding)
+    if historical is not None:
+        package, files, provenance = historical
+        if package.metadata.name != binding.name or package.metadata.version != binding.version:
+            raise _error("historical Catalog binding mismatch")
+        return (*(retained or (package, files)), provenance)
+    try:
+        current = _package(original, binding, authoring=True)
+        provenance = _catalog_provenance(original, current[0])
+    except (ContextCanonError, OSError) as exc:
+        raise _error(
+            f"exact accepted Catalog package/provenance cannot be recovered: {binding.name} "
+            f"{binding.version} (Node {binding.id}; package {binding.package_digest}). "
+            "No matching frozen package with provenance or verified local Git history was found. "
+            f"Original provider: {original}. Preserve/recover its historical package or Git history; "
+            "do not substitute the newer provider or restart accepted review merely to migrate."
+        ) from exc
+    return (*(retained or current), provenance)
 
 
 def _relative(repository, path):
@@ -366,20 +423,7 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
         frozen_rows = []
         for row in rows:
             binding = binding_from_row(row)
-            root = old / "reusable-context-packages" / binding.package_digest
-            if not root.exists():
-                root = version_path(project, binding)
-            if not root.exists():
-                # Read exact current bytes only if the complete accepted binding matches.
-                root = Path(row.get("path", "")).expanduser().absolute()
-            package, files = _package(root, binding, provenance=True)
-            provenance_file = root / PROVENANCE
-            if not provenance_file.is_file():
-                existing = old / "catalog-provenance" / (package_key(package) + ".json")
-                if not existing.is_file():
-                    raise _error(f"exact frozen provenance missing: {root}; freeze/recover the exact historical package before migration")
-                provenance_file = existing
-            provenance = _json(provenance_file)
+            package, files, provenance = _catalog_input(project, old, row)
             if provenance.get("schema") != "contextcanon/onboarding-reusable-package-provenance/v0" or provenance.get("package_digest") != package.package_digest:
                 raise _error("invalid frozen Catalog provenance")
             provenance.update(node_id=package.metadata.id, normalized_digest=package.normalized_digest)

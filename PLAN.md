@@ -2,6 +2,16 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Active owner-test correction — legacy frozen Catalog recovery (#107)
+
+Purpose: migration reaches an original Foundation authoring directory and rejects its authoring files as unknown immutable-package content. Distinguish isolated stores from live authoring roots, prefer exact retained packages, and reuse the existing Git-history recovery path for pre-freezing onboarding state. Snapshot/consumer/provider retained bytes take precedence; only full Node/version/normalized/package bindings may recover missing legacy bytes. Preview must not write into either repository or change provider checkouts, review files or accepted digests.
+
+- [x] Factor the existing package validator/Git recovery reader for verified in-memory historical bytes; keep one package semantic/digest validation implementation and existing recovery writers.
+- [x] Resolve missing legacy Catalog bytes and provenance deterministically, distinguish authoring files from strict store contents, and refuse advanced/unrecoverable provider substitution with useful diagnostics.
+- [x] Regress exact live-package fallback, changed provider with retained history/Git history, missing/corrupt historical bytes, preview/apply/interruption and unchanged STEP-07/08/10/publication.
+- [x] Verify the full correction and prepare publication on Draft #111; fresh exact-head Linux/Windows evidence remains live PR metadata.
+- [ ] Owner retries the original migration preview/apply with the corrected tool; Phase-2 approval remains separate.
+
 ## Active owner-test correction — migration workspace diagnostics (#107)
 
 Purpose: the owner supplied a valid legacy snapshot but migration reports unknown workspace content without naming it. Keep the existing conservative ownership check; report the exact top-level blockers so the owner can distinguish personal/IDE files from unsupported historical ContextCanon artifacts. No automatic claiming, movement or deletion of unrecognized content is authorized.
@@ -9,7 +19,7 @@ Purpose: the owner supplied a valid legacy snapshot but migration reports unknow
 - [x] Report sorted concrete unknown files/directories, selected workspace and unchanged-state/action guidance.
 - [x] Regress preview and apply refusal with default/explicit snapshots, root/subtree workspaces and empty unknown directories; preserve all bytes and avoid creating receipts.
 - [x] Verify the full candidate and prepare publication on Draft #111; fresh exact-head Linux/Windows CI remains live PR metadata.
-- [ ] Owner reports the concrete unrecognized names; determine their origin before changing compatibility rules or advising any file movement.
+- [x] Owner identified three obsolete anonymized exchange copies, removed them and successfully passed the workspace guard; no compatibility exception is needed.
 
 ## Post-merge baseline reconciliation — PR #108 (2026-10-06)
 

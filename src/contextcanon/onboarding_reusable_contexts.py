@@ -15,7 +15,7 @@ from .onboarding_storage import RUN_MARKER, binding_from_row, enclosing_parent, 
 from .version_store import package_key, version_path
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_structure import HumanStructurePlan
-from .package import PACKAGE_MANIFEST_PATH, load_package
+from .package import PACKAGE_MANIFEST_PATH, load_package, load_package_files
 from .path_budget import preflight_paths
 from .parser import ContextCanonError
 from .onboarding_workspace import write_utf8
@@ -429,71 +429,57 @@ def _manifest_digest(raw: bytes) -> str | None:
         value = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
-    digests = value.get("digests")
+    digests = value.get("digests") if isinstance(value, dict) else None
     if not isinstance(digests, dict):
         return None
     digest = digests.get("package")
     return digest if isinstance(digest, str) else None
 
 
-def _recover_historical_package(
-    snapshot_root: Path,
-    original_root: Path,
-    expected_digest: str,
-    expected_binding=None,
-) -> Path | None:
-    repository_text = _git_text(original_root, "rev-parse", "--show-toplevel")
+def _read_historical_package(original_root: Path, expected_digest: str, expected_binding=None):
+    """Read/verify exact committed artifacts without modifying either repository."""
+    original_root = original_root.resolve()
+    anchor = original_root
+    while not anchor.exists() and anchor != anchor.parent:
+        anchor = anchor.parent
+    repository_text = _git_text(anchor, "rev-parse", "--show-toplevel")
     if repository_text is None:
         return None
     repository = Path(repository_text).resolve()
     try:
-        node_path = original_root.resolve().relative_to(repository).as_posix() or "."
+        node_path = original_root.relative_to(repository).as_posix() or "."
     except ValueError:
         return None
-
-    manifest_rel = (
-        PACKAGE_MANIFEST_PATH
-        if node_path == "."
-        else f"{node_path}/{PACKAGE_MANIFEST_PATH}"
-    )
+    manifest_rel = PACKAGE_MANIFEST_PATH if node_path == "." else f"{node_path}/{PACKAGE_MANIFEST_PATH}"
     history = _git_text(repository, "log", "--all", "--format=%H", "--", manifest_rel)
     if not history:
         return None
-
     for commit in history.splitlines():
         manifest_bytes = _git_bytes(repository, "show", f"{commit}:{manifest_rel}")
         if manifest_bytes is None or _manifest_digest(manifest_bytes) != expected_digest:
             continue
         try:
-            manifest = json.loads(manifest_bytes.decode("utf-8"))
-            files = manifest.get("files", [])
-            paths = [item["path"] for item in files if isinstance(item, dict) and isinstance(item.get("path"), str)]
-        except (UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
-            continue
-
-        destination = _frozen_package_root(snapshot_root, expected_digest)
-        temporary = Path(tempfile.mkdtemp(prefix=".recover-", dir=snapshot_root.parent)) if _shared_snapshot(snapshot_root) else destination.with_name(destination.name + ".tmp")
-        for target_root in ((temporary,) if _shared_snapshot(snapshot_root) else (destination, temporary)):
-            preflight_paths(target_root, (PACKAGE_MANIFEST_PATH, FROZEN_PROVENANCE_REL, *paths), action="onboarding historical package recovery")
-        if temporary.exists():
-            shutil.rmtree(temporary)
-        try:
-            manifest_target = temporary / PACKAGE_MANIFEST_PATH
-            manifest_target.parent.mkdir(parents=True, exist_ok=True)
-            manifest_target.write_bytes(manifest_bytes)
-            complete = True
-            for rel in paths:
-                git_path = rel if node_path == "." else f"{node_path}/{rel}"
-                data = _git_bytes(repository, "show", f"{commit}:{git_path}")
-                if data is None:
-                    complete = False
-                    break
-                target = temporary / Path(*PurePosixPath(rel).parts)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)
-            if not complete:
+            manifest = json.loads(manifest_bytes)
+            rows = manifest.get("files", [])
+            if not isinstance(rows, list) or any(not isinstance(row, dict) or not isinstance(row.get("path"), str) for row in rows):
                 continue
-
+        except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+            continue
+        contents = {PACKAGE_MANIFEST_PATH: manifest_bytes}
+        for row in rows:
+            rel = row["path"]
+            git_path = rel if node_path == "." else f"{node_path}/{rel}"
+            data = _git_bytes(repository, "show", f"{commit}:{git_path}")
+            if data is None:
+                break
+            contents[rel] = data
+        else:
+            try:
+                package = load_package_files(contents)
+            except ContextCanonError:
+                continue
+            if package.package_digest != expected_digest or (expected_binding is not None and package_key(package) != package_key(expected_binding)):
+                continue
             origin = _git_text(repository, "remote", "get-url", "origin") or ""
             provenance = {
                 "schema": FROZEN_PROVENANCE_SCHEMA,
@@ -502,27 +488,36 @@ def _recover_historical_package(
                 "locator": origin or str(repository),
                 "ref": commit,
                 "node_path": node_path,
-                # A legacy STEP-07 state did not preserve the symbolic discovery branch.
-                # Use the provider's default discovery channel rather than guessing from
-                # whatever feature branch happens to be checked out during recovery.
+                # Legacy review state did not bind a symbolic discovery branch.
                 "discovery_ref": "",
             }
-            provenance_path = temporary / FROZEN_PROVENANCE_REL
-            write_utf8(provenance_path, json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
-            verified = load_package(temporary)
-            if verified.package_digest != expected_digest or (expected_binding is not None and package_key(verified) != package_key(expected_binding)):
-                continue
-            if _shared_snapshot(snapshot_root):
-                return freeze_package(snapshot_root, temporary, verified, provenance)
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            if destination.exists():
-                shutil.rmtree(destination)
-            temporary.replace(destination)
-            return destination
-        finally:
-            if temporary.exists():
-                shutil.rmtree(temporary, ignore_errors=True)
+            return package, contents, provenance
     return None
+
+
+def _recover_historical_package(
+    snapshot_root: Path,
+    original_root: Path,
+    expected_digest: str,
+    expected_binding=None,
+) -> Path | None:
+    recovered = _read_historical_package(original_root, expected_digest, expected_binding)
+    if recovered is None:
+        return None
+    package, contents, provenance = recovered
+    # Ordinary legacy runtime recovery still publishes an owned freeze. The
+    # migration preview calls only the read-only reader above.
+    with tempfile.TemporaryDirectory(prefix=".recover-") as directory:
+        temporary = Path(directory)
+        preflight_paths(temporary, contents, action="onboarding historical package recovery")
+        for rel, data in contents.items():
+            path = temporary / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        if _shared_snapshot(snapshot_root):
+            return freeze_package(snapshot_root, temporary, package, provenance)
+        return _write_frozen_package(_frozen_package_root(snapshot_root, expected_digest),
+                                     temporary, package, provenance)
 
 
 def _accepted_catalog_from_state(

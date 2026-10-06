@@ -93,3 +93,11 @@ Final local verification: **430 deterministic tests pass**, all six self-hosted 
 ## Phase-1 post-merge baseline checkpoint — 2026-10-06
 
 The owner merged Phase 1 after its CI recovered and started testing Phase 2. Accepted main is integrated without rewriting the test branch history; the original Phase-1 base and squash tree are byte-identical. PLAN/STATE now record the real accepted baseline and owner-test status. Only planning documents change; keep the already-tested executable/packages and preserve ordinary editable-install pulls. Fresh exact-head hosted Linux/Windows evidence is maintained in Draft PR #111. #107 stays open through Phase-2 owner approval.
+
+## Owner-test correction — missing legacy Catalog freezes (2026-10-06)
+
+The Foundation authoring path in the owner's error proved that migration's fallback conflated normal Node authoring with an isolated immutable package. The earlier workspace blocker was only three obsolete owner-created exchange copies and is resolved.
+
+Prefer exact snapshot/consumer/provider retained packages. For legacy states created before Catalog freezing, reuse the existing Git-history recovery reader; verify committed manifest/file bytes in memory with the same package validator used by filesystem loads. Preview creates no freeze, staging directory or provider checkout. Apply installs those exact full bindings in the consuming shared library and preserves provenance/review identity. The exact current authoring fallback reads only manifest artifacts, not every authoring/IDE file, and may not accept an advanced binding. Missing/corrupt history refuses before mutation with the required historical Node/version/package identity.
+
+Regressions exercise current authoring with unrelated notes, newer/deleted providers, retained provider history with old run provenance, corrupt/missing Git bytes, interrupted package installation and retirement, unchanged STEP 07/08/10 Parent/Reference publication, and legacy untyped v0 review/publication without rewriting its human SHA or accepted digest. The native Windows job additionally includes memory-package tampering checks and ordinary historical freeze recovery. Owner retest and live exact-head gate follow this correction; no merge is authorized.
