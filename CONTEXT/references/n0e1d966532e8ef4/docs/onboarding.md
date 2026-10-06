@@ -59,6 +59,8 @@ Create the workspace first with `contextcanon onboard init .`. From that moment,
 
 Reusable Context configuration lives in `STEP-07-reusable-contexts.md`, where it belongs. ContextCanon keeps exact IDs, digests, and remembered machine state behind that human gate. `contextcanon-onboarding/README.md` remains the stable orientation page; `PLAN.md` tells you what to do next.
 
+For a subtree, the visible workspace and machine payloads now live at the outer Git root. `onboard init` prints that project's exact PLAN location. Full Node/Evidence IDs remain verified metadata; short directory tokens are only locators. The [storage and active-run migration guide](onboarding-storage.md) explains `onboard migrate` for an existing run. Human reviews and frozen input bytes survive relocation. Authored Node sources and documents stay at their project locations.
+
 ## 0. Install and create the operator workspace
 
 For ordinary use, install ContextCanon as an isolated uv tool rather than into the project environment being onboarded. The repository README keeps the short current installation commands.
@@ -238,8 +240,8 @@ Important onboarding Markdown is written directly as UTF-8 by ContextCanon rathe
 The instruction command also prepares a complete **STEP-specific semantic handoff**:
 
 ```text
-contextcanon-onboarding/handoffs/STEP-04-structure/
-contextcanon-onboarding/handoffs/STEP-04-structure.zip
+.context/handoffs/<STEP-04-token>/
+.context/handoffs/<STEP-04-token>.zip
 ```
 
 The directory and ZIP contain the same inputs. Frozen Evidence files are materialized directly at their repository-relative paths; the only extra control directory is `.contextcanon-handoff/`, containing a one-task PLAN, the exact ContextCanon instruction and a deterministic manifest.
@@ -415,7 +417,7 @@ contextcanon onboard placement-instruction \
   .context/onboarding/<evidence-digest>
 ```
 
-ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md` and creates a **new isolated handoff** at `contextcanon-onboarding/handoffs/STEP-08-placement/` plus a matching ZIP. Do not reuse the STEP-04 agent project: STEP 08 receives its own instruction and the same immutable Evidence bytes, while accepted structure/reusable-Context meaning is supplied through the placement instruction rather than through old LLM proposals or review files.
+ContextCanon writes `contextcanon-onboarding/STEP-08a-placement-instruction.md` and creates a **new isolated handoff** at `<git-root>/.context/handoffs/<STEP-08-token>/` plus a matching ZIP. Do not reuse the STEP-04 agent project: STEP 08 receives its own instruction and the same immutable Evidence bytes, while accepted structure/reusable-Context meaning is supplied through the placement instruction rather than through old LLM proposals or review files.
 
 Open/upload only the STEP-08 handoff, tell the model to follow `.contextcanon-handoff/PLAN.md`, then explicitly import and validate:
 

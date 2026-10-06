@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .gitignore import ensure_candidate_gitignore
+from .onboarding_storage import default_workspace
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .path_budget import preflight_paths
 from .parser import ContextCanonError
@@ -411,13 +412,15 @@ def write_utf8(path: Path, text: str) -> None:
         raise
 
 
-def _snapshot_label(snapshot_root: Path) -> str:
+def _snapshot_label(snapshot_root: Path, project: Path | None = None) -> str:
     snapshot = snapshot_root.resolve()
-    project = project_root_from_snapshot(snapshot)
+    project = project or project_root_from_snapshot(snapshot)
     try:
         return snapshot.relative_to(project).as_posix()
     except ValueError:
-        return str(snapshot)
+        # Central runs are above a subtree. Keep the operator PLAN portable
+        # when the whole checkout moves; project ownership comes from markers.
+        return Path(os.path.relpath(snapshot, project)).as_posix()
 
 
 def _quote_cli(value: str) -> str:
@@ -428,7 +431,7 @@ def _quote_cli(value: str) -> str:
 
 def _workspace_option(workspace: OnboardingWorkspace, snapshot_root: Path) -> list[str]:
     try:
-        default = (project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME).resolve()
+        default = default_workspace(project_root_from_snapshot(snapshot_root)).resolve()
     except ContextCanonError:
         return ["--workspace", str(workspace.root)]
     return [] if workspace.root.resolve() == default else ["--workspace", str(workspace.root)]
@@ -465,20 +468,32 @@ def _exact_commands(
     catalog_inputs: tuple[str, ...],
     owner_source_specs: tuple[str, ...],
     completed: set[int] | None = None,
+    project_root: Path | None = None,
+    evidence_digest: str | None = None,
+    central_handoffs: bool = False,
 ) -> str:
     completed = completed or set()
-    snapshot = _snapshot_label(snapshot_root)
+    project_root = project_root or project_root_from_snapshot(snapshot_root)
+    snapshot = _snapshot_label(snapshot_root, project_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
-    project_root = project_root_from_snapshot(snapshot_root)
     try:
         inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
         workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
     except ValueError:
-        inventory_label = str(workspace.inventory_path.resolve())
-        workspace_label = str(workspace.root.resolve())
-    structure_handoff_label = f"{workspace_label}/handoffs/STEP-04-structure"
-    placement_handoff_label = f"{workspace_label}/handoffs/STEP-08-placement"
+        inventory_label = Path(os.path.relpath(workspace.inventory_path.resolve(), project_root)).as_posix()
+        workspace_label = Path(os.path.relpath(workspace.root.resolve(), project_root)).as_posix()
+    from .onboarding_handoff import handoff_locations
+    from .onboarding_proposal import load_evidence_snapshot
+    digest = evidence_digest or load_evidence_snapshot(snapshot_root).evidence_digest
+    if central_handoffs:
+        from .onboarding_storage import handoff_path
+        handoffs = [(handoff_path(project_root, digest, step), None) for step in (4, 8)]
+    else:
+        handoffs = [handoff_locations(project_root, digest, workspace.root, step) for step in (4, 8)]
+    def label(path):
+        return Path(os.path.relpath(path, project_root)).as_posix()
+    structure_handoff_label, placement_handoff_label = [label(root) for root, _ in handoffs]
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
         snapshot_token = "$SNAPSHOT"
@@ -828,8 +843,11 @@ def update_workspace_checkpoint(
     completed = _completed_steps(stage, placement_review_complete)
     text = _replace_commands(text, workspace, snapshot_root, catalog_inputs, owner_specs, completed=completed)
 
+    from .onboarding_proposal import load_evidence_snapshot
+    evidence_identity = load_evidence_snapshot(snapshot_root).evidence_digest
     lines = [
-        f"- Evidence: `{snapshot_root.resolve().name}`",
+        f"- Evidence: `{evidence_identity}`",
+        f"- Evidence snapshot: `{_snapshot_label(snapshot_root)}`",
         f"- Snapshot: `{_snapshot_label(snapshot_root)}`",
         f"- Stage: **{stage}**",
     ]
@@ -859,7 +877,7 @@ def update_workspace_checkpoint(
 
 
 def _default_workspace_root(snapshot_root: Path) -> Path:
-    return project_root_from_snapshot(snapshot_root) / DEFAULT_WORKSPACE_NAME
+    return default_workspace(project_root_from_snapshot(snapshot_root))
 
 
 def _migrate_legacy_artifacts(workspace: OnboardingWorkspace) -> None:
@@ -908,14 +926,14 @@ def _checkpoint_block(text: str, path: Path) -> str | None:
 def _checkpoint_snapshot(block: str | None) -> str | None:
     if block is None:
         return None
-    match = re.search(r"^- Snapshot: \`(.+?)\`$", block, re.MULTILINE)
+    match = re.search(r"^- Snapshot: \`(.+?)\`$", block.replace("\r\n", "\n"), re.MULTILINE)
     return match.group(1) if match else None
 
 
 def _checkpoint_stage(block: str | None) -> str | None:
     if block is None:
         return None
-    match = re.search(r"^- Stage: \*\*(.+?)\*\*$", block, re.MULTILINE)
+    match = re.search(r"^- Stage: \*\*(.+?)\*\*$", block.replace("\r\n", "\n"), re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -1022,6 +1040,8 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
 
     project = _require_project_root_for_inventory(project_root)
     ensure_candidate_gitignore(project)
+    from .gitignore import ensure_onboarding_store_gitignore
+    ensure_onboarding_store_gitignore(project)
     gitignore = project / ".gitignore"
     try:
         existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
@@ -1038,7 +1058,13 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
     if workspace_rel and workspace_rel != DEFAULT_WORKSPACE_NAME:
         lines.append(f"/{workspace_rel}/")
     lines.extend([
-        "**/.context/onboarding/*",
+        "**/.context/onboarding/**",
+        "!**/.context/onboarding/",
+        "!**/.context/onboarding/*/",
+        "!**/.context/onboarding/*/.scope.json",
+        "!**/.context/onboarding/*/.active.json",
+        "!**/.context/onboarding/*/inventory-state.json",
+        "!**/.context/onboarding/*/inventory-acceptance.json",
         "!**/.context/onboarding/inventory-state.json",
         "!**/.context/onboarding/inventory-acceptance.json",
         GITIGNORE_END,
@@ -1109,7 +1135,7 @@ def open_inventory_workspace(
     """Open/create the visible workspace before an Evidence snapshot exists."""
 
     project = _require_project_root_for_inventory(project_root)
-    root = workspace_root.resolve() if workspace_root is not None else project / DEFAULT_WORKSPACE_NAME
+    root = workspace_root.resolve() if workspace_root is not None else default_workspace(project)
     workspace = OnboardingWorkspace(root)
     ensure_onboarding_gitignore(project, root)
 

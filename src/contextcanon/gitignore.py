@@ -30,3 +30,25 @@ def ensure_candidate_gitignore(node_root: Path) -> Path:
     if after != before:
         path.write_text(after, encoding="utf-8")
     return path
+
+
+def ensure_onboarding_store_gitignore(project: Path) -> Path:
+    """Repository-wide rules outlive a reset of any individual project scope."""
+    path = find_repo_root(project.resolve()) / ".gitignore"
+    start = "# >>> ContextCanon shared onboarding scratch (managed)"
+    end = "# <<< ContextCanon shared onboarding scratch (managed)"
+    before = path.read_text(encoding="utf-8") if path.exists() else ""
+    block = "\n".join((start, "/contextcanon-onboarding-*/", "/.context/handoffs/", "/.context/onboarding-migrations/", "/.context/onboarding/**",
+                       "!/.context/onboarding/", "!/.context/onboarding/inventory-state.json",
+                       "!/.context/onboarding/inventory-acceptance.json", "!/.context/onboarding/*/",
+                       "!/.context/onboarding/*/.scope.json",
+                       "!/.context/onboarding/*/.active.json",
+                       "!/.context/onboarding/*/inventory-state.json",
+                       "!/.context/onboarding/*/inventory-acceptance.json", end))
+    first, last = before.find(start), before.find(end)
+    if (first >= 0) != (last >= 0) or (first >= 0 and last < first):
+        raise ContextCanonError(f"Incomplete shared onboarding ignore block: {path}")
+    after = (before[:first] + block + before[last + len(end):]) if first >= 0 else before.rstrip("\n") + ("\n\n" if before.strip() else "") + block + "\n"
+    if after != before:
+        path.write_text(after, encoding="utf-8")
+    return path

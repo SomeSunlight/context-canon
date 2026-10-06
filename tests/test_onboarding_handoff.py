@@ -246,9 +246,9 @@ class OnboardingHandoffTests(unittest.TestCase):
         self.assertTrue(step4.zip_path.is_file())
         self.assertFalse(step8.root.exists())
         self.assertFalse(step8.zip_path.exists())
-        self.assertIn("handoffs/STEP-08-placement/", result["workspace_files_removed"])
-        self.assertIn("handoffs/STEP-08-placement.zip", result["workspace_files_removed"])
-        self.assertNotIn("handoffs/STEP-04-structure/", result["workspace_files_removed"])
+        self.assertIn(str(step8.root), result["workspace_files_removed"])
+        self.assertIn(str(step8.zip_path), result["workspace_files_removed"])
+        self.assertNotIn(str(step4.root), result["workspace_files_removed"])
 
     def test_reset_from_step4_removes_disposable_handoff_and_zip(self):
         repo, prepared, workspace = self.make_run()
@@ -260,8 +260,8 @@ class OnboardingHandoffTests(unittest.TestCase):
 
         self.assertFalse(handoff.root.exists())
         self.assertFalse(handoff.zip_path.exists())
-        self.assertIn("handoffs/STEP-04-structure/", result["workspace_files_removed"])
-        self.assertIn("handoffs/STEP-04-structure.zip", result["workspace_files_removed"])
+        self.assertIn(str(handoff.root), result["workspace_files_removed"])
+        self.assertIn(str(handoff.zip_path), result["workspace_files_removed"])
 
 
 if __name__ == "__main__":

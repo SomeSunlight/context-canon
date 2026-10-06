@@ -375,8 +375,11 @@ class OnboardingPlacementTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertTrue(workspace.placement_instruction_path.is_file())
         self.assertIn(str(workspace.placement_proposal_path), stdout.getvalue())
-        self.assertTrue((workspace.root / "handoffs" / "STEP-08-placement").is_dir())
-        self.assertTrue((workspace.root / "handoffs" / "STEP-08-placement.zip").is_file())
+        from contextcanon.onboarding import project_root_from_snapshot
+        from contextcanon.onboarding_storage import handoff_path
+        handoff = handoff_path(project_root_from_snapshot(prepared.snapshot_root), prepared.evidence_digest, 8)
+        self.assertTrue(handoff.is_dir())
+        self.assertTrue(handoff.with_suffix(".zip").is_file())
 
         workspace.placement_proposal_path.write_text(
             json.dumps(self.placement_dict(prepared, workspace, readme, architecture, package), indent=2),

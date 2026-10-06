@@ -189,6 +189,10 @@ def _require_git_repository_root(path: Path) -> Path:
 
 def project_root_from_snapshot(snapshot_root: Path) -> Path:
     root = snapshot_root.resolve()
+    from .onboarding_storage import project_from_run
+    owned_project = project_from_run(root)
+    if owned_project is not None:
+        return owned_project
     if root.parent.name == "onboarding" and root.parent.parent.name == ".context":
         return root.parent.parent.parent.resolve()
     # Preserve the historical workspace/error path for callers that have not
@@ -518,8 +522,9 @@ def prepare_onboarding_evidence(
     digest = _evidence_digest(payload)
     manifest = _manifest_bytes(payload, digest)
 
-    base = project_root / ".context" / "onboarding"
-    snapshot_root = base / digest
+    from .onboarding_storage import RUN_MARKER, SCOPE_MARKER, run_metadata, run_path
+    snapshot_root = run_path(project_root, digest)
+    base = snapshot_root.parent
     if snapshot_root.exists():
         _verify_existing_snapshot(snapshot_root, manifest, included)
         return PreparedEvidence(project_root, snapshot_root, digest, included, excluded)
@@ -536,6 +541,8 @@ def prepare_onboarding_evidence(
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(content[entry.path])
         (staging / "manifest.json").write_bytes(manifest)
+        if (base / SCOPE_MARKER).is_file():
+            (staging / RUN_MARKER).write_text(json.dumps(run_metadata(project_root, digest), sort_keys=True) + "\n", encoding="utf-8")
         try:
             os.rename(staging, snapshot_root)
         except OSError:

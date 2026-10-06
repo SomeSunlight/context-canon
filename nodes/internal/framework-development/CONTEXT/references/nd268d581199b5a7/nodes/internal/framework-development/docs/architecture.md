@@ -304,3 +304,9 @@ Git `ref` and `node-path` describe candidate discovery and location; they are no
 Candidate and accepted package directories are staged and verified before atomic publication. Review receipts and Source-pin changes are also published atomically. If the final pin replacement fails after the candidate package was installed, the old `CONTEXT.src.md` remains intact and the old accepted build state remains authoritative.
 
 This separation makes a newer Source version a reviewable change request rather than live inheritance.
+
+## Repository-root onboarding storage
+
+The selected project scope remains the semantic/authoring unit. Its frozen Evidence and mutable reviews use authenticated short root-scoped runs; exact reusable/enclosing-Parent packages use the ordinary complete-Node version library. STEP-04/08 handoffs have short project/Evidence/step locators and preserve their portable input contract. A visible workspace holds human gates and the exact operator PLAN.
+
+`onboarding_storage.py` owns normal routing and full ownership validation. Explicit removable `onboarding_migration.py` owns old-run preview/apply receipts, copy verification and retirement. Runtime activation is independent of migration receipts. Directory tokens never replace full Node, Evidence or package identity, and shared immutable history is outside one run's rollback ownership. See [onboarding-design.md](onboarding-design.md).

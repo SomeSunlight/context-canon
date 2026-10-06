@@ -366,11 +366,11 @@ class OnboardingStructureTests(unittest.TestCase):
         ))
         self.assertNotIn("# ContextCanon Onboarding Structure Discovery Instruction", stdout.getvalue())
         self.assertIn(str(proposal_path), stdout.getvalue())
-        self.assertTrue((workspace_root / "handoffs" / "STEP-04-structure").is_dir())
-        self.assertTrue((workspace_root / "handoffs" / "STEP-04-structure.zip").is_file())
-        handoff_plan = (
-            workspace_root / "handoffs" / "STEP-04-structure" / ".contextcanon-handoff" / "PLAN.md"
-        ).read_text(encoding="utf-8")
+        from contextcanon.onboarding_storage import handoff_path
+        handoff = handoff_path(repo, prepared.evidence_digest, 4)
+        self.assertTrue(handoff.is_dir())
+        self.assertTrue(handoff.with_suffix(".zip").is_file())
+        handoff_plan = (handoff / ".contextcanon-handoff/PLAN.md").read_text(encoding="utf-8")
         self.assertIn("single-task, disposable workspace", handoff_plan)
         self.assertIn(".contextcanon-handoff/RESULT.json", handoff_plan)
 

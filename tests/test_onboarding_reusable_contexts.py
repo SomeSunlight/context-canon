@@ -226,7 +226,7 @@ class ReusableContextsTests(unittest.TestCase):
             self.assertFalse(created)
             self.assertEqual(loaded.catalog_packages[0].metadata.version, "0.2.0-draft")
             self.assertEqual(loaded.catalog_packages[0].package_digest, old_digest)
-            self.assertEqual(loaded.catalog_roots, (frozen_root,))
+            self.assertEqual(loaded.catalog_roots, (frozen_root.resolve(),))
             self.assertEqual(rerun.catalog_packages[0].package_digest, old_digest)
             self.assertEqual(rerun.catalog_roots, (frozen_root,))
 
@@ -249,7 +249,7 @@ class ReusableContextsTests(unittest.TestCase):
             frozen_root = snapshot / "reusable-context-packages" / old_digest
             self.assertEqual(loaded.catalog_packages[0].metadata.version, "0.2.0-draft")
             self.assertEqual(loaded.catalog_packages[0].package_digest, old_digest)
-            self.assertEqual(loaded.catalog_roots, (frozen_root,))
+            self.assertEqual(loaded.catalog_roots, (frozen_root.resolve(),))
             provenance = json.loads(
                 (frozen_root / ".context/onboarding-provenance.json").read_text(encoding="utf-8")
             )

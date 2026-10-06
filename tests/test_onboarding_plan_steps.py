@@ -36,6 +36,7 @@ class OnboardingPlanStepsTests(unittest.TestCase):
                 ("/legacy/catalog/package",),
                 ("N-001=opaque-id",),
                 completed={1, 2, 3, 4, 5, 6},
+                evidence_digest="a" * 64,
             )
             self.assertIn("### STEP 07 — Reusable Contexts", text)
             self.assertIn("already-curated reusable Context should apply here", text)

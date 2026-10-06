@@ -224,6 +224,7 @@ def _read_json(path: Path, label: str) -> dict[str, Any]:
 
 def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
     root = snapshot_root.resolve()
+    from .onboarding_storage import project_from_run
     manifest_path = root / "manifest.json"
     manifest = _read_json(manifest_path, "onboarding evidence manifest")
 
@@ -345,6 +346,7 @@ def load_evidence_snapshot(snapshot_root: Path) -> EvidenceSnapshot:
             raise ContextCanonError("Onboarding evidence excluded paths must be unique and sorted")
         previous_excluded = path
 
+    project_from_run(root)
     return EvidenceSnapshot(root=root, evidence_digest=digest, entries=tuple(entries))
 
 

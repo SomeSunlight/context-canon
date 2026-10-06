@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable, Mapping
 
+from .onboarding_storage import scope_root
 from .onboarding import (
     PreparedEvidence,
     REVIEWED_INVENTORY_SELECTION_POLICY,
@@ -140,11 +141,11 @@ class InventorySelection:
 
 
 def _state_path(project_root: Path) -> Path:
-    return project_root / ".context" / "onboarding" / "inventory-state.json"
+    return scope_root(project_root) / "inventory-state.json"
 
 
 def _acceptance_path(project_root: Path) -> Path:
-    return project_root / ".context" / "onboarding" / "inventory-acceptance.json"
+    return scope_root(project_root) / "inventory-acceptance.json"
 
 
 def _sha256(path: Path, *, inventory_path: str | None = None) -> str:
@@ -585,6 +586,7 @@ def refresh_inventory(
         omitted_source_code=len(all_live_paths) - len(live_paths),
     )
     _write_csv(result.csv_path, result.rows)
+    scope_root(project_root, create=True)
     _write_json(
         _state_path(project_root),
         {

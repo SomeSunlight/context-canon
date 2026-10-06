@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from .compiler import Compiler
+from .onboarding_storage import require_project
 from .onboarding_structure import (
     HumanStructureNode,
     HumanStructurePlan,
@@ -18,6 +19,8 @@ from .onboarding_workspace import write_utf8
 from .outputs import write_outputs
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .parser import ContextCanonError, parse_node
+from .package import PACKAGE_MANIFEST_PATH, load_package
+from .version_store import package_key
 
 
 @dataclass(frozen=True)
@@ -195,12 +198,37 @@ def _framework_machine_namespace(root: Path, *, allow_onboarding: bool) -> bool:
     allowed = {"context.yaml", "package.json", "resource-origins.json", "sources"}
     if allow_onboarding:
         allowed.add("onboarding")
+        allowed.add("versions")
     for child in machine.iterdir():
         if child.name not in allowed or child.is_symlink():
             return False
         if child.name == "resource-origins.json" and not _matches_generated_manifest(root, ".context/resource-origins.json"):
             return False
+        if child.name == "versions" and not _verified_version_namespace(child):
+            return False
     return True
+
+
+def _verified_version_namespace(store: Path) -> bool:
+    if not store.is_dir() or store.is_symlink():
+        return False
+    try:
+        for path in store.iterdir():
+            if path.name == "README.md" and path.is_file() and not path.is_symlink():
+                if not path.read_text(encoding="utf-8").startswith("# Node versions\n\n> GENERATED INVENTORY — DO NOT EDIT."):
+                    return False
+                continue
+            if path.is_symlink() or not path.is_dir():
+                return False
+            package = load_package(path)
+            if not package_key(package).startswith(path.name):
+                return False
+            expected = {PACKAGE_MANIFEST_PATH, *(file.path for file in package.files)}
+            if {file.relative_to(path).as_posix() for file in path.rglob("*") if file.is_file()} != expected:
+                return False
+        return True
+    except (ContextCanonError, OSError, UnicodeError):
+        return False
 
 
 def _fresh_root_machine_namespace(root: Path) -> bool:
@@ -209,11 +237,10 @@ def _fresh_root_machine_namespace(root: Path) -> bool:
         return True
     if machine.is_symlink() or not machine.is_dir():
         return False
-    children = list(machine.iterdir())
-    if len(children) != 1:
-        return False
-    onboarding = children[0]
-    return onboarding.name == "onboarding" and onboarding.is_dir() and not onboarding.is_symlink()
+    return all(not child.is_symlink() and (
+        (child.name == "onboarding" and child.is_dir())
+        or (child.name == "versions" and _verified_version_namespace(child))
+    ) for child in machine.iterdir())
 
 
 def _preflight_new_node(
@@ -267,6 +294,7 @@ def preview_structure_materialization(
     proposal = load_onboarding_structure_proposal(proposal_path, snapshot_root)
     plan = load_structure_markdown(structure_path, proposal)
     project = (project_root or project_root_from_snapshot(snapshot_root)).resolve()
+    require_project(snapshot_root, project)
     scope = resolve_onboarding_scope(project)
     repository = scope.repository_root
 
@@ -450,7 +478,7 @@ def materialize_structure_skeletons(preview: StructureMaterializationPreview) ->
             )
             created_sources.append(source)
 
-        compiler = Compiler(resolve_onboarding_scope(project).repository_root, legacy_carriers=True)
+        compiler = Compiler(resolve_onboarding_scope(project).repository_root)
         for source in created_sources:
             root = source.parent
             compiled = compiler.compile(root)

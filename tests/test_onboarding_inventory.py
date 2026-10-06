@@ -19,6 +19,7 @@ from contextcanon.onboarding_inventory import (
     prepare_from_inventory,
     refresh_inventory,
 )
+from contextcanon.onboarding_storage import SCOPE_MARKER, scope_root
 from contextcanon.parser import ContextCanonError
 
 
@@ -189,8 +190,8 @@ class OnboardingInventoryTests(unittest.TestCase):
         prepared, _ = prepare_from_inventory(repo, csv_path)
 
         shutil.rmtree(repo / "contextcanon-onboarding")
-        for child in (repo / ".context" / "onboarding").iterdir():
-            if child.name not in {"inventory-state.json", "inventory-acceptance.json"}:
+        for child in scope_root(repo).iterdir():
+            if child.name not in {"inventory-state.json", "inventory-acceptance.json", SCOPE_MARKER}:
                 if child.is_dir():
                     shutil.rmtree(child)
                 else:

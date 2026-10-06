@@ -316,6 +316,27 @@ def load_package(package_root: Path) -> CompiledPackage:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContextCanonError(f"Invalid Context package manifest {manifest_path}: {exc}") from exc
 
+    return _load_package(raw, manifest_path, lambda expected: _read_and_verify_files(package_root, expected))
+
+
+def load_package_files(contents: dict[str, bytes]) -> CompiledPackage:
+    """Verify exact package bytes without materializing a checkout or store.
+
+    Historical recovery uses the same semantic, file and digest checks as the
+    filesystem loader, while a migration preview remains read-only.
+    """
+    if PACKAGE_MANIFEST_PATH not in contents:
+        raise ContextCanonError(f"Not a compiled Context package: missing {PACKAGE_MANIFEST_PATH}")
+    try:
+        raw = json.loads(contents[PACKAGE_MANIFEST_PATH].decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ContextCanonError(f"Invalid Context package manifest: {exc}") from exc
+    files = {path: data for path, data in contents.items() if path != PACKAGE_MANIFEST_PATH}
+    return _load_package(raw, PACKAGE_MANIFEST_PATH,
+                         lambda expected: _verify_file_contents(files, expected, "in-memory package"))
+
+
+def _load_package(raw, manifest_path, read_files) -> CompiledPackage:
     root = _dict(raw, "manifest")
     schema = root.get("schema")
     if schema not in {PACKAGE_SCHEMA, RELATIONSHIP_PACKAGE_SCHEMA, PREVIOUS_PACKAGE_SCHEMA, OLDER_PACKAGE_SCHEMA, LEGACY_PACKAGE_SCHEMA}:
@@ -376,7 +397,7 @@ def load_package(package_root: Path) -> CompiledPackage:
             f"expected {normalized_digest}, computed {actual_normalized}"
         )
 
-    actual_files = _read_and_verify_files(package_root, files)
+    actual_files = read_files(files)
     actual_package_digest = package_digest(actual_files)
     if actual_package_digest != expected_package_digest:
         raise ContextCanonError(
@@ -589,27 +610,30 @@ def _read_and_verify_files(package_root: Path, expected: tuple[PackageFile, ...]
             if path.is_file()
         )
 
-    if actual_paths != set(expected_by_path):
-        missing = sorted(set(expected_by_path) - actual_paths)
-        extra = sorted(actual_paths - set(expected_by_path))
+    contents = {path: (package_root / path).read_bytes() for path in sorted(actual_paths)}
+    return _verify_file_contents(contents, expected, package_root)
+
+
+def _verify_file_contents(contents: dict[str, bytes], expected: tuple[PackageFile, ...], label) -> dict[str, bytes]:
+    expected_by_path = {file.path: file for file in expected}
+    if set(contents) != set(expected_by_path):
+        missing = sorted(set(expected_by_path) - set(contents))
+        extra = sorted(set(contents) - set(expected_by_path))
         details = []
         if missing:
             details.append("missing " + ", ".join(missing))
         if extra:
             details.append("extra " + ", ".join(extra))
-        raise ContextCanonError(f"Context package file set mismatch in {package_root}: {'; '.join(details)}")
+        raise ContextCanonError(f"Context package file set mismatch in {label}: {'; '.join(details)}")
 
-    contents: dict[str, bytes] = {}
-    for path in sorted(actual_paths):
+    for path, content in sorted(contents.items()):
         expected_file = expected_by_path[path]
-        content = (package_root / path).read_bytes()
         actual_hash = hashlib.sha256(content).hexdigest()
         if actual_hash != expected_file.sha256 or len(content) != expected_file.size:
             raise ContextCanonError(
                 f"Context package file mismatch: {path} expected sha256={expected_file.sha256} "
                 f"size={expected_file.size}, got sha256={actual_hash} size={len(content)}"
             )
-        contents[path] = content
     return contents
 
 

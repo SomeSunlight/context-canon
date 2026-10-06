@@ -179,7 +179,7 @@ def _add_workspace(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--workspace",
         metavar="PATH",
-        help="visible human onboarding workspace (default: <project>/contextcanon-onboarding)",
+        help="visible human onboarding workspace (default: owned workspace at the Git root)",
     )
 
 
@@ -842,6 +842,12 @@ def main(argv: list[str] | None = None) -> int:
     onboard_init.add_argument("project", nargs="?", default=".", help="project root or repository subtree to onboard (default: current directory)")
     _add_workspace(onboard_init)
 
+    onboard_migrate = onboard_sub.add_parser("migrate", help="preview relocation of one active legacy onboarding run; --apply makes the verified migration")
+    onboard_migrate.add_argument("project", nargs="?", default=".", help="selected project/subtree root")
+    onboard_migrate.add_argument("--snapshot", help="explicit old Evidence snapshot; required when the active run is ambiguous")
+    onboard_migrate.add_argument("--apply", action="store_true", help="copy and verify frozen state, activate short root storage, then retire only verified old files")
+    _add_workspace(onboard_migrate)
+
     onboard_inventory = onboard_sub.add_parser(
         "inventory",
         help="create or refresh the human-reviewed onboarding file inventory CSV",
@@ -1306,7 +1312,19 @@ def main(argv: list[str] | None = None) -> int:
             return 1 if not result.is_empty else 0
 
         if args.command == "onboard":
-            snapshot = Path(args.snapshot) if hasattr(args, "snapshot") else None
+            snapshot = Path(args.snapshot) if getattr(args, "snapshot", None) else None
+
+            if args.onboard_command == "migrate":
+                import json
+                from .onboarding_migration import migrate_onboarding
+                result = migrate_onboarding(Path(args.project), snapshot=Path(args.snapshot) if args.snapshot else None,
+                                            workspace=_workspace_path(args.workspace), apply=args.apply)
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+                if not args.apply:
+                    print("Preview only. Rerun with --apply to migrate these verified inputs.")
+                elif result.get("workspace"):
+                    print(f"Continue with {result['workspace']}/PLAN.md; reviews and frozen inputs are unchanged.")
+                return 0
 
             if args.onboard_command == "init":
                 project = Path(args.project).resolve()
@@ -1371,7 +1389,7 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     prepared = prepare_onboarding_evidence(Path(args.project), explicit_paths=args.include)
                     inventory_counts = {}
-                label = prepared.snapshot_root.relative_to(prepared.project_root).as_posix()
+                label = str(prepared.snapshot_root)
                 print(f"prepared onboarding evidence {prepared.evidence_digest}")
                 print(f"Evidence snapshot: {label}")
                 print(f"Included files: {len(prepared.included)}")
@@ -1382,8 +1400,9 @@ def main(argv: list[str] | None = None) -> int:
                         + ", ".join(f"{name}={inventory_counts[name]}" for name in sorted(inventory_counts))
                     )
                     print("Durable inventory restore state (keep in Git):")
-                    print("  .context/onboarding/inventory-state.json")
-                    print("  .context/onboarding/inventory-acceptance.json")
+                    from .onboarding_storage import scope_root
+                    print(f"  {scope_root(prepared.project_root) / 'inventory-state.json'}")
+                    print(f"  {scope_root(prepared.project_root) / 'inventory-acceptance.json'}")
                 return 0
 
             if args.onboard_command == "reset":

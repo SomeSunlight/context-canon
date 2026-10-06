@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import contextcanon.onboarding as onboarding
 from contextcanon.cli import main
+from contextcanon.onboarding_storage import SCOPE_MARKER, scope_root
 from contextcanon.onboarding import MAX_EVIDENCE_FILE_BYTES, prepare_onboarding_evidence
 from contextcanon.parser import ContextCanonError
 
@@ -188,7 +189,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
         (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
 
         self.assertEqual(main(["onboard", "prepare", str(repo)]), 0)
-        snapshots = [path for path in (repo / ".context/onboarding").iterdir() if path.is_dir()]
+        snapshots = [path for path in scope_root(repo).iterdir() if path.is_dir()]
         self.assertEqual(len(snapshots), 1)
         self.assertTrue((snapshots[0] / "manifest.json").is_file())
 
@@ -210,7 +211,7 @@ class OnboardingEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             prepared.snapshot_root.parent,
-            (child / ".context/onboarding").resolve(),
+            scope_root(child).resolve(),
         )
         self.assertFalse((prepared.snapshot_root / "evidence/../README.md").exists())
         self.assertEqual(

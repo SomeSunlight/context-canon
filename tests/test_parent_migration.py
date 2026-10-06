@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextcanon.version_store import version_path
 
 import hashlib
 import json
@@ -120,7 +121,7 @@ class LegacyParentMigrationTests(unittest.TestCase):
         self.assertIn("ctx:source", child_text)
         child_compiled = Compiler(repo).compile(child)
         self.assertIsNotNone(child_compiled.parent_package)
-        parent_store = child / ".context" / "sources" / child_compiled.parent_package.package_digest
+        parent_store = version_path(child, child_compiled.parent_package)
         self.assertTrue(parent_store.is_dir())
 
         second = build_placement_publication_preview(
@@ -139,7 +140,7 @@ class LegacyParentMigrationTests(unittest.TestCase):
         self.assertGreaterEqual(reset["journal_records_reversed"], 1)
         self.assertEqual((child / "CONTEXT.src.md").read_bytes(), legacy_child)
         self.assertEqual(acceptance.read_bytes(), legacy_bytes)
-        self.assertFalse(parent_store.exists())
+        self.assertTrue(parent_store.exists())  # Shared immutable history survives reset.
         restored_child = Compiler(repo).compile(child)
         self.assertIsNone(restored_child.parent_package)
 
