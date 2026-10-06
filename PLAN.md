@@ -2,6 +2,15 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Active owner-test correction — preserve unbound IDE metadata (#107)
+
+Purpose: the reported STEP-04 extras are JetBrains `.idea/` files, including its own `.gitignore`. The owner wants ordinary IDE metadata to stop blocking ContextCanon. Existing handoff PLAN already excludes post-preparation `.idea/`/`.vscode/` from Evidence. Inventory respects Git standard ignores for untracked files; migration cannot use Git ignores as an ownership boundary because complete managed workspaces/runs are ignored too.
+
+- [x] Exclude unbound `.idea/`/`.vscode/` metadata at workspace/task roots from migration inputs, copying and retirement; preserve those paths in place and report them. Explicitly bound Evidence/Parent/control/result bytes and isolated immutable packages stay fully verified; other unknown files still refuse.
+- [x] Preserve metadata during interrupted package install/copy/retirement, including IDE edits/new files during recovery. Keep ownership/path/symlink protections for governed inputs and avoid treating arbitrary Git-ignored files as harmless.
+- [x] Regress root/subtree and STEP 04/08 metadata, existing destination metadata, immutable/bound tampering and unrelated ignored files; all 32 migration tests pass and owner guidance/checkpoints are updated.
+- [x] Verify the bounded correction and prepare publication on Draft #111: all 444 local tests pass, six self-hosted Nodes have zero drift, all four normative edges are current, and diff hygiene is clean. Fresh exact-head Linux/native Windows proof remains live PR metadata; owner retries preview/apply without moving IDE files.
+
 ## Active owner-test correction — handoff file diagnostics (#107)
 
 Purpose: the owner's migration in Itop now refuses `unknown/missing handoff files` without identifying the task or files. First make this refusal actionable without assuming its cause or claiming/deleting unrecognized content. Preserve frozen inputs, review decisions and result bytes; distinguish unknown files from missing required files and report STEP/root paths.
@@ -9,7 +18,7 @@ Purpose: the owner's migration in Itop now refuses `unknown/missing handoff file
 - [x] Report sorted unknown and missing relative paths, selected handoff STEP/root, unchanged-state assurance, and distinct preserve/report versus restore guidance.
 - [x] Regress root/subtree, STEP 04/08 and preview/apply with unknown/missing/mixed files; preserve all remaining bytes/directories and avoid receipts. Retain successful RESULT.json migration and existing tampering guards; all 28 migration tests pass.
 - [x] Verify the bounded correction locally and prepare publication on Draft #111: 440 tests pass, six self-hosted Nodes have zero drift, all four normative edges are current, and diff hygiene is clean. Fresh exact-head Linux/native Windows evidence remains live PR metadata.
-- [ ] Obtain the actual owner-side handoff file names before expanding historical compatibility or changing migration ownership rules.
+- [x] Owner reported six JetBrains `.idea/` files in STEP 04 and explicitly requested IDE metadata tolerance. Continue with the bounded preservation block above; no blanket Git-ignore bypass.
 
 ## Active owner-test correction — legacy frozen Catalog recovery (#107)
 

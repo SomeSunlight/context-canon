@@ -35,6 +35,7 @@ PROVENANCE = ".context/onboarding-provenance.json"
 INVENTORY = ("inventory-state.json", "inventory-acceptance.json")
 RUN_FILES = {"manifest.json", "run-inputs.json", "reusable-contexts.json", "enclosing-parent.json",
              "placement-acceptance.json", "onboarding-reset-journal.json"}
+TOOL_METADATA_DIRECTORIES = (".idea", ".vscode")
 
 
 def _error(message):
@@ -45,11 +46,28 @@ def _sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def _tool_metadata(path, roots):
+    # The semantic handoff PLAN already excludes post-preparation IDE metadata.
+    # Preserve only these root-local namespaces; Git ignores cannot determine
+    # ownership because complete managed runs/workspaces are Git-ignored too.
+    return any(path.is_relative_to(root / name) for root in roots for name in TOOL_METADATA_DIRECTORIES)
+
+
+def _contains_tool_metadata(path, roots):
+    return any(((root / name).exists() or (root / name).is_symlink()) and (root / name).is_relative_to(path)
+               for root in roots for name in TOOL_METADATA_DIRECTORIES)
+
+
+def _workspace_tasks(workspace):
+    from .onboarding_handoff import handoff_relative_paths
+    return (workspace, *(workspace / handoff_relative_paths(step)[0] for step in (4, 8)))
+
+
 def _bytes(value):
     return (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
 
-def _tree(root):
+def _tree(root, *, metadata_roots=(), bound=()):
     _normal_path(root)
     if not root.exists():
         return {}
@@ -57,6 +75,8 @@ def _tree(root):
         raise _error(f"not a normal directory: {root}")
     result = {}
     for path in root.rglob("*"):
+        if path not in bound and _tool_metadata(path, metadata_roots):
+            continue  # Unowned metadata is not read, copied, hashed or retired.
         _normal_path(path)
         if path.is_file():
             result[path.relative_to(root).as_posix()] = path.read_bytes()
@@ -65,9 +85,10 @@ def _tree(root):
     return result
 
 
-def _directories(root):
-    _tree(root)  # Prove every ancestor/descendant is a normal path first.
-    return {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_dir()} if root.exists() else set()
+def _directories(root, *, metadata_roots=()):
+    _tree(root, metadata_roots=metadata_roots)  # Prove owned paths are normal first.
+    return {p.relative_to(root).as_posix() for p in root.rglob("*")
+            if not _tool_metadata(p, metadata_roots) and p.is_dir()} if root.exists() else set()
 
 
 def _package(root, binding=None, *, provenance=False, authoring=False):
@@ -162,7 +183,7 @@ def _receipt_path(project):
 
 
 def _owned_workspace(root, old):
-    files = _tree(root)
+    files = _tree(root, metadata_roots=_workspace_tasks(root))
     if not files:
         return files
     if WORKSPACE_MARKER not in files.get("README.md", b"").decode("utf-8"):
@@ -176,8 +197,8 @@ def _owned_workspace(root, old):
     from .onboarding_reset import _ARTIFACT_STEPS
     names = set(_ARTIFACT_STEPS) | set(LEGACY_ARTIFACT_NAMES) | set(LEGACY_DIRECTORY_NAMES)
     names |= {"README.md", "PLAN.md", "STEP-02-inventory.csv", "STEP-02-inventory-guide.md", "handoffs"}
-    unknown = sorted({rel.split("/")[0] for rel in [*files, *_directories(root)]
-                      if rel.split("/")[0] not in names})
+    unknown = sorted({rel.split("/")[0] for rel in [*files, *_directories(root, metadata_roots=_workspace_tasks(root))]
+                      if rel.split("/")[0] not in names and not _tool_metadata(root / rel, (root,))})
     if unknown:
         entries = "\n".join(f"  - {name}{'/' if (root / name).is_dir() else ''}" for name in unknown)
         raise _error(
@@ -220,7 +241,8 @@ def _verify_handoff(root, payload, evidence, zip_path):
     """Verify portable frozen inputs before claiming/copying a disposable task."""
     import zipfile
     from .onboarding_handoff import handoff_spec
-    files = _tree(root)
+    bound = {root / row["path"] for row in payload.get("evidence", [])}
+    files = _tree(root, metadata_roots=(root,), bound=bound)
     control = ".contextcanon-handoff/"
     expected = {control + name for name in ("PLAN.md", "INSTRUCTION.md", "manifest.json")}
     if _sha(files.get(control + "INSTRUCTION.md", b"")) != payload.get("instruction_sha256"):
@@ -243,7 +265,8 @@ def _verify_handoff(root, payload, evidence, zip_path):
             raise _error("frozen handoff Parent files changed")
         expected.update(parent["root"] + "/" + rel for rel in packaged)
     missing = sorted(expected - set(files))
-    unknown = sorted(set(files) - expected - {control + "RESULT.json"})
+    unknown = sorted(rel for rel in set(files) - expected - {control + "RESULT.json"}
+                     if not _tool_metadata(root / rel, (root,)))
     if missing or unknown:
         details = []
         if unknown:
@@ -270,6 +293,9 @@ def _verify_handoff(root, payload, evidence, zip_path):
                     raise _error("frozen handoff ZIP differs from its verified inputs")
         except (OSError, zipfile.BadZipFile) as exc:
             raise _error("frozen handoff ZIP is unreadable") from exc
+    # Bound Evidence wins over its directory name, even inside .idea/.vscode.
+    # Only declared inputs and the optional result may move or be retired.
+    return {rel: data for rel, data in files.items() if rel in expected or rel == control + "RESULT.json"}
 
 
 def _parent_input(project, old, workspace, packages):
@@ -427,6 +453,7 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
     if old_workspace == project / "contextcanon-onboarding" and project != repository:
         new_workspace = repository / ("contextcanon-onboarding-" + new.parent.name)
     workspace_files = _owned_workspace(old_workspace, old)
+    original_workspace_files = dict(workspace_files)
     old_files = _tree(old)
     if any(rel.split("/")[0] not in RUN_FILES | {"evidence", "reusable-context-packages", "catalog-provenance"} for rel in [*old_files, *_directories(old)]):
         raise _error("unknown files in selected legacy run; migration did not change anything")
@@ -475,12 +502,12 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
         payload = _json(legacy_dir / ".contextcanon-handoff/manifest.json")
         if payload.get("schema") != "contextcanon/semantic-handoff/v1" or payload.get("step") != step or payload.get("evidence_digest") != evidence.evidence_digest:
             raise _error("legacy handoff is not bound to the selected run")
-        _verify_handoff(legacy_dir, payload, evidence, legacy_zip)
+        handoff_files = _verify_handoff(legacy_dir, payload, evidence, legacy_zip)
         handoff = handoff_path(project, evidence.evidence_digest, step)
-        handoff_files = _tree(legacy_dir)
         legacy_handoff_files.update({legacy_dir / rel: data for rel, data in handoff_files.items()})
-        legacy_handoff_dirs.extend([legacy_dir, *(legacy_dir / rel for rel in _directories(legacy_dir))])
-        actual = _tree(handoff)
+        directories = sorted(_directories(legacy_dir, metadata_roots=(legacy_dir,)))
+        legacy_handoff_dirs.extend([legacy_dir, *(legacy_dir / rel for rel in directories)])
+        actual = _tree(handoff, metadata_roots=(handoff,), bound={handoff / rel for rel in handoff_files})
         owner = {"schema": HANDOFF_OWNER_SCHEMA, "project_path": project.relative_to(repository).as_posix(),
                  "evidence_digest": evidence.evidence_digest, "step": step}
         for rel, data in actual.items():
@@ -492,7 +519,7 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
             writes[handoff.with_suffix(".zip")] = legacy_zip.read_bytes()
             legacy_handoff_files[legacy_zip] = legacy_zip.read_bytes()
         handoffs.append({"step": step, "root": _relative(repository, handoff), "zip": _relative(repository, handoff.with_suffix(".zip"))})
-        handoff_dirs.extend(_relative(repository, handoff / rel) for rel in _directories(legacy_dir))
+        handoff_dirs.extend(_relative(repository, handoff / rel) for rel in directories)
         workspace_files = {rel: data for rel, data in workspace_files.items() if not rel.startswith(relative_dir + "/") and rel != relative_zip}
     writes.update({new_workspace / rel: data for rel, data in workspace_files.items()})
     inventory = {}
@@ -516,7 +543,8 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
     for root, expected in ((new, copied), (new_workspace, workspace_files)):
         if root == old_workspace:
             continue
-        actual = _tree(root)
+        actual = _tree(root, metadata_roots=(root,) if root == new_workspace else (),
+                       bound={root / rel for rel in expected})
         if any(rel not in expected or data != expected[rel] for rel, data in actual.items()):
             raise _error(f"foreign/changed destination: {root}")
     for path, data in writes.items():
@@ -532,8 +560,10 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
     retire = {old / rel: data for rel, data in old_files.items()}
     retire.update(inventory)
     retire.update(legacy_handoff_files)
+    source_workspace_files = {old_workspace / rel: data for rel, data in original_workspace_files.items()}
+    source_workspace_files.update(legacy_handoff_files)
     if new_workspace != old_workspace:
-        retire.update({old_workspace / rel: data for rel, data in _tree(old_workspace).items()})
+        retire.update(source_workspace_files)
     receipt = {"schema": SCHEMA, "project_path": expected_scope["project_path"], "evidence_digest": evidence.evidence_digest,
                "old_run": _relative(repository, old), "new_run": _relative(repository, new),
                "old_workspace": _relative(repository, old_workspace), "new_workspace": _relative(repository, new_workspace),
@@ -542,16 +572,17 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
                              "normalized_digest": p.normalized_digest, "package_digest": p.package_digest} for p, _ in packages.values()],
                "sources": [{"path": _relative(repository, p), "sha256": _sha(data)} for p, data in
                            {**{old / rel: data for rel, data in old_files.items()},
-                            **{old_workspace / rel: data for rel, data in _tree(old_workspace).items()}, **inventory}.items()],
+                            **source_workspace_files, **inventory}.items()],
                "writes": [{"path": _relative(repository, p), "sha256": _sha(data), "data": base64.b64encode(data).decode("ascii")} for p, data in writes.items()],
                "retire": [{"path": _relative(repository, p), "sha256": _sha(data)} for p, data in retire.items()],
                "original_records": {rel: base64.b64encode(old_files[rel]).decode("ascii") for rel in RUN_FILES if rel in old_files and copied.get(rel) != old_files[rel]}}
     receipt["handoffs"] = handoffs
-    receipt["directories"] = handoff_dirs + [_relative(repository, new_workspace / rel) for rel in sorted(_directories(old_workspace)) if not rel.startswith("handoffs")]
+    receipt["directories"] = handoff_dirs + [_relative(repository, new_workspace / rel) for rel in sorted(_directories(old_workspace, metadata_roots=_workspace_tasks(old_workspace)))
+                                           if not rel.startswith("handoffs")]
     receipt["retire_directories"] = [_relative(repository, old / rel) for rel in sorted(_directories(old))]
     receipt["retire_directories"] += [_relative(repository, directory) for directory in legacy_handoff_dirs]
     if new_workspace != old_workspace:
-        receipt["retire_directories"] += [_relative(repository, old_workspace / rel) for rel in sorted(_directories(old_workspace))]
+        receipt["retire_directories"] += [_relative(repository, old_workspace / rel) for rel in sorted(_directories(old_workspace, metadata_roots=_workspace_tasks(old_workspace)))]
     return project, repository, receipt, packages
 
 
@@ -682,6 +713,9 @@ def migrate_onboarding(target: Path, *, snapshot: Path | None = None, workspace:
               "snapshot": str(new), "workspace": str(nw), "apply": apply,
               "files_to_copy": len(receipt["writes"]), "legacy_files_to_retire": len(receipt["retire"]),
               "receipt": str(receipt_path)}
+    metadata_roots = _workspace_tasks(ow)
+    result["preserved_tool_metadata"] = sorted(str(root / name) for root in metadata_roots
+                                              for name in TOOL_METADATA_DIRECTORIES if (root / name).exists() or (root / name).is_symlink())
     if not apply or receipt["phase"] == "complete":
         return result
     if not receipt_path.exists():
@@ -703,8 +737,10 @@ def migrate_onboarding(target: Path, *, snapshot: Path | None = None, workspace:
         expected = {r["path"]: r["sha256"] for r in receipt["writes"]}
         sources = {r["path"]: r["sha256"] for r in receipt["sources"]}
         retiring = {r["path"]: r["sha256"] for r in receipt["retire"]}
+        task_roots = (*metadata_roots, nw, *(_path(repository, row["root"]) for row in receipt["handoffs"]))
+        bound_paths = {_path(repository, path) for path in {*expected, *retiring}}
         for root in (new, nw, *(_path(repository, row["root"]) for row in receipt["handoffs"])):
-            for rel, data in _tree(root).items():
+            for rel, data in _tree(root, metadata_roots=task_roots, bound=bound_paths).items():
                 key = _relative(repository, root / rel)
                 if key not in expected and retiring.get(key) == _sha(data):
                     continue
@@ -725,21 +761,25 @@ def migrate_onboarding(target: Path, *, snapshot: Path | None = None, workspace:
     _write_marker(new.parent / ACTIVE_MARKER, receipt["activation"])
     load_evidence_snapshot(new)
     retire_paths = {r["path"] for r in receipt["retire"]}
+    bound_paths = {_path(repository, path) for path in retire_paths}
     retirement_roots = (old, ow) if ow != nw else (old, ow / "handoffs")
     for root in retirement_roots:
-        for relative in _tree(root):
+        for relative in _tree(root, metadata_roots=metadata_roots, bound=bound_paths):
             if _relative(repository, root / relative) not in retire_paths:
                 raise _error("unknown file appeared in legacy storage; new run remains usable")
-        for relative in _directories(root):
-            if _relative(repository, root / relative) not in receipt["retire_directories"]:
+        for relative in _directories(root, metadata_roots=metadata_roots):
+            if (_relative(repository, root / relative) not in receipt["retire_directories"] and
+                    not _contains_tool_metadata(root / relative, metadata_roots)):
                 raise _error("unknown directory appeared in legacy storage; new run remains usable")
     for record in receipt["retire"]:
         _retire_file(_path(repository, record["path"]), record["sha256"])
     for root in retirement_roots:
         if root.exists():
             for directory in sorted((p for p in root.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
-                directory.rmdir()
-            root.rmdir()
+                if not _tool_metadata(directory, metadata_roots) and not _contains_tool_metadata(directory, metadata_roots):
+                    directory.rmdir()
+            if not _contains_tool_metadata(root, metadata_roots):
+                root.rmdir()
     receipt["phase"] = "complete"
     # Large frozen bytes now live in their authoritative destinations. Keep
     # hashes and original transformed records, not another full Evidence copy.

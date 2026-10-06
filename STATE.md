@@ -1,6 +1,14 @@
 # Current State
 
-## Owner-test finding — handoff file diagnostics (2026-10-06)
+## Owner-test correction — unbound IDE metadata (2026-10-06)
+
+The owner identified the STEP-04 extras as six JetBrains `.idea/` files, including its own `.gitignore`, and requested normal IDE metadata tolerance. Existing handoff PLAN already says post-preparation `.idea/`/`.vscode/` is not Evidence; the migration guard was inconsistent with that boundary. Git standard ignores already apply to untracked inventory files. They cannot determine migration ownership because authoritative managed workspaces/runs are Git-ignored too.
+
+Migration now leaves unbound `.idea/`/`.vscode/` namespaces at workspace/task roots in place, does not read/copy/hash/retire their files, and reports their existing locations in `preserved_tool_metadata`. Metadata may change or appear during package installation, copy or retirement recovery. Empty metadata directories and their required ancestors are retained. Declared Evidence inside either namespace still undergoes its ordinary SHA/size checks and exact relocation. Immutable packages, bound control/Parent/result files, ownership markers and other unknown content retain their existing verification/refusal behavior; no general Git-ignore bypass or receipt schema change is introduced.
+
+All 32 migration tests and all 444 deterministic tests pass, including root/subtree and STEP 04/08, unbound-file read prevention, existing destination metadata, interrupted install/copy/retirement with IDE edits/new files, explicit metadata-path Evidence tampering and arbitrary Git-ignored-file refusal. Six self-hosted Nodes have zero generated drift and all four normative edges are current. Fresh exact-head hosted proof belongs in Draft #111. Next owner action after publication: update the editable code checkout and retry the original migration preview/apply without moving IDE files. #107 stays open and #111 stays Draft; no merge is authorized.
+
+## Earlier owner-test finding — handoff file diagnostics (2026-10-06)
 
 After updating the tool, the owner ran migration in Itop and reached `unknown/missing handoff files`. That message identifies neither STEP 04/08 nor the task directory or offending files. Their names and cause are not known; do not infer another owner-copy problem or automatically accept/delete files.
 

@@ -1,6 +1,6 @@
 # Onboarding short-path owner test (#107 Phase 2)
 
-PR #111 stays Draft for this test. Its branch includes owner-tested Phase 1; neither PR is merged implicitly. No confidential project data needs to leave your machine.
+PR #108 is accepted in main. PR #111 includes that baseline and stays Draft for this onboarding test; no Phase-2 merge is authorized. No confidential project data needs to leave your machine.
 
 ## Update the editable tool checkout
 
@@ -52,6 +52,8 @@ contextcanon onboard migrate . --apply
 
 The command prints the new PLAN. Confirm your existing STEP-07 decisions, placement proposal/review and any handoff RESULT.json remain. Continue at the already reached step; no new LLM run is required for relocation. Repeat `--apply` to confirm a completed migration is idempotent. If an operation is interrupted, that same command verifies and resumes its narrow recovery receipt.
 
+Post-preparation `.idea/` and `.vscode/` metadata at workspace/STEP-04/08 task roots does not block migration. It remains at its original location, is excluded from migration inputs/copies/retirement, and appears in `preserved_tool_metadata`; do not move/delete IDE settings just to migrate. Old directories can therefore remain containing only IDE metadata. Explicitly declared Evidence is still verified even inside those namespaces. This is a narrow metadata policy, not a Git-ignore bypass: ignored frozen inputs remain binding and other unknown files still require classification/preservation.
+
 If exact old frozen bytes are missing or a destination has unrelated files, migration refuses before mutation and identifies the input/problem. Preserve it and report the exact message; do not replace a reviewed provider with a newer package or delete whole stores to force continuation.
 
 ## Publication and recovery
@@ -79,4 +81,4 @@ In a test return copy, exercise `contextcanon onboard reset . --from 7`, `--from
 
 The path reduction applies to ContextCanon-owned stores and new compact exports. Exact retained old packages keep their original interior paths; genuinely long project document paths still count. Inspect a warning's longest destination instead of renaming documents blindly. Report successful continuation/reset and any remaining long destination on PR #111. Keep #107 open until both phases have owner acceptance.
 
-After Phase 1 is actually merged, retarget/rebase PR #111 to accepted main and require fresh exact-head CI before an explicitly approved Phase-2 merge. This test guide does not authorize merging the stacked PR into its Phase-1 base.
+PR #111 targets accepted main and preserves the active editable test branch's ancestry for fast-forward pulls. Require fresh exact-head CI and explicit owner approval before a Phase-2 merge.

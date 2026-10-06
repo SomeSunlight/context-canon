@@ -12,12 +12,12 @@ from unittest.mock import patch
 
 from contextcanon.compiler import Compiler
 from contextcanon.onboarding import prepare_onboarding_evidence, project_root_from_snapshot
-from contextcanon.onboarding_migration import migrate_onboarding, _copy_binary, _retire_file, _receipt_path
-from contextcanon.onboarding_proposal import load_evidence_snapshot
+from contextcanon.onboarding_migration import migrate_onboarding, _copy_binary, _retire_file, _receipt_path, _verify_handoff
+from contextcanon.onboarding_proposal import load_evidence_snapshot, EvidenceSnapshot, SnapshotEvidence
 from contextcanon.onboarding_reusable_contexts import load_accepted_reusable_contexts
 from contextcanon.onboarding_reset import reset_onboarding
 from contextcanon.onboarding_storage import ACTIVE_MARKER, RUN_MARKER, default_workspace, package_files, provenance_path, scope_root
-from contextcanon.onboarding_workspace import OnboardingWorkspace, _snapshot_label
+from contextcanon.onboarding_workspace import OnboardingWorkspace, _snapshot_label, ensure_onboarding_gitignore
 from contextcanon.onboarding_handoff import handoff_relative_paths
 from contextcanon.onboarding_storage import HANDOFF_MARKER, handoff_path
 from contextcanon.parser import ContextCanonError
@@ -81,6 +81,139 @@ class OnboardingMigrationTests(unittest.TestCase):
 
     def snapshot(self, root):
         return {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file() and ".git" not in p.relative_to(root).parts}
+
+    def ide_metadata(self, root):
+        rows = {".idea/.gitignore": b"/workspace.xml\n",
+                ".idea/STEP-04-structure.iml": b"<module />\r\n",
+                ".idea/inspectionProfiles/profiles_settings.xml": b"<profiles />",
+                ".idea/misc.xml": b"<project />",
+                ".idea/modules.xml": b"<modules />",
+                ".idea/workspace.xml": '<settings owner="✏️" />\r\n'.encode("utf-8"),
+                ".vscode/settings.json": b'{"editor.tabSize": 4}\n'}
+        for rel, data in rows.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        (root / ".idea/empty-local-directory").mkdir(exist_ok=True)
+        return {root / rel: data for rel, data in rows.items()}
+
+    def test_unbound_ide_metadata_is_preserved_unread_and_unclaimed_for_both_scopes_and_tasks(self):
+        for subtree in (False, True):
+            with self.subTest(subtree=subtree):
+                helper, case, accepted = self.case(subtree=subtree, stage=8, handoff4=True)
+                repo, project, prepared, workspace, structure, catalog = case
+                metadata = self.ide_metadata(workspace.root)
+                for step in (4, 8):
+                    relative, _ = handoff_relative_paths(step)
+                    metadata.update(self.ide_metadata(workspace.root / relative))
+                before = self.snapshot(repo)
+                preview = migrate_onboarding(project)
+                self.assertEqual(self.snapshot(repo), before)
+                for step in (4, 8):
+                    metadata.update(self.ide_metadata(handoff_path(project, prepared.evidence_digest, step, create=True)))
+                if Path(preview["workspace"]) != workspace.root:
+                    metadata.update(self.ide_metadata(Path(preview["workspace"])))
+                read_bytes = Path.read_bytes
+                def no_metadata_reads(path):
+                    if path in metadata:
+                        raise AssertionError(f"Unbound IDE metadata was read: {path}")
+                    return read_bytes(path)
+                with patch.object(Path, "read_bytes", no_metadata_reads):
+                    result = migrate_onboarding(project, apply=True)
+                self.assertEqual(result["status"], "complete")
+                self.assertIn(str(workspace.root / ".idea"), result["preserved_tool_metadata"])
+                self.assertTrue(all(path.read_bytes() == data for path, data in metadata.items()))
+                self.assertTrue((workspace.root / ".idea/empty-local-directory").is_dir())
+                receipt = json.loads(_receipt_path(project).read_text(encoding="utf-8"))
+                metadata_paths = {p.relative_to(repo).as_posix() for p in metadata}
+                for field in ("sources", "writes", "retire"):
+                    self.assertTrue(metadata_paths.isdisjoint(r["path"] for r in receipt[field]))
+                new, visible = Path(result["snapshot"]), OnboardingWorkspace(Path(result["workspace"]))
+                loaded = load_accepted_reusable_contexts(visible.reusable_contexts_path, new,
+                                                       prepared.evidence_digest, structure)
+                self.assertEqual(loaded.review_digest, accepted.review_digest)
+                helper.publish((repo, project, replace(prepared, snapshot_root=new), visible, structure, catalog))
+                self.assertTrue(all(path.read_bytes() == data for path, data in metadata.items()))
+                self.assertEqual(migrate_onboarding(project, apply=True)["status"], "complete")
+
+    def test_ide_edits_and_new_metadata_do_not_block_package_copy_or_retirement_recovery(self):
+        for phase in ("package", "copy", "retire"):
+            with self.subTest(phase=phase):
+                _, case, _ = self.case(subtree=True, stage=8, handoff4=True)
+                repo, project, prepared, workspace, _, _ = case
+                metadata = self.ide_metadata(workspace.root)
+                relative, _ = handoff_relative_paths(4)
+                root = workspace.root / relative
+                metadata.update(self.ide_metadata(root))
+                target = {"package": "store_package", "copy": "_copy_binary", "retire": "_retire_file"}[phase]
+                with patch("contextcanon.onboarding_migration." + target, side_effect=OSError("interrupted")):
+                    with self.assertRaisesRegex(OSError, "interrupted"):
+                        migrate_onboarding(project, apply=True)
+                changed = root / ".idea/workspace.xml"
+                changed.write_bytes(b"IDE changed these private settings after interruption")
+                metadata[changed] = changed.read_bytes()
+                metadata.update(self.ide_metadata(workspace.root / handoff_relative_paths(8)[0]))
+                destination = handoff_path(project, prepared.evidence_digest, 4, create=True)
+                metadata.update(self.ide_metadata(destination))
+                result = migrate_onboarding(project, apply=True)
+                self.assertEqual(result["status"], "complete")
+                self.assertTrue(all(path.read_bytes() == data for path, data in metadata.items()))
+                self.assertEqual(migrate_onboarding(project, apply=True)["status"], "complete")
+
+    def test_explicitly_bound_ide_evidence_is_still_verified_and_migrated(self):
+        for directory in (".idea", ".vscode"):
+            with self.subTest(directory=directory), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp).resolve()
+                rel, data = directory + "/frozen-context.md", b"Explicitly reviewed Evidence.\n"
+                original = SnapshotEvidence(rel, hashlib.sha256(data).hexdigest(), len(data), "reviewed", 1)
+                evidence = EvidenceSnapshot(root, "a" * 64, (original,))
+                instruction = b"Read the declared Evidence."
+                payload = {"step": 4, "instruction_sha256": hashlib.sha256(instruction).hexdigest(),
+                           "evidence": [{"path": rel, "sha256": original.sha256, "size": original.size}]}
+                files = {".contextcanon-handoff/PLAN.md": b"Exact task plan",
+                         ".contextcanon-handoff/INSTRUCTION.md": instruction,
+                         ".contextcanon-handoff/manifest.json": json.dumps(payload).encode("utf-8"),
+                         rel: data, directory + "/private-settings.xml": b"Unbound settings"}
+                for path, content in files.items():
+                    destination = root / path
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(content)
+                verified = _verify_handoff(root, payload, evidence, root / "absent.zip")
+                self.assertEqual(verified[rel], data)
+                self.assertNotIn(directory + "/private-settings.xml", verified)
+                for missing in (False, True):
+                    if missing:
+                        (root / rel).unlink()
+                    else:
+                        (root / rel).write_bytes(b"Changed supposedly ignored Evidence")
+                    with self.assertRaisesRegex(ContextCanonError, "frozen handoff Evidence changed"):
+                        _verify_handoff(root, payload, evidence, root / "absent.zip")
+
+    def test_git_ignored_unknown_files_and_frozen_tampering_still_refuse_with_ide_metadata(self):
+        _, case, _ = self.case(stage=8, handoff4=True)
+        repo, project, _, workspace, _, _ = case
+        ensure_onboarding_gitignore(project, workspace.root)
+        relative, _ = handoff_relative_paths(4)
+        root = workspace.root / relative
+        metadata = self.ide_metadata(root)
+        path = root / "private-copy.md"
+        path.write_bytes(b"Unknown owner content")
+        subprocess.run(["git", "-C", str(repo), "check-ignore", str(path)], check=True, capture_output=True)
+        before = self.snapshot(repo)
+        for apply in (False, True):
+            with self.assertRaisesRegex(ContextCanonError, "private-copy.md"):
+                migrate_onboarding(project, apply=apply)
+            self.assertEqual(self.snapshot(repo), before)
+        path.unlink()
+        bound = root / "README.md"
+        subprocess.run(["git", "-C", str(repo), "check-ignore", str(bound)], check=True, capture_output=True)
+        bound.write_bytes(b"Tampered frozen Evidence, also Git-ignored")
+        before = self.snapshot(repo)
+        for apply in (False, True):
+            with self.assertRaisesRegex(ContextCanonError, "frozen handoff Evidence changed"):
+                migrate_onboarding(project, apply=apply)
+            self.assertEqual(self.snapshot(repo), before)
+        self.assertTrue(all(path.read_bytes() == data for path, data in metadata.items()))
 
     def test_preview_is_read_only_and_acceptance_survives_offline_for_root_and_subtree(self):
         for subtree in (False, True):
@@ -253,7 +386,8 @@ class OnboardingMigrationTests(unittest.TestCase):
                                                    apply=apply)
                             message = str(caught.exception)
                             self.assertIn(str(workspace.root), message)
-                            self.assertIn("  - .idea/\n  - empty backup/\n  - owner-note.md\n", message)
+                            self.assertIn("  - empty backup/\n  - owner-note.md\n", message)
+                            self.assertNotIn("  - .idea/", message)
                             self.assertIn("selected snapshot passed the workspace binding check", message)
                             self.assertIn("No files were changed", message)
                             self.assertNotIn("Private review notes", message)
