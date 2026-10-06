@@ -368,12 +368,15 @@ def accept_onboarding_review(
     source_bindings = _resolve_source_bindings(accepted_items, packages, locators)
     source_text = _render_context_source(review.node, accepted_items, source_bindings)
 
-    staging_parent = project_root / ".context" / "onboarding"
+    from .onboarding_storage import package_files
+    from .version_store import install_version, package_key
+    staging_parent = project_root / ".context"
     staging_parent.mkdir(parents=True, exist_ok=True)
-    stage = Path(tempfile.mkdtemp(prefix=".onboarding-accept-", dir=staging_parent))
+    stage = Path(tempfile.mkdtemp(prefix=".accept-", dir=staging_parent))
     try:
         _prepare_stage(stage, snapshot, source_text, source_bindings)
-        staged_compiled = Compiler(project_root, legacy_carriers=True).compile(stage)
+        overrides = {(stage, package_key(p)): (p, package_files(root, p)) for _, root, p, _ in source_bindings}
+        staged_compiled = Compiler(project_root, package_overrides=overrides).compile(stage)
     finally:
         if stage.exists():
             shutil.rmtree(stage)
@@ -387,21 +390,18 @@ def accept_onboarding_review(
     )
     _ensure_first_adoption_outputs_absent(project_root, output_paths)
 
-    accepted_root = project_root / ".context" / "onboarding" / "accepted" / proposal.proposal_digest
-    new_source_store_paths = tuple(
-        project_root / ".context" / "sources" / package.package_digest
-        for _item_id, _package_root, package, _locator in source_bindings
-        if not (project_root / ".context" / "sources" / package.package_digest).exists()
-    )
+    accepted_root = snapshot_root / ("accepted-" + proposal.proposal_digest[:16])
+    if accepted_root.exists():
+        raise ContextCanonError(f"Onboarding acceptance record already exists: {accepted_root}")
 
     try:
         for _item_id, package_root, package, _locator in source_bindings:
-            installed = install_source_package(project_root, package_root, legacy_store=True)
-            if installed.package_digest != package.package_digest:
+            installed = load_package(install_version(project_root, package_root, package))
+            if package_key(installed) != package_key(package):
                 raise ContextCanonError("Installed Source package identity changed during onboarding acceptance")
 
         _atomic_write_text(source_path, source_text)
-        compiled = Compiler(project_root, legacy_carriers=True).compile(project_root)
+        compiled = Compiler(project_root).compile(project_root)
         changed = tuple(write_outputs(compiled))
         drift = check_outputs(compiled)
         if drift:
@@ -452,7 +452,7 @@ def accept_onboarding_review(
             source_path,
             output_paths,
             accepted_root,
-            new_source_store_paths,
+            (),  # Shared immutable versions can already be used by another run.
         )
         raise
 
@@ -633,13 +633,13 @@ def _render_context_source(
     ]
 
     if source_bindings:
-        lines.extend(["## Sources", ""])
+        lines.extend(["## Context Imports", ""])
         for _item_id, _root, package, locator in source_bindings:
             _publishable(package.metadata.name, "Source name")
             _publishable(locator, "Source locator")
             lines.extend(
                 [
-                    f"- [{package.metadata.name}]({markdown_link_target(locator)}) — `{package.metadata.version}`",
+                    f"- [{package.metadata.name}]({markdown_link_target(locator)}) — `{package.metadata.version}` — `relationship=parent`",
                     (
                         f'  <!-- ctx:source id="{package.metadata.id}" version="{package.metadata.version}" '
                         f'normalized-digest="{package.normalized_digest}" package-digest="{package.package_digest}" -->'
@@ -705,11 +705,6 @@ def _prepare_stage(
     source_bindings: list[tuple[str, Path, CompiledPackage, str]],
 ) -> None:
     paths = ["CONTEXT.src.md", *(entry.path for entry in snapshot.entries)]
-    for _item_id, _package_root, package, _locator in source_bindings:
-        paths.extend(
-            f".context/sources/{package.package_digest}/{rel}"
-            for rel in (PACKAGE_MANIFEST_PATH, *(file.path for file in package.files))
-        )
     preflight_paths(stage, paths, action="legacy onboarding acceptance staging")
     stage.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(stage / "CONTEXT.src.md", source_text)
@@ -718,13 +713,6 @@ def _prepare_stage(
         target = stage / Path(*PurePosixPath(entry.path).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
-    for _item_id, package_root, package, _locator in source_bindings:
-        destination = stage / ".context" / "sources" / package.package_digest
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(package_root, destination)
-        staged = load_package(destination)
-        if staged.package_digest != package.package_digest or staged.normalized_digest != package.normalized_digest:
-            raise ContextCanonError("Staged Source package identity changed during onboarding acceptance")
 
 
 def _write_follow_up_artifacts(

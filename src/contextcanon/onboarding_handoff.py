@@ -9,7 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from .compiler import Compiler
-from .onboarding_storage import enclosing_parent
+from .onboarding_storage import enclosing_parent, handoff_path
 from .onboarding import find_enclosing_context_root, project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_proposal import EvidenceSnapshot, SnapshotEvidence, load_evidence_snapshot
 from .package import artifact_files
@@ -114,6 +114,14 @@ def handoff_relative_paths(step: int) -> tuple[str, str]:
     spec = handoff_spec(step)
     base = f"{HANDOFFS_DIR_NAME}/{spec.directory_name}"
     return base, f"{base}.zip"
+
+
+def handoff_locations(project: Path, digest: str, workspace: Path, step: int) -> tuple[Path, Path]:
+    legacy_dir, legacy_zip = handoff_relative_paths(step)
+    if (workspace / legacy_dir).exists():
+        return workspace / legacy_dir, workspace / legacy_zip
+    root = handoff_path(project, digest, step)
+    return root, root.with_suffix(".zip")
 
 
 def _sha256(content: bytes) -> str:
@@ -330,6 +338,7 @@ def _write_deterministic_zip(
     root: Path,
     zip_path: Path,
     expected: dict[Path, bytes],
+    directory_name: str,
 ) -> None:
     temporary = zip_path.with_suffix(zip_path.suffix + ".tmp")
     temporary.unlink(missing_ok=True)
@@ -343,7 +352,7 @@ def _write_deterministic_zip(
         ) as archive:
             for path in files:
                 rel = path.relative_to(root).as_posix()
-                arcname = f"{root.name}/{rel}"
+                arcname = f"{directory_name}/{rel}"
                 info = zipfile.ZipInfo(arcname, date_time=(1980, 1, 1, 0, 0, 0))
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.create_system = 3
@@ -389,8 +398,9 @@ def build_semantic_handoff(
     except (OSError, UnicodeDecodeError) as exc:
         raise ContextCanonError(f"Semantic handoff instruction is not readable UTF-8: {instruction}") from exc
 
-    root = workspace / HANDOFFS_DIR_NAME / spec.directory_name
-    zip_path = workspace / HANDOFFS_DIR_NAME / f"{spec.directory_name}.zip"
+    project = project_root_from_snapshot(snapshot_root)
+    root, zip_path = handoff_locations(project, snapshot.evidence_digest, workspace, step)
+    central = root.parent.name == "handoffs" and root.parent.parent.name == ".context"
     entries = _selected_evidence(snapshot, evidence_paths)
     manifest_value = _manifest(spec, snapshot, entries, instruction_bytes, parent_context)
     manifest_bytes = (
@@ -403,8 +413,8 @@ def build_semantic_handoff(
     preflight_paths(root, (path.relative_to(root).as_posix() for path in expected), action="semantic handoff materialization", node_root=workspace)
     result_path = root / HANDOFF_CONTROL_DIR / HANDOFF_RESULT_NAME
 
-    created = not root.exists()
-    if root.exists():
+    created = not (root / HANDOFF_CONTROL_DIR / HANDOFF_MANIFEST_NAME).exists()
+    if root.exists() and not created:
         manifest_path = root / HANDOFF_CONTROL_DIR / HANDOFF_MANIFEST_NAME
         existing_manifest = _read_owned_manifest(manifest_path)
         same = _canonical_json(existing_manifest) == _canonical_json(manifest_value)
@@ -424,10 +434,14 @@ def build_semantic_handoff(
             created = True
 
     if created:
-        root.mkdir(parents=True, exist_ok=False)
+        if central:
+            if handoff_path(project, snapshot.evidence_digest, step, create=True) != root:
+                raise ContextCanonError("Handoff ownership changed before publication")
+        else:
+            root.mkdir(parents=True, exist_ok=False)
         _write_inputs(expected)
 
-    _write_deterministic_zip(root, zip_path, expected)
+    _write_deterministic_zip(root, zip_path, expected, spec.directory_name)
     return SemanticHandoff(
         step=step,
         root=root,

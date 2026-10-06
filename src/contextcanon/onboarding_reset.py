@@ -41,7 +41,7 @@ from .onboarding_workspace import (
     update_workspace_checkpoint,
     write_utf8,
 )
-from .onboarding_storage import SCOPE_MARKER, default_workspace, require_project, run_path, scope_root
+from .onboarding_storage import ACTIVE_MARKER, SCOPE_MARKER, active_location, default_workspace, require_project, run_path, scope_root
 from .onboarding import project_root_from_snapshot, resolve_onboarding_scope
 from .onboarding_handoff import handoff_relative_paths, semantic_handoff_steps
 from .onboarding_proposal import load_evidence_snapshot
@@ -470,6 +470,18 @@ def _reset_semantic(
     if from_step <= 4 and 4 not in selected_steps:
         legacy_files = _remove_legacy_skeletons(project)
     workspace_files = _reset_workspace(workspace, from_step)
+    from .onboarding_storage import handoff_path
+    digest = load_evidence_snapshot(snapshot).evidence_digest
+    for step in semantic_handoff_steps():
+        if step < from_step:
+            continue
+        handoff = handoff_path(project, digest, step)
+        if handoff.exists():
+            # handoff_path authenticates project/Evidence/step before reset.
+            shutil.rmtree(handoff)
+            handoff.with_suffix(".zip").unlink(missing_ok=True)
+            workspace_files.append(str(handoff))
+            workspace_files.append(str(handoff.with_suffix(".zip")))
     if from_step <= 7:
         (snapshot / "reusable-contexts.json").unlink(missing_ok=True)
         frozen_catalog = snapshot / "reusable-context-packages"
@@ -521,10 +533,12 @@ def _owned_machine_entries(project: Path, root: Path) -> list[Path]:
         return []
     owned = []
     for path in root.iterdir():
-        if path.name in {INVENTORY_STATE_NAME, INVENTORY_ACCEPTANCE_NAME, SCOPE_MARKER}:
+        if path.name in {INVENTORY_STATE_NAME, INVENTORY_ACCEPTANCE_NAME, SCOPE_MARKER, ACTIVE_MARKER}:
             if path.is_symlink() or not path.is_file():
                 raise _error(f"unsafe onboarding state: {path}")
             owned.append(path)
+            if path.name == ACTIVE_MARKER:
+                active_location(project, root)
         elif path.is_dir() and (path / SCOPE_MARKER).is_file():
             # A legacy root-level run may coexist with new project scopes.
             # Reset only its old files; the other scopes are never descendants
@@ -547,7 +561,11 @@ def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[s
     owned = _owned_machine_entries(project, root)
     removed = []
     for path in owned:
-        if keep_inventory_state and path.name in {INVENTORY_STATE_NAME, SCOPE_MARKER}:
+        if path.name in {ACTIVE_MARKER, SCOPE_MARKER} and (root / ACTIVE_MARKER).is_file():
+            # Routing is not a semantic acceptance. Historical local runs may
+            # still exist; resetting this run must not reactivate those runs.
+            continue
+        if keep_inventory_state and path.name in {INVENTORY_STATE_NAME, SCOPE_MARKER, ACTIVE_MARKER}:
             continue
         if path.is_dir():
             shutil.rmtree(path)

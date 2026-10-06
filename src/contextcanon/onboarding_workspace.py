@@ -412,13 +412,15 @@ def write_utf8(path: Path, text: str) -> None:
         raise
 
 
-def _snapshot_label(snapshot_root: Path) -> str:
+def _snapshot_label(snapshot_root: Path, project: Path | None = None) -> str:
     snapshot = snapshot_root.resolve()
-    project = project_root_from_snapshot(snapshot)
+    project = project or project_root_from_snapshot(snapshot)
     try:
         return snapshot.relative_to(project).as_posix()
     except ValueError:
-        return str(snapshot)
+        # Central runs are above a subtree. Keep the operator PLAN portable
+        # when the whole checkout moves; project ownership comes from markers.
+        return Path(os.path.relpath(snapshot, project)).as_posix()
 
 
 def _quote_cli(value: str) -> str:
@@ -466,20 +468,32 @@ def _exact_commands(
     catalog_inputs: tuple[str, ...],
     owner_source_specs: tuple[str, ...],
     completed: set[int] | None = None,
+    project_root: Path | None = None,
+    evidence_digest: str | None = None,
+    central_handoffs: bool = False,
 ) -> str:
     completed = completed or set()
-    snapshot = _snapshot_label(snapshot_root)
+    project_root = project_root or project_root_from_snapshot(snapshot_root)
+    snapshot = _snapshot_label(snapshot_root, project_root)
     workspace_args = _workspace_option(workspace, snapshot_root)
     snapshot_literal = _quote_cli(snapshot)
-    project_root = project_root_from_snapshot(snapshot_root)
     try:
         inventory_label = workspace.inventory_path.resolve().relative_to(project_root).as_posix()
         workspace_label = workspace.root.resolve().relative_to(project_root).as_posix()
     except ValueError:
-        inventory_label = str(workspace.inventory_path.resolve())
-        workspace_label = str(workspace.root.resolve())
-    structure_handoff_label = f"{workspace_label}/handoffs/STEP-04-structure"
-    placement_handoff_label = f"{workspace_label}/handoffs/STEP-08-placement"
+        inventory_label = Path(os.path.relpath(workspace.inventory_path.resolve(), project_root)).as_posix()
+        workspace_label = Path(os.path.relpath(workspace.root.resolve(), project_root)).as_posix()
+    from .onboarding_handoff import handoff_locations
+    from .onboarding_proposal import load_evidence_snapshot
+    digest = evidence_digest or load_evidence_snapshot(snapshot_root).evidence_digest
+    if central_handoffs:
+        from .onboarding_storage import handoff_path
+        handoffs = [(handoff_path(project_root, digest, step), None) for step in (4, 8)]
+    else:
+        handoffs = [handoff_locations(project_root, digest, workspace.root, step) for step in (4, 8)]
+    def label(path):
+        return Path(os.path.relpath(path, project_root)).as_posix()
+    structure_handoff_label, placement_handoff_label = [label(root) for root, _ in handoffs]
     if os.name == "nt":
         snapshot_assignment = f"$SNAPSHOT = {snapshot_literal}"
         snapshot_token = "$SNAPSHOT"
@@ -1048,6 +1062,7 @@ def ensure_onboarding_gitignore(project_root: Path, workspace_root: Path) -> Pat
         "!**/.context/onboarding/",
         "!**/.context/onboarding/*/",
         "!**/.context/onboarding/*/.scope.json",
+        "!**/.context/onboarding/*/.active.json",
         "!**/.context/onboarding/*/inventory-state.json",
         "!**/.context/onboarding/*/inventory-acceptance.json",
         "!**/.context/onboarding/inventory-state.json",

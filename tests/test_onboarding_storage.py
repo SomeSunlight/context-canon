@@ -273,3 +273,24 @@ class OnboardingStorageTests(unittest.TestCase):
         self.assertTrue(all(path.is_file() and path.read_bytes() == data for path, data in before.items()))
         expected_context = {path for path in before if repo / "CONTEXT" in path.parents}
         self.assertEqual({path for path in (repo / "CONTEXT").rglob("*") if path.is_file()}, expected_context)
+
+    def test_handoffs_for_identical_evidence_in_two_deep_scopes_are_owned_and_short(self):
+        from contextcanon.onboarding_handoff import build_semantic_handoff
+        from contextcanon.onboarding_storage import HANDOFF_MARKER
+        repo = self.repo()
+        projects = [self.project(repo, '/'.join(['level'] * 10) + '/' + name) for name in ('a', 'b')]
+        prepared = [prepare_onboarding_evidence(project) for project in projects]
+        workspaces = [open_onboarding_workspace(run.snapshot_root, create=True) for run in prepared]
+        handoffs = []
+        for run, workspace in zip(prepared, workspaces):
+            workspace.structure_instruction_path.write_text('# Instruction\nReturn JSON.\n', encoding='utf-8')
+            with patch('contextcanon.path_budget._windows', return_value=True):
+                handoffs.append(build_semantic_handoff(run.snapshot_root, workspace.root, step=4))
+        self.assertEqual(prepared[0].evidence_digest, prepared[1].evidence_digest)
+        self.assertNotEqual(handoffs[0].root, handoffs[1].root)
+        self.assertEqual(handoffs[0].root.parent, repo / '.context/handoffs')
+        self.assertLess(len(str(handoffs[0].root / '.contextcanon-handoff/manifest.json')), 160)
+        self.assertTrue((handoffs[0].root / HANDOFF_MARKER).exists())
+        reset_onboarding(projects[0], from_step=4)
+        self.assertFalse(handoffs[0].root.exists())
+        self.assertTrue(handoffs[1].root.exists())

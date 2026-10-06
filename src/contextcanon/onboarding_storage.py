@@ -17,6 +17,10 @@ SCOPE_MARKER = ".scope.json"
 RUN_MARKER = ".run.json"
 SCOPE_SCHEMA = "contextcanon/onboarding-scope/v1"
 RUN_SCHEMA = "contextcanon/onboarding-run/v1"
+ACTIVE_MARKER = ".active.json"
+ACTIVE_SCHEMA = "contextcanon/onboarding-location/v1"
+HANDOFF_MARKER = ".owner.json"
+HANDOFF_OWNER_SCHEMA = "contextcanon/onboarding-handoff-owner/v1"
 
 
 def _json(path: Path) -> dict:
@@ -61,6 +65,11 @@ def _scope(project: Path) -> tuple[Path, dict, str]:
 def scope_root(project: Path, *, create: bool = False, legacy: bool = True) -> Path:
     repository, expected, key = _scope(project)
     old = project.resolve() / ".context" / "onboarding"
+    if legacy:
+        central = scope_root(project, legacy=False)
+        if (central / ACTIVE_MARKER).exists():
+            active_location(project, central)
+            return central
     # Existing local runs stay usable until an explicit migration. A central
     # root can contain other scopes, so its existence alone is not a legacy run.
     if legacy and old.exists() and (
@@ -95,11 +104,11 @@ def scope_root(project: Path, *, create: bool = False, legacy: bool = True) -> P
     return free
 
 
-def run_path(project: Path, evidence_digest: str, *, central: bool = False) -> Path:
+def run_path(project: Path, evidence_digest: str, *, central: bool = False, create: bool = True) -> Path:
     if not re.fullmatch(r"[0-9a-f]{64}", evidence_digest):
         raise ContextCanonError("Invalid onboarding Evidence identity")
-    scope = scope_root(project, create=True, legacy=not central)
-    if not (scope / SCOPE_MARKER).is_file():
+    scope = scope_root(project, create=create, legacy=not central)
+    if not central and scope == project.resolve() / ".context/onboarding":
         return scope / evidence_digest
     free = None
     for length in TOKEN_LENGTHS:
@@ -155,10 +164,59 @@ def project_from_run(snapshot: Path) -> Path | None:
 def default_workspace(project: Path) -> Path:
     project = project.resolve()
     repository, _, _ = _scope(project)
+    central = scope_root(project, legacy=False)
+    if (central / ACTIVE_MARKER).exists():
+        location = active_location(project, central)
+        if location["workspace_path"] is not None:
+            return repository / location["workspace_path"]
+        return repository / ("contextcanon-onboarding-" + central.name) if project != repository else project / "contextcanon-onboarding"
     old = project / "contextcanon-onboarding"
     if project == repository or old.exists():
         return old
     return repository / ("contextcanon-onboarding-" + scope_root(project, legacy=False).name)
+
+
+def active_location(project: Path, scope: Path | None = None) -> dict:
+    """Runtime routing survives migration interruption; receipts are not readers."""
+    _, expected, _ = _scope(project)
+    scope = scope or scope_root(project, legacy=False)
+    value = _json(scope / ACTIVE_MARKER)
+    relative = value.get("workspace_path")
+    if set(value) != {"schema", "project_path", "workspace_path"} or value.get("schema") != ACTIVE_SCHEMA or value.get("project_path") != expected["project_path"]:
+        raise ContextCanonError(f"Invalid active onboarding location: {scope}")
+    if relative is not None and (not isinstance(relative, str) or PurePosixPath(relative).is_absolute() or "\\" in relative or ":" in relative or any(part in {"", ".", ".."} for part in relative.split("/"))):
+        raise ContextCanonError(f"Unsafe active onboarding workspace: {relative!r}")
+    if relative is not None:
+        _normal_path(find_repo_root(project) / relative)
+    return value
+
+
+def handoff_path(project: Path, evidence_digest: str, step: int, *, create: bool = False) -> Path:
+    if step not in {4, 8} or not re.fullmatch(r"[0-9a-f]{64}", evidence_digest):
+        raise ContextCanonError("Invalid semantic handoff ownership")
+    repository, scope, _ = _scope(project)
+    value = {"schema": HANDOFF_OWNER_SCHEMA, "project_path": scope["project_path"],
+             "evidence_digest": evidence_digest, "step": step}
+    key = hashlib.sha256(json.dumps(value, sort_keys=True).encode("utf-8")).hexdigest()
+    base = repository / ".context/handoffs"
+    _normal_path(base)
+    free = None
+    for length in TOKEN_LENGTHS:
+        candidate = base / key[:length]
+        _normal_path(candidate)
+        if not candidate.exists():
+            free = free or candidate
+            continue
+        other = _json(candidate / HANDOFF_MARKER)
+        if set(other) != set(value) or other.get("schema") != HANDOFF_OWNER_SCHEMA or not hashlib.sha256(json.dumps(other, sort_keys=True).encode("utf-8")).hexdigest().startswith(candidate.name):
+            raise ContextCanonError(f"Unowned semantic handoff locator: {candidate}")
+        if other == value:
+            return candidate
+    if free is None:
+        raise ContextCanonError("No free semantic handoff locator")
+    if create:
+        _write_marker(free / HANDOFF_MARKER, value)
+    return free
 
 
 def require_project(snapshot: Path, project: Path) -> None:

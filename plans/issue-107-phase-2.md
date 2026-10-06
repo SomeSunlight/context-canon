@@ -30,10 +30,10 @@ Exit: coherent implemented candidate, focused checkpoint tests, full determinist
 
 ## D. Separate active-run migration
 
-Resume with the [migration handoff and safety matrix](issue-107-phase-2-migration.md). No migration CLI/module is implemented yet.
+Resume with the [migration handoff and safety matrix](issue-107-phase-2-migration.md). The final closure block is authorized by the owner on 2026-10-06; implement the migration and finish the testable candidate without another intermediate owner handoff.
 
-- [ ] Implement a removable read-only preview / explicit apply module and CLI entry. Verify/copy exact old frozen inputs before switching authoritative locators or retiring narrowly owned legacy wrappers.
-- [ ] Preserve exact STEP 07/08/10 bindings, decisions, proposals/results and journal recovery; schema-aware mechanical rebinding must not make stale reviews valid or broadly replace prose. Handle interruption, foreign files and concurrent ownership conservatively.
+- [x] Implement a removable read-only preview / explicit apply module and CLI entry. Verify/copy exact old frozen inputs before switching authoritative locators or retiring narrowly owned legacy wrappers.
+- [x] Preserve exact STEP 07/08/10 bindings, decisions, proposals/results and journal recovery; schema-aware mechanical rebinding must not make stale reviews valid or broadly replace prose. Handle interruption, foreign files and concurrent ownership conservatively.
 - [ ] Test idempotence, interrupted migration/reset, changed/unavailable providers, legacy layouts and Windows staging/final path budgets; checkpoint and publish.
 
 ## E. Review candidate
@@ -58,3 +58,22 @@ Added 14 focused storage regressions, including deep Windows-budget preflight, i
 Resume at **D**: explicit active-run migration and legacy single-pass acceptance staging. Preserve reviewed payload digests and human file hashes; never broadly rewrite old snapshot paths inside proposals or prose. Keep custom/legacy workspaces usable and preserve exact old acceptance bytes for reset. After this block, finish operator/canonical documentation and the final exact-head Linux/Windows gate before owner tests. No Draft PR, owner acceptance or merge is implied by this runtime checkpoint.
 
 The follow-up reader/ownership audit routes both STEP-04/08 instructions through the same frozen Parent, refuses a conflicting `--project` before project mutations, validates unknown machine entries before deleting any workspace review, and restores retired generated Resource files byte-for-byte. Native Windows CI now includes all 14 onboarding-storage regressions (39 Windows-targeted tests total). A Draft checkpoint PR may be opened for durable review/CI before D/E are complete; it remains WIP, with migration explicitly pending.
+
+## Final closure block — 2026-10-06
+
+- [x] Add a non-creating run locator and an authenticated runtime activation record in the central project scope. This makes the new scope authoritative during interrupted retirement without making runtime depend on migration receipts. Preserve direct legacy readers for historical runs.
+- [x] Implement `onboard migrate` (read-only by default, `--apply` explicit) in a removable module. Select the accepted/current run or require an explicit snapshot when ambiguous; authenticate the workspace checkpoint. Copy exact Evidence/reviews/handoffs, shared complete packages and narrow physical fields, then activate and retire only verified selected files. Keep receipt hashes and original transformed records for recovery.
+- [x] Route compatibility single-pass staging/publication through shallow storage and shared packages. Exercise accepted STEP 07/08/10/publication, offline providers, stale reviews, interruptions, sibling/history protection, custom workspaces, reset and Windows path/Git behavior.
+- [ ] Finish operator instructions and canonical documentation; regenerate affected self-host packages, run full local gates and publish a final Draft head with successful Linux/native Windows CI.
+
+Migration is conservative when exact frozen bytes or historical Parent identity cannot be proved: refuse before mutation and explain the exact recovery input. Never substitute a newer provider or recalculate human acceptance merely because locators changed. The activation record is compact runtime-owned project/workspace routing; the receipt is separate, removable tooling state. Immutable shared history survives reset.
+
+### Handoff path audit
+
+The final audit found that a shallow visible workspace alone still adds `handoffs/STEP-xx-.../.contextcanon-handoff/enclosing-parent/` before a whole frozen Parent package. A legacy full-ID export can therefore remain over 260 units even after scope relocation. Include root-scoped, collision-checked handoff working directories in this closure block. Authenticate project/Evidence/step ownership outside the portable input contract; preserve original manifest/instruction/result/ZIP bytes during migration. The visible PLAN points to the exact short handoff; custom workspaces and legacy local handoffs stay readable. Reset must reverse only this run's handoffs, and independent same-Evidence project scopes must stay isolated.
+
+### Migration implementation checkpoint
+
+`onboarding_migration.py` now provides read-only preview and explicit `onboard migrate --apply`. All exact frozen packages are verified before copying; schema-defined physical fields and owned PLAN blocks are rebound without changing review hashes, human files, proposals, handoff inputs/results or ZIP bytes. Central activation survives interrupted retirement and resets without reactivating historical local runs. Receipts retain original transformed records and narrow byte hashes; completed retry leaves later human edits untouched. Compatibility single-pass acceptance now uses compact compiler overrides and shared packages, with shallow staging and explicit canonical Parents.
+
+Focused regressions cover Root/subtree STEP 07/08/10/publication, offline Catalogs, retained Parent handoffs after provider source removal, stale reviews, copy/in-place PLAN/activation/retirement interruption, post-activation edits, custom workspaces, relocated checkouts, old acceptance journal reset, foreign files/packages/destinations/symlinks/receipt paths, Git visibility and Windows preflight. Shared root handoffs preserve stable portable ZIP directory names; ten-level same-Evidence project scopes stay isolated under reset. The complete suite passed 422 tests before the four additional recovery/deep-scope cases; those focused cases now also pass. Final native Windows/full-suite/docs gates remain E.

@@ -38,10 +38,11 @@ def ensure_onboarding_store_gitignore(project: Path) -> Path:
     start = "# >>> ContextCanon shared onboarding scratch (managed)"
     end = "# <<< ContextCanon shared onboarding scratch (managed)"
     before = path.read_text(encoding="utf-8") if path.exists() else ""
-    block = "\n".join((start, "/contextcanon-onboarding-*/", "/.context/onboarding/**",
+    block = "\n".join((start, "/contextcanon-onboarding-*/", "/.context/handoffs/", "/.context/onboarding-migrations/", "/.context/onboarding/**",
                        "!/.context/onboarding/", "!/.context/onboarding/inventory-state.json",
                        "!/.context/onboarding/inventory-acceptance.json", "!/.context/onboarding/*/",
                        "!/.context/onboarding/*/.scope.json",
+                       "!/.context/onboarding/*/.active.json",
                        "!/.context/onboarding/*/inventory-state.json",
                        "!/.context/onboarding/*/inventory-acceptance.json", end))
     first, last = before.find(start), before.find(end)

@@ -1,16 +1,16 @@
 # Phase-2 next block: active-run migration (#107)
 
-Implementation has **not started** in a migration module yet. This is the handoff for block D after the published runtime checkpoint. Keep migration removable and normal readers independent of its receipts. Do not merge or ask the owner to migrate the confidential project yet.
+Implementation is present in `onboarding_migration.py` under the owner-authorized final closure block (2026-10-06). This document retains the design/safety matrix for block D; the active implementation checkpoint is in the Phase-2 plan. Keep migration removable and normal readers independent of its receipts. Do not merge or ask the owner to migrate the confidential project yet.
 
 ## Known readers and remaining writers
 
 - New runtime boundary: `onboarding_storage.py` (scope/run ownership, complete frozen bindings, provenance, enclosing Parent).
-- Read-only Evidence validation: `onboarding_proposal.load_evidence_snapshot`. `run_path` currently creates a scope; provide a non-creating locator for migration preview.
+- Read-only Evidence validation: `onboarding_proposal.load_evidence_snapshot`. `run_path(create=False)` supports non-creating migration preview.
 - Accepted STEP-07 state hashes the original `catalog_packages` roots/bindings and Assignments. `frozen_catalog_packages` is a physical locator list outside that review payload. Preserve original Catalog rows, review digest and human-file SHA exactly.
 - `load_accepted_reusable_contexts` can freeze/recover missing legacy inputs and enclosing-Parent state. Do not call it as an allegedly read-only preview without separating its validation from those writes.
 - STEP 04/08 instruction and handoff readers, STEP 07, publication and journaled reset now use frozen Parents. Tests explicitly cover provider edit/removal across both instruction stages.
 - Inventory state `csv_path` and acceptance `inventory_path` are mechanical locators; accepted CSV bytes, inventory SHA, Evidence digest and semantic scope stay unchanged.
-- Legacy single-pass `onboarding_review.accept_onboarding_review` still uses project-local acceptance staging and legacy package carriers. Route its preview via exact package overrides and final installation through shared versions; retain old acceptance readers and first-adoption rollback safety.
+- Legacy single-pass `onboarding_review.accept_onboarding_review` now uses shallow staging, exact package overrides and shared versions. Old acceptance readers and first-adoption rollback safety remain.
 
 ## Migration decisions to implement and verify
 
