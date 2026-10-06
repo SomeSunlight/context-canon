@@ -119,8 +119,18 @@ def _owned_workspace(root, old):
     from .onboarding_reset import _ARTIFACT_STEPS
     names = set(_ARTIFACT_STEPS) | set(LEGACY_ARTIFACT_NAMES) | set(LEGACY_DIRECTORY_NAMES)
     names |= {"README.md", "PLAN.md", "STEP-02-inventory.csv", "STEP-02-inventory-guide.md", "handoffs"}
-    if any(rel.split("/")[0] not in names for rel in [*files, *_directories(root)]):
-        raise _error(f"unknown files in workspace; preserve/move them before migration: {root}")
+    unknown = sorted({rel.split("/")[0] for rel in [*files, *_directories(root)]
+                      if rel.split("/")[0] not in names})
+    if unknown:
+        entries = "\n".join(f"  - {name}{'/' if (root / name).is_dir() else ''}" for name in unknown)
+        raise _error(
+            f"unknown files or directories in workspace: {root}\n"
+            f"Unrecognized entries (relative to this workspace):\n{entries}\n"
+            "No files were changed. The selected snapshot passed the workspace binding check; "
+            "changing --snapshot does not resolve these unrecognized entries. "
+            "If these are ContextCanon artifacts, report their names. Otherwise, preserve them "
+            "outside the onboarding workspace and retry; do not delete them."
+        )
     return files
 
 

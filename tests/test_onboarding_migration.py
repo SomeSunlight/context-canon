@@ -226,6 +226,35 @@ class OnboardingMigrationTests(unittest.TestCase):
                     migrate_onboarding(project, apply=True)
                 self.assertEqual(self.snapshot(repo), before)
 
+    def test_unknown_workspace_diagnostic_names_blockers_and_preserves_all_state(self):
+        for subtree in (False, True):
+            with self.subTest(subtree=subtree):
+                _, case, _ = self.case(subtree=subtree)
+                repo, project, prepared, workspace, _, _ = case
+                (workspace.root / "owner-note.md").write_bytes(b"Private review notes")
+                (workspace.root / ".idea").mkdir()
+                (workspace.root / ".idea/workspace.xml").write_bytes(b"IDE state")
+                (workspace.root / "empty backup").mkdir()
+                before = self.snapshot(repo)
+                directories = {p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_dir()}
+                for explicit in (False, True):
+                    for apply in (False, True):
+                        with self.subTest(explicit_snapshot=explicit, apply=apply):
+                            with self.assertRaises(ContextCanonError) as caught:
+                                migrate_onboarding(project, snapshot=prepared.snapshot_root if explicit else None,
+                                                   apply=apply)
+                            message = str(caught.exception)
+                            self.assertIn(str(workspace.root), message)
+                            self.assertIn("  - .idea/\n  - empty backup/\n  - owner-note.md\n", message)
+                            self.assertIn("selected snapshot passed the workspace binding check", message)
+                            self.assertIn("No files were changed", message)
+                            self.assertNotIn("Private review notes", message)
+                            self.assertNotIn("IDE state", message)
+                            self.assertEqual(self.snapshot(repo), before)
+                            self.assertEqual({p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_dir()},
+                                             directories)
+                            self.assertFalse(_receipt_path(project).exists())
+
     def test_custom_workspace_unchanged_and_historical_runs_protected_by_activation(self):
         _, case, _ = self.case(subtree=True, custom=True)
         repo, project, prepared, workspace, _, _ = case

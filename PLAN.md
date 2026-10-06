@@ -2,6 +2,15 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Active owner-test correction — migration workspace diagnostics (#107)
+
+Purpose: the owner supplied a valid legacy snapshot but migration reports unknown workspace content without naming it. Keep the existing conservative ownership check; report the exact top-level blockers so the owner can distinguish personal/IDE files from unsupported historical ContextCanon artifacts. No automatic claiming, movement or deletion of unrecognized content is authorized.
+
+- [x] Report sorted concrete unknown files/directories, selected workspace and unchanged-state/action guidance.
+- [x] Regress preview and apply refusal with default/explicit snapshots, root/subtree workspaces and empty unknown directories; preserve all bytes and avoid creating receipts.
+- [x] Verify the full candidate and prepare publication on Draft #111; fresh exact-head Linux/Windows CI remains live PR metadata.
+- [ ] Owner reports the concrete unrecognized names; determine their origin before changing compatibility rules or advising any file movement.
+
 ## Post-merge baseline reconciliation — PR #108 (2026-10-06)
 
 Purpose: record the owner's actual Phase-1 squash merge at `dc20fdb86980d5b6adb801d299a4610e0a297ae3`, integrate that accepted baseline into Draft PR #111, and run fresh exact-head Linux/Windows CI while the owner tests onboarding. The accepted Phase-1 tree exactly matches the previous stacked base. Preserve branch ancestry with a merge so an existing editable test checkout can continue using fast-forward pulls; do not rewrite the owner's active branch history or alter executable behavior.

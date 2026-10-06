@@ -1,5 +1,11 @@
 # Current State
 
+## Owner-test finding — migration workspace diagnostics (2026-10-06)
+
+The owner's legacy snapshot reaches the workspace ownership check successfully, but unrecognized top-level files/directories block migration. The former error named only the workspace, so changing `--snapshot` appeared to be a possible remedy. The correction now lists sorted concrete blockers (directories have `/`), confirms the successful snapshot binding and unchanged state, and distinguishes reporting unsupported ContextCanon names from preserving unrelated files outside the workspace. Ownership/refusal behavior is unchanged; do not automatically claim, move or delete these entries.
+
+A regression verifies root/subtree, preview/apply and default/explicit-snapshot refusal, including hidden IDE and empty directories, with byte/directory equality and no receipt creation. All 20 focused migration tests and the 431-test deterministic suite pass locally, with zero generated drift and all four normative edges current. Fresh exact-head hosted evidence is recorded in Draft #111. Next obtain the owner's actual names; their origin is not yet known. The original baseline and completed implementation checkpoints below are historical. #107 stays open and no Phase-2 merge is authorized.
+
 ## Accepted Phase 1; Phase-2 owner test — 2026-10-06
 
 The owner squash-merged PR #108 after green CI. Accepted `main` is `dc20fdb86980d5b6adb801d299a4610e0a297ae3`; its tree exactly matches the previous stacked Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`. Draft PR #111 now targets main and integrates the accepted baseline while preserving the existing test branch's ancestry. This reconciliation changes planning status only; the executable and generated packages are identical to the green owner-test candidate `87eb536cd091187143a65ae4317ce3b1c335b247` (430 Linux tests, 67 native Windows tests, zero drift). Fresh exact-head CI evidence belongs in PR #111.
