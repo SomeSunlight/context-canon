@@ -1,5 +1,13 @@
 # Current State
 
+## Phase-2 owner acceptance — 2026-10-06
+
+The owner confirms that real onboarding migration now succeeds, the resulting layout is orderly, and no long paths remain in the tested project. Its onboarding was already completed; a fresh end-to-end onboarding has not been performed against Phase 2. The owner accepts the implementation for main on the migration/path result and existing regression coverage, explicitly deferring new onboarding validation to the next real adoption. Any later bugs should be tracked as new Issues.
+
+The accepted product candidate `3dd078d3e0e896d87a7c300602e221587ebdd7db` passes hosted Linux (444 tests, zero generated drift for six Nodes and all four normative edges current) and native Windows (82 tests). This closure changes only planning documents; executable behavior, release version and immutable packages remain unchanged. PR #111 targets accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3` and is being finalized for the owner's squash merge. Fresh exact-head CI/readiness live in the PR. Keep #107 open until the merge closes it; record the actual squash commit in the next accepted-baseline checkpoint. No merge on the owner's behalf is requested.
+
+The correction/checkpoint sections below are historical evidence. Their earlier owner-test/merge restrictions are superseded by this explicit owner acceptance.
+
 ## Owner-test correction — unbound IDE metadata (2026-10-06)
 
 The owner identified the STEP-04 extras as six JetBrains `.idea/` files, including its own `.gitignore`, and requested normal IDE metadata tolerance. Existing handoff PLAN already says post-preparation `.idea/`/`.vscode/` is not Evidence; the migration guard was inconsistent with that boundary. Git standard ignores already apply to untracked inventory files. They cannot determine migration ownership because authoritative managed workspaces/runs are Git-ignored too.

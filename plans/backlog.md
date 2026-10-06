@@ -4,7 +4,7 @@ Unscheduled work only. This snapshot was read from GitHub on 2026-10-05 (#109); 
 
 | Issue | Title | Planning position |
 | --- | --- | --- |
-| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Phase 1 owner accepted in PR #108; onboarding Phase 2 next after merge |
+| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Phase 1 merged; Phase 2 owner accepted after successful migration, preparing PR #111 for squash merge |
 | [#106](https://github.com/SomeSunlight/context-canon/issues/106) | Define safe project reinitialization and optional identity remapping for project copies | Separate future design |
 | [#95](https://github.com/SomeSunlight/context-canon/issues/95) | Expose canonical Evidence line counts to semantic handoffs | Unscheduled; inspect issue before implementation |
 | [#94](https://github.com/SomeSunlight/context-canon/issues/94) | Separate visible onboarding artifacts from hidden machine state | Unscheduled; inspect issue before implementation |
@@ -40,7 +40,7 @@ Unscheduled work only. This snapshot was read from GitHub on 2026-10-05 (#109); 
 - #66 version 0.9.9/final PR #54 verification box: superseded by the accepted 0.10.0 baseline; the issue remains open and may need status reconciliation.
 - Optional semantic contradiction analysis: still a future design question. Preserve explicit human conflict resolution; do not infer Parent precedence. Relate any new block to #41 or create a specific issue before implementation.
 
-The [unchanged historical record](archive/implementation-history-through-pr-105.md) retains all original checkboxes and decisions. The [#107 Phase-2 plan](issue-107-phase-2.md) contains the next unchecked storage/recovery prerequisites.
+The [unchanged historical record](archive/implementation-history-through-pr-105.md) retains all original checkboxes and decisions. The [#107 Phase-2 plan](issue-107-phase-2.md) records completed storage/recovery implementation and owner acceptance; automatic pruning still needs complete reachability accounting, and later onboarding findings belong in new Issues.
 
 ## Legacy review-candidate cleanup follow-up (#107)
 

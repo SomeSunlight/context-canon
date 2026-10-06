@@ -1,6 +1,6 @@
 # Shared Node Versions — Onboarding Phase 2 (#107)
 
-**Fast Track status — IMPLEMENTATION CLOSED / OWNER TEST IN PROGRESS.** The owner authorized starting this phase on 2026-10-05 before PR #108 was merged. Its starting base was owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; the owner has now squash-merged it as accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3`. Draft PR #111 targets main. Integrate that identical accepted baseline with preserved branch ancestry so the owner's active editable checkout can keep fast-forward pulls. The implementation and package bytes remain unchanged. Require fresh exact-head CI and explicit Phase-2 approval before merge.
+**Fast Track status — CLOSED / OWNER ACCEPTED.** The owner authorized starting this phase on 2026-10-05 before PR #108 was merged. Its starting base was owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; Phase 1 is accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3` and integrated with preserved test-branch ancestry. On 2026-10-06 the owner confirms successful migration and orderly short paths and accepts Phase 2 for main. A fresh end-to-end onboarding is deferred to the next real adoption; later findings become new Issues. PR #111 targets main and is being finalized for the owner's squash merge after fresh exact-head CI. This acceptance closure changes planning documents only.
 
 Purpose: make onboarding payload/storage overhead independent of physical project nesting, reuse the shared complete-Node library, and migrate active old runs without losing reviewed meaning or recoverable state.
 
@@ -41,11 +41,11 @@ Resume with the [migration handoff and safety matrix](issue-107-phase-2-migratio
 - [x] Document storage/ownership/migration and owner tests; regenerate only affected self-hosted packages provider-first.
 - [x] Pass the complete local deterministic suite, zero generated drift, propagation health and diff hygiene. Exact-head hosted Linux/Windows CI is a live gate in PR #111; do not create a new commit merely to mirror its result.
 - [x] Publish the separate Draft implementation PR, update PLAN/STATE and leave the concrete owner-test guide. Final closure content is published on the same PR; keep #107 open until the owner accepts both phases.
-- [ ] Owner tests and accepts Phase 2; exact-head merge gate and explicit merge follow separately.
+- [x] Owner accepts Phase 2 after successful real migration/path validation, explicitly deferring fresh onboarding to the next real adoption. Exact-head merge readiness remains live PR metadata; the owner performs the squash merge.
 
 ## Recovery notes
 
-Resume at the first unchecked item. Read root CONTEXT, applicable Topics, STATE and this plan; verify this Phase-2 branch; PR #108 is now accepted and closed. Publish meaningful checkpoints during the night so recovery does not depend on scratch or this chat. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR.
+Implementation and owner acceptance are complete. Read root CONTEXT, applicable Topics, STATE and the PLAN closure block; verify PR #111's current CI/readiness, then await the owner's squash merge and reconcile the actual accepted main commit. PR #108 is accepted and closed. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR. The implementation checkpoints below are historical; current owner acceptance supersedes their earlier merge restrictions.
 
 Before any future pruning feature, enumerate current pins, retained-version dependencies, pending reviews, frozen onboarding inputs and recovery receipts. The Phase-1 inventory alone is insufficient deletion authority.
 

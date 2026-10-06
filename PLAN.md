@@ -2,6 +2,15 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Phase-2 owner acceptance and merge preparation (#107 / #111)
+
+Purpose: the owner confirms successful real migration and orderly short paths, accepts the result for main, and explicitly defers a new end-to-end onboarding to the next real adoption. Record that precise test boundary in PLAN/STATE, the Phase-2 plan and backlog; prepare PR #111 for the owner's squash merge. Future onboarding findings belong in new Issues. No executable, packaged Resource or release-version change belongs to this closure.
+
+- [x] Record successful migration/path validation and owner acceptance without claiming a fresh end-to-end onboarding test.
+- [x] Reconcile the current planning surfaces and verify documentation links (all four repository-consistency tests pass), zero generated drift for six Nodes, all four normative edges current and diff hygiene before publishing the closure.
+
+Exact-head Linux/Windows CI and PR readiness remain live PR metadata. Keep #107 open until the merge closes it. After the owner's squash merge, record the actual accepted main commit in the baseline checkpoint; do not merge on the owner's behalf.
+
 ## Active owner-test correction — preserve unbound IDE metadata (#107)
 
 Purpose: the reported STEP-04 extras are JetBrains `.idea/` files, including its own `.gitignore`. The owner wants ordinary IDE metadata to stop blocking ContextCanon. Existing handoff PLAN already excludes post-preparation `.idea/`/`.vscode/` from Evidence. Inventory respects Git standard ignores for untracked files; migration cannot use Git ignores as an ownership boundary because complete managed workspaces/runs are ignored too.
@@ -29,7 +38,7 @@ Purpose: migration reaches an original Foundation authoring directory and reject
 - [x] Regress exact live-package fallback, changed provider with retained history/Git history, missing/corrupt historical bytes, preview/apply/interruption and unchanged STEP-07/08/10/publication.
 - [x] Verify the full correction and prepare publication on Draft #111; fresh exact-head Linux/Windows evidence remains live PR metadata.
 - [x] Close native Windows findings: restore legacy CRLF artifact bytes only when size and full hash prove the original bytes, add a portable Git-autocrlf regression, and correct UTF-8/path-alias assumptions in tests. All 438 tests and self-host checks pass locally; prepare the fast-forward publication and record fresh hosted evidence in #111.
-- [ ] Owner retries the original migration preview/apply with the corrected tool; Phase-2 approval remains separate.
+- [x] Owner confirms successful migration and orderly short paths, accepts Phase 2 for main, and defers a fresh onboarding to the next real adoption. See the closure block above.
 
 ## Active owner-test correction — migration workspace diagnostics (#107)
 
@@ -48,7 +57,7 @@ Purpose: record the owner's actual Phase-1 squash merge at `dc20fdb86980d5b6adb8
 - [x] Integrate accepted main and reconcile PLAN/STATE/detail-plan current status.
 - [x] Verify the documentation-only reconciliation and prepare its publication on #111 targeting main.
 
-- [ ] Owner finishes onboarding testing; Phase-2 approval/merge remain separate.
+- [x] Owner accepts Phase 2 after successful real migration/path validation; a new end-to-end onboarding is deferred by the owner. Squash merge remains the owner's next action.
 
 Fresh exact-head Linux/Windows results are a live gate recorded in PR #111, not another status-only commit.
 
@@ -56,16 +65,16 @@ Fresh exact-head Linux/Windows results are a live gate recorded in PR #111, not 
 
 Accepted `main`: `dc20fdb86980d5b6adb801d299a4610e0a297ae3` (owner-tested PR #108, squash-merged on 2026-10-06).
 
-Active owner review: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, Draft PR #111 targeting `main`. Its original stacked Phase-1 base exactly matches the accepted squash tree. The accepted main commit is integrated without rewriting the editable test branch's ancestry or changing executable/package bytes. The owner is now testing onboarding. See the [Phase-2 plan](plans/issue-107-phase-2.md) and [owner test](plans/issue-107-onboarding-owner-test.md).
+Owner-accepted change: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, PR #111 targeting `main`, being finalized for the owner's squash merge. Its original stacked Phase-1 base exactly matches the accepted squash tree. Accepted main is integrated with preserved editable-test branch ancestry. Real migration succeeds and the owner reports no remaining long paths in that project; a fresh end-to-end onboarding is explicitly deferred. See the [Phase-2 plan](plans/issue-107-phase-2.md) and [owner test](plans/issue-107-onboarding-owner-test.md).
 
-[PR #108](https://github.com/SomeSunlight/context-canon/pull/108) is accepted: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. #109 recovery and the #110 Resource-move correction are included. Keep #107 open for Phase-2 acceptance; no merge of #111 is authorized.
+[PR #108](https://github.com/SomeSunlight/context-canon/pull/108) is accepted: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. #109 recovery and the #110 Resource-move correction are included. Phase 2 is now owner accepted; keep #107 open until the owner's merge of #111 closes it.
 
 | Main point | Status | Detail / next action |
 | --- | --- | --- |
 | Restore a usable plan and review the interrupted work (#109) | Complete; owner accepted | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
 | Resource-move review correction (#110) | Fixed; owner retest successful | [Correction checklist](plans/issue-110-resource-move-review.md) |
 | Shared versions and migration (#107 Phase 1) | Accepted in main via PR #108 | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
-| Onboarding storage and reset/recovery (#107 Phase 2) | Implementation complete; owner testing Draft #111 on main | [Phase-2 checklist](plans/issue-107-phase-2.md) |
+| Onboarding storage and reset/recovery (#107 Phase 2) | Owner accepted after real migration; preparing #111 for squash merge | [Phase-2 checklist](plans/issue-107-phase-2.md) |
 | Safe unused-version pruning | Deferred; complete reachability required | [Phase-2 prerequisite](plans/issue-107-phase-2.md) |
 | Reinitialization / copied-project ID remapping (#106) | Separate open issue | [Backlog](plans/backlog.md) |
 | Other proposed work and unresolved issue bookkeeping | Unscheduled | [Backlog](plans/backlog.md) |
