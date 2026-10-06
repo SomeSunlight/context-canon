@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import tempfile
 from pathlib import Path, PurePosixPath
 
 from .parser import ContextCanonError, find_repo_root
@@ -43,14 +45,31 @@ def _normal_path(path: Path) -> None:
 
 
 def _write_marker(path: Path, value: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        with path.open("x", encoding="utf-8") as handle:
-            json.dump(value, handle, ensure_ascii=False, sort_keys=True)
-            handle.write("\n")
-    except FileExistsError:
+    _normal_path(path)
+    if path.exists():
         if _json(path) != value:
             raise ContextCanonError(f"Onboarding ownership changed: {path}")
+        return
+    from .path_budget import preflight_paths
+    preflight_paths(path.parent, [path.name, ".m-xxxxxxxx"], action="onboarding ownership publication")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, name = tempfile.mkstemp(prefix=".m-", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(value, handle, ensure_ascii=False, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            # Atomic no-clobber publication of a tiny marker, not package/file
+            # deduplication. Readers never observe half an activation record.
+            os.link(temporary, path)
+        except FileExistsError:
+            if _json(path) != value:
+                raise ContextCanonError(f"Onboarding ownership changed: {path}")
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _scope(project: Path) -> tuple[Path, dict, str]:

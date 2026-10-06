@@ -15,7 +15,7 @@ from .onboarding import find_enclosing_context_root, project_root_from_snapshot,
 from .onboarding_proposal import load_evidence_snapshot
 from .onboarding_storage import (
     ACTIVE_MARKER, ACTIVE_SCHEMA, RUN_MARKER, SCOPE_MARKER, _json, _normal_path,
-    _scope, _write_marker, binding_from_row, package_files, run_metadata, run_path, scope_root,
+    _scope, _write_marker, binding_from_row, run_metadata, run_path, scope_root,
     handoff_path, HANDOFF_MARKER, HANDOFF_OWNER_SCHEMA,
 )
 from .onboarding_workspace import (
@@ -119,7 +119,7 @@ def _owned_workspace(root, old):
     from .onboarding_reset import _ARTIFACT_STEPS
     names = set(_ARTIFACT_STEPS) | set(LEGACY_ARTIFACT_NAMES) | set(LEGACY_DIRECTORY_NAMES)
     names |= {"README.md", "PLAN.md", "STEP-02-inventory.csv", "STEP-02-inventory-guide.md", "handoffs"}
-    if any(rel.split("/")[0] not in names for rel in files):
+    if any(rel.split("/")[0] not in names for rel in [*files, *_directories(root)]):
         raise _error(f"unknown files in workspace; preserve/move them before migration: {root}")
     return files
 
@@ -135,6 +135,8 @@ def _plan_bytes(data, project, old, new, workspace, run_inputs):
                             completed=_completed_steps(_checkpoint_stage(checkpoint) or "evidence prepared",
                                                        _checkpoint_review_complete(checkpoint)), project_root=project,
                             evidence_digest=load_evidence_snapshot(old).evidence_digest, central_handoffs=True)
+    if "\r\n" in text:
+        block = block.replace("\n", "\r\n")
     if text.count(COMMANDS_START) != 1 or text.count(COMMANDS_END) != 1:
         raise _error("workspace PLAN has no unique managed commands block")
     start, end = text.index(COMMANDS_START), text.index(COMMANDS_END) + len(COMMANDS_END)
@@ -145,6 +147,45 @@ def _plan_bytes(data, project, old, new, workspace, run_inputs):
         checkpoint = checkpoint.replace(f"- {label}: `{old_label}`", f"- {label}: `{new_label}`")
     start, end = text.index(CHECKPOINT_START), text.index(CHECKPOINT_END) + len(CHECKPOINT_END)
     return (text[:start] + checkpoint + text[end:]).encode("utf-8")
+
+
+def _verify_handoff(root, payload, evidence, zip_path):
+    """Verify portable frozen inputs before claiming/copying a disposable task."""
+    import zipfile
+    from .onboarding_handoff import handoff_spec
+    files = _tree(root)
+    control = ".contextcanon-handoff/"
+    expected = {control + name for name in ("PLAN.md", "INSTRUCTION.md", "manifest.json")}
+    if _sha(files.get(control + "INSTRUCTION.md", b"")) != payload.get("instruction_sha256"):
+        raise _error("frozen handoff instruction changed")
+    for row in payload.get("evidence", []):
+        rel = row.get("path")
+        original = evidence.by_path.get(rel)
+        data = files.get(rel)
+        if original is None or data is None or row.get("sha256") != original.sha256 or row.get("size") != original.size or _sha(data) != original.sha256 or len(data) != original.size:
+            raise _error("frozen handoff Evidence changed")
+        expected.add(rel)
+    parent = payload.get("enclosing_parent")
+    if parent is not None:
+        binding = binding_from_row({**parent, "id": parent.get("node_id")})
+        if parent.get("root") != control + "enclosing-parent":
+            raise _error("unsafe handoff Parent locator")
+        _, packaged = _package(root / parent["root"], binding)
+        rows = parent.get("files")
+        if not isinstance(rows, list) or {r.get("path"): (r.get("sha256"), r.get("size")) for r in rows} != {rel: (_sha(data), len(data)) for rel, data in packaged.items()}:
+            raise _error("frozen handoff Parent files changed")
+        expected.update(parent["root"] + "/" + rel for rel in packaged)
+    if not expected <= set(files) or set(files) - expected - {control + "RESULT.json"}:
+        raise _error("unknown/missing handoff files; preserve those files before migration")
+    if zip_path.exists():
+        try:
+            with zipfile.ZipFile(zip_path) as archive:
+                prefix = handoff_spec(payload["step"]).directory_name + "/"
+                names = {prefix + rel for rel in expected}
+                if len(archive.namelist()) != len(names) or set(archive.namelist()) != names or any(archive.read(prefix + rel) != files[rel] for rel in expected):
+                    raise _error("frozen handoff ZIP differs from its verified inputs")
+        except (OSError, zipfile.BadZipFile) as exc:
+            raise _error("frozen handoff ZIP is unreadable") from exc
 
 
 def _parent_input(project, old, workspace, packages):
@@ -222,6 +263,7 @@ def _journal(data, project, old, packages):
     if value.get("schema") != RESET_JOURNAL_SCHEMA or not isinstance(value.get("records"), list):
         raise _error("invalid legacy reset journal")
     acceptance = (old / "placement-acceptance.json").relative_to(project).as_posix()
+    installations = {}
     for record in value["records"]:
         kept = []
         for change in record.get("changes", []):
@@ -236,7 +278,26 @@ def _journal(data, project, old, packages):
                 if len(parts) <= index + 3 or parts[index + 1] != "sources":
                     raise _error("unrecognized package installation journal path")
                 root = project.joinpath(*parts[:index + 3])
-                package, files = _package(root)
+                if root not in installations:
+                    if root.exists():
+                        installations[root] = _package(root)
+                    else:
+                        # Normal versions migration may already have retired
+                        # this wrapper. Its journaled manifest hash proves the
+                        # full old identity in the shared library, offline.
+                        manifest_rel = root.relative_to(project).as_posix() + "/" + PACKAGE_MANIFEST_PATH
+                        manifests = [c for c in record.get("changes", []) if c.get("path") == manifest_rel and c.get("before") is None and c.get("after_exists")]
+                        matches = []
+                        if len(manifests) == 1:
+                            for candidate in library_root(project).glob("*/.context/package.json"):
+                                if _sha(candidate.read_bytes()) == manifests[0].get("after_sha256"):
+                                    p, content = _package(candidate.parent.parent)
+                                    if p.package_digest == root.name:
+                                        matches.append((p, content))
+                        if len(matches) != 1:
+                            raise _error("legacy installation is unavailable and its exact journaled manifest cannot be proved in shared history")
+                        installations[root] = matches[0]
+                package, files = installations[root]
                 inner = PurePosixPath(*parts[index + 3:]).as_posix()
                 if change.get("before") is not None or not change.get("after_exists") or inner not in files or _sha(files[inner]) != change.get("after_sha256"):
                     raise _error("legacy package journal is not a verified new immutable installation; retain the old run until reviewed recovery")
@@ -267,6 +328,7 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
             snapshot = candidates[0].parent
     old = snapshot.absolute()
     _normal_path(old)
+    old = old.resolve()  # Windows 8.3 aliases must share canonical scope ownership.
     if old.parent != old_scope or project_root_from_snapshot(old) != project:
         raise _error("snapshot is not a project-local legacy run owned by this project")
     evidence = load_evidence_snapshot(old)
@@ -274,13 +336,15 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
         raise _error("legacy locator does not match its full Evidence identity")
     new = run_path(project, evidence.evidence_digest, central=True, create=False)
     old_workspace = (workspace or project / "contextcanon-onboarding").absolute()
+    _normal_path(old_workspace)
+    old_workspace = old_workspace.resolve()
     _relative(repository, old_workspace)
     new_workspace = old_workspace
     if old_workspace == project / "contextcanon-onboarding" and project != repository:
         new_workspace = repository / ("contextcanon-onboarding-" + new.parent.name)
     workspace_files = _owned_workspace(old_workspace, old)
     old_files = _tree(old)
-    if any(rel.split("/")[0] not in RUN_FILES | {"evidence", "reusable-context-packages", "catalog-provenance"} for rel in old_files):
+    if any(rel.split("/")[0] not in RUN_FILES | {"evidence", "reusable-context-packages", "catalog-provenance"} for rel in [*old_files, *_directories(old)]):
         raise _error("unknown files in selected legacy run; migration did not change anything")
     packages = {}
     copied = {rel: data for rel, data in old_files.items() if not rel.startswith("reusable-context-packages/")}
@@ -340,6 +404,7 @@ def plan_migration(target: Path, *, snapshot: Path | None = None, workspace: Pat
         payload = _json(legacy_dir / ".contextcanon-handoff/manifest.json")
         if payload.get("schema") != "contextcanon/semantic-handoff/v1" or payload.get("step") != step or payload.get("evidence_digest") != evidence.evidence_digest:
             raise _error("legacy handoff is not bound to the selected run")
+        _verify_handoff(legacy_dir, payload, evidence, legacy_zip)
         handoff = handoff_path(project, evidence.evidence_digest, step)
         handoff_files = _tree(legacy_dir)
         legacy_handoff_files.update({legacy_dir / rel: data for rel, data in handoff_files.items()})
@@ -486,11 +551,6 @@ def _save(path, receipt):
     write_utf8(path, _bytes(receipt).decode("utf-8"))
 
 
-def _copy(path, data):
-    # write_utf8 also enforces the real temporary publication path budget.
-    write_utf8(path, data.decode("utf-8")) if path.suffix in {".json", ".md", ".csv"} else _copy_binary(path, data)
-
-
 def _copy_binary(path, data):
     import os
     import tempfile
@@ -525,8 +585,10 @@ def migrate_onboarding(target: Path, *, snapshot: Path | None = None, workspace:
     if receipt_path.exists():
         receipt = _json(receipt_path)
         old, new, ow, nw = _validate_receipt(project, repository, receipt)
-        if snapshot is not None and snapshot.absolute() not in {old, new}:
-            raise _error("existing migration receipt belongs to a different run")
+        if snapshot is not None:
+            _normal_path(snapshot.absolute())
+            if snapshot.resolve() not in {old, new}:
+                raise _error("existing migration receipt belongs to a different run")
         packages = {}
         if receipt["phase"] == "copy":
             # Sources still exist. Re-plan read-only to prove frozen packages and

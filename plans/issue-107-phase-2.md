@@ -34,13 +34,13 @@ Resume with the [migration handoff and safety matrix](issue-107-phase-2-migratio
 
 - [x] Implement a removable read-only preview / explicit apply module and CLI entry. Verify/copy exact old frozen inputs before switching authoritative locators or retiring narrowly owned legacy wrappers.
 - [x] Preserve exact STEP 07/08/10 bindings, decisions, proposals/results and journal recovery; schema-aware mechanical rebinding must not make stale reviews valid or broadly replace prose. Handle interruption, foreign files and concurrent ownership conservatively.
-- [ ] Test idempotence, interrupted migration/reset, changed/unavailable providers, legacy layouts and Windows staging/final path budgets; checkpoint and publish.
+- [x] Test idempotence, interrupted migration/reset, changed/unavailable providers, legacy layouts and Windows staging/final path budgets; checkpoint and publish.
 
 ## E. Review candidate
 
-- [ ] Document storage/ownership/migration and owner tests; regenerate only affected self-hosted packages provider-first.
-- [ ] Pass the complete deterministic suite, zero generated drift, propagation health, diff hygiene and exact-head Linux/Windows CI (disclose hosted-runner outages rather than changing product semantics to mask them).
-- [ ] Publish the final separate Draft PR, update PLAN/STATE and leave concrete remaining owner checks. Keep #107 open until the owner accepts both phases.
+- [x] Document storage/ownership/migration and owner tests; regenerate only affected self-hosted packages provider-first.
+- [x] Pass the complete local deterministic suite, zero generated drift, propagation health and diff hygiene. Exact-head hosted Linux/Windows CI is a live gate in PR #111; do not create a new commit merely to mirror its result.
+- [x] Publish the separate Draft implementation PR, update PLAN/STATE and leave the concrete owner-test guide. Final closure content is published on the same PR; keep #107 open until the owner accepts both phases.
 - [ ] Owner tests and accepts Phase 2; exact-head merge gate and explicit merge follow separately.
 
 ## Recovery notes
@@ -64,7 +64,7 @@ The follow-up reader/ownership audit routes both STEP-04/08 instructions through
 - [x] Add a non-creating run locator and an authenticated runtime activation record in the central project scope. This makes the new scope authoritative during interrupted retirement without making runtime depend on migration receipts. Preserve direct legacy readers for historical runs.
 - [x] Implement `onboard migrate` (read-only by default, `--apply` explicit) in a removable module. Select the accepted/current run or require an explicit snapshot when ambiguous; authenticate the workspace checkpoint. Copy exact Evidence/reviews/handoffs, shared complete packages and narrow physical fields, then activate and retire only verified selected files. Keep receipt hashes and original transformed records for recovery.
 - [x] Route compatibility single-pass staging/publication through shallow storage and shared packages. Exercise accepted STEP 07/08/10/publication, offline providers, stale reviews, interruptions, sibling/history protection, custom workspaces, reset and Windows path/Git behavior.
-- [ ] Finish operator instructions and canonical documentation; regenerate affected self-host packages, run full local gates and publish a final Draft head with successful Linux/native Windows CI.
+- [x] Finish operator instructions and canonical documentation; regenerate affected self-host packages and pass full local gates. Publish final Draft content and verify Linux/native Windows on the exact head; hosted proof remains live PR metadata.
 
 Migration is conservative when exact frozen bytes or historical Parent identity cannot be proved: refuse before mutation and explain the exact recovery input. Never substitute a newer provider or recalculate human acceptance merely because locators changed. The activation record is compact runtime-owned project/workspace routing; the receipt is separate, removable tooling state. Immutable shared history survives reset.
 
@@ -77,3 +77,15 @@ The final audit found that a shallow visible workspace alone still adds `handoff
 `onboarding_migration.py` now provides read-only preview and explicit `onboard migrate --apply`. All exact frozen packages are verified before copying; schema-defined physical fields and owned PLAN blocks are rebound without changing review hashes, human files, proposals, handoff inputs/results or ZIP bytes. Central activation survives interrupted retirement and resets without reactivating historical local runs. Receipts retain original transformed records and narrow byte hashes; completed retry leaves later human edits untouched. Compatibility single-pass acceptance now uses compact compiler overrides and shared packages, with shallow staging and explicit canonical Parents.
 
 Focused regressions cover Root/subtree STEP 07/08/10/publication, offline Catalogs, retained Parent handoffs after provider source removal, stale reviews, copy/in-place PLAN/activation/retirement interruption, post-activation edits, custom workspaces, relocated checkouts, old acceptance journal reset, foreign files/packages/destinations/symlinks/receipt paths, Git visibility and Windows preflight. Shared root handoffs preserve stable portable ZIP directory names; ten-level same-Evidence project scopes stay isolated under reset. The complete suite passed 422 tests before the four additional recovery/deep-scope cases; those focused cases now also pass. Final native Windows/full-suite/docs gates remain E.
+
+### Windows finalization audit
+
+Hosted checkpoint CI verified all 426 Linux tests plus zero drift. Native Windows exposed 8.3 versus long-path aliases in migration/workspace fixtures and CRLF checkpoint parsing; fix by canonicalizing only after lexical symlink checks and parsing owned locator/stage lines across CRLF without rewriting unmanaged PLAN notes. Additional explicit CRLF and handoff/ZIP tampering regressions verify byte preservation and read-only refusal. Operator docs and affected Gateway/Framework packages are regenerated; final exact-head Windows rerun is mandatory before owner handoff.
+
+### Final review boundary
+
+All implementation blocks A–D are complete. Operator/canonical docs and the two affected self-hosted Nodes are regenerated (Gateway 0.3.22-draft; Framework Development 0.3.21-draft). Recovery now checks the exact head's live Linux/native Windows results in Draft PR #111, then continues at owner testing. No merge is authorized. The final gate includes complete old package-installation journal recovery even after Phase-1 wrapper retirement, atomic no-clobber activation publication, CRLF note preservation and portable checkout relocation.
+
+Normal legacy packages and new imports retain full bindings; human review SHA/digests are never recalculated to make a stale decision current. Onboarding migration remains removable transition code. No shared-version pruning, reinit/remapping or blanket abandoned-candidate deletion belongs to this result.
+
+Final local verification: **430 deterministic tests pass**, all six self-hosted Nodes report zero generated drift, all four local normative edges are current, and diff hygiene is clean. The final native Windows job runs **67 targeted tests**. These counts describe this assembled candidate; hosted exact-head success is recorded in PR #111 after publication.

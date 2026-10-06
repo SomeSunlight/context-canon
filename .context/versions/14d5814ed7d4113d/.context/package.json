@@ -1,0 +1,853 @@
+{
+  "changes": [],
+  "compiler_version": "0.8.0",
+  "digests": {
+    "normalized": "95e7c0f24a1aa6617e1cde1ff885df2a97ad08ff8d66e007de7f2359d4126329",
+    "package": "bd5c61802dcc66ab00544d17b17cd70ddd9305c9e50ef9a414f510945678a7bd"
+  },
+  "files": [
+    {
+      "path": ".context/resource-origins.json",
+      "sha256": "d7d52dfbfde51032a0cbce02a86e409d2d958511f0f6a8d53a7a5f7827c08e4f",
+      "size": 5377
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "92338c00f4d863e9e545a7b970e6f29338dd9d625024a65ecc05d43ff498d5f9",
+      "size": 20075
+    },
+    {
+      "path": "CONTEXT/README.md",
+      "sha256": "37bdcad600896b9c2995e058911dfd9cc25433d9cf924c0bcbe15e41941f0ebb",
+      "size": 2146
+    },
+    {
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/composition.md",
+      "sha256": "b35c514388a9095155912e561f069b713775a927b2a49fc07d7f46f10b5ef07e",
+      "size": 17529
+    },
+    {
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/harnesses.md",
+      "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
+      "size": 3499
+    },
+    {
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/official-context.md",
+      "sha256": "e16478552c7ae9b2f8655c31c2da7a8457518e5a1f09fd4af4f5fad073e1d94d",
+      "size": 7654
+    },
+    {
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/source-format.md",
+      "sha256": "4a115d1f395eb6553eb318cf8ca432709960f2ceb49568ee81864d304d9c7917",
+      "size": 20483
+    },
+    {
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/topics.md",
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/node-versions.md",
+      "sha256": "89b11c5cce5f44e74f915d82e84f0a9864a1208c032a248b8f434b000f46f1c7",
+      "size": 5694
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/onboarding-storage.md",
+      "sha256": "71a4e298f942440d40eabdc29755aa3d36b200e4000e0b30c1a1caa9001142a4",
+      "size": 7252
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/windows-paths.md",
+      "sha256": "796c7482821f8326feb7fb67fd5d3606be331c03d2894c88435ee580406e2013",
+      "size": 9174
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/architecture.md",
+      "sha256": "680ae07b887d0b4918bf6c0a05e0207b298906afbc5707927edecf52a13ead50",
+      "size": 26746
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/compiler.md",
+      "sha256": "da4a24745b1d3b1d65a76002b11df3e1f82965fd97b0450551a012fa57058bec",
+      "size": 18336
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/concepts.md",
+      "sha256": "75473db600fea1fa6279dcfd53557ca1266f26fe21154dc2d8ae7f254b375b84",
+      "size": 5762
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/onboarding-design.md",
+      "sha256": "b31e10130af8679387b161ec2adae3094ffbdd691bae5c98935f8969e6d04569",
+      "size": 30909
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/state.md",
+      "sha256": "2725beca19e2eb26d29af2d8a8078415fc518943ac14b0d4bb7743024b5024ae",
+      "size": 1382
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/tests-and-ci.md",
+      "sha256": "631cf4888d1efc5e5a113b0424f09a3e0c171590fa4f99795447f56f396ef208",
+      "size": 6378
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+      "sha256": "107f10defaf30e0d99dc0b5591be47dc06acf24323e098f0ad96208df5e8421a",
+      "size": 14140
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/composition.md",
+      "sha256": "b35c514388a9095155912e561f069b713775a927b2a49fc07d7f46f10b5ef07e",
+      "size": 17529
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/harnesses.md",
+      "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
+      "size": 3499
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/official-context.md",
+      "sha256": "e16478552c7ae9b2f8655c31c2da7a8457518e5a1f09fd4af4f5fad073e1d94d",
+      "size": 7654
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/source-format.md",
+      "sha256": "4a115d1f395eb6553eb318cf8ca432709960f2ceb49568ee81864d304d9c7917",
+      "size": 20483
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md",
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
+    },
+    {
+      "path": "CONTEXT/references/nd268d581199b5a7/plans/issue-107-onboarding-owner-test.md",
+      "sha256": "feeb3fc295e8daeb7f4b50f38a307abb49db1b0b973cd8226d477f8b52da4586",
+      "size": 4525
+    },
+    {
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md",
+      "sha256": "21ac62e2449effee4c2172ba02438c2f5093c9dc7e0235684fcb78801b851060",
+      "size": 9670
+    },
+    {
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
+      "sha256": "124440f4a2ed17d7bfbf265ac2936fa38695e6699069acc94f19f38a92b4351f",
+      "size": 6107
+    }
+  ],
+  "imports": [
+    {
+      "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "name": "ContextCanon Foundation",
+      "normalized_digest": "3d6d19485eb3698c94e0f880e3bbce5c0c5b9bd28f9ea5da0eda38d031145ec2",
+      "package_digest": "c6916ff9b980238f6144944f4b6df77684d603d93183a8bcab1d506a7e6a59ad",
+      "version": "0.2.4-draft",
+      "why": null
+    },
+    {
+      "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "name": "Development Workflow",
+      "normalized_digest": "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b",
+      "package_digest": "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731",
+      "version": "0.3.7-draft",
+      "why": null
+    }
+  ],
+  "node": {
+    "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+    "name": "ContextCanon Framework Development",
+    "version": "0.3.20-draft"
+  },
+  "parents": [],
+  "removed_rules": [],
+  "rules": [
+    {
+      "group": "Canonical context",
+      "id": "CC-001",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.",
+      "title": "One canonical package with an explicit export boundary",
+      "why": "Local background information must not become inherited governance, but the local view and normative export must still come from one deterministic authenticated package."
+    },
+    {
+      "group": "Canonical context",
+      "id": "CC-002",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.",
+      "title": "Edit source, not generated output",
+      "why": "One editable source prevents drift between equivalent outputs."
+    },
+    {
+      "group": "Machine state",
+      "id": "CC-003",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Framework bookkeeping belongs under `.context/` and should not be required reading for normal human or agent work.",
+      "title": "Keep compiler bookkeeping out of the normal workflow",
+      "why": "IDs, snapshots, provenance, and digests are necessary for the compiler but should not dominate the user experience."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-004",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.",
+      "title": "References stay informational",
+      "why": "Related information must not silently become governance merely because it uses the same immutable package infrastructure."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-013",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.",
+      "title": "Parents are unordered",
+      "why": "Orthogonal context commonly meets at one Node; ordering must never hide a contradiction."
+    },
+    {
+      "group": "Identity",
+      "id": "CC-005",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Every addressable context element has a stable ID independent of its title, wording, file location, and presentation.",
+      "title": "Stable identity",
+      "why": "Children must be able to remove, override, trace, or debug inherited elements even after human wording changes."
+    },
+    {
+      "group": "Identity",
+      "id": "CC-006",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Published official contexts expose stable IDs for Rules and other elements that child Nodes may reference.",
+      "title": "Publish IDs that children may reference",
+      "why": "Users must be able to discover the correct target without searching hidden comments or machine YAML."
+    },
+    {
+      "group": "Progressive disclosure",
+      "id": "CC-007",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Keep the official entry context compact and use Topics to load deeper context only when needed; Topic targets distinguish Required from Optional material.",
+      "title": "Keep entry context small",
+      "why": "Context is scarce working memory and should be spent on information relevant to the current task."
+    },
+    {
+      "group": "Project state",
+      "id": "CC-008",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "`STATE.md` describes the current local project situation and is never inherited as governance by child Nodes.",
+      "title": "State stays local",
+      "why": "Temporary project reality is useful locally but is not a reusable Rule of descendants."
+    },
+    {
+      "group": "Harness independence",
+      "id": "CC-009",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Project code and canonical project context must not depend on a particular LLM or agent harness; harness-specific files are thin generated adapters at the edge.",
+      "title": "Canonical context is model- and harness-neutral",
+      "why": "A project should remain portable across models and tools without duplicating its truth."
+    },
+    {
+      "group": "Repository conventions",
+      "id": "CC-012",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.",
+      "title": "Align Node roots with governed files",
+      "why": "Humans and agents should encounter the applicable Context naturally from the files they change."
+    },
+    {
+      "group": "Repository conventions",
+      "id": "CC-010",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.",
+      "title": "Keep familiar repository documents useful",
+      "why": "ContextCanon should complement familiar project navigation rather than replace it."
+    },
+    {
+      "group": "Documentation style",
+      "id": "CC-011",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.",
+      "title": "Write for intelligent readers",
+      "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
+    },
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-010",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Before implementation, framework-context, or substantial documentation changes, ensure an Issue records why the change exists; it may be brief.",
+      "title": "Back every change with an Issue",
+      "why": "Repository history should show the reason without reconstructing chat history."
+    },
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-001",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Before starting a new coherent development block, record a short purpose and checklist in the project's durable planning surface; use `PLAN.md` when the project follows this workflow convention.",
+      "title": "Plan a coherent change block before editing",
+      "why": "Repository state must explain what work is in progress even if the chat, model session, or tool run disappears."
+    },
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-002",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When a listed step is actually complete, mark its `PLAN.md` checkbox `[x]` immediately rather than reconstructing completion at the end of a long session.",
+      "title": "Checkpoint completed plan items immediately",
+      "why": "Immediate checkpoints turn PLAN into a reliable recovery ledger instead of requiring plan archaeology after an interruption."
+    },
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-003",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Put decisions, active constraints, accepted state, and next steps needed to resume work in repository documentation such as `PLAN.md`, `STATE.md`, or the project's equivalent rather than relying on chat history or model memory.",
+      "title": "Keep recovery-critical knowledge in the repository",
+      "why": "Long conversations and agent sessions are transient; the repository is the durable shared recovery point for humans and tools."
+    },
+    {
+      "group": "Recoverable planning",
+      "id": "CCW-007",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When the project owner resumes work after a short conversational interruption, explicitly says to continue, and reports no intervening repository changes, continue from the last established branch/PR state unless a repository operation gives evidence that it changed. Do not spend a new work cycle re-checking already established repository facts merely to prove that nothing happened.",
+      "title": "Resume recent explicit continuation without re-proving unchanged state",
+      "why": "In a controlled single-owner workflow, repeated defensive re-verification consumes the useful working window without adding evidence. Any stated or observed intervening change still invalidates this assumption."
+    },
+    {
+      "group": "Transparent machine semantics",
+      "id": "CCW-012",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When Markdown is also parsed, compiled, extracted, or otherwise given machine-significant meaning, every field or wording whose value affects machine semantics must live in an explicitly marked machine structure rather than being inferred from ordinary presentation prose. Keep that machine significance recognizable in rendered and review surfaces; rendering may style or summarize the control structure, but must not make the machine/human boundary indistinguishable.",
+      "title": "Mark machine-significant Markdown explicitly",
+      "why": "Humans must be able to tell which Markdown is freely editable presentation and which content participates in operational semantics; hidden parser contracts turn harmless-looking prose edits into surprising behavior."
+    },
+    {
+      "group": "Transparent machine semantics",
+      "id": "CCW-015",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.",
+      "title": "Render repository-local Markdown links URL-safely",
+      "why": "Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-004",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.",
+      "title": "Batch related edits before expensive final verification",
+      "why": "Final verification is valuable, but repeating it on superseded intermediate heads adds ceremony without increasing confidence in the candidate that will actually be reviewed or merged."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-009",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When the project owner explicitly approves a coherent implementation scope and says intermediate product review is unnecessary, mark the Fast Track as active in the durable PLAN with its scope and exit condition, keep recovery checkpoints and focused verification inside bounded work blocks, and defer repeated PR-description polish, full CI, generated-output regeneration, and other review ceremony until the coherent review candidate. When the Fast Track ends, record that closure before returning to ordinary review cadence.",
+      "title": "Use owner-approved Fast Track blocks without weakening the final gate",
+      "why": "Explicit delegation can remove intermediate coordination cost without sacrificing recoverability. Visible start/scope/exit/closure boundaries prevent a long single-worker Fast Track from becoming undocumented process state, while final human review and exact-head merge verification remain unchanged."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-005",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "A coherent development block may be presented for project-owner review while understood and disclosed CI failures or generated drift remain. After explicit project-owner approval and before merging, require the exact current head to pass the project's complete merge-gate verification, including zero generated drift when generated canonical output is part of the project contract.",
+      "title": "Require exact-head green verification at the merge gate, not the first review gate",
+      "why": "Human review should happen before spending finalization effort on a candidate that may still change, while the accepted branch remains protected by a strict reproducibility gate."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-013",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When actively testing an installable Python tool from a development checkout, prefer one editable install (`uv tool install --editable .`) and pull subsequent revisions with Git rather than reinstalling each version, when the environment supports it.",
+      "title": "Prefer editable installs for repeated owner testing",
+      "why": "This keeps the owner-test loop short and makes the tested command follow the current checkout."
+    },
+    {
+      "group": "Proportional verification",
+      "id": "CCW-014",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "When an executable tool is tested from a changing Git checkout, keep its release version stable until a real release/version boundary, but make runtime version output identify the current VCS state with the branch/ref when available, commit identity, and dirty state. Treat the commit identity as authoritative and the branch/ref as human orientation; release artifacts without checkout metadata still report the canonical release version.",
+      "title": "Expose development provenance without micro-bumping releases",
+      "why": "Humans and agents must be able to distinguish different development code behind the same release baseline without turning every branch, documentation edit, or review iteration into release-version ceremony."
+    },
+    {
+      "group": "Human review gate",
+      "id": "CCW-011",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Applicable Context constrains a task; it does not silently expand its writable scope.",
+      "title": "Expand change scope explicitly",
+      "why": "A local task must not acquire wider impact merely because broader Context was loaded."
+    },
+    {
+      "group": "Human review gate",
+      "id": "CCW-006",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Keep a review PR or equivalent change set open until the project owner explicitly approves the reviewed result.",
+      "title": "Do not merge without explicit project-owner approval",
+      "why": "Green automation proves only the properties it checks; it does not prove that the product, architecture, or documentation is acceptable to its human owner."
+    },
+    {
+      "group": "Accepted baseline",
+      "id": "CCW-008",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "After a reviewed change is successfully merged into the accepted branch, reconcile the durable repository state that records the accepted baseline before starting the next coherent development block. Record the merge outcome in `PLAN.md`, update `STATE.md` or equivalent current-state documentation, and refresh README/CHANGELOG or review-status wording made stale by the merge when applicable.",
+      "title": "Close the post-merge baseline checkpoint before new development",
+      "why": "The merge itself creates project facts after the merge candidate was frozen. Without a post-merge checkpoint, the accepted code can be correct while recovery documentation still describes the pre-merge state."
+    },
+    {
+      "group": "Compiler architecture",
+      "id": "CCI-001",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Prefer deterministic mechanisms whenever behavior can be specified and computed exactly; use LLMs only for work that genuinely requires semantic interpretation.",
+      "title": "Deterministic skeleton, semantic intelligence on top",
+      "why": "Deterministic structure provides reproducibility and auditability, while LLM reasoning is most valuable where meaning rather than mechanics must be understood."
+    },
+    {
+      "group": "Compiler architecture",
+      "id": "CCI-005",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Keep the compiler pipeline explicit: `parser.py` parses authoring syntax into `model.py` structures; `compiler.py` resolves and composes semantics; `render.py` produces deterministic text; `outputs.py` compares or writes generated files; `cli.py` only orchestrates commands.",
+      "title": "Keep compiler stages separated",
+      "why": "Narrow one-way stages make compiler behavior easier to reason about, test, and debug without letting filesystem or presentation concerns leak into semantic truth."
+    },
+    {
+      "group": "Compiler architecture",
+      "id": "CCI-012",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.",
+      "title": "Bind semantic reasoning to an explicit task context",
+      "why": "Semantic intelligence is most reliable when ContextCanon supplies the smallest sufficient world and resumes deterministic control at a strict result boundary; this also makes the same task viable across hosted and smaller local models without coupling canonical behavior to a provider."
+    },
+    {
+      "group": "Generated storage",
+      "id": "CCI-013",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Retain whole immutable Node versions once at the consuming Git root, keep exact acceptance per consumer, and avoid repeating repository prefixes or full IDs in generated package paths. Preserve document directories and exact relative links; bind complete identity/origin in verified package metadata. Scope transient review storage by consumer and migrate existing packages explicitly without changing accepted meaning.",
+      "title": "Keep generated storage independent of Node nesting",
+      "why": "ContextCanon is designed for nested Nodes; its own storage must not multiply their path depth or become the limiting factor when project-owned files remain usable. Shared whole-Node history is easier to inspect and avoids retaining the same accepted version in every Child."
+    },
+    {
+      "group": "Onboarding trust",
+      "id": "CCI-006",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "A newly onboarded Context Node must receive human-owned stable identity; when ContextCanon generates that identity it creates a fresh UUID once and stores it in review state rather than deriving it from the Evidence digest.",
+      "title": "Keep new Node identity independent from Evidence identity",
+      "why": "Evidence identifies the exact bytes reviewed, while Node identity identifies one continuing project context; unrelated projects can contain identical evidence and must remain independent Nodes."
+    },
+    {
+      "group": "Onboarding trust",
+      "id": "CCI-007",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "An onboarding proposal that reuses an existing Source must bind the Source Node ID, name, version, normalized digest, and package digest inspected by the semantic reviewer, and final acceptance must require that same immutable package.",
+      "title": "Bind reusable Sources to the exact reviewed package",
+      "why": "A different package version is a different review object even when the stable Source Node ID is unchanged; semantic review must not silently authorize content the reviewer never saw."
+    },
+    {
+      "group": "Onboarding trust",
+      "id": "CCI-008",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Before first onboarding publication, compile the proposed Node in staging, derive its actual compiler-owned output paths, and refuse publication when those outputs or canonical Context authoring/resource paths are already owned by the project.",
+      "title": "Do not seize project-owned paths during first adoption",
+      "why": "Adopting ContextCanon must never silently repurpose or overwrite an existing project file merely because its path collides with a generated ContextCanon output."
+    },
+    {
+      "group": "Onboarding trust",
+      "id": "CCI-009",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Treat first onboarding publication as one transaction-like state change; if publication fails before the acceptance record is complete, remove only the canonical/generated state and Source packages newly created by that failed attempt while preserving pre-existing accepted state.",
+      "title": "Make first-adoption publication rollback-safe",
+      "why": "An operator should be able to fix the failure and retry without first reconstructing whether the repository was left half-adopted."
+    },
+    {
+      "group": "Development method",
+      "id": "CCI-002",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Validate ContextCanon through concrete repository use cases before hardening abstractions into compiler code.",
+      "title": "Validate vertically before hardening",
+      "why": "Simple real workflows should shape the framework; implementation convenience must not force unnecessary ceremony on users."
+    },
+    {
+      "group": "Development method",
+      "id": "CCI-003",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Treat the repository documentation as the canonical design record once a decision is accepted; do not rely on reconstructing architecture from chat history.",
+      "title": "Repository documentation is the design record",
+      "why": "ContextCanon itself should demonstrate durable, reviewable project context."
+    },
+    {
+      "group": "Development method",
+      "id": "CCI-011",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Whenever ContextCanon generates a Markdown human gate that expects edits, mark every editable region with the same rendered `✏️ Editable ...` / `End editable ...` cues in addition to machine-only markers; HTML comments or heading wording must never be the only indication of editability.",
+      "title": "Mark human-editable generated Markdown with one visible convention",
+      "why": "Operators often review Markdown in preview mode where HTML comments disappear. One repeated visual grammar makes the workflow scannable and prevents each new review surface from inventing its own hidden interaction contract."
+    },
+    {
+      "group": "Development method",
+      "id": "CCI-010",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "Use `uv` instead of direct `pip` installation when the required workflow is supported. For the current Windows development environment, prefer a dedicated PowerShell 7.x window and install a review branch or exact commit as a globally available uv tool with `uv tool install --force \"git+https://github.com/SomeSunlight/context-canon.git@<ref>\"`. Keep commands and implementation portable so Windows/PowerShell remains an operator environment, not a ContextCanon platform requirement; use another installer only when `uv` is unavailable or unsuitable for the concrete task.",
+      "title": "Prefer uv for ContextCanon development and tool installation",
+      "why": "A uv-managed tool install has proven more repeatable for the real ContextCanon operator workflow and avoids repeatedly reintroducing environment-specific `pip` setup across development sessions, while the framework itself must remain usable on other operating systems and shells."
+    },
+    {
+      "group": "Node library",
+      "id": "CCI-004",
+      "modifications": [],
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "statement": "A reusable Node in the ContextCanon Node Library uses Foundation as a Parent only when its own semantics actually depend on Foundation. Standalone reusable Nodes remain independent, and consumers add Foundation as another Parent when both are wanted.",
+      "title": "Keep reusable Node dependencies explicit",
+      "why": "Reuse should not force unrelated transitive governance on consumers; explicit Parent relationships are simpler than requiring consumers to remove a baseline that a reusable Node never needed."
+    }
+  ],
+  "schema": "contextcanon/package/v4",
+  "sources": [
+    {
+      "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "name": "ContextCanon Foundation",
+      "normalized_digest": "3d6d19485eb3698c94e0f880e3bbce5c0c5b9bd28f9ea5da0eda38d031145ec2",
+      "package_digest": "c6916ff9b980238f6144944f4b6df77684d603d93183a8bcab1d506a7e6a59ad",
+      "relationship": "parent",
+      "version": "0.2.4-draft",
+      "why": null
+    },
+    {
+      "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "name": "Development Workflow",
+      "normalized_digest": "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b",
+      "package_digest": "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731",
+      "relationship": "parent",
+      "version": "0.3.7-draft",
+      "why": null
+    }
+  ],
+  "topics": [
+    {
+      "condition": "When editing ContextCanon source, IDs, generated views, package resources, or Topics:",
+      "id": "CC-TOPIC-AUTHORING",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n12f5de19a55e750/docs/official-context.md",
+          "resource_id": "RESOURCE-0490D1539162"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n12f5de19a55e750/docs/source-format.md",
+          "resource_id": "RESOURCE-75BB443F9641"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n12f5de19a55e750/docs/topics.md",
+          "resource_id": "RESOURCE-37704BB906AD"
+        }
+      ],
+      "title": "Context authoring"
+    },
+    {
+      "condition": "When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:",
+      "id": "CC-TOPIC-COMPOSITION",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n12f5de19a55e750/docs/composition.md",
+          "resource_id": "RESOURCE-484FEC35A542"
+        }
+      ],
+      "title": "Context composition"
+    },
+    {
+      "condition": "When adding or changing a harness-specific entry file:",
+      "id": "CC-TOPIC-HARNESSES",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n12f5de19a55e750/docs/harnesses.md",
+          "resource_id": "RESOURCE-438E892D9E41"
+        }
+      ],
+      "title": "Harness adapters"
+    },
+    {
+      "condition": "When planning, resuming, checkpointing, reviewing, testing, finalizing, merging, or closing the accepted baseline for a coherent development block:",
+      "id": "CCW-TOPIC-CHANGE-WORKFLOW",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md",
+          "resource_id": "RESOURCE-AF854839DFA0"
+        }
+      ],
+      "title": "Executing a development block"
+    },
+    {
+      "condition": "When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:",
+      "id": "CCW-TOPIC-VERSION-PROVENANCE",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
+          "resource_id": "RESOURCE-7C6F7E4D126B"
+        }
+      ],
+      "title": "Implementing executable version identity"
+    },
+    {
+      "condition": "When changing, debugging, reviewing, or extending the deterministic compiler implementation, parser grammar, semantic composition, rendering, generated-output handling, CLI, or compiler behavior:",
+      "id": "CCI-TOPIC-COMPILER",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/compiler.md",
+          "resource_id": "RESOURCE-BFB23E631C95"
+        }
+      ],
+      "title": "Compiler implementation"
+    },
+    {
+      "condition": "When changing or reviewing tests, GitHub Actions, repository consistency checks, self-hosted generated-package drift verification, or when diagnosing why a pull-request check failed, first understand the two test levels: deterministic behavior tests and exact generated-output drift checking.",
+      "id": "CCI-TOPIC-TESTS",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/tests-and-ci.md",
+          "resource_id": "RESOURCE-7A8E65675C80"
+        }
+      ],
+      "title": "Tests and CI"
+    },
+    {
+      "condition": "When planning, resuming, checkpointing, testing, regenerating ContextCanon's own generated packages, installing a ContextCanon development build, or preparing a ContextCanon development block for project-owner review:",
+      "id": "CCI-TOPIC-DEVELOPMENT-WORKFLOW",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "context-node",
+          "locator": "../../library/development-workflow/",
+          "target_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+          "target_node_name": "Development Workflow"
+        }
+      ],
+      "title": "Development workflow"
+    },
+    {
+      "condition": "When changing the compiler boundary, package model, Node structure, deterministic/semantic split, or generated artifacts:",
+      "id": "CCI-TOPIC-ARCHITECTURE",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "optional",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/concepts.md",
+          "resource_id": "RESOURCE-009EEDA1D1FB"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/architecture.md",
+          "resource_id": "RESOURCE-3220F65B61A9"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+          "resource_id": "RESOURCE-0ABD4555D3F3"
+        }
+      ],
+      "title": "Framework architecture"
+    },
+    {
+      "condition": "When changing onboarding inventory, evidence capture, semantic classification, proposal review/acceptance, or extraction of reusable context from an existing project:",
+      "id": "CCI-TOPIC-ONBOARDING",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/onboarding-design.md",
+          "resource_id": "RESOURCE-59AA3A35FF8B"
+        }
+      ],
+      "title": "Reviewed project onboarding"
+    },
+    {
+      "condition": "When changing authoring syntax, IDs, Topics, Changes, official entry views, or machine representation:",
+      "id": "CCI-TOPIC-FORMATS",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/official-context.md",
+          "resource_id": "RESOURCE-14ADEC7D5169"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/source-format.md",
+          "resource_id": "RESOURCE-ACA971B8F356"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md",
+          "resource_id": "RESOURCE-D817E3612085"
+        }
+      ],
+      "title": "Source and official formats"
+    },
+    {
+      "condition": "When changing Parent/Reference relationships, version acceptance, conflicts, removes, overrides, exceptions, or multi-Node repositories:",
+      "id": "CCI-TOPIC-COMPOSITION",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+          "resource_id": "RESOURCE-0ABD4555D3F3"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/composition.md",
+          "resource_id": "RESOURCE-2097657E0CFB"
+        }
+      ],
+      "title": "Composition"
+    },
+    {
+      "condition": "When changing `AGENTS.md`, `.goosehints`, or another model/harness adapter:",
+      "id": "CCI-TOPIC-HARNESSES",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/harnesses.md",
+          "resource_id": "RESOURCE-7C2416533946"
+        }
+      ],
+      "title": "Harness integration"
+    },
+    {
+      "condition": "When deciding whether information belongs in current state, planning, governance, or history:",
+      "id": "CCI-TOPIC-STATE",
+      "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "origin_node_name": "ContextCanon Framework Development",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/state.md",
+          "resource_id": "RESOURCE-B64A196201D7"
+        }
+      ],
+      "title": "State and planning"
+    }
+  ]
+}

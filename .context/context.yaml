@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.20-draft"
+  version: "0.3.22-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -86,13 +86,15 @@ resources:
   - {"source": "docs/maintenance.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md"}
   - {"source": "docs/node-versions.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md"}
   - {"source": "docs/onboarding-cli.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md"}
+  - {"source": "docs/onboarding-storage.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-storage.md"}
   - {"source": "docs/onboarding.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md"}
   - {"source": "docs/windows-paths.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/windows-paths.md"}
   - {"source": "nodes/internal/framework-development/docs/external-sources.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/external-sources.md"}
   - {"source": "nodes/internal/framework-development/docs/onboarding-design.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/onboarding-design.md"}
   - {"source": "nodes/library/foundation/docs/composition.md", "published": "CONTEXT/references/n0e1d966532e8ef4/nodes/library/foundation/docs/composition.md"}
+  - {"source": "plans/issue-107-onboarding-owner-test.md", "published": "CONTEXT/references/n0e1d966532e8ef4/plans/issue-107-onboarding-owner-test.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "ce32b79d50b1fa22c71335acdaf4aa8d030decba4316fe2a738f0fb086660b9e"
-  package_digest: "740b20263165be6caf730b3239339be3c487f2d993cfe964764e01479c0bdf97"
+  normalized_digest: "933055209c44ea8d15551f535f0b5dea290ffefbf6ba67d55ca63097265fb57f"
+  package_digest: "54e1a57cbb5f7038c977a9b051c46ac1cdc1b5c534f57fdda7a270b68a98536b"

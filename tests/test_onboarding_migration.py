@@ -31,6 +31,8 @@ class OnboardingMigrationTests(unittest.TestCase):
         self.addCleanup(helper.doCleanups)
         case = helper.make_case(subtree=subtree)
         repo, project, prepared, workspace, structure, catalog = case
+        repo, project = repo.resolve(), project.resolve()
+        case = repo, project, prepared, workspace, structure, catalog
         accepted = helper.accept_imports(case, [("Project (.)", "Workflow", "parent"), ("Project (.)", "Knowledge", "reference")])
         if stage >= 8:
             helper.placement(case)
@@ -335,3 +337,78 @@ class OnboardingMigrationTests(unittest.TestCase):
         self.assertEqual(default_workspace(project).parent, moved)
         reset_onboarding(project, from_step=10)
         self.assertTrue((default_workspace(project) / workspace.reusable_contexts_path.name).exists())
+
+    def test_crlf_plan_rebinding_preserves_unmanaged_notes_and_human_bytes(self):
+        _, case, _ = self.case(subtree=True)
+        _, project, prepared, workspace, _, _ = case
+        note = b'\r\nOwner note outside managed blocks.\r\n'
+        workspace.plan_path.write_bytes(workspace.plan_path.read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n') + note)
+        human = workspace.reusable_contexts_path.read_bytes()
+        result = migrate_onboarding(project, apply=True)
+        visible = OnboardingWorkspace(Path(result['workspace']))
+        self.assertTrue(visible.plan_path.read_bytes().endswith(note))
+        self.assertEqual(visible.reusable_contexts_path.read_bytes(), human)
+        reset_onboarding(project, from_step=10)
+
+    def test_frozen_handoff_and_zip_tampering_refuse_before_mutation(self):
+        for kind in ('instruction', 'evidence', 'zip', 'foreign'):
+            with self.subTest(kind=kind):
+                _, case, _ = self.case(subtree=True, stage=8)
+                repo, project, _, workspace, _, _ = case
+                relative, relative_zip = handoff_relative_paths(8)
+                root = workspace.root / relative
+                if kind == 'instruction':
+                    (root / '.contextcanon-handoff/INSTRUCTION.md').write_bytes(b'Changed task')
+                elif kind == 'evidence':
+                    (root / 'README.md').write_bytes(b'Changed Evidence')
+                elif kind == 'zip':
+                    (workspace.root / relative_zip).write_bytes(b'Changed transport')
+                else:
+                    (root / 'owner-note.txt').write_bytes(b'Preserve me')
+                before = self.snapshot(repo)
+                with self.assertRaises(ContextCanonError):
+                    migrate_onboarding(project, apply=True)
+                self.assertEqual(self.snapshot(repo), before)
+
+    def test_failed_atomic_activation_publication_keeps_legacy_routing_and_resumes(self):
+        _, case, _ = self.case(subtree=True)
+        _, project, prepared, _, _, _ = case
+        import os
+        link = os.link
+        def failed(source, destination, *args, **kwargs):
+            if Path(destination).name == ACTIVE_MARKER:
+                raise PermissionError('simulated Windows activation lock')
+            return link(source, destination, *args, **kwargs)
+        with patch('contextcanon.onboarding_storage.os.link', failed):
+            with self.assertRaises(PermissionError):
+                migrate_onboarding(project, apply=True)
+        self.assertEqual(scope_root(project), prepared.snapshot_root.parent)
+        self.assertFalse((scope_root(project, legacy=False) / ACTIVE_MARKER).exists())
+        self.assertEqual(migrate_onboarding(project, apply=True)['status'], 'complete')
+
+    def test_legacy_package_installation_journal_reuses_exact_shared_history_after_wrapper_retired(self):
+        for retained in (True, False):
+            with self.subTest(wrapper_present=retained):
+                _, case, accepted = self.case(subtree=True, stage=12)
+                repo, project, prepared, _, _, _ = case
+                root, package = accepted.catalog_roots[0], accepted.catalog_packages[0]
+                files = package_files(root, package)
+                wrapper = project / '.context/sources' / package.package_digest
+                for rel, data in files.items():
+                    path = wrapper / rel
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(data)
+                journal_path = prepared.snapshot_root / 'onboarding-reset-journal.json'
+                journal = json.loads(journal_path.read_text())
+                journal['records'][-1]['changes'].extend({'path': (wrapper / rel).relative_to(project).as_posix(),
+                    'before': None, 'after_exists': True, 'after_sha256': hashlib.sha256(data).hexdigest()} for rel, data in files.items())
+                journal_path.write_text(json.dumps(journal), encoding='utf-8')
+                if not retained:
+                    shutil.rmtree(wrapper)
+                versions = self.snapshot(library_root(repo))
+                result = migrate_onboarding(project, apply=True)
+                reset_onboarding(project, from_step=12)
+                self.assertEqual(self.snapshot(library_root(repo)), versions)
+                self.assertTrue((root / '.context/package.json').is_file())
+                receipt = json.loads(_receipt_path(project).read_text())
+                self.assertIn('onboarding-reset-journal.json', receipt['original_records'])

@@ -6,7 +6,7 @@ This is the recovery index, not the implementation diary. Read [STATE.md](STATE.
 
 Accepted `main`: `28ce62ef7aca4960bcf238b8d2221b7e445aa236` (owner-tested PR #105).
 
-Active development: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, stacked on owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`. On 2026-10-05 the owner explicitly authorized starting this phase before PR #108 is merged, with systematic recoverable checkpoints. This supersedes the earlier wait-for-merge start condition; accepted `main` is unchanged. PR #108 stays separate and unmerged. See the [active Phase-2 plan](plans/issue-107-phase-2.md).
+Active development: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, stacked on owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`. On 2026-10-05 the owner explicitly authorized starting this phase before PR #108 is merged, with systematic recoverable checkpoints. This supersedes the earlier wait-for-merge start condition; accepted `main` is unchanged. PR #108 stays separate and unmerged. See the [active Phase-2 plan](plans/issue-107-phase-2.md) and [owner test](plans/issue-107-onboarding-owner-test.md).
 
 [PR #108](https://github.com/SomeSunlight/context-canon/pull/108), branch `agent/issue-107-shared-node-versions`, implements #107 Phase 1: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. On 2026-10-05 the owner reported successful migration/history browsing and corrected propagation, accepted Phase 1, and requested preparation for an owner-performed squash merge. The product correction passed Linux/Windows CI. The subsequent documentation-head run passed Windows but its Linux job was cancelled; the final current head must pass the complete merge gate before readiness is confirmed.
 
@@ -15,7 +15,7 @@ Active development: **#107 Phase 2 onboarding storage**, branch `agent/issue-107
 | Restore a usable plan and review the interrupted work (#109) | Complete; owner accepted | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
 | Resource-move review correction (#110) | Fixed; owner retest successful | [Correction checklist](plans/issue-110-resource-move-review.md) |
 | Shared versions and migration (#107 Phase 1) | Owner accepted; exact-head gate/readiness on PR #108 | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
-| Onboarding storage and reset/recovery (#107 Phase 2) | Active owner-authorized Fast Track on a separate stacked branch | [Phase-2 checklist](plans/issue-107-phase-2.md) |
+| Onboarding storage and reset/recovery (#107 Phase 2) | Implementation complete; final candidate gates and owner test on Draft #111 | [Phase-2 checklist](plans/issue-107-phase-2.md) |
 | Safe unused-version pruning | Deferred; complete reachability required | [Phase-2 prerequisite](plans/issue-107-phase-2.md) |
 | Reinitialization / copied-project ID remapping (#106) | Separate open issue | [Backlog](plans/backlog.md) |
 | Other proposed work and unresolved issue bookkeeping | Unscheduled | [Backlog](plans/backlog.md) |

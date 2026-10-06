@@ -179,7 +179,7 @@ def _add_workspace(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--workspace",
         metavar="PATH",
-        help="visible human onboarding workspace (default: <project>/contextcanon-onboarding)",
+        help="visible human onboarding workspace (default: owned workspace at the Git root)",
     )
 
 

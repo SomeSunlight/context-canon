@@ -926,14 +926,14 @@ def _checkpoint_block(text: str, path: Path) -> str | None:
 def _checkpoint_snapshot(block: str | None) -> str | None:
     if block is None:
         return None
-    match = re.search(r"^- Snapshot: \`(.+?)\`$", block, re.MULTILINE)
+    match = re.search(r"^- Snapshot: \`(.+?)\`$", block.replace("\r\n", "\n"), re.MULTILINE)
     return match.group(1) if match else None
 
 
 def _checkpoint_stage(block: str | None) -> str | None:
     if block is None:
         return None
-    match = re.search(r"^- Stage: \*\*(.+?)\*\*$", block, re.MULTILINE)
+    match = re.search(r"^- Stage: \*\*(.+?)\*\*$", block.replace("\r\n", "\n"), re.MULTILINE)
     return match.group(1) if match else None
 
 

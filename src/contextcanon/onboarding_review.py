@@ -24,7 +24,6 @@ from .outputs import check_outputs, expected_outputs, write_outputs
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .path_budget import preflight_paths
 from .parser import ContextCanonError
-from .sources import install_source_package
 
 
 REVIEW_SCHEMA = "contextcanon/onboarding-review/v0"
@@ -431,6 +430,7 @@ def accept_onboarding_review(
                     "normalized_digest": package.normalized_digest,
                     "package_digest": package.package_digest,
                     "locator": locator,
+                    "relationship": "parent",
                 }
                 for item_id, _root, package, locator in source_bindings
             ],

@@ -8,6 +8,14 @@ Use this design document when you already have a Git repository and want to unde
 
 You do **not** need an existing `CONTEXT.src.md`, and you do not need to decide the final ContextCanon structure before you start.
 
+## Shared storage and active-run relocation
+
+New runs bind full project/Evidence ownership in root-scoped `.context/onboarding/<project-token>/<Evidence-token>/`. Exact Catalog/enclosing-Parent packages use the normal complete-binding version library, while provenance and mutable reviews belong to the run. Visible subtree workspaces and isolated STEP-04/08 handoffs are shallow root locations. Handoffs authenticate project/Evidence/step independently of their portable manifest; ZIP contents retain readable STEP directories and exclude the physical ownership sidecar. Authored Node/document paths and Parent/Reference semantics remain unchanged.
+
+`onboarding_migration.py` is removable transition tooling, lazily imported by explicit `onboard migrate`. Preview verifies inputs without creating a scope or freezing a provider. Apply copies/verifies exact inputs and human state before an authenticated runtime activation record changes routing; narrow hash-bound retirement is resumable. Runtime never depends on the receipt. Only physical schema fields and owned PLAN blocks are rebound, so stale review hashes remain stale. Shared immutable history stays outside rollback/reset ownership. Old acceptance paths are translated to the restricted run acceptance locator, preserving original before bytes. Compact routing survives resets so historical old scopes cannot reactivate accidentally.
+
+See the operator [storage/migration contract](../../../../docs/onboarding-storage.md) for exact paths, refusal conditions, Git visibility, return-copy boundaries and retained legacy-layout limitations. External custom workspaces stay supported by runtime; the explicit migration currently requires an in-repository workspace. Safe pruning requires onboarding and recovery reachability and is separate work.
+
 ## Current architecture in one picture
 
 The current first-adoption path has **three distinct concerns** before publication:

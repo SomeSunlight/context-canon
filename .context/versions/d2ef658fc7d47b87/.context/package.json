@@ -1,0 +1,157 @@
+{
+  "changes": [],
+  "compiler_version": "0.8.0",
+  "digests": {
+    "normalized": "77a08aa9c959827745d362c92c88c8dcc5db9d764dc38646a240b8815f41f6e9",
+    "package": "f961e87357e9176e7d7f7eddbda64cf2d06ecdbec4eb85d4135251142bf65bda"
+  },
+  "files": [
+    {
+      "path": ".context/resource-origins.json",
+      "sha256": "40fc930005274ca090df208414cb5875ed5f428819428a1f0250107c573074d1",
+      "size": 2368
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "db390195eb4ff9536f8a9bd2f867a395d5943b460ac2135484b5a4d67cb2e99c",
+      "size": 3246
+    },
+    {
+      "path": "CONTEXT/README.md",
+      "sha256": "37bdcad600896b9c2995e058911dfd9cc25433d9cf924c0bcbe15e41941f0ebb",
+      "size": 2146
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md",
+      "sha256": "3ce6f524162ef266fe7ee618a6c5ae6d00ab64b6f88798867912bb40d63cc122",
+      "size": 9651
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md",
+      "sha256": "9b88d3b547a4139d9d423804e7f9cd84041097ec5e92705dd98168b9e0419312",
+      "size": 11503
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md",
+      "sha256": "89b11c5cce5f44e74f915d82e84f0a9864a1208c032a248b8f434b000f46f1c7",
+      "size": 5694
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md",
+      "sha256": "3bb55fca5bcd9c5e31ea19296f1d3df63db387dd158d056833bbe8a2efdc74b2",
+      "size": 9110
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-storage.md",
+      "sha256": "71a4e298f942440d40eabdc29755aa3d36b200e4000e0b30c1a1caa9001142a4",
+      "size": 7252
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md",
+      "sha256": "3bc69fa1b80184270cd3b3a899ad2e4da81d7dd3bbd16b03f9cde23bf7f6f6e2",
+      "size": 38622
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/windows-paths.md",
+      "sha256": "796c7482821f8326feb7fb67fd5d3606be331c03d2894c88435ee580406e2013",
+      "size": 9174
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/external-sources.md",
+      "sha256": "8080fe87063a29d26d3db6546c65f8ed02aa830437a3477b3dcecd4be43b18b1",
+      "size": 18150
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/onboarding-design.md",
+      "sha256": "b31e10130af8679387b161ec2adae3094ffbdd691bae5c98935f8969e6d04569",
+      "size": 30909
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/library/foundation/docs/composition.md",
+      "sha256": "b35c514388a9095155912e561f069b713775a927b2a49fc07d7f46f10b5ef07e",
+      "size": 17529
+    },
+    {
+      "path": "CONTEXT/references/n0e1d966532e8ef4/plans/issue-107-onboarding-owner-test.md",
+      "sha256": "feeb3fc295e8daeb7f4b50f38a307abb49db1b0b973cd8226d477f8b52da4586",
+      "size": 4525
+    }
+  ],
+  "imports": [],
+  "node": {
+    "id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+    "name": "ContextCanon Gateway",
+    "version": "0.3.21-draft"
+  },
+  "parents": [],
+  "removed_rules": [],
+  "rules": [],
+  "schema": "contextcanon/package/v4",
+  "sources": [],
+  "topics": [
+    {
+      "condition": "When adopting ContextCanon in an existing repository, preparing onboarding evidence, generating or running the onboarding instruction, validating an onboarding proposal, or deciding how to start using ContextCanon on an existing project:",
+      "id": "CCG-TOPIC-ONBOARDING",
+      "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "origin_node_name": "ContextCanon Gateway",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md",
+          "resource_id": "RESOURCE-5F43AABB6A6C"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md",
+          "resource_id": "RESOURCE-99512F179D85"
+        }
+      ],
+      "title": "Onboard an existing project"
+    },
+    {
+      "condition": "When inspecting, updating, propagating, building, checking, or learning the normal CLI workflow in an already-onboarded ContextCanon project:",
+      "id": "CCG-TOPIC-MAINTENANCE",
+      "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "origin_node_name": "ContextCanon Gateway",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md",
+          "resource_id": "RESOURCE-FF07DC187B0F"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md",
+          "resource_id": "RESOURCE-4C412020705C"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md",
+          "resource_id": "RESOURCE-NODE-VERSIONS"
+        }
+      ],
+      "title": "Use and maintain ContextCanon"
+    },
+    {
+      "condition": "When changing ContextCanon's specification, documentation, Context Nodes, compiler, examples, harness integration, or project tooling:",
+      "id": "CCG-TOPIC-DEVELOPMENT",
+      "origin_node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "origin_node_name": "ContextCanon Gateway",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "context-node",
+          "locator": "nodes/internal/framework-development",
+          "target_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+          "target_node_name": "ContextCanon Framework Development"
+        }
+      ],
+      "title": "ContextCanon framework development"
+    }
+  ]
+}

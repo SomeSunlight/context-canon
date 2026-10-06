@@ -15,13 +15,26 @@ contextcanon --version
 contextcanon onboard init .
 ```
 
-For a first adoption this is usually the Git repository root. For a later subproject inside an already-onboarded repository, run the same command from that subtree root. Git still defines the outer repository boundary; onboarding state and Evidence stay inside the selected subtree.
+For a first adoption this is usually the Git repository root. For a later subproject inside an already-onboarded repository, run the same command from that subtree root. Git still defines the outer repository boundary; authored material stays inside the selected subtree; new machine payloads and the default visible workspace use short, owned locations at the outer Git root. `init` prints the exact PLAN path.
 
 Then open:
 
 ```text
 contextcanon-onboarding/PLAN.md
 ```
+
+## Relocate an existing active run
+
+From its project/subtree root:
+
+```text
+contextcanon onboard migrate .
+contextcanon onboard migrate . --apply
+```
+
+The first command is read-only. It selects accepted inventory or requires `--snapshot <old-snapshot>` when ambiguous. An in-repository custom workspace uses `--workspace <path>` and remains in place. Continue with the printed new PLAN; original reviews, frozen bindings, handoff results and portable ZIP bytes are preserved. Retry the same apply after interruption. See [storage, safety and recovery](onboarding-storage.md) and the [owner test](../plans/issue-107-onboarding-owner-test.md).
+
+All examples below use `<snapshot>`: copy the exact snapshot variable/commands from the generated PLAN, whose relative locators remain usable when the checkout moves. Historical full-digest local runs remain readable.
 
 ## Go back or restart
 
@@ -70,7 +83,7 @@ contextcanon onboard prepare . --inventory contextcanon-onboarding/STEP-02-inven
 The command prints the immutable Evidence snapshot path:
 
 ```text
-.context/onboarding/<evidence-digest>
+<snapshot>
 ```
 
 ## STEP 04–07 — design the shelves
@@ -78,22 +91,22 @@ The command prints the immutable Evidence snapshot path:
 Generate the structure task:
 
 ```text
-contextcanon onboard structure-instruction .context/onboarding/<evidence-digest>
+contextcanon onboard structure-instruction <snapshot>
 ```
 
-The instruction command automatically creates `contextcanon-onboarding/handoffs/STEP-04-structure/` and `STEP-04-structure.zip`. Open only the directory as an agent project, or upload the ZIP. Tell the model to follow `.contextcanon-handoff/PLAN.md`.
+The instruction command automatically creates `<git-root>/.context/handoffs/<STEP-04-token>/` and a matching `.zip`. Open only the directory as an agent project, or upload the ZIP. Tell the model to follow `.contextcanon-handoff/PLAN.md`.
 
 Import the result, then validate it as a separate explicit step:
 
 ```text
-contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 4
-contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
+contextcanon onboard handoff-import <snapshot> --step 4
+contextcanon onboard structure-validate <snapshot>
 ```
 
 To rebuild/export the handoff manually:
 
 ```text
-contextcanon onboard handoff .context/onboarding/<evidence-digest> --step 4
+contextcanon onboard handoff <snapshot> --step 4
 ```
 
 Use `--refresh` only when you deliberately want to discard an existing handoff result and rebuild changed inputs.
@@ -101,11 +114,11 @@ Use `--refresh` only when you deliberately want to discard an existing handoff r
 After the reasoning model result has been imported as `STEP-04b-structure-proposal.json`:
 
 ```text
-contextcanon onboard structure-validate .context/onboarding/<evidence-digest>
-contextcanon onboard structure-review .context/onboarding/<evidence-digest>
-contextcanon onboard structure-preview .context/onboarding/<evidence-digest>
-contextcanon onboard structure-materialize .context/onboarding/<evidence-digest>
-contextcanon onboard reusable-contexts .context/onboarding/<evidence-digest>
+contextcanon onboard structure-validate <snapshot>
+contextcanon onboard structure-review <snapshot>
+contextcanon onboard structure-preview <snapshot>
+contextcanon onboard structure-materialize <snapshot>
+contextcanon onboard reusable-contexts <snapshot>
 ```
 
 The generated PLAN gives the exact command variant required by the current checkpoint.
@@ -127,16 +140,16 @@ Existing enclosing Parents are shown separately; do not assign them again. Paren
 Generate the placement task:
 
 ```text
-contextcanon onboard placement-instruction .context/onboarding/<evidence-digest>
+contextcanon onboard placement-instruction <snapshot>
 ```
 
-STEP 08 creates a separate `handoffs/STEP-08-placement/` workspace and ZIP. Never reuse the STEP-04 agent workspace. The handoff binds its input set from the frozen snapshot manifest; files an IDE later adds inside the directory are not semantic inputs and are not added to regenerated ZIPs.
+STEP 08 creates a separate `<git-root>/.context/handoffs/<STEP-08-token>/` workspace and ZIP. Never reuse the STEP-04 agent workspace. The handoff binds its input set from the frozen snapshot manifest; files an IDE later adds inside the directory are not semantic inputs and are not added to regenerated ZIPs.
 
 When the selected project is a subtree inside an existing ContextCanon Node, STEP 04 and STEP 08 also receive that nearest enclosing Node as already-accepted inherited Context. Its exact compiled package is bound under `.contextcanon-handoff/enclosing-parent/`; the model may read its `CONTEXT.md` and packaged Topic Resources, but they are not subtree Evidence. Publication pins the subtree root to that exact Parent package.
 
 ```text
-contextcanon onboard handoff-import .context/onboarding/<evidence-digest> --step 8
-contextcanon onboard placement-validate .context/onboarding/<evidence-digest>
+contextcanon onboard handoff-import <snapshot> --step 8
+contextcanon onboard placement-validate <snapshot>
 ```
 
 If onboarding uses a non-default visible workspace, pass the same `--workspace PATH` to instruction, handoff/import, validation and reset commands. The STEP-specific handoff stays below that workspace; it never falls back to the default directory silently.
@@ -144,10 +157,10 @@ If onboarding uses a non-default visible workspace, pass the same `--workspace P
 After import, `STEP-08b-placement-proposal.json` is the canonical machine proposal:
 
 ```text
-contextcanon onboard placement-validate .context/onboarding/<evidence-digest>
-contextcanon onboard placement-review .context/onboarding/<evidence-digest>
-contextcanon onboard placement-preview .context/onboarding/<evidence-digest>
-contextcanon onboard placement-publish .context/onboarding/<evidence-digest>
+contextcanon onboard placement-validate <snapshot>
+contextcanon onboard placement-review <snapshot>
+contextcanon onboard placement-preview <snapshot>
+contextcanon onboard placement-publish <snapshot>
 ```
 
 STEP 09 is validation-only and intentionally creates no separate review document. STEP 10 is the human placement gate; STEP 11 is the deterministic publication preview; STEP 12 is the explicit publication action.
@@ -164,7 +177,7 @@ Normally ignored:
 
 ```text
 contextcanon-onboarding/
-.context/onboarding/<evidence-digest>/
+<snapshot>/
 ```
 
 Normally Git-visible after STEP 03:

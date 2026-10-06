@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.19-draft"
+  version: "0.3.21-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -262,6 +262,7 @@ resources:
   - {"source": null, "published": "CONTEXT/references/n12f5de19a55e750/docs/source-format.md"}
   - {"source": null, "published": "CONTEXT/references/n12f5de19a55e750/docs/topics.md"}
   - {"source": "../../../docs/node-versions.md", "published": "CONTEXT/references/nd268d581199b5a7/docs/node-versions.md"}
+  - {"source": "../../../docs/onboarding-storage.md", "published": "CONTEXT/references/nd268d581199b5a7/docs/onboarding-storage.md"}
   - {"source": "../../../docs/windows-paths.md", "published": "CONTEXT/references/nd268d581199b5a7/docs/windows-paths.md"}
   - {"source": "docs/architecture.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/architecture.md"}
   - {"source": "docs/compiler.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/compiler.md"}
@@ -275,10 +276,11 @@ resources:
   - {"source": "../../library/foundation/docs/official-context.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/official-context.md"}
   - {"source": "../../library/foundation/docs/source-format.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/source-format.md"}
   - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md"}
+  - {"source": "../../../plans/issue-107-onboarding-owner-test.md", "published": "CONTEXT/references/nd268d581199b5a7/plans/issue-107-onboarding-owner-test.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "3f540d3ef0692adede3ca3ddaee8915233aecfea4ad245a1b71c1a7bb62dd2c3"
-  package_digest: "277165522926f38a5c52fb9e750c5af3d309a82135f785f2c67878624a85f0a2"
+  normalized_digest: "292c9a2932937612a0b360951ea80b0b56d0c8f61f04f731bbe6f3d87ebd3b34"
+  package_digest: "fd9a9fd875767cf85f192f4a9253c7161b4f4206f0e476ee1a248d2f206e7581"
