@@ -83,7 +83,7 @@ class CompiledPackageTests(unittest.TestCase):
         artifact = self.write_artifact(team)
         self.addCleanup(shutil.rmtree, artifact)
         self.assertEqual(load_package_files(contents), load_package(artifact))
-        for kind in ("missing", "extra", "bytes", "semantic"):
+        for kind in ("missing", "extra", "bytes", "semantic", "encoding"):
             with self.subTest(kind=kind):
                 changed = dict(contents)
                 if kind == "missing":
@@ -92,10 +92,12 @@ class CompiledPackageTests(unittest.TestCase):
                     changed["CONTEXT.src.md"] = b"Authoring is not an immutable artifact"
                 elif kind == "bytes":
                     changed["CONTEXT.md"] += b"Changed bytes"
-                else:
+                elif kind == "semantic":
                     manifest = json.loads(changed[PACKAGE_MANIFEST_PATH])
                     manifest["node"]["id"] = "different-node"
                     changed[PACKAGE_MANIFEST_PATH] = json.dumps(manifest).encode()
+                else:
+                    changed[PACKAGE_MANIFEST_PATH] = changed[PACKAGE_MANIFEST_PATH].decode("utf-8").encode("utf-16")
                 with self.assertRaises(ContextCanonError):
                     load_package_files(changed)
 

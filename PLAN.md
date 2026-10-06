@@ -10,6 +10,7 @@ Purpose: migration reaches an original Foundation authoring directory and reject
 - [x] Resolve missing legacy Catalog bytes and provenance deterministically, distinguish authoring files from strict store contents, and refuse advanced/unrecoverable provider substitution with useful diagnostics.
 - [x] Regress exact live-package fallback, changed provider with retained history/Git history, missing/corrupt historical bytes, preview/apply/interruption and unchanged STEP-07/08/10/publication.
 - [x] Verify the full correction and prepare publication on Draft #111; fresh exact-head Linux/Windows evidence remains live PR metadata.
+- [x] Close native Windows findings: restore legacy CRLF artifact bytes only when size and full hash prove the original bytes, add a portable Git-autocrlf regression, and correct UTF-8/path-alias assumptions in tests. All 438 tests and self-host checks pass locally; prepare the fast-forward publication and record fresh hosted evidence in #111.
 - [ ] Owner retries the original migration preview/apply with the corrected tool; Phase-2 approval remains separate.
 
 ## Active owner-test correction — migration workspace diagnostics (#107)

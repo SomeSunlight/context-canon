@@ -472,6 +472,14 @@ def _read_historical_package(original_root: Path, expected_digest: str, expected
             data = _git_bytes(repository, "show", f"{commit}:{git_path}")
             if data is None:
                 break
+            # Git may have stored LF for a CRLF artifact whose original bytes
+            # were bound by a legacy Windows manifest. Restore that one known
+            # transport conversion only when its size AND full SHA prove the
+            # exact original bytes. This is not package/EOL normalization.
+            if len(data) != row.get("size") or hashlib.sha256(data).hexdigest() != row.get("sha256"):
+                crlf = data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+                if len(crlf) == row.get("size") and hashlib.sha256(crlf).hexdigest() == row.get("sha256"):
+                    data = crlf
             contents[rel] = data
         else:
             try:

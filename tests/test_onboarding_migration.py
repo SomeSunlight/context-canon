@@ -27,13 +27,18 @@ import tests.test_onboarding_relationships as relationships
 
 
 class OnboardingMigrationTests(unittest.TestCase):
-    def case(self, *, subtree=False, stage=7, custom=False, choices=None):
+    def case(self, *, subtree=False, stage=7, custom=False, choices=None, crlf=False):
         helper = relationships.OnboardingRelationshipTests()
         self.addCleanup(helper.doCleanups)
         case = helper.make_case(subtree=subtree)
         repo, project, prepared, workspace, structure, catalog = case
         repo, project = repo.resolve(), project.resolve()
         case = repo, project, prepared, workspace, structure, catalog
+        if crlf:
+            for node in (catalog / "workflow", catalog / "knowledge"):
+                guide = node / "guide.md"
+                guide.write_bytes(guide.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+                write_outputs(Compiler(catalog).compile(node))
         accepted = helper.accept_imports(case, choices or [("Project (.)", "Workflow", "parent"), ("Project (.)", "Knowledge", "reference")])
         if stage >= 8:
             helper.placement(case)
@@ -351,7 +356,7 @@ class OnboardingMigrationTests(unittest.TestCase):
                 else:
                     for node in (catalog / "workflow", catalog / "knowledge"):
                         source = node / "CONTEXT.src.md"
-                        source.write_text(source.read_text().replace('version="1.0.0"', 'version="2.0.0"'),
+                        source.write_text(source.read_text(encoding="utf-8").replace('version="1.0.0"', 'version="2.0.0"'),
                                           encoding="utf-8")
                         write_outputs(Compiler(catalog).compile(node))
                 self.commit_catalog(catalog, "Changed provider checkout")
@@ -384,12 +389,48 @@ class OnboardingMigrationTests(unittest.TestCase):
                 self.assertEqual(loaded.catalog_packages, accepted.catalog_packages)
                 for root, package in zip(loaded.catalog_roots, loaded.catalog_packages):
                     self.assertEqual(package_files(root, package), expected[package.metadata.id])
-                    provenance = json.loads(provenance_path(new, package).read_text())
+                    provenance = json.loads(provenance_path(new, package).read_text(encoding="utf-8"))
                     self.assertEqual(provenance["ref"], exact_ref)
                 helper.publish((repo, project, replace(prepared, snapshot_root=new), visible, structure, catalog))
                 self.assertEqual(self.snapshot(catalog), providers)
                 self.assertEqual(subprocess.run(["git", "-C", str(catalog), "rev-parse", "HEAD"],
                                                check=True, capture_output=True, text=True).stdout.strip(), head)
+
+    def test_git_lf_transport_recovers_only_hash_proven_legacy_crlf_artifacts(self):
+        helper, case, accepted = self.case(stage=8, crlf=True)
+        repo, project, prepared, workspace, structure, catalog = case
+        subprocess.run(["git", "init", "-q", str(catalog)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(catalog), "config", "core.autocrlf", "true"], check=True)
+        expected = {p.metadata.id: package_files(root, p)
+                    for root, p in zip(accepted.catalog_roots, accepted.catalog_packages)}
+        self.commit_catalog(catalog, "Original CRLF catalog")
+        for package in accepted.catalog_packages:
+            rel = next(f.path for f in package.files if f.path.endswith("/guide.md"))
+            original = expected[package.metadata.id][rel]
+            blob = subprocess.run(["git", "-C", str(catalog), "show",
+                                   f"HEAD:{package.metadata.id}/{rel}"],
+                                  check=True, capture_output=True).stdout
+            self.assertIn(b"\r\n", original)
+            self.assertNotEqual(blob, original)
+            self.assertEqual(blob, original.replace(b"\r\n", b"\n"))
+        self.remove_catalog_freezes(case, accepted)
+        for node in (catalog / "workflow", catalog / "knowledge"):
+            shutil.rmtree(node)
+        self.commit_catalog(catalog, "Provider nodes removed")
+        before, providers = self.snapshot(repo), self.snapshot(catalog)
+        migrate_onboarding(project)
+        self.assertEqual(self.snapshot(repo), before)
+        self.assertEqual(self.snapshot(catalog), providers)
+        result = migrate_onboarding(project, apply=True)
+        new = Path(result["snapshot"])
+        loaded = load_accepted_reusable_contexts(workspace.reusable_contexts_path, new,
+                                               prepared.evidence_digest, structure)
+        self.assertEqual(loaded.review_digest, accepted.review_digest)
+        self.assertEqual(loaded.catalog_packages, accepted.catalog_packages)
+        for root, package in zip(loaded.catalog_roots, loaded.catalog_packages):
+            self.assertEqual(package_files(root, package), expected[package.metadata.id])
+        helper.publish((repo, project, replace(prepared, snapshot_root=new), workspace, structure, catalog))
+        self.assertEqual(self.snapshot(catalog), providers)
 
     def test_provider_retained_library_is_used_without_live_authoring_or_git_history(self):
         _, case, accepted = self.case()
@@ -428,7 +469,7 @@ class OnboardingMigrationTests(unittest.TestCase):
                 self.remove_catalog_freezes(case, accepted)
                 for node in (catalog / "workflow", catalog / "knowledge"):
                     source = node / "CONTEXT.src.md"
-                    source.write_text(source.read_text().replace('version="1.0.0"', 'version="2.0.0"'), encoding="utf-8")
+                    source.write_text(source.read_text(encoding="utf-8").replace('version="1.0.0"', 'version="2.0.0"'), encoding="utf-8")
                     write_outputs(Compiler(catalog).compile(node))
                 if corrupt_history:
                     self.commit_catalog(catalog, "Only advanced valid packages")
@@ -445,11 +486,11 @@ class OnboardingMigrationTests(unittest.TestCase):
                                                    ("Project (.)", "Knowledge", "parent")])
         repo, project, prepared, workspace, structure, catalog = case
         path = workspace.reusable_contexts_path
-        text = path.read_text().replace("contextcanon/onboarding-reusable-contexts/v1",
+        text = path.read_text(encoding="utf-8").replace("contextcanon/onboarding-reusable-contexts/v1",
                                         "contextcanon/onboarding-reusable-contexts/v0").replace(" [Parent]", "")
         path.write_text(text, encoding="utf-8")
         state_path = prepared.snapshot_root / "reusable-contexts.json"
-        state = json.loads(state_path.read_text())
+        state = json.loads(state_path.read_text(encoding="utf-8"))
         state["schema"] = "contextcanon/onboarding-reusable-contexts-state/v0"
         for assignment in state["assignments"]:
             assignment.pop("relationship")
@@ -472,7 +513,7 @@ class OnboardingMigrationTests(unittest.TestCase):
         result = migrate_onboarding(project, apply=True)
         new = Path(result["snapshot"])
         self.assertEqual(path.read_bytes(), human)
-        migrated = json.loads((new / "reusable-contexts.json").read_text())
+        migrated = json.loads((new / "reusable-contexts.json").read_text(encoding="utf-8"))
         self.assertEqual(migrated["review_digest"], state["review_digest"])
         self.assertEqual(migrated["human_file_sha256"], state["human_file_sha256"])
         loaded = load_accepted_reusable_contexts(path, new, prepared.evidence_digest, structure)

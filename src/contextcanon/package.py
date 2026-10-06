@@ -328,7 +328,7 @@ def load_package_files(contents: dict[str, bytes]) -> CompiledPackage:
     if PACKAGE_MANIFEST_PATH not in contents:
         raise ContextCanonError(f"Not a compiled Context package: missing {PACKAGE_MANIFEST_PATH}")
     try:
-        raw = json.loads(contents[PACKAGE_MANIFEST_PATH])
+        raw = json.loads(contents[PACKAGE_MANIFEST_PATH].decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContextCanonError(f"Invalid Context package manifest: {exc}") from exc
     files = {path: data for path, data in contents.items() if path != PACKAGE_MANIFEST_PATH}
