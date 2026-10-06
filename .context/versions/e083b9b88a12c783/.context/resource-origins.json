@@ -1,0 +1,60 @@
+{
+  "resources": [
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md",
+      "repo_path": "docs/cli.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md",
+      "repo_path": "docs/maintenance.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md",
+      "repo_path": "docs/node-versions.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md",
+      "repo_path": "docs/onboarding-cli.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-storage.md",
+      "repo_path": "docs/onboarding-storage.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding.md",
+      "repo_path": "docs/onboarding.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/docs/windows-paths.md",
+      "repo_path": "docs/windows-paths.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/external-sources.md",
+      "repo_path": "nodes/internal/framework-development/docs/external-sources.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/internal/framework-development/docs/onboarding-design.md",
+      "repo_path": "nodes/internal/framework-development/docs/onboarding-design.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/nodes/library/foundation/docs/composition.md",
+      "repo_path": "nodes/library/foundation/docs/composition.md"
+    },
+    {
+      "node_id": "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11",
+      "path": "CONTEXT/references/n0e1d966532e8ef4/plans/issue-107-onboarding-owner-test.md",
+      "repo_path": "plans/issue-107-onboarding-owner-test.md"
+    }
+  ],
+  "schema": "contextcanon/resource-origins/v1"
+}
