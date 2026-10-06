@@ -61,6 +61,8 @@ from .onboarding_structure_materialize import (
 from .onboarding_workspace import open_inventory_workspace, open_onboarding_workspace, remember_run_inputs, update_workspace_checkpoint, write_utf8
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
+from .version_history import publish_outputs, render_inventory
+from .version_store import library_root
 from .package import compiled_package, export_digest
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .resources import (
@@ -272,6 +274,8 @@ _HUMAN_CHANGE_NOUNS = {
     "resource": ("resource", "resources"),
 }
 
+_HUMAN_CHANGE_SYMBOLS = {"added": "+", "removed": "-", "modified": "~", "moved": "R"}
+
 
 def _human_change_summary(diff, *, include_categories: set[str] | None = None, exclude_categories: set[str] | None = None) -> str:
     include = include_categories
@@ -282,11 +286,11 @@ def _human_change_summary(diff, *, include_categories: set[str] | None = None, e
             continue
         key = (entry.category, entry.change)
         counts[key] = counts.get(key, 0) + 1
-    action = {"added": "added", "removed": "removed", "modified": "changed"}
+    action = {"added": "added", "removed": "removed", "modified": "changed", "moved": "moved"}
     parts: list[str] = []
     for category in ("parent", "source", "change", "rule", "topic", "resource"):
         singular, plural = _HUMAN_CHANGE_NOUNS[category]
-        for change in ("added", "removed", "modified"):
+        for change in ("added", "removed", "modified", "moved"):
             count = counts.get((category, change), 0)
             if count:
                 parts.append(f"{count} {singular if count == 1 else plural} {action[change]}")
@@ -314,7 +318,6 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
         "topic": "Topics",
         "resource": "Resources",
     }
-    symbols = {"added": "+", "removed": "-", "modified": "~"}
     grouped: dict[str, list[object]] = {}
     for entry in diff.entries:
         if entry.category in exclude:
@@ -327,9 +330,11 @@ def _print_human_change_details(diff, *, exclude_categories: set[str] | None = N
         print(f"{headings[category]}:")
         for entry in entries:
             detail = ""
-            if entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
+            if entry.change == "moved" and entry.before and entry.after:
+                detail = f" [{entry.before['path']} -> {entry.after['path']}]"
+            elif entry.change == "modified" and entry.changed_fields and entry.category not in {"resource", "source", "parent"}:
                 detail = " [" + ", ".join(entry.changed_fields) + "]"
-            print(f"  {symbols[entry.change]} {_human_entry_label(entry)}{detail}")
+            print(f"  {_HUMAN_CHANGE_SYMBOLS[entry.change]} {_human_entry_label(entry)}{detail}")
             if entry.category in {"source", "parent"} and entry.change == "modified":
                 before = entry.before or {}
                 after = entry.after or {}
@@ -773,11 +778,10 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         print(f"  Parent normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
         print(f"  Parent package digest: {result.before_package_digest} -> {result.after_package_digest}")
         print("  Exact changed identities:")
-        symbols = {"added": "+", "removed": "-", "modified": "~"}
         for entry in result.entries:
             if entry.category == "node":
                 continue
-            print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+            print(f"    {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
         try:
             receipt_label = receipt.relative_to(child_root).as_posix()
         except ValueError:
@@ -1185,6 +1189,14 @@ def main(argv: list[str] | None = None) -> int:
         "--status", action="store_true",
         help="read-only check for pending normative Parent propagation; exit 1 when updates are pending",
     )
+
+    versions_parser = sub.add_parser("versions", help="inspect retained Node versions or migrate legacy package stores")
+    versions_sub = versions_parser.add_subparsers(dest="versions_command", required=True)
+    versions_list = versions_sub.add_parser("list", help="show retained versions and their current consumers")
+    versions_list.add_argument("path", nargs="?", default=".")
+    versions_migrate = versions_sub.add_parser("migrate", help="preview legacy package relocation (explicit --apply performs it)")
+    versions_migrate.add_argument("path", nargs="?", default=".")
+    versions_migrate.add_argument("--apply", action="store_true", help="verify, share and relocate legacy accepted packages")
 
     parent_parser = sub.add_parser("parent", help="review and explicitly accept a newer semantic Parent snapshot")
     parent_sub = parent_parser.add_subparsers(dest="parent_command", required=True)
@@ -2253,7 +2265,7 @@ def main(argv: list[str] | None = None) -> int:
                     cache_label = location.relative_to(node_root).as_posix()
                 except ValueError:
                     cache_label = str(location)
-                provenance = load_candidate_provenance(node_root, candidate.package_digest)
+                provenance = load_candidate_provenance(node_root, candidate.package_digest, source_id)
 
                 migrated = None
                 if args.source_command == "update":
@@ -2372,11 +2384,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  Source normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
                 print(f"  Source package digest: {result.before_package_digest} -> {result.after_package_digest}")
                 print("  Exact changed identities:")
-                symbols = {"added": "+", "removed": "-", "modified": "~"}
                 for entry in result.entries:
                     if entry.category == "node":
                         continue
-                    print(f"    {symbols[entry.change]} {entry.category}: {entry.identity}")
+                    print(f"    {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
                 print("  Candidate discovery:")
                 if provenance is not None and provenance.get("candidate_ref"):
                     print(f"    Git commit: {provenance['candidate_ref']}")
@@ -2430,6 +2441,15 @@ def main(argv: list[str] | None = None) -> int:
             _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
             return 0
 
+        if args.command == "versions":
+            repo = find_repo_root(Path(args.path).resolve())
+            if args.versions_command == "list":
+                print(render_inventory(repo))
+            else:
+                from .storage_migration import migrate_versions
+                print(migrate_versions(repo, apply=args.apply))
+            return 0
+
         repo_root, node_roots = _targets(Path(args.path), args.all)
         if not node_roots:
             raise ContextCanonError(f"No Context Nodes found under {repo_root}")
@@ -2439,9 +2459,10 @@ def main(argv: list[str] | None = None) -> int:
             label = node_root.relative_to(repo_root).as_posix() or "."
             try:
                 if args.command == "build":
+                    library_root(node_root).mkdir(parents=True, exist_ok=True)
                     _report_version_bump(ensure_node_version_advanced(node_root, repo_root))
                     compiled = Compiler(repo_root).compile(node_root)
-                    changed = write_outputs(compiled)
+                    changed = publish_outputs(compiled)
                     suffix = f" ({', '.join(changed)})" if changed else " (no changes)"
                     print(f"built {label}{suffix}")
                 else:

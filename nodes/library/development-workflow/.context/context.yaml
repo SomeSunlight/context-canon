@@ -3,13 +3,13 @@
 # This file is deterministic compiler output and must not be edited manually.
 
 schema: contextcanon/v0
-compiler_version: "0.7.0"
+compiler_version: "0.8.0"
 
 # Stable logical Node identity. The filesystem path is deliberately not identity.
 node:
   id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
   name: "Development Workflow"
-  version: "0.3.6-draft"
+  version: "0.3.7-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -75,22 +75,22 @@ targets:
   - topic: "CCW-TOPIC-CHANGE-WORKFLOW"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCW-TOPIC-VERSION-PROVENANCE"
     intent: "required"
     kind: "resource"
-    locator: "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
     target_node_id: null
     target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
-  - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/change-workflow.md"}
-  - {"source": "docs/version-provenance-python.md", "published": "CONTEXT/references/c4c94726-3cc7-4df6-b779-72bbf9c06f40/nodes/library/development-workflow/docs/version-provenance-python.md"}
+  - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": "docs/version-provenance-python.md", "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "bc5bf44bddfae63c5363b2d6fa68a53f4aa8446f0c71f18f5a394b6aaf5938ae"
-  package_digest: "53c40dbb700645baf15f4d319643e99238665ff005468c26821ee1cdf7c022de"
+  normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
+  package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"

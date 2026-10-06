@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextcanon.version_store import version_path, package_key, scratch_root
+
 import json
 import shutil
 import subprocess
@@ -63,9 +65,9 @@ class CandidateLifecycleTests(unittest.TestCase):
         self.assertTrue(other.is_dir())
         self.assertEqual(other_receipt.read_text(encoding="utf-8"), 'unrelated receipt')
         self.assertTrue((child / '.context/sources' / old.package_digest).is_dir())
-        self.assertTrue((child / '.context/sources' / new.package_digest).is_dir())
-        shutil.rmtree(child / '.context/parent-candidates')
-        shutil.rmtree(child / '.context/parent-reviews')
+        self.assertTrue(version_path(child, new).is_dir())
+        shutil.rmtree(scratch_root(child, 'parent-candidates'))
+        shutil.rmtree(scratch_root(child, 'parent-reviews'))
         compiled = Compiler(repo).compile(child)
         self.assertEqual(compiled.inherited_rules[0].statement, 'Reviewed v2.')
         write_outputs(compiled)
@@ -74,7 +76,8 @@ class CandidateLifecycleTests(unittest.TestCase):
     def test_legacy_full_digest_parent_candidate_is_recovered_and_cleaned(self):
         _, _, child, _, receipt, short = self.parent_case()
         digest = load_package(short).package_digest
-        legacy = short.with_name(digest)
+        legacy = child / ".context/parent-candidates" / digest
+        legacy.parent.mkdir(parents=True, exist_ok=True)
         short.rename(legacy)
         raw = json.loads(receipt.read_text(encoding="utf-8"))
         raw['candidate_path'] = legacy.relative_to(child).as_posix()
@@ -101,10 +104,15 @@ class CandidateLifecycleTests(unittest.TestCase):
 
     def test_windows_acceptance_preflight_preserves_review_and_old_pin(self):
         repo, _, child, old, receipt, candidate = self.parent_case()
-        long_child = repo / ('Project Node ' * 12)
-        child.rename(long_child)
-        receipt = long_child / receipt.relative_to(child)
-        candidate = long_child / candidate.relative_to(child)
+        long_repo = repo.parent / (repo.name + (' Project Root' * 17))
+        self.addCleanup(shutil.rmtree, long_repo, True)
+        relative = child.relative_to(repo)
+        receipt_relative, candidate_relative = receipt.relative_to(repo), candidate.relative_to(repo)
+        repo.rename(long_repo)
+        long_child = long_repo / relative
+        repo = long_repo
+        receipt = repo / receipt_relative
+        candidate = repo / candidate_relative
         before = (long_child / 'CONTEXT.src.md').read_bytes()
         with patch('contextcanon.path_budget._windows', return_value=True), patch.dict('os.environ', {}, clear=True):
             with self.assertRaisesRegex(ContextCanonError, 'accepted immutable package installation'):
@@ -151,7 +159,7 @@ class CandidateLifecycleTests(unittest.TestCase):
         write_outputs(compiled)
         self.assertEqual(check_outputs(Compiler(consumer).compile(consumer)), [])
         self.assertTrue((consumer / '.context/sources' / old.package_digest).exists())
-        self.assertTrue((consumer / '.context/sources' / new.package_digest).exists())
+        self.assertTrue(version_path(consumer, new).exists())
 
     def test_explicit_external_candidate_package_is_never_deleted(self):
         repo, parent, child, _, receipt, scratch = self.parent_case()
@@ -199,7 +207,7 @@ class CandidateLifecycleTests(unittest.TestCase):
         for index in range(40):
             source.write_text(PARENT_TEMPLATE.format(version=f'1.0.{index}', statement=f'Policy {index}.'), encoding="utf-8")
             compiled = Compiler(repo).compile(repo)
-            token = compiled.package_digest[:1]
+            token = package_key(compiled_package(compiled))[:1]
             if token in seen:
                 collision = (seen[token], compiled)
                 break
@@ -278,7 +286,7 @@ class WindowsPathBudgetTests(unittest.TestCase):
                 preflight_paths(root, [DEEP * 5], action='unchanged non-Windows behavior')
                 self.assertEqual(caught, [])
 
-    def test_251_unit_parent_acceptance_warns_publishes_and_builds_offline(self):
+    def test_legacy_251_unit_layout_accepts_into_short_shared_store_and_builds_offline(self):
         with tempfile.TemporaryDirectory() as directory:
             # Match preflight's resolved destination, including Windows temp
             # directory aliases, before sizing the exact 251-unit fixture.
@@ -322,13 +330,14 @@ Required:
                 _, receipt = review_parent_candidate(child)
                 raw = json.loads(receipt.read_text(encoding='utf-8'))
                 candidate = child / raw['candidate_path']
-                with self.assertWarnsRegex(RuntimeWarning, '251 characters') as caught:
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter('always')
                     accepted = accept_parent_candidate(child)
-                self.assertIn('C:\\Projektverzeichnis', str(caught.warning))
-                self.assertIn('at least 12 characters', str(caught.warning))
-                self.assertIn('Continuing with a warning', str(caught.warning))
-                destination = child / '.context/sources' / accepted.package_digest / DEEP
-                self.assertEqual(_length(destination), 251)
+                self.assertFalse(caught)
+                target = next(file.path for file in accepted.files if file.path.endswith('change-workflow.md'))
+                destination = version_path(child, accepted) / target
+                self.assertLess(_length(destination), 240)
+                self.assertEqual(_length(child / accepted_rel), 251)
                 self.assertEqual(destination.read_bytes(), resource.read_bytes())
                 self.assertFalse(candidate.exists())
                 self.assertFalse(receipt.exists())
@@ -368,12 +377,12 @@ Required:
                 candidate = store_candidate(consumer, 'parent-candidates', package, artifact_files(compiled))
                 self.assertEqual(load_package(candidate).package_digest, package.package_digest)
                 self.assertLess(_length(candidate / DEEP), WINDOWS_PATH_BUDGET)
-                # Durable stores keep full digests; headroom pressure alone must
-                # not prevent an existing project from accepting an update.
                 from contextcanon.sources import _install_package
-                with self.assertWarnsRegex(RuntimeWarning, 'accepted immutable package installation'):
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter('always')
                     _install_package(consumer, candidate, package)
-                self.assertEqual(load_package(consumer / '.context/sources' / package.package_digest).package_digest, package.package_digest)
+                self.assertFalse(caught)
+                self.assertEqual(load_package(version_path(consumer, package)).package_digest, package.package_digest)
                 self.assertTrue(candidate.is_dir())
 
     def test_failed_output_preflight_does_not_delete_or_write_any_outputs(self):

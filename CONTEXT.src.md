@@ -1,5 +1,5 @@
 # ContextCanon Gateway — Local Context Source
-<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" name="ContextCanon Gateway" version="0.3.18-draft" adapters="agents,goose" -->
+<!-- ctx:node id="a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11" name="ContextCanon Gateway" version="0.3.20-draft" adapters="agents,goose" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the repository Gateway context.**
@@ -37,6 +37,8 @@ Required:
   <!-- ctx:resource id="RESOURCE-4C412020705C" -->
 - Resource: `docs/cli.md`
   <!-- ctx:resource id="RESOURCE-FF07DC187B0F" -->
+- Resource: `docs/node-versions.md`
+  <!-- ctx:resource id="RESOURCE-NODE-VERSIONS" -->
 <!-- ctx:topic id="CCG-TOPIC-MAINTENANCE" -->
 
 ### ContextCanon framework development

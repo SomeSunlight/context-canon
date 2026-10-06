@@ -165,6 +165,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertEqual(
             list(node.resources),
             [
+                ".context/resource-origins.json",
                 "CONTEXT/README.md",
                 "CONTEXT/references/node-development/docs/architecture.md",
                 "CONTEXT/references/node-development/docs/authoring.md",
@@ -175,7 +176,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         )
         self.assertEqual(len(node.normalized_digest), 64)
         self.assertEqual(len(node.package_digest), 64)
-        self.assertIn('"schema": "contextcanon/package/v3"', node.package_manifest)
+        self.assertIn('"schema": "contextcanon/package/v4"', node.package_manifest)
         self.assertIn("How to use this context", node.official_markdown)
         self.assertIn("Apply all Rules below to every task in this Node.", node.official_markdown)
         self.assertIn("Rules from Demo Foundation", node.official_markdown)
@@ -222,7 +223,7 @@ class WalkingSkeletonTests(unittest.TestCase):
         self.assertIn("Changes to inherited Rules", node.official_markdown)
         self.assertIn("**Overrode** `Demo Foundation / F-001`", node.official_markdown)
         self.assertIn("**Removed** `Demo Foundation / F-002`", node.official_markdown)
-        self.assertIn("compiler_version: \"0.7.0\"", node.machine_yaml)
+        self.assertIn("compiler_version: \"0.8.0\"", node.machine_yaml)
         self.assertIn('"kind": "override"', node.machine_yaml)
         self.assertIn('"kind": "remove"', node.machine_yaml)
         self.assertIn("removed_rules:", node.machine_yaml)

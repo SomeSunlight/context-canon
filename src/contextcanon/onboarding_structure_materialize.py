@@ -100,7 +100,7 @@ def _yaml_generated_identity(path: Path) -> _RecoveredNodeIdentity | None:
 def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _RecoveredNodeIdentity | None:
     candidates: list[_RecoveredNodeIdentity] = []
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is not None and manifest.get("schema") in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3"}:
+    if manifest is not None and manifest.get("schema") in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3", "contextcanon/package/v4"}:
         item = _identity(manifest.get("node"), ".context/package.json")
         if item is not None:
             candidates.append(item)
@@ -137,7 +137,7 @@ def _recover_node_identity(root: Path, *, include_acceptance: bool) -> _Recovere
 
 def _manifest_file_hash(root: Path, rel: str) -> str | None:
     manifest = _json_object(root / ".context" / "package.json")
-    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3"}:
+    if manifest is None or manifest.get("schema") not in {"contextcanon/package/v0", "contextcanon/package/v1", "contextcanon/package/v2", "contextcanon/package/v3", "contextcanon/package/v4"}:
         return None
     files = manifest.get("files")
     if not isinstance(files, list):
@@ -192,11 +192,13 @@ def _framework_machine_namespace(root: Path, *, allow_onboarding: bool) -> bool:
         return True
     if machine.is_symlink() or not machine.is_dir():
         return False
-    allowed = {"context.yaml", "package.json", "sources"}
+    allowed = {"context.yaml", "package.json", "resource-origins.json", "sources"}
     if allow_onboarding:
         allowed.add("onboarding")
     for child in machine.iterdir():
         if child.name not in allowed or child.is_symlink():
+            return False
+        if child.name == "resource-origins.json" and not _matches_generated_manifest(root, ".context/resource-origins.json"):
             return False
     return True
 
@@ -448,7 +450,7 @@ def materialize_structure_skeletons(preview: StructureMaterializationPreview) ->
             )
             created_sources.append(source)
 
-        compiler = Compiler(resolve_onboarding_scope(project).repository_root)
+        compiler = Compiler(resolve_onboarding_scope(project).repository_root, legacy_carriers=True)
         for source in created_sources:
             root = source.parent
             compiled = compiler.compile(root)

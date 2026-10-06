@@ -40,7 +40,7 @@ class DevelopmentWorkflowProviderTests(unittest.TestCase):
         self.assertEqual(topic_ids, {"GHL-TOPIC-PROVIDER"})
         self.assertIn("issues/", node.official_markdown)
         self.assertTrue(
-            any(path.endswith("nodes/library/github-local/docs/provider.md") for path in node.resources),
+            any(path.endswith("/docs/provider.md") for path in node.resources),
             sorted(node.resources),
         )
 

@@ -54,7 +54,14 @@ def preflight_paths(
     if isinstance(base, Path):
         base = base.resolve()
     added = length - _length(base)
-    relative = longest.relative_to(base)
+    try:
+        relative = longest.relative_to(base)
+    except ValueError:
+        # Shared versions live above the consumer Node. Diagnose the common
+        # checkout prefix rather than treating it as a descendant destination.
+        base = next((parent for parent in base.parents if longest.is_relative_to(parent)), root)
+        added = length - _length(base)
+        relative = longest.relative_to(base)
     parts = relative.parts
     owned = 0
     if parts[:1] == (".context",):
@@ -79,7 +86,7 @@ def preflight_paths(
         + f"Move the whole checkout nearer the drive root, for example C:\\Projektverzeichnis; "
         f"shorten the absolute prefix by at least {length - WINDOWS_PATH_BUDGET + 1} characters "
         f"to bring this destination below {WINDOWS_PATH_BUDGET}. "
-        "Rebuilding accepted packages does not shorten their canonical full-digest paths.\n"
+        "For legacy accepted stores, preview 'contextcanon versions migrate .'; rebuilding alone does not relocate those old directories.\n"
         "Long-path failures are tool-dependent: Git, IDE links and file APIs can fail "
         "at different layers; partial success does not prove this path is safe. "
         "For Git-related failures, use 'git config core.longpaths true'. Enable Windows "

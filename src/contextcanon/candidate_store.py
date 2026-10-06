@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import os
 import re
 import shutil
-import tempfile
 import warnings
 from pathlib import Path
 
 from .model import CompiledPackage
 from .package import load_package
 from .parser import ContextCanonError
-from .path_budget import preflight_paths
+from .version_store import package_key, scratch_root, store_package
 
 
 STORES = ("candidates", "parent-candidates")
@@ -22,75 +20,43 @@ def _digest(digest: str) -> None:
         raise ContextCanonError(f"Invalid candidate package digest: {digest!r}")
 
 
-def candidate_path(node_root: Path, store_name: str, digest: str) -> Path:
-    """Find exact existing bytes, or the first free collision-safe prefix.
-
-    Full digests remain authoritative. Historical full-digest directories are
-    still read; a prefix collision never reuses or overwrites another package.
-    """
+def candidate_path(node_root: Path, store_name: str, digest: str, *, node_id: str | None = None,
+                   normalized_digest: str | None = None) -> Path:
+    """Read both old local scratch and new isolated working-tree scratch."""
     _digest(digest)
     if store_name not in STORES:
         raise ValueError(f"Not a candidate store: {store_name}")
-    store = node_root / ".context" / store_name
-    legacy = store / digest
-    if legacy.exists():
-        if load_package(legacy).package_digest != digest:
-            raise ContextCanonError(f"Candidate full-digest path contains different content: {legacy}")
-        return legacy
-    first_free = None
-    for size in TOKEN_LENGTHS:
-        path = store / digest[:size]
-        if not path.exists():
-            if first_free is None:
-                first_free = path
+    matches = []
+    legacy = node_root / ".context" / store_name
+    central = scratch_root(node_root, store_name)
+    for store in dict.fromkeys((legacy, central)):
+        if not store.is_dir():
             continue
-        existing = load_package(path)
-        if existing.package_digest == digest:
-            return path
-        if not existing.package_digest.startswith(path.name):
-            raise ContextCanonError(f"Candidate token does not match its full package digest: {path}")
-    if first_free is None:
-        raise ContextCanonError(f"No free candidate path for {digest}")
-    return first_free
+        for path in sorted(store.iterdir()):
+            if not path.is_dir() or not (path / ".context/package.json").is_file():
+                continue
+            package = load_package(path)
+            if package.package_digest != digest:
+                continue
+            if node_id is not None and package.metadata.id != node_id:
+                continue
+            if normalized_digest is not None and package.normalized_digest != normalized_digest:
+                continue
+            if store == central and not package_key(package).startswith(path.name):
+                raise ContextCanonError(f"Candidate token does not match its full identity: {path}")
+            matches.append(path)
+    if len(matches) > 1 and len({package_key(load_package(path)) for path in matches}) > 1:
+        raise ContextCanonError(f"Ambiguous candidate bytes {digest}; select complete Node identity")
+    return matches[0] if matches else central / digest[:16]
 
 
-def store_candidate(
-    node_root: Path,
-    store_name: str,
-    package: CompiledPackage,
-    files: dict[str, bytes],
-) -> Path:
-    destination = candidate_path(node_root, store_name, package.package_digest)
-    if destination.exists():
-        return destination
-    action = f"{store_name} candidate materialization"
-    preflight_paths(destination, files, action=action, node_root=node_root)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    # A short random sibling also leaves room for atomic staging.
-    staging = Path(tempfile.mkdtemp(prefix=".tmp-", dir=destination.parent))
-    try:
-        preflight_paths(staging, files, action=f"{action} (staging)", node_root=node_root)
-        for relative, content in files.items():
-            target = staging / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
-        staged = load_package(staging)
-        if (
-            staged.metadata.id != package.metadata.id
-            or staged.normalized_digest != package.normalized_digest
-            or staged.package_digest != package.package_digest
-        ):
-            raise ContextCanonError("Candidate identity changed while staging")
-        # Never replace an occupied token, including one published concurrently.
-        if destination.exists():
-            if load_package(destination).package_digest != package.package_digest:
-                raise ContextCanonError(f"Candidate token became occupied; retry: {destination}")
-        else:
-            os.rename(staging, destination)
-    finally:
-        if staging.exists():
-            shutil.rmtree(staging)
-    return destination
+def store_candidate(node_root: Path, store_name: str, package: CompiledPackage,
+                    files: dict[str, bytes]) -> Path:
+    if store_name not in STORES:
+        raise ValueError(f"Not a candidate store: {store_name}")
+    store = scratch_root(node_root, store_name, create=True)
+    return store_package(store, package, files, action=f"{store_name} candidate publication",
+                         node_root=node_root, lengths=TOKEN_LENGTHS)
 
 
 def cleanup_accepted_candidate(
@@ -109,9 +75,9 @@ def cleanup_accepted_candidate(
     node_root = node_root.resolve()
     candidate_root = candidate_root.resolve()
     managed = any(
-        candidate_root.parent == node_root / ".context" / name
+        candidate_root.parent in (node_root / ".context" / name, scratch_root(node_root, name))
         for name in STORES
-    ) and len(candidate_root.name) in TOKEN_LENGTHS and digest.startswith(candidate_root.name)
+    ) and len(candidate_root.name) in TOKEN_LENGTHS
     try:
         if managed and candidate_root.exists():
             if load_package(candidate_root).package_digest != digest:

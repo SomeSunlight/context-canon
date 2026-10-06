@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import hashlib
+import os
 import posixpath
 from pathlib import Path
 import re
@@ -17,10 +18,13 @@ from .package import (
     render_package_manifest,
     semantic_digest_for_node,
 )
+from .version_store import accepted_package_path, package_key
+from .resource_layout import ORIGINS_PATH, resource_namespace, render_origins
+from .model import ResourceOrigin
 from .parser import ContextCanonError, parse_node
 from .render import render_adapters, render_machine_yaml, render_official
 
-COMPILER_VERSION = "0.7.0"
+COMPILER_VERSION = "0.8.0"
 
 CONTEXT_FOLDER_README = """# Generated Context package resources
 
@@ -32,14 +36,14 @@ This `CONTEXT/` directory exists because the Node has deeper Topic resources tha
 
 ## Why `references/` may look like duplicate documentation
 
-`references/` contains exact materialized copies of effective Topic resources. The first path component after `CONTEXT/references/` is the stable origin Node identity (or a deterministic hash when that identity is not path-safe); the remaining path preserves repository-relative source location. This namespace lets inherited Topic resources from independent packages coexist without Source-order precedence.
+`references/` contains exact materialized copies of effective Topic resources. The first path component after `CONTEXT/references/` is a compact origin token; full Node identity and original repository paths are authenticated in `../.context/resource-origins.json`. Remaining paths normally preserve authoring-Node-relative directories. Cross-Node links widen the common base enough to keep exact relative links valid. This namespace lets inherited Topic resources coexist without Parent-order precedence.
 
 For example:
 
 ```text
 nodes/internal/framework-development/docs/architecture.md
         ↓ deterministic materialization
-CONTEXT/references/<origin-node-id>/nodes/internal/framework-development/docs/architecture.md
+CONTEXT/references/<origin-token>/docs/architecture.md
 ```
 
 The first path is the authored source. The second path is generated package content and is **not another maintenance surface**.
@@ -57,11 +61,13 @@ class Compiler:
         self,
         repo_root: Path,
         *,
+        legacy_carriers: bool | None = None,
         source_overrides: dict[Path, str] | None = None,
         file_overrides: dict[Path, bytes] | None = None,
         package_overrides: dict[tuple[Path, str], tuple[CompiledPackage, dict[str, bytes]]] | None = None,
     ):
         self.repo_root = repo_root.resolve()
+        self._legacy_carriers = legacy_carriers
         self._cache: dict[Path, CompiledNode] = {}
         self._active: list[Path] = []
         self._node_ids: dict[str, Path] = {}
@@ -72,8 +78,10 @@ class Compiler:
             path.resolve(): content for path, content in (file_overrides or {}).items()
         }
         self._package_overrides = {
-            (root.resolve(), digest): value
-            for (root, digest), value in (package_overrides or {}).items()
+            # Normalize legacy digest-keyed preview callers at this boundary;
+            # an override can only replace its own complete Node binding.
+            (root.resolve(), package_key(value[0])): value
+            for (root, _identity), value in (package_overrides or {}).items()
         }
 
     def compile(self, node_root: Path) -> CompiledNode:
@@ -95,9 +103,10 @@ class Compiler:
                 raise ContextCanonError(f"Node ID {parsed.metadata.id} is used by both {previous} and {node_root}")
             self._node_ids[parsed.metadata.id] = node_root
 
-            compiled = CompiledNode(parsed=parsed)
+            compiled = CompiledNode(parsed=parsed, legacy_carriers=self._legacy_carriers)
             composition_packages: list[CompiledPackage] = []
             context_resource_sets: list[dict[str, bytes]] = []
+            imported_origins: list[tuple[CompiledPackage, dict[str, bytes]]] = []
             parent_ids: set[str] = set()
             for parent in parsed.parents:
                 parent_package, parent_resources = self._load_pinned_dependency(
@@ -108,6 +117,7 @@ class Compiler:
                 compiled.parent_packages.append(parent_package)
                 composition_packages.append(parent_package)
                 context_resource_sets.append(parent_resources)
+                imported_origins.append((parent_package, parent_resources))
                 parent_ids.add(parent.id)
 
             seen_source_ids: set[str] = set()
@@ -130,6 +140,7 @@ class Compiler:
                     if source.relationship == "parent":
                         composition_packages.append(package)
                     context_resource_sets.append(package_resources)
+                    imported_origins.append((package, package_resources))
                     continue
 
                 source_root = self._resolve_source_root(node_root, source.locator)
@@ -147,11 +158,9 @@ class Compiler:
                 if source.relationship == "parent":
                     composition_packages.append(source_package)
                 exported_paths = {file.path for file in exported_resource_files(source_package)}
-                context_resource_sets.append({
-                    path: content
-                    for path, content in source_node.resources.items()
-                    if path in exported_paths
-                })
+                source_resources = {path: content for path, content in source_node.resources.items() if path in exported_paths}
+                context_resource_sets.append(source_resources)
+                imported_origins.append((source_package, source_resources))
 
             compiled.imported_contexts = self._compose_imported_contexts(
                 composition_packages,
@@ -198,6 +207,17 @@ class Compiler:
                 local_resources,
                 context_resource_sets,
             )
+            for package, resource_set in imported_origins:
+                for origin in package.resource_origins:
+                    if origin.path not in resource_set:
+                        continue
+                    previous = compiled.resource_origins.get(origin.path)
+                    if previous is not None and previous != origin:
+                        raise ContextCanonError(f"Resource origin conflict at {origin.path}")
+                    compiled.resource_origins[origin.path] = origin
+            if compiled.resource_origins:
+                compiled.resources[ORIGINS_PATH] = render_origins(compiled.resource_origins)
+            compiled.resources = dict(sorted(compiled.resources.items()))
             compiled.normalized_digest = semantic_digest_for_node(compiled)
             compiled.official_markdown = render_official(compiled, self.repo_root)
             compiled.package_digest = package_digest(package_content_files(compiled))
@@ -221,17 +241,17 @@ class Compiler:
                 f"{node_root}: internal error: pinned {relation} {dependency.name} has incomplete digests"
             )
 
-        override = self._package_overrides.get((node_root.resolve(), dependency.package_digest))
+        override = self._package_overrides.get((node_root.resolve(), package_key(dependency)))
         if override is not None:
             package, supplied_resources = override
             exported_paths = {file.path for file in exported_resource_files(package)}
             resources = {path: content for path, content in supplied_resources.items() if path in exported_paths}
         else:
-            package_root = node_root / ".context" / "sources" / dependency.package_digest
+            package_root = accepted_package_path(node_root, dependency)
             if not package_root.is_dir():
                 raise ContextCanonError(
                     f"{node_root}: accepted {relation} package {dependency.name} is not available locally at "
-                    f".context/sources/{dependency.package_digest}; build does not fetch {relation} packages"
+                    f"{package_root}; build does not fetch {relation} packages"
                 )
             package = load_package(package_root)
             exported_paths = {file.path for file in exported_resource_files(package)}
@@ -505,11 +525,7 @@ class Compiler:
                 )
             seen[topic.id] = topic
 
-    @staticmethod
-    def _resource_namespace(node_id: str) -> str:
-        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", node_id):
-            return node_id
-        return "sha256-" + hashlib.sha256(node_id.encode("utf-8")).hexdigest()
+    _resource_namespace = staticmethod(resource_namespace)
 
     def _is_generated_context_target(self, source: Path) -> bool:
         if source.name != "CONTEXT.md":
@@ -576,20 +592,25 @@ class Compiler:
         effective: list[Topic] = []
         resources: dict[str, bytes] = {}
         namespace = self._resource_namespace(compiled.metadata.id)
+        closures = {}
+        for topic in compiled.parsed.topics:
+            for target in topic.targets:
+                if target.kind == "resource":
+                    seed = (compiled.parsed.root / target.locator).resolve()
+                    closures[seed] = self._resource_closure(seed, compiled.metadata.name, topic.id,
+                                                          target.locator, target.resource_id)
+        # Keep meaningful document directories and all exact relative links.
+        # Cross-Node links widen the base; no unsafe blind prefix stripping.
+        paths = [compiled.parsed.root, *(path.parent for closure in closures.values() for path in closure)]
+        base = Path(os.path.commonpath(paths))
         for topic in compiled.parsed.topics:
             targets: list[TopicTarget] = []
             for target in topic.targets:
                 if target.kind == "resource":
                     seed = (compiled.parsed.root / target.locator).resolve()
-                    closure = self._resource_closure(
-                        seed,
-                        compiled.metadata.name,
-                        topic.id,
-                        target.locator,
-                        target.resource_id,
-                    )
+                    closure = closures[seed]
                     for source in closure:
-                        rel = source.relative_to(self.repo_root).as_posix()
+                        rel = source.relative_to(base).as_posix()
                         published = f"CONTEXT/references/{namespace}/{rel}"
                         content = (
                             self._context_bridge_bytes(published)
@@ -602,7 +623,9 @@ class Compiler:
                                 f"{compiled.metadata.name}: local Topic Resource collision at {published}"
                             )
                         resources[published] = content
-                    seed_rel = seed.relative_to(self.repo_root).as_posix()
+                        compiled.resource_origins[published] = ResourceOrigin(
+                            published, compiled.metadata.id, source.relative_to(self.repo_root).as_posix())
+                    seed_rel = seed.relative_to(base).as_posix()
                     targets.append(
                         TopicTarget(
                             kind="resource",

@@ -203,15 +203,15 @@ Required:
 
         resources = leaf_compiled.resources
         self.assertEqual(
-            resources["CONTEXT/references/node-workflow/library/workflow/docs/workflow.md"],
+            resources["CONTEXT/references/node-workflow/docs/workflow.md"],
             b"# Workflow\n\nReview before merge.\n",
         )
         self.assertEqual(
-            resources["CONTEXT/references/node-project/project/docs/project.md"],
+            resources["CONTEXT/references/node-project/docs/project.md"],
             b"# Project\n\nProject-wide architecture.\n",
         )
         self.assertEqual(
-            resources["CONTEXT/references/node-subsystem/project/subsystem/docs/subsystem.md"],
+            resources["CONTEXT/references/node-subsystem/docs/subsystem.md"],
             b"# Subsystem\n\nSubsystem-specific operations.\n",
         )
         self.assertNotIn("node-sibling", "\n".join(resources))

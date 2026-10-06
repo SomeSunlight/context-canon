@@ -1,0 +1,30 @@
+{
+  "resources": [
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/composition.md",
+      "repo_path": "nodes/library/foundation/docs/composition.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/harnesses.md",
+      "repo_path": "nodes/library/foundation/docs/harnesses.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/official-context.md",
+      "repo_path": "nodes/library/foundation/docs/official-context.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/source-format.md",
+      "repo_path": "nodes/library/foundation/docs/source-format.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/topics.md",
+      "repo_path": "nodes/library/foundation/docs/topics.md"
+    }
+  ],
+  "schema": "contextcanon/resource-origins/v1"
+}

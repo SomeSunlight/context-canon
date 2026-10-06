@@ -171,7 +171,7 @@ def _enclosing_parent_package(snapshot_root: Path):
     if parent_root is None:
         return None
     repository = resolve_onboarding_scope(project).repository_root
-    return Compiler(repository).compile(parent_root)
+    return Compiler(repository, legacy_carriers=True).compile(parent_root)
 
 
 def _candidate_manifest_paths(location: Path) -> list[Path]:

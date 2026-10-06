@@ -853,7 +853,7 @@ def build_placement_publication_preview(
     documents = _expected_document_deltas(snapshot, project, review)
     enclosing_parent_root = find_enclosing_context_root(project)
     enclosing_parent = (
-        Compiler(repository).compile(enclosing_parent_root)
+        Compiler(repository, legacy_carriers=True).compile(enclosing_parent_root)
         if enclosing_parent_root is not None
         else None
     )
@@ -982,7 +982,7 @@ def build_placement_publication_preview(
             source_overrides=source_overrides,
             file_overrides=file_overrides,
             package_overrides=package_overrides,
-        ).compile(root)
+         legacy_carriers=True).compile(root)
         if compiled.metadata.id != node_ids[node.key]:
             raise _error(f"semantic Parent preview changed stable Node identity for {node.name}")
         preflight_paths(root, expected_outputs(compiled), action="onboarding Official Context preview")
@@ -1471,7 +1471,7 @@ def publish_placement_review(
             if parent_pin is not None:
                 if parent_pin.parent_key == "@enclosing":
                     enclosing_root = (delta.source_path.parent / parent_pin.locator).resolve()
-                    compiled_parent = Compiler(repository).compile(enclosing_root)
+                    compiled_parent = Compiler(repository, legacy_carriers=True).compile(enclosing_root)
                 else:
                     compiled_parent = compiled_by_key.get(parent_pin.parent_key)
                     if compiled_parent is None:
@@ -1491,7 +1491,7 @@ def publish_placement_review(
                 if _copy_compiled_package(compiled_parent, delta.source_path.parent):
                     new_package_dirs.append(destination)
 
-            compiled = Compiler(repository).compile(delta.source_path.parent)
+            compiled = Compiler(repository, legacy_carriers=True).compile(delta.source_path.parent)
             if compiled.metadata.id != delta.node_id:
                 raise _error(f"publication changed stable Node identity for {delta.name}")
             if parent_pin is not None:
@@ -1513,7 +1513,7 @@ def publish_placement_review(
         for compiled in compiled_nodes:
             write_outputs(compiled)
 
-        verifier = Compiler(repository)
+        verifier = Compiler(repository, legacy_carriers=True)
         node_digests: dict[str, dict[str, str]] = {}
         for delta in preview.nodes:
             compiled = verifier.compile(delta.source_path.parent)

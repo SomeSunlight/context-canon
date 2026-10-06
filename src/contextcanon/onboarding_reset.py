@@ -129,7 +129,7 @@ def _managed_state(project_root: Path, extra_paths: Iterable[str] = ()) -> dict[
     project = project_root.resolve()
     repository = resolve_onboarding_scope(project).repository_root
     result: dict[str, bytes | None] = {}
-    compiler = Compiler(repository)
+    compiler = Compiler(repository, legacy_carriers=True)
     for node_root in discover_nodes(project):
         source = node_root / "CONTEXT.src.md"
         result[source.relative_to(project).as_posix()] = source.read_bytes() if source.is_file() else None
@@ -278,7 +278,7 @@ def _restore_journal(snapshot_root: Path, project: Path, from_step: int) -> tupl
 
 def _remove_legacy_skeletons(project: Path) -> list[str]:
     removed: list[str] = []
-    compiler = Compiler(project)
+    compiler = Compiler(project, legacy_carriers=True)
     candidates = sorted(
         (path for path in project.rglob("CONTEXT.src.md") if path.parent != project),
         key=lambda value: len(value.parts), reverse=True,

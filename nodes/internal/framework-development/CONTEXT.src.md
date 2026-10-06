@@ -1,5 +1,5 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.18-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.19-draft" -->
 
 > [!IMPORTANT]
 > **Edit this file to change the context for designing and implementing ContextCanon itself.**
@@ -33,11 +33,11 @@ OVERRIDE IMPORTED RULE
 -->
 
 ## Context Imports
-- [ContextCanon Foundation](../../library/foundation/) — `0.2.3-draft` — `relationship=parent`
-  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.3-draft" -->
+- [ContextCanon Foundation](../../library/foundation/) — `0.2.4-draft` — `relationship=parent`
+  <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.4-draft" -->
 
-- [Development Workflow](../../library/development-workflow/) — `0.3.6-draft` — `relationship=parent`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.6-draft" -->
+- [Development Workflow](../../library/development-workflow/) — `0.3.7-draft` — `relationship=parent`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.7-draft" -->
 
 ## Local Rules
 
@@ -54,6 +54,12 @@ OVERRIDE IMPORTED RULE
 - **Bind semantic reasoning to an explicit task context:** Before invoking an LLM for framework-owned semantic work, deterministically bind the task-specific frozen/accepted inputs, instruction and result contract; previous raw model outputs, reviews, chat history, live-repository search and tool metadata are not implicit task context.
   Why: Semantic intelligence is most reliable when ContextCanon supplies the smallest sufficient world and resumes deterministic control at a strict result boundary; this also makes the same task viable across hosted and smaller local models without coupling canonical behavior to a provider.
   <!-- ctx:rule id="CCI-012" -->
+
+### Generated storage
+
+- **Keep generated storage independent of Node nesting:** Retain whole immutable Node versions once at the consuming Git root, keep exact acceptance per consumer, and avoid repeating repository prefixes or full IDs in generated package paths. Preserve document directories and exact relative links; bind complete identity/origin in verified package metadata. Scope transient review storage by consumer and migrate existing packages explicitly without changing accepted meaning.
+  Why: ContextCanon is designed for nested Nodes; its own storage must not multiply their path depth or become the limiting factor when project-owned files remain usable. Shared whole-Node history is easier to inspect and avoids retaining the same accepted version in every Child.
+  <!-- ctx:rule id="CCI-013" -->
 
 ### Onboarding trust
 

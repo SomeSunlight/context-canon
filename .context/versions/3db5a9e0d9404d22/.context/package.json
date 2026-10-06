@@ -1,0 +1,246 @@
+{
+  "changes": [],
+  "compiler_version": "0.7.0",
+  "digests": {
+    "normalized": "e9cafd8e9eb60c8221f17f9ffecb13644d8d7a1b4db295737e671898cb9e52c0",
+    "package": "eed463681e455b3574b273000dcf8772184b056c48b3b41661c24eed9e7e3c46"
+  },
+  "files": [
+    {
+      "path": "CONTEXT.md",
+      "sha256": "25edd11afc52346a912107bbdb9bc62994ee9eed5555026979850db2b5f3deaa",
+      "size": 4985
+    },
+    {
+      "path": "CONTEXT/README.md",
+      "sha256": "933428c92391d1c0429d6e3b96804b67d6e4aa1ce1ae5d82a272198a681bcbbe",
+      "size": 2088
+    },
+    {
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+      "sha256": "5a61c28c67a1f5c7980b598c16e44e61c439a7b230cfff4465ad52f1709b50be",
+      "size": 17520
+    },
+    {
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
+      "sha256": "24257aafd27276c3a801b6aeddb9dede2c0459bbdde8f16c35e56323ea2cb1c4",
+      "size": 3499
+    },
+    {
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+      "sha256": "3d5f396f32508c1370099d519f7a163269c2df77b12727c7419b54a087900275",
+      "size": 7439
+    },
+    {
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+      "sha256": "1f14f00fffe09955b1f1d46f9ccfb634e39c757a10231c97bdf61fdab39c5b0e",
+      "size": 20246
+    },
+    {
+      "path": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
+      "sha256": "984ff85157c42290654bd696de7d874dd05a5f2f32984f75d3416e1a306ec1d5",
+      "size": 5262
+    }
+  ],
+  "imports": [],
+  "node": {
+    "id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+    "name": "ContextCanon Foundation",
+    "version": "0.2.3-draft"
+  },
+  "parents": [],
+  "removed_rules": [],
+  "rules": [
+    {
+      "group": "Canonical context",
+      "id": "CC-001",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "The compiled Official Context Package is the single canonical context artifact for a Node. It may include direct informational References for the Node itself, while only the effective normative Parent/local Context is exported to semantic Children.",
+      "title": "One canonical package with an explicit export boundary",
+      "why": "Local background information must not become inherited governance, but the local view and normative export must still come from one deterministic authenticated package."
+    },
+    {
+      "group": "Canonical context",
+      "id": "CC-002",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Human context changes are authored in `CONTEXT.src.md`; generated context views, package contents, machine state, and harness adapters are not edited directly.",
+      "title": "Edit source, not generated output",
+      "why": "One editable source prevents drift between equivalent outputs."
+    },
+    {
+      "group": "Machine state",
+      "id": "CC-003",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Framework bookkeeping belongs under `.context/` and should not be required reading for normal human or agent work.",
+      "title": "Keep compiler bookkeeping out of the normal workflow",
+      "why": "IDs, snapshots, provenance, and digests are necessary for the compiler but should not dominate the user experience."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-004",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Reference may expose useful Topics and Resources to the current Node, but its Rules never become effective, its Overrides/Removes never alter normative Context, and the Reference relationship is never inherited by Children.",
+      "title": "References stay informational",
+      "why": "Related information must not silently become governance merely because it uses the same immutable package infrastructure."
+    },
+    {
+      "group": "Composition",
+      "id": "CC-013",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "A Node may compose several semantic Parents. Parent order has no precedence; non-orthogonal conflicts must be resolved explicitly.",
+      "title": "Parents are unordered",
+      "why": "Orthogonal context commonly meets at one Node; ordering must never hide a contradiction."
+    },
+    {
+      "group": "Identity",
+      "id": "CC-005",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Every addressable context element has a stable ID independent of its title, wording, file location, and presentation.",
+      "title": "Stable identity",
+      "why": "Children must be able to remove, override, trace, or debug inherited elements even after human wording changes."
+    },
+    {
+      "group": "Identity",
+      "id": "CC-006",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Published official contexts expose stable IDs for Rules and other elements that child Nodes may reference.",
+      "title": "Publish IDs that children may reference",
+      "why": "Users must be able to discover the correct target without searching hidden comments or machine YAML."
+    },
+    {
+      "group": "Progressive disclosure",
+      "id": "CC-007",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Keep the official entry context compact and use Topics to load deeper context only when needed; Topic targets distinguish Required from Optional material.",
+      "title": "Keep entry context small",
+      "why": "Context is scarce working memory and should be spent on information relevant to the current task."
+    },
+    {
+      "group": "Project state",
+      "id": "CC-008",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "`STATE.md` describes the current local project situation and is never inherited as governance by child Nodes.",
+      "title": "State stays local",
+      "why": "Temporary project reality is useful locally but is not a reusable Rule of descendants."
+    },
+    {
+      "group": "Harness independence",
+      "id": "CC-009",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Project code and canonical project context must not depend on a particular LLM or agent harness; harness-specific files are thin generated adapters at the edge.",
+      "title": "Canonical context is model- and harness-neutral",
+      "why": "A project should remain portable across models and tools without duplicating its truth."
+    },
+    {
+      "group": "Repository conventions",
+      "id": "CC-012",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Prefer Node roots that contain the files they primarily govern; keep the existing directory structure when it already fits.",
+      "title": "Align Node roots with governed files",
+      "why": "Humans and agents should encounter the applicable Context naturally from the files they change."
+    },
+    {
+      "group": "Repository conventions",
+      "id": "CC-010",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Keep `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` present when they are useful to the repository even when ContextCanon is present.",
+      "title": "Keep familiar repository documents useful",
+      "why": "ContextCanon should complement familiar project navigation rather than replace it."
+    },
+    {
+      "group": "Documentation style",
+      "id": "CC-011",
+      "modifications": [],
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "statement": "Write technical documentation in precise, plain prose for intelligent readers; introduce unfamiliar concepts before using specialized terms and avoid unexplained internal shorthand, inflated marketing language, and unnecessary jargon.",
+      "title": "Write for intelligent readers",
+      "why": "Context should reduce interpretation effort for humans and models rather than create a private vocabulary barrier."
+    }
+  ],
+  "schema": "contextcanon/package/v3",
+  "sources": [],
+  "topics": [
+    {
+      "condition": "When editing ContextCanon source, IDs, generated views, package resources, or Topics:",
+      "id": "CC-TOPIC-AUTHORING",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/official-context.md",
+          "resource_id": "RESOURCE-0490D1539162"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/source-format.md",
+          "resource_id": "RESOURCE-75BB443F9641"
+        },
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/topics.md",
+          "resource_id": "RESOURCE-37704BB906AD"
+        }
+      ],
+      "title": "Context authoring"
+    },
+    {
+      "condition": "When adding or changing Parent/Reference relationships, inherited Rules, or composition behavior:",
+      "id": "CC-TOPIC-COMPOSITION",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/composition.md",
+          "resource_id": "RESOURCE-484FEC35A542"
+        }
+      ],
+      "title": "Context composition"
+    },
+    {
+      "condition": "When adding or changing a harness-specific entry file:",
+      "id": "CC-TOPIC-HARNESSES",
+      "origin_node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "origin_node_name": "ContextCanon Foundation",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001/nodes/library/foundation/docs/harnesses.md",
+          "resource_id": "RESOURCE-438E892D9E41"
+        }
+      ],
+      "title": "Harness adapters"
+    }
+  ]
+}
