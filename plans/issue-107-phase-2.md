@@ -1,6 +1,6 @@
 # Shared Node Versions — Onboarding Phase 2 (#107)
 
-**Fast Track status — ACTIVE.** The owner authorized starting this phase on 2026-10-05 while PR #108 remains unmerged. Branch `agent/issue-107-onboarding-versions` starts at owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; accepted `main` remains `28ce62ef7aca4960bcf238b8d2221b7e445aa236`. The earlier wait-for-merge start condition is explicitly superseded. Keep this change on a separate Draft PR initially based on the Phase-1 branch; rebase/retarget and reconcile the accepted baseline after the owner merges Phase 1. Never merge either phase implicitly.
+**Fast Track status — IMPLEMENTATION CLOSED / OWNER TEST IN PROGRESS.** The owner authorized starting this phase on 2026-10-05 before PR #108 was merged. Its starting base was owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; the owner has now squash-merged it as accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3`. Draft PR #111 targets main. Integrate that identical accepted baseline with preserved branch ancestry so the owner's active editable checkout can keep fast-forward pulls. The implementation and package bytes remain unchanged. Require fresh exact-head CI and explicit Phase-2 approval before merge.
 
 Purpose: make onboarding payload/storage overhead independent of physical project nesting, reuse the shared complete-Node library, and migrate active old runs without losing reviewed meaning or recoverable state.
 
@@ -45,7 +45,7 @@ Resume with the [migration handoff and safety matrix](issue-107-phase-2-migratio
 
 ## Recovery notes
 
-Resume at the first unchecked item. Read root CONTEXT, applicable Topics, STATE and this plan; verify this Phase-2 branch rather than writing to PR #108. Publish meaningful checkpoints during the night so recovery does not depend on scratch or this chat. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR.
+Resume at the first unchecked item. Read root CONTEXT, applicable Topics, STATE and this plan; verify this Phase-2 branch; PR #108 is now accepted and closed. Publish meaningful checkpoints during the night so recovery does not depend on scratch or this chat. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR.
 
 Before any future pruning feature, enumerate current pins, retained-version dependencies, pending reviews, frozen onboarding inputs and recovery receipts. The Phase-1 inventory alone is insufficient deletion authority.
 
@@ -89,3 +89,7 @@ All implementation blocks A–D are complete. Operator/canonical docs and the tw
 Normal legacy packages and new imports retain full bindings; human review SHA/digests are never recalculated to make a stale decision current. Onboarding migration remains removable transition code. No shared-version pruning, reinit/remapping or blanket abandoned-candidate deletion belongs to this result.
 
 Final local verification: **430 deterministic tests pass**, all six self-hosted Nodes report zero generated drift, all four local normative edges are current, and diff hygiene is clean. The final native Windows job runs **67 targeted tests**. These counts describe this assembled candidate; hosted exact-head success is recorded in PR #111 after publication.
+
+## Phase-1 post-merge baseline checkpoint — 2026-10-06
+
+The owner merged Phase 1 after its CI recovered and started testing Phase 2. Accepted main is integrated without rewriting the test branch history; the original Phase-1 base and squash tree are byte-identical. PLAN/STATE now record the real accepted baseline and owner-test status. Only planning documents change; keep the already-tested executable/packages and preserve ordinary editable-install pulls. Fresh exact-head hosted Linux/Windows evidence is maintained in Draft PR #111. #107 stays open through Phase-2 owner approval.

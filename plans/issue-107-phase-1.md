@@ -1,8 +1,8 @@
 # Shared Node Versions — Phase 1 (#107 / PR #108)
 
-Status: implementation complete and owner accepted on 2026-10-05, including the Resource-move correction #110. Prepare the exact-head merge gate for the owner's squash merge. Start at [PLAN.md](../PLAN.md) for the current next action.
+Status: owner accepted on 2026-10-05 and squash-merged PR #108 on 2026-10-06 after green CI, including the Resource-move correction #110. Accepted main is `dc20fdb86980d5b6adb801d299a4610e0a297ae3`. #107 stays open for the Phase-2 onboarding owner test on Draft PR #111. Start at [PLAN.md](../PLAN.md) for the current next action.
 
-The dated checkpoints below preserve the implementation history. Earlier resume instructions are superseded by the final checkpoint.
+The dated checkpoints below preserve implementation history. Earlier merge/resume instructions are superseded by the accepted baseline above.
 
 ## Owner-test candidate: shared Node versions — Issue #107, Phase 1
 

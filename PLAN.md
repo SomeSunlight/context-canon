@@ -2,20 +2,32 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Post-merge baseline reconciliation — PR #108 (2026-10-06)
+
+Purpose: record the owner's actual Phase-1 squash merge at `dc20fdb86980d5b6adb801d299a4610e0a297ae3`, integrate that accepted baseline into Draft PR #111, and run fresh exact-head Linux/Windows CI while the owner tests onboarding. The accepted Phase-1 tree exactly matches the previous stacked base. Preserve branch ancestry with a merge so an existing editable test checkout can continue using fast-forward pulls; do not rewrite the owner's active branch history or alter executable behavior.
+
+- [x] Verify the actual Phase-1 merge and identical accepted/base trees; keep #107 open for Phase 2.
+- [x] Integrate accepted main and reconcile PLAN/STATE/detail-plan current status.
+- [x] Verify the documentation-only reconciliation and prepare its publication on #111 targeting main.
+
+- [ ] Owner finishes onboarding testing; Phase-2 approval/merge remain separate.
+
+Fresh exact-head Linux/Windows results are a live gate recorded in PR #111, not another status-only commit.
+
 ## Current position
 
-Accepted `main`: `28ce62ef7aca4960bcf238b8d2221b7e445aa236` (owner-tested PR #105).
+Accepted `main`: `dc20fdb86980d5b6adb801d299a4610e0a297ae3` (owner-tested PR #108, squash-merged on 2026-10-06).
 
-Active development: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, stacked on owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`. On 2026-10-05 the owner explicitly authorized starting this phase before PR #108 is merged, with systematic recoverable checkpoints. This supersedes the earlier wait-for-merge start condition; accepted `main` is unchanged. PR #108 stays separate and unmerged. See the [active Phase-2 plan](plans/issue-107-phase-2.md) and [owner test](plans/issue-107-onboarding-owner-test.md).
+Active owner review: **#107 Phase 2 onboarding storage**, branch `agent/issue-107-onboarding-versions`, Draft PR #111 targeting `main`. Its original stacked Phase-1 base exactly matches the accepted squash tree. The accepted main commit is integrated without rewriting the editable test branch's ancestry or changing executable/package bytes. The owner is now testing onboarding. See the [Phase-2 plan](plans/issue-107-phase-2.md) and [owner test](plans/issue-107-onboarding-owner-test.md).
 
-[PR #108](https://github.com/SomeSunlight/context-canon/pull/108), branch `agent/issue-107-shared-node-versions`, implements #107 Phase 1: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. On 2026-10-05 the owner reported successful migration/history browsing and corrected propagation, accepted Phase 1, and requested preparation for an owner-performed squash merge. The product correction passed Linux/Windows CI. The subsequent documentation-head run passed Windows but its Linux job was cancelled; the final current head must pass the complete merge gate before readiness is confirmed.
+[PR #108](https://github.com/SomeSunlight/context-canon/pull/108) is accepted: shared complete Node versions, shorter new Resource layouts and separate preview/apply migration for normal operation. #109 recovery and the #110 Resource-move correction are included. Keep #107 open for Phase-2 acceptance; no merge of #111 is authorized.
 
 | Main point | Status | Detail / next action |
 | --- | --- | --- |
 | Restore a usable plan and review the interrupted work (#109) | Complete; owner accepted | [Recovery checklist](plans/issue-107-phase-1.md#recovery-and-owner-test-preparation-109) |
 | Resource-move review correction (#110) | Fixed; owner retest successful | [Correction checklist](plans/issue-110-resource-move-review.md) |
-| Shared versions and migration (#107 Phase 1) | Owner accepted; exact-head gate/readiness on PR #108 | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
-| Onboarding storage and reset/recovery (#107 Phase 2) | Implementation complete; final candidate gates and owner test on Draft #111 | [Phase-2 checklist](plans/issue-107-phase-2.md) |
+| Shared versions and migration (#107 Phase 1) | Accepted in main via PR #108 | [Implementation contract and checkpoints](plans/issue-107-phase-1.md); [internal-project owner test](plans/issue-107-owner-test.md); [operator guide](docs/node-versions.md) |
+| Onboarding storage and reset/recovery (#107 Phase 2) | Implementation complete; owner testing Draft #111 on main | [Phase-2 checklist](plans/issue-107-phase-2.md) |
 | Safe unused-version pruning | Deferred; complete reachability required | [Phase-2 prerequisite](plans/issue-107-phase-2.md) |
 | Reinitialization / copied-project ID remapping (#106) | Separate open issue | [Backlog](plans/backlog.md) |
 | Other proposed work and unresolved issue bookkeeping | Unscheduled | [Backlog](plans/backlog.md) |
@@ -23,7 +35,7 @@ Active development: **#107 Phase 2 onboarding storage**, branch `agent/issue-107
 
 ## Current block — recovery and owner testing (#109)
 
-Purpose: make the plan resumable after a lost Work chat, independently verify PR #108, and give the owner an executable test/migration sequence for the already-onboarded internal project. Recovery and real owner testing are complete; the owner will perform the squash merge after the gate below.
+Purpose: make the plan resumable after a lost Work chat, independently verify PR #108, and give the owner an executable test/migration sequence for the already-onboarded internal project. Recovery and real owner testing are complete; the owner squash-merged PR #108 on 2026-10-06 after the complete gate passed.
 
 - [x] Preserve and separate overview, Phase-1 detail, deferred Phase-2 work and history.
 - [x] Verify the published implementation and record remaining work or test limitations.
@@ -37,9 +49,9 @@ Scope: record the owner's successful test/acceptance, preserve the remaining onb
 
 - [x] Record owner acceptance and the next Phase-2 boundary in the current status/detail plans.
 - [x] Prepare and locally verify the documentation-only closure, including repository links, zero generated drift and propagation health.
-- [ ] Owner squash-merges after complete exact-head Linux/Windows CI and readiness evidence recorded on PR #108; keep #107 open for Phase 2.
+- [x] Owner squash-merged PR #108 after complete exact-head Linux/Windows CI as `dc20fdb86980d5b6adb801d299a4610e0a297ae3`; #107 stays open for Phase 2.
 
-Final CI and readiness are live PR metadata: record them there without creating another status-only commit that invalidates the verified head. Reconcile this index and STATE with the actual accepted baseline after the owner merges.
+Final CI and readiness are live PR metadata: record them there without creating another status-only commit that invalidates the verified head. This index and STATE are reconciled with the actual Phase-1 squash baseline; new Phase-2 verification remains live PR metadata.
 
 ## Active owner-test correction (#110)
 
