@@ -2,6 +2,18 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Resource target notes (#113)
+
+Accepted baseline: the owner squash-merged Phase 2 as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80` (#111). The older Phase-2 preparation blocks below are historical. Resource notes are a separate review branch, `agent/issue-113-resource-notes`; Topic inheritance visibility remains deferred.
+
+Purpose: add an optional indented single-line `Why:` below each Resource target, following the owner's preference for explicit syntax. Preserve explanations through rendering, immutable packages, composition, review and Resource maintenance. VALID/OBSOLETE are ordinary text, not status enums or Required/Optional control. Existing syntax and unannotated package identities stay compatible; arbitrary trailing prose remains unsupported.
+
+- [x] Implement Resource-only Why parsing, typed/package preservation, rendering, review identity and register/move/reconcile preservation. Before documentation edits, all six self-hosted Nodes still have zero generated drift and all four normative edges remain current, proving unannotated output compatibility.
+- [x] Cover the reported mixed identified/path-only targets, malformed syntax, offline Parent/Reference packages, Why-only review changes and Resource lifecycle. Seven focused regressions pass, including metadata before/after Why, canonical target reordering, registration idempotence, explicit move and external rename reconciliation.
+- [x] Document syntax and prepare a separate Draft PR: all 451 deterministic/repository-consistency tests pass, including seven new regressions; diff hygiene is clean. Expected generated drift is confined to Foundation and Framework Development copies of the two edited syntax guides. All four normative edges remain current. Regeneration follows owner review; no merge is authorized.
+
+Review boundary: the feature is ready on this branch. After owner acceptance, regenerate only the two affected self-hosted packages, repeat the complete exact-head gate and leave the merge to the owner. Until then `check --all`/hosted drift CI is expected to be red for the documented guide-copy drift.
+
 ## Phase-2 owner acceptance and merge preparation (#107 / #111)
 
 Purpose: the owner confirms successful real migration and orderly short paths, accepts the result for main, and explicitly defers a new end-to-end onboarding to the next real adoption. Record that precise test boundary in PLAN/STATE, the Phase-2 plan and backlog; prepare PR #111 for the owner's squash merge. Future onboarding findings belong in new Issues. No executable, packaged Resource or release-version change belongs to this closure.
@@ -61,7 +73,7 @@ Purpose: record the owner's actual Phase-1 squash merge at `dc20fdb86980d5b6adb8
 
 Fresh exact-head Linux/Windows results are a live gate recorded in PR #111, not another status-only commit.
 
-## Current position
+## Phase-2 pre-merge position (historical)
 
 Accepted `main`: `dc20fdb86980d5b6adb801d299a4610e0a297ae3` (owner-tested PR #108, squash-merged on 2026-10-06).
 

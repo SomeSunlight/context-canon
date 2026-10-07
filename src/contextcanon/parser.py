@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 
 from .model import NodeMetadata, ParentRef, ParsedNode, RelationshipKind, Rule, RuleChange, SourceRef, Topic, TopicTarget
@@ -22,6 +23,9 @@ SOURCE_RE = re.compile(
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
 CHANGE_TARGET_RE = re.compile(r'^- `(?P<source>.+?) / (?P<rule_id>[^`]+)`(?:\s+—\s+.*)?\s*$')
 TARGET_RE = re.compile(r'^- (?P<label>Resource|Context Node):\s+`(?P<path>[^`]+)`\s*$')
+RESOURCE_LINE_RE = re.compile(
+    r'^(?P<indent>[ \t]*)- Resource:\s+`(?P<locator>[^`]+)`\s*$'
+)
 
 
 class ContextCanonError(ValueError):
@@ -432,26 +436,43 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
         condition_lines: list[str] = []
         targets: list[TopicTarget] = []
         intent = None
+        resource_target_index = None
         for offset, raw in enumerate(block):
             stripped = raw.strip()
             if not stripped or stripped.startswith("<!--"):
                 continue
             if stripped == "Required:":
                 intent = "required"
+                resource_target_index = None
                 continue
             if stripped == "Optional:":
                 intent = "optional"
+                resource_target_index = None
                 continue
-            target_match = TARGET_RE.match(stripped)
+            if stripped.startswith("Why:"):
+                if resource_target_index is None or not raw[:1].isspace():
+                    raise ContextCanonError(f"{source_path}: Why: must be indented below a Resource target")
+                why = stripped[len("Why:"):].strip()
+                if not why:
+                    raise ContextCanonError(f"{source_path}: Resource Why: must not be empty")
+                target = targets[resource_target_index]
+                if target.why is not None:
+                    raise ContextCanonError(f"{source_path}: duplicate Resource Why:")
+                targets[resource_target_index] = replace(target, why=why)
+                continue
+            resource_match = RESOURCE_LINE_RE.match(stripped)
+            target_match = resource_match or TARGET_RE.match(stripped)
             if target_match:
                 if intent is None:
                     raise ContextCanonError(f"{source_path}: Topic target appears before Required:/Optional:")
-                kind = "resource" if target_match.group("label") == "Resource" else "context-node"
+                kind = "resource" if resource_match else "context-node"
                 resource_id = None
                 if kind == "resource":
                     for following in block[offset + 1:]:
                         following_stripped = following.strip()
                         if not following_stripped:
+                            continue
+                        if following[:1].isspace() and following_stripped.startswith("Why:"):
                             continue
                         comment = RESOURCE_COMMENT_RE.search(following)
                         if comment:
@@ -465,11 +486,12 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
                 targets.append(
                     TopicTarget(
                         kind=kind,
-                        locator=target_match.group("path"),
+                        locator=target_match.group("locator" if resource_match else "path"),
                         intent=intent,
                         resource_id=resource_id,
                     )
                 )
+                resource_target_index = len(targets) - 1 if kind == "resource" else None
                 continue
             if intent is None:
                 condition_lines.append(stripped)

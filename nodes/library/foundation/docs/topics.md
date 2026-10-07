@@ -38,6 +38,26 @@ Required:
 
 The distinction matters. A model should not guess whether a target is mandatory, and the compiler should not guess whether a filesystem path means package material or another Node.
 
+## Explain an individual Resource
+
+A Resource target may have one optional, indented, single-line `Why:` explanation:
+
+```markdown
+Required:
+- Resource: `samples/variant-6.jsonc`
+  Why: Version 6 - valid example of the current payload shape.
+  <!-- ctx:resource id="RESOURCE-CURRENT-SAMPLE" -->
+- Resource: `samples/variant-0-legacy.json`
+  Why: Obsolete payload, retained for migration comparisons.
+  <!-- ctx:resource id="RESOURCE-LEGACY-SAMPLE" -->
+```
+
+The text explains why this Resource is useful for this Topic. It is shown below the link in the generated context and retained in immutable packages and inherited Topics. A change to the explanation appears in Topic review.
+
+`Why:` does not define a status or change the load intention. A Resource marked Required remains required even if its explanation calls it obsolete; its file must still exist. Use Optional when reading it is optional. The Resource identity comment may appear immediately before or after `Why:`. Legacy targets without a Resource ID can also have an explanation; registering them preserves the text.
+
+Keep the explanation on one line and indent it below the Resource. Empty or repeated `Why:` fields, `Why:` on Context Node targets, and arbitrary text after the backticked locator are rejected. Move existing trailing annotations such as `(OBSOLETE)` onto `Why:` rather than adding a second authoring convention.
+
 ## Progressive disclosure can repeat
 
 A required document should again put the most important information first. It may then point to more detailed material.

@@ -241,7 +241,8 @@ def _append_topics(
 
 def _render_target_line(compiled: CompiledNode, topic, target, repo_root: Path) -> str:
     if target.kind == "resource":
-        return f"- [`{target.locator}`]({markdown_link_target(target.locator)})"
+        why = f"\n  Why: {target.why}" if target.why is not None else ""
+        return f"- [`{target.locator}`]({markdown_link_target(target.locator)}){why}"
     if topic.origin_node_id == compiled.metadata.id:
         target_root = (compiled.parsed.root / target.locator).resolve()
         if target_root.name == "CONTEXT.md":
@@ -455,6 +456,8 @@ def render_machine_yaml(compiled: CompiledNode, repo_root: Path, compiler_versio
                 f"    target_node_id: {q(target.target_node_id) if target.target_node_id else 'null'}",
                 f"    target_node_name: {q(target.target_node_name) if target.target_node_name else 'null'}",
             ])
+            if target.why is not None:
+                lines.append(f"    why: {q(target.why)}")
     else:
         lines.append("targets: []")
 

@@ -1,5 +1,13 @@
 # Current State
 
+## Accepted Phase 2; Resource notes review (#113) — 2026-10-08
+
+The owner squash-merged #111 into main as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`. Phase 2 is accepted; the preceding migration/path owner-test boundary still applies and fresh onboarding remains deferred to the next adoption. Earlier pre-merge entries below are historical.
+
+New bounded work on `agent/issue-113-resource-notes` adds optional indented `Why:` text below Resource targets, including the owner's VALID/OBSOLETE explanations, without interpreting those words as status or changing Required/Optional semantics. See the active checklist in PLAN.md. Topic inheritance changes remain deferred; no merge is authorized for #113.
+
+Implementation and syntax documentation are ready for review. All 451 deterministic/repository-consistency tests pass, including seven new Resource-Why regressions; diff hygiene is clean. Before guide edits, all six self-hosted Nodes retained zero drift, proving compatibility for existing unannotated packages. The final authored candidate has expected documentation-copy drift in Foundation and Framework Development only, with all four normative edges still current. Per the existing review cadence, regenerate those two packages after owner review; the Draft PR must disclose the expected red drift gate. Release remains 0.10.0 with checkout provenance.
+
 ## Phase-2 owner acceptance — 2026-10-06
 
 The owner confirms that real onboarding migration now succeeds, the resulting layout is orderly, and no long paths remain in the tested project. Its onboarding was already completed; a fresh end-to-end onboarding has not been performed against Phase 2. The owner accepts the implementation for main on the migration/path result and existing regression coverage, explicitly deferring new onboarding validation to the next real adoption. Any later bugs should be tracked as new Issues.

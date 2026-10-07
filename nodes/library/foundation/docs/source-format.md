@@ -226,6 +226,7 @@ When changing logging, diagnostics, or structured events:
 
 Required:
 - Resource: `docs/logging-contract.md`
+  Why: Defines the logging contract required for this work.
   <!-- ctx:resource id="RESOURCE-LOGGING-CONTRACT" -->
 
 Optional:
@@ -241,6 +242,8 @@ Required:
 ```
 
 A direct `Resource` target has its own stable `ctx:resource` ID. The ID belongs to the owning/origin Context Node and remains the Resource's semantic identity when its file is deliberately renamed or moved. The adjacent path is the Resource's current repository location. If the same Resource is targeted by several Topics in one Node, those targets reuse the same Resource ID.
+
+An optional indented `Why:` line explains the Resource's relevance to this Topic. It must contain non-empty text on one line and may appear immediately before or after its identity comment. It is preserved in generated context and immutable packages, participates in Topic identity/review, and survives Resource registration/moves. Its words do not alter Required/Optional or create machine status; arbitrary trailing prose remains unsupported. See [Topics](topics.md#explain-an-individual-resource) for examples.
 
 Older path-only Resource targets remain readable for compatibility. Migrate them explicitly with `contextcanon resource register`; ordinary `build` and `check` never allocate IDs or rewrite `CONTEXT.src.md` silently. New `contextcanon author topic` authoring and onboarding publication allocate Resource IDs immediately.
 

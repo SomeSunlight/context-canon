@@ -103,6 +103,7 @@ class TopicTarget:
     target_node_id: str | None = None
     target_node_name: str | None = None
     resource_id: str | None = None
+    why: str | None = None
 
 
 @dataclass(frozen=True)

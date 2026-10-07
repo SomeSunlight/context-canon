@@ -1,6 +1,6 @@
 # Shared Node Versions — Onboarding Phase 2 (#107)
 
-**Fast Track status — CLOSED / OWNER ACCEPTED.** The owner authorized starting this phase on 2026-10-05 before PR #108 was merged. Its starting base was owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; Phase 1 is accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3` and integrated with preserved test-branch ancestry. On 2026-10-06 the owner confirms successful migration and orderly short paths and accepts Phase 2 for main. A fresh end-to-end onboarding is deferred to the next real adoption; later findings become new Issues. PR #111 targets main and is being finalized for the owner's squash merge after fresh exact-head CI. This acceptance closure changes planning documents only.
+**Fast Track status — CLOSED / OWNER ACCEPTED.** The owner authorized starting this phase on 2026-10-05 before PR #108 was merged. Its starting base was owner-tested Phase-1 head `9ec581121df2592a93f5b97b365b165cf7a6d3f8`; Phase 1 is accepted main `dc20fdb86980d5b6adb801d299a4610e0a297ae3` and integrated with preserved test-branch ancestry. On 2026-10-06 the owner confirms successful migration and orderly short paths and accepts Phase 2 for main. A fresh end-to-end onboarding is deferred to the next real adoption; later findings become new Issues. The owner squash-merged PR #111 on 2026-10-06 as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`. Earlier checkpoints below describe pre-merge facts.
 
 Purpose: make onboarding payload/storage overhead independent of physical project nesting, reuse the shared complete-Node library, and migrate active old runs without losing reviewed meaning or recoverable state.
 
@@ -45,7 +45,7 @@ Resume with the [migration handoff and safety matrix](issue-107-phase-2-migratio
 
 ## Recovery notes
 
-Implementation and owner acceptance are complete. Read root CONTEXT, applicable Topics, STATE and the PLAN closure block; verify PR #111's current CI/readiness, then await the owner's squash merge and reconcile the actual accepted main commit. PR #108 is accepted and closed. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR. The implementation checkpoints below are historical; current owner acceptance supersedes their earlier merge restrictions.
+Implementation, owner acceptance and the squash merge of #111 are complete. Accepted main is `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`; resume new work from the current PLAN/STATE. PR #108 is accepted and closed. Do not create a new commit merely to mirror a live CI status: record final CI evidence in the PR. The implementation checkpoints below are historical; current owner acceptance supersedes their earlier merge restrictions.
 
 Before any future pruning feature, enumerate current pins, retained-version dependencies, pending reviews, frozen onboarding inputs and recovery receipts. The Phase-1 inventory alone is insufficient deletion authority.
 

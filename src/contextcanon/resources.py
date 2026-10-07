@@ -17,10 +17,9 @@ from .links import local_markdown_targets
 from .model import CompiledPackage
 from .package import load_package
 from .resource_layout import legacy_namespace
-from .parser import ContextCanonError, find_repo_root, parse_node
+from .parser import ContextCanonError, RESOURCE_LINE_RE, find_repo_root, parse_node
 
 
-RESOURCE_LINE_RE = re.compile(r'^(?P<indent>\s*)- Resource:\s+`(?P<locator>[^`]+)`\s*$')
 RESOURCE_COMMENT_RE = re.compile(r'<!--\s*ctx:resource\s+(?P<attrs>.*?)\s*-->')
 RESOURCE_ID_RE = re.compile(r'\bid="(?P<id>[^"]+)"')
 
@@ -223,7 +222,10 @@ def register_resources(node_root: Path) -> RegisterResult:
 
         locator = match.group("locator")
         look = index + 1
-        while look < len(lines) and not lines[look].strip():
+        while look < len(lines) and (
+            not lines[look].strip()
+            or (lines[look][:1].isspace() and lines[look].strip().startswith("Why:"))
+        ):
             look += 1
         has_metadata = False
         if look < len(lines):
