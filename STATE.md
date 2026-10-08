@@ -8,6 +8,8 @@ The full authoring change is implemented. Build stages and validates all selecte
 
 All 475 deterministic/repository-consistency tests pass, including 22 source-authoring regressions and updated onboarding preview/publication/recovery contracts. Installed-wheel offline migration, ID allocation, guide loading and check also pass. All six self-hosted sources are migrated; repeated build changes nothing, all six Nodes have zero drift and all four normative edges are current. Gateway and Framework Development are `0.3.24-draft`; Foundation is `0.2.6-draft`, with its explicit local development import advanced and previous immutable publications retained. Executable release remains 0.10.0 with checkout provenance. Implementation checkpoint is `2ef067d`; final publication/exact-head Linux/Windows evidence and review status belong in #114, without a status-only commit invalidating the tested head. No merge is authorized.
 
+The first expanded hosted head `dbe29e2` passes the complete Linux/full-suite/self-host gate. Native Windows ran 104 tests and exposed three new-fixture failures caused by comparing the temporary RUNNER~1 alias with the resolved runneradmin path; two intended failure injections therefore did not fire. Resolve the fixture repository once, keeping actual migration/package behavior unchanged, and repeat hosted proof on the corrected exact head. Final evidence remains live in #114.
+
 ## Accepted Phase 2; Resource notes review (#113) — 2026-10-08
 
 The owner squash-merged #111 into main as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`. Phase 2 is accepted; the preceding migration/path owner-test boundary still applies and fresh onboarding remains deferred to the next adoption. Earlier pre-merge entries below are historical.
