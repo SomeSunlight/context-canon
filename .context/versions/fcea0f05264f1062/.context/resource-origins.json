@@ -1,0 +1,120 @@
+{
+  "resources": [
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/composition.md",
+      "repo_path": "nodes/library/foundation/docs/composition.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/harnesses.md",
+      "repo_path": "nodes/library/foundation/docs/harnesses.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/official-context.md",
+      "repo_path": "nodes/library/foundation/docs/official-context.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/source-format.md",
+      "repo_path": "nodes/library/foundation/docs/source-format.md"
+    },
+    {
+      "node_id": "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001",
+      "path": "CONTEXT/references/n12f5de19a55e750/docs/topics.md",
+      "repo_path": "nodes/library/foundation/docs/topics.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/node-versions.md",
+      "repo_path": "docs/node-versions.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/onboarding-storage.md",
+      "repo_path": "docs/onboarding-storage.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/docs/windows-paths.md",
+      "repo_path": "docs/windows-paths.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/architecture.md",
+      "repo_path": "nodes/internal/framework-development/docs/architecture.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/compiler.md",
+      "repo_path": "nodes/internal/framework-development/docs/compiler.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/concepts.md",
+      "repo_path": "nodes/internal/framework-development/docs/concepts.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/onboarding-design.md",
+      "repo_path": "nodes/internal/framework-development/docs/onboarding-design.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/state.md",
+      "repo_path": "nodes/internal/framework-development/docs/state.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/tests-and-ci.md",
+      "repo_path": "nodes/internal/framework-development/docs/tests-and-ci.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/internal/framework-development/docs/use-case-walkthrough.md",
+      "repo_path": "nodes/internal/framework-development/docs/use-case-walkthrough.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/composition.md",
+      "repo_path": "nodes/library/foundation/docs/composition.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/harnesses.md",
+      "repo_path": "nodes/library/foundation/docs/harnesses.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/official-context.md",
+      "repo_path": "nodes/library/foundation/docs/official-context.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/source-format.md",
+      "repo_path": "nodes/library/foundation/docs/source-format.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md",
+      "repo_path": "nodes/library/foundation/docs/topics.md"
+    },
+    {
+      "node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
+      "path": "CONTEXT/references/nd268d581199b5a7/plans/issue-107-onboarding-owner-test.md",
+      "repo_path": "plans/issue-107-onboarding-owner-test.md"
+    },
+    {
+      "node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md",
+      "repo_path": "nodes/library/development-workflow/docs/change-workflow.md"
+    },
+    {
+      "node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
+      "repo_path": "nodes/library/development-workflow/docs/version-provenance-python.md"
+    }
+  ],
+  "schema": "contextcanon/resource-origins/v1"
+}

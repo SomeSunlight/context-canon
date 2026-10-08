@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.22-draft"
+  version: "0.3.23-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,11 +18,11 @@ parents: []
 sources:
   - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
     name: "ContextCanon Foundation"
-    version: "0.2.4-draft"
+    version: "0.2.5-draft"
     relationship: "parent"
     locator: "../../library/foundation/"
-    normalized_digest: "3d6d19485eb3698c94e0f880e3bbce5c0c5b9bd28f9ea5da0eda38d031145ec2"
-    package_digest: "c6916ff9b980238f6144944f4b6df77684d603d93183a8bcab1d506a7e6a59ad"
+    normalized_digest: "c7d9ef3cb16aa275d609d3d1bafa6af653c7ae08ecb4bca8a51c39ef83759ff6"
+    package_digest: "af20d63c5ab1ca80c6627ff28533f39cf644f971f24a1249baecf9b51243421c"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.3.7-draft"
@@ -38,9 +38,9 @@ references: []
 imports:
   - id: "4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001"
     name: "ContextCanon Foundation"
-    version: "0.2.4-draft"
-    normalized_digest: "3d6d19485eb3698c94e0f880e3bbce5c0c5b9bd28f9ea5da0eda38d031145ec2"
-    package_digest: "c6916ff9b980238f6144944f4b6df77684d603d93183a8bcab1d506a7e6a59ad"
+    version: "0.2.5-draft"
+    normalized_digest: "c7d9ef3cb16aa275d609d3d1bafa6af653c7ae08ecb4bca8a51c39ef83759ff6"
+    package_digest: "af20d63c5ab1ca80c6627ff28533f39cf644f971f24a1249baecf9b51243421c"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
     version: "0.3.7-draft"
@@ -282,5 +282,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "7354b1fbce79b61812fc589cfa80d8a40834a29b2b963bb7d307fb4e57432aa6"
-  package_digest: "2229ae6b58c1edb80562ea0f14566ef3ee374a7619089f236d2cf5648f757143"
+  normalized_digest: "124ff1b95cb48bf1418e6fb33f8c5fe99316edd1bc1acd8368a64d15a05995ff"
+  package_digest: "1a4f0aeb3f740d31ca681954b67c5660b19f5ee9b3d3fab879b180a1c0bb74ab"

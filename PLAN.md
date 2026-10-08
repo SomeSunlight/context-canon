@@ -12,7 +12,10 @@ Purpose: add an optional indented single-line `Why:` below each Resource target,
 - [x] Cover the reported mixed identified/path-only targets, malformed syntax, offline Parent/Reference packages, Why-only review changes and Resource lifecycle. Seven focused regressions pass, including metadata before/after Why, canonical target reordering, registration idempotence, explicit move and external rename reconciliation.
 - [x] Document syntax and prepare a separate Draft PR: all 451 deterministic/repository-consistency tests pass, including seven new regressions; diff hygiene is clean. Expected generated drift is confined to Foundation and Framework Development copies of the two edited syntax guides. All four normative edges remain current. Regeneration follows owner review; no merge is authorized.
 
-Review boundary: the feature is ready on this branch. After owner acceptance, regenerate only the two affected self-hosted packages, repeat the complete exact-head gate and leave the merge to the owner. Until then `check --all`/hosted drift CI is expected to be red for the documented guide-copy drift.
+The owner authorized finalization on 2026-10-08. No merge is authorized; leave the squash merge to the owner.
+
+- [x] Regenerate Foundation at `0.2.5-draft` and Framework Development at `0.3.23-draft`, advance the explicit local Foundation import and retain both previous immutable publications. All six Nodes now have zero generated drift; all four normative edges are current.
+- [x] Pass all 451 deterministic/repository-consistency tests, zero generated drift for six Nodes, current normative state for all four local edges and diff hygiene. Final candidate is prepared for publication. Exact-head hosted Linux/Windows evidence and PR readiness are live metadata in #114; mark ready only after both jobs succeed, without a status-only commit that invalidates the verified head.
 
 ## Phase-2 owner acceptance and merge preparation (#107 / #111)
 
