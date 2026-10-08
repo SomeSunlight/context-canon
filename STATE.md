@@ -1,5 +1,23 @@
 # Current State
 
+## Complete source authoring usability (#115 / #89) — 2026-10-08
+
+The owner clarifies that the original task was broader than Resource Why: source-only format help, Imports first, trailing IDs/provenance, a format guide and links, actionable diagnostics and automatic build migration of existing Nodes. Expand open #114 on its existing branch; the green Why-only snapshot is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`. Main remains the #111 squash baseline. The owner explicitly authorizes narrow authoring-source writes during build; check remains read-only. See the active PLAN block. No merge is authorized; Topic inheritance visibility remains deferred.
+
+The full authoring change is implemented. Build stages and validates all selected sources before replacing any; it preserves existing IDs/import pins and frozen packages, allocates genuinely missing new-entry IDs once, maintains source-only format help and an offline guide, places Imports first and trails State/Plan placement identity. Onboarding uses the same formatter. Diagnostics include the original unchanged file/line, expected syntax and both local/full documentation. Hidden comment examples are excluded from semantic parsing and Markdown Resource/link discovery.
+
+All 475 deterministic/repository-consistency tests pass, including 22 source-authoring regressions and updated onboarding preview/publication/recovery contracts. Installed-wheel offline migration, ID allocation, guide loading and check also pass. All six self-hosted sources are migrated; repeated build changes nothing, all six Nodes have zero drift and all four normative edges are current. Gateway and Framework Development are `0.3.24-draft`; Foundation is `0.2.6-draft`, with its explicit local development import advanced and previous immutable publications retained. Executable release remains 0.10.0 with checkout provenance. Implementation checkpoint is `2ef067d`; final publication/exact-head Linux/Windows evidence and review status belong in #114, without a status-only commit invalidating the tested head. No merge is authorized.
+
+The first expanded hosted head `dbe29e2` passes the complete Linux/full-suite/self-host gate. Native Windows ran 104 tests and exposed three new-fixture failures caused by comparing the temporary RUNNER~1 alias with the resolved runneradmin path; two intended failure injections therefore did not fire. Resolve the fixture repository once, keeping actual migration/package behavior unchanged, and repeat hosted proof on the corrected exact head. Final evidence remains live in #114.
+
+## Accepted Phase 2; Resource notes review (#113) — 2026-10-08
+
+The owner squash-merged #111 into main as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`. Phase 2 is accepted; the preceding migration/path owner-test boundary still applies and fresh onboarding remains deferred to the next adoption. Earlier pre-merge entries below are historical.
+
+New bounded work on `agent/issue-113-resource-notes` adds optional indented `Why:` text below Resource targets, including the owner's VALID/OBSOLETE explanations, without interpreting those words as status or changing Required/Optional semantics. See the active checklist in PLAN.md. Topic inheritance changes remain deferred; no merge is authorized for #113.
+
+The owner authorized finalization on 2026-10-08. Foundation is regenerated at `0.2.5-draft`, Framework Development at `0.3.23-draft`, its explicit local Foundation import is advanced, and both previous immutable publications are retained. All 451 deterministic/repository-consistency tests pass, including seven Resource-Why regressions; all six Nodes have zero generated drift, all four normative edges are current and diff hygiene is clean. The previous review-stage documentation-copy drift is resolved. Before guide edits, existing unannotated packages also retained zero drift. Exact-head hosted Linux/Windows results and PR readiness are live metadata in #114; no merge is authorized. Release remains 0.10.0 with checkout provenance.
+
 ## Phase-2 owner acceptance — 2026-10-06
 
 The owner confirms that real onboarding migration now succeeds, the resulting layout is orderly, and no long paths remain in the tested project. Its onboarding was already completed; a fresh end-to-end onboarding has not been performed against Phase 2. The owner accepts the implementation for main on the migration/path result and existing regression coverage, explicitly deferring new onboarding validation to the next real adoption. Any later bugs should be tracked as new Issues.

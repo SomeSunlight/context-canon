@@ -2,6 +2,35 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Complete source authoring usability (#115 / #89; expands #114)
+
+The owner clarified the missing original scope on 2026-10-08. Extend the open Resource-Why PR #114 on `agent/issue-113-resource-notes`; do not merge. Accepted main remains `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`; the green Why-only candidate is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`.
+
+Purpose: every new/existing CONTEXT.src.md must explain its authoring contract. The owner's explicit request authorizes normal build to migrate source-only orientation, marked format help, import placement, trailing identity/provenance markers and missing stable IDs for valid new Rules/Topics/Resources. This narrowly supersedes the older no-source-write build convention. Never infer malformed prose, change Parent/Reference meaning, reallocate existing identity, alter accepted pins or mutate frozen packages. check remains read-only.
+
+- [x] Add shared source-only authoring help/diagnostics, a visible format-guide link, section examples and a complete root documentation/README entry. The distributed guide is bundled for offline use; root documentation exposes the complete same contract.
+- [x] Implement idempotent build migration across the selected Nodes: Imports first, help refresh, trailing placement markers, allocate missing IDs once, validate before writing and preserve user bytes/meaning outside the narrow authoring changes. Candidate diagnostics point to the original unchanged file; all selected candidates compile before any source write, with rollback/concurrent-edit/ownership checks.
+- [x] Apply the same layout/help to onboarding skeletons, compatibility publication and reviewed placement preview/publication; keep managed blocks and frozen/review state compatible. Existing 451 tests and 53 focused authoring/onboarding tests pass; final full-suite verification follows the last review changes.
+- [x] Regress existing/new/nested/offline Nodes, parent/reference pins, missing-ID authoring, invalid Rules/Topics/Resources, help isolation, State/Plan identity placement, idempotence, failed writes and onboarding contracts; run complete tests and document real migration usage. All 475 tests pass, including 22 source-authoring regressions and updated onboarding contracts. The installed wheel also completes offline build/migration/check with bundled guidance.
+- [x] Prepare the expanded Draft #114 with recoverable implementation/regeneration checkpoints and complete local verification. All six self-hosted sources are migrated; repeated build makes no changes, check reports zero drift and all four normative edges are current. Exact published-head hosted Linux/Windows proof and owner-review status are live PR metadata; no status-only commit should invalidate that head. Leave owner review and merge as explicit gates.
+
+Native Windows first exposed a fixture alias issue: RUNNER~1 and the resolved runneradmin directory were compared as different Paths, so two injected write/concurrent-edit failures were not triggered. Resolve the temporary repository once in the fixture so the rollback tests exercise the intended failure on both platforms. Product migration already resolves all roots; no product/package change is required. The corrected candidate must pass fresh exact-head Windows as well as Linux evidence in #114.
+
+## Resource target notes (#113)
+
+Accepted baseline: the owner squash-merged Phase 2 as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80` (#111). The older Phase-2 preparation blocks below are historical. Resource notes are a separate review branch, `agent/issue-113-resource-notes`; Topic inheritance visibility remains deferred.
+
+Purpose: add an optional indented single-line `Why:` below each Resource target, following the owner's preference for explicit syntax. Preserve explanations through rendering, immutable packages, composition, review and Resource maintenance. VALID/OBSOLETE are ordinary text, not status enums or Required/Optional control. Existing syntax and unannotated package identities stay compatible; arbitrary trailing prose remains unsupported.
+
+- [x] Implement Resource-only Why parsing, typed/package preservation, rendering, review identity and register/move/reconcile preservation. Before documentation edits, all six self-hosted Nodes still have zero generated drift and all four normative edges remain current, proving unannotated output compatibility.
+- [x] Cover the reported mixed identified/path-only targets, malformed syntax, offline Parent/Reference packages, Why-only review changes and Resource lifecycle. Seven focused regressions pass, including metadata before/after Why, canonical target reordering, registration idempotence, explicit move and external rename reconciliation.
+- [x] Document syntax and prepare a separate Draft PR: all 451 deterministic/repository-consistency tests pass, including seven new regressions; diff hygiene is clean. Expected generated drift is confined to Foundation and Framework Development copies of the two edited syntax guides. All four normative edges remain current. Regeneration follows owner review; no merge is authorized.
+
+The owner authorized finalization on 2026-10-08. No merge is authorized; leave the squash merge to the owner.
+
+- [x] Regenerate Foundation at `0.2.5-draft` and Framework Development at `0.3.23-draft`, advance the explicit local Foundation import and retain both previous immutable publications. All six Nodes now have zero generated drift; all four normative edges are current.
+- [x] Pass all 451 deterministic/repository-consistency tests, zero generated drift for six Nodes, current normative state for all four local edges and diff hygiene. Final candidate is prepared for publication. Exact-head hosted Linux/Windows evidence and PR readiness are live metadata in #114; mark ready only after both jobs succeed, without a status-only commit that invalidates the verified head.
+
 ## Phase-2 owner acceptance and merge preparation (#107 / #111)
 
 Purpose: the owner confirms successful real migration and orderly short paths, accepts the result for main, and explicitly defers a new end-to-end onboarding to the next real adoption. Record that precise test boundary in PLAN/STATE, the Phase-2 plan and backlog; prepare PR #111 for the owner's squash merge. Future onboarding findings belong in new Issues. No executable, packaged Resource or release-version change belongs to this closure.
@@ -61,7 +90,7 @@ Purpose: record the owner's actual Phase-1 squash merge at `dc20fdb86980d5b6adb8
 
 Fresh exact-head Linux/Windows results are a live gate recorded in PR #111, not another status-only commit.
 
-## Current position
+## Phase-2 pre-merge position (historical)
 
 Accepted `main`: `dc20fdb86980d5b6adb801d299a4610e0a297ae3` (owner-tested PR #108, squash-merged on 2026-10-06).
 

@@ -2,3 +2,5 @@
 CONTEXT/** linguist-generated
 nodes/**/.context/** linguist-generated
 nodes/**/CONTEXT/** linguist-generated
+# Frozen Official Context keeps authenticated Markdown hard line breaks.
+.context/versions/**/CONTEXT.md whitespace=-blank-at-eol

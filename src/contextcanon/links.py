@@ -43,7 +43,7 @@ def markdown_target_locator(target: str) -> str:
 
 
 def local_markdown_targets(text: str) -> Iterator[str]:
-    """Yield decoded local link targets outside fenced code blocks.
+    """Yield decoded local link targets outside fenced code blocks/comments.
 
     External URLs, mailto/data/ssh/git links, anchors, and empty links are
     ignored. Anchors on local paths are stripped before percent-decoding so an
@@ -51,13 +51,23 @@ def local_markdown_targets(text: str) -> Iterator[str]:
     """
 
     in_fence = False
+    comment_depth = 0
     for line in text.splitlines():
-        if line.lstrip().startswith("```"):
+        if comment_depth == 0 and line.lstrip().startswith("```"):
             in_fence = not in_fence
             continue
         if in_fence:
             continue
-        for match in LINK_RE.finditer(line):
+        visible = []
+        cursor = 0
+        for marker in re.finditer(r"<!--|-->", line):
+            if comment_depth == 0:
+                visible.append(line[cursor:marker.start()])
+            comment_depth = comment_depth + 1 if marker.group() == "<!--" else max(0, comment_depth - 1)
+            cursor = marker.end()
+        if comment_depth == 0:
+            visible.append(line[cursor:])
+        for match in LINK_RE.finditer("".join(visible)):
             target = match.group(1).strip()
             if not target or target.startswith("#") or _is_external_target(target):
                 continue

@@ -114,6 +114,12 @@ Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**.
 
 `contextcanon propagate` reviews only semantic descendants of the selected Context Node. `--all` deliberately broadens the review scope to every Parent graph in the repository; it is not blanket approval.
 
+## Edit the local Context source
+
+Edit `CONTEXT.src.md`; ContextCanon generates `CONTEXT.md` from it. Each meaningful section has a short format comment and the source links to an offline `CONTEXT-format.md` guide beside it. For new Rules, Topics and Resources, use the examples and omit IDs; build adds them automatically.
+
+`contextcanon build --all .` also migrates existing sources: it puts Context Imports first, refreshes authoring help and places historical State/Plan identity comments after their entries. Existing IDs and accepted Parent/Reference pins are preserved. `check` remains read-only. See [Editing CONTEXT.src.md](docs/context-source-format.md) for the complete syntax and examples.
+
 ## Four concerns that should not be tangled together
 
 ContextCanon deliberately does **not** try to be the agent, the development process and the forge at the same time.

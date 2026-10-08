@@ -59,8 +59,9 @@ def _trim_insert(lines: list[str], index: int, block: list[str]) -> list[str]:
 
 
 def _write_validated(node_root: Path, original: str, lines: list[str], expected_kind: str, element_id: str) -> AuthoringResult:
+    from .source_authoring import format_source
     source_path = node_root / "CONTEXT.src.md"
-    source_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    source_path.write_text(format_source("\n".join(lines).rstrip() + "\n"), encoding="utf-8")
     try:
         parsed = parse_node(node_root)
         ids = {item.id for item in (parsed.rules if expected_kind == "rule" else parsed.topics)}

@@ -68,6 +68,13 @@ class RepositoryConsistencyTests(unittest.TestCase):
         (root / "README.md").write_text("# Authored and valid\n", encoding="utf-8")
         self.assertEqual(broken_local_markdown_links(root), [])
 
+    def test_link_checker_ignores_hidden_format_examples_and_nested_metadata(self):
+        text = ('<!-- contextcanon:format Context Imports\nFormat: - [Name](location)\n-->\n'
+                '<!-- Old template\n[example](missing.md)\n<!-- ctx:rule id="example" -->\n[another](missing.md)\n-->\n'
+                '[real](real.md) <!-- [hidden](missing.md) --> [also real](other.md)\n'
+                '```markdown\n<!-- unclosed example\n```\n[after code](after.md)\n')
+        self.assertEqual(list(local_markdown_targets(text)), ["real.md", "other.md", "after.md"])
+
     def test_repository_local_markdown_links_resolve(self):
         root = Path(__file__).resolve().parents[1]
         broken = broken_local_markdown_links(root)

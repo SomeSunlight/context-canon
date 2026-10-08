@@ -5,10 +5,21 @@ from .model import CompiledNode
 from .package import PACKAGE_MANIFEST_PATH
 from .resource_layout import ORIGINS_PATH
 from .render import render_node_readme
+from .parser import ContextCanonError
+from .source_help import GUIDE_MARKER, GUIDE_NAME, guide_text
 
 
 def expected_outputs(compiled: CompiledNode) -> dict[str, bytes]:
+    guide = compiled.parsed.root / GUIDE_NAME
+    if guide.exists() or guide.is_symlink():
+        try:
+            owned = not guide.is_symlink() and guide.is_file() and guide.read_text(encoding="utf-8").startswith(GUIDE_MARKER + "\n")
+        except (OSError, UnicodeDecodeError):
+            owned = False
+        if not owned:
+            raise ContextCanonError(f"{guide}: source format guide destination is not ContextCanon-owned; rename this file before building")
     outputs: dict[str, bytes] = {
+        GUIDE_NAME: guide_text().encode("utf-8"),
         "CONTEXT.md": compiled.official_markdown.encode("utf-8"),
         ".context/context.yaml": compiled.machine_yaml.encode("utf-8"),
         PACKAGE_MANIFEST_PATH: compiled.package_manifest.encode("utf-8"),

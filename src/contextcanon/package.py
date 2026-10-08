@@ -490,6 +490,7 @@ def _semantic_topic_dict(topic: Topic) -> dict[str, Any]:
                     "kind": target["kind"],
                     "intent": target["intent"],
                     "resource_id": target["resource_id"],
+                    **({"why": target["why"]} if target.get("why") is not None else {}),
                 }
             )
         else:
@@ -503,6 +504,7 @@ def _semantic_topic_dict(topic: Topic) -> dict[str, Any]:
             target.get("locator", ""),
             target.get("target_node_id", ""),
             target.get("target_node_name", ""),
+            target.get("why", ""),
         ),
     )
     return item
@@ -519,6 +521,7 @@ def _topic_dict(topic: Topic) -> dict[str, Any]:
             target["intent"], target["kind"], target["locator"],
             target.get("resource_id", ""),
             target.get("target_node_id", ""), target.get("target_node_name", ""),
+            target.get("why", ""),
         ),
     )
     return item
@@ -774,6 +777,12 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
     target_node_id = item.get("target_node_id")
     target_node_name = item.get("target_node_name")
     resource_id = item.get("resource_id")
+    why = item.get("why")
+    if why is not None:
+        if not isinstance(why, str) or not why.strip() or why.splitlines() != [why]:
+            raise ContextCanonError(f"Invalid {label}.why: expected non-empty single-line string or null")
+        if kind != "resource":
+            raise ContextCanonError(f"Invalid {label}: only Resource targets can carry Why text")
     if target_node_id is not None and not isinstance(target_node_id, str):
         raise ContextCanonError(f"Invalid {label}.target_node_id: expected string or null")
     if target_node_name is not None and not isinstance(target_node_name, str):
@@ -791,6 +800,7 @@ def _parse_target(value: Any, topic_index: int, target_index: int) -> TopicTarge
         target_node_id=target_node_id,
         target_node_name=target_node_name,
         resource_id=resource_id,
+        why=why,
     )
 
 

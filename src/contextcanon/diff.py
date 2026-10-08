@@ -325,6 +325,8 @@ def _topic_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
         targets: list[dict[str, Any]] = []
         for target in item["targets"]:
             normalized = dict(target)
+            if normalized.get("why") is None:
+                normalized.pop("why", None)
             if normalized["kind"] == "resource" and normalized.get("resource_id"):
                 normalized.pop("locator", None)
             targets.append(normalized)
@@ -335,6 +337,7 @@ def _topic_snapshot(compiled: CompiledNode) -> dict[str, dict[str, Any]]:
                 target["kind"],
                 target.get("resource_id") or "",
                 target.get("locator") or "",
+                target.get("why") or "",
             ),
         )
         result[f"{topic.origin_node_id}#{topic.id}"] = item

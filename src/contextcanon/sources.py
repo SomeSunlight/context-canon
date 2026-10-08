@@ -171,7 +171,8 @@ def normalize_source_relationships(node_root: Path) -> bool:
     Canonical authoring has exactly one relationship form: Context Imports
     with ctx:source metadata and an explicit parent/reference relationship.
     Legacy forms remain readable only so this maintenance action can migrate
-    them; ordinary build/check do not rewrite human-authored relationships.
+    them; build also performs this meaning-preserving authoring migration,
+    while check remains read-only.
     """
 
     node_root = node_root.resolve()

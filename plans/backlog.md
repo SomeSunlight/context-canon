@@ -4,7 +4,7 @@ Unscheduled work only. This snapshot was read from GitHub on 2026-10-05 (#109); 
 
 | Issue | Title | Planning position |
 | --- | --- | --- |
-| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Phase 1 merged; Phase 2 owner accepted after successful migration, preparing PR #111 for squash merge |
+| [#107](https://github.com/SomeSunlight/context-canon/issues/107) | Share immutable Node versions at repository root and shorten generated paths safely | Both phases merged in #108/#111; fresh onboarding validation deferred to the next adoption |
 | [#106](https://github.com/SomeSunlight/context-canon/issues/106) | Define safe project reinitialization and optional identity remapping for project copies | Separate future design |
 | [#95](https://github.com/SomeSunlight/context-canon/issues/95) | Expose canonical Evidence line counts to semantic handoffs | Unscheduled; inspect issue before implementation |
 | [#94](https://github.com/SomeSunlight/context-canon/issues/94) | Separate visible onboarding artifacts from hidden machine state | Unscheduled; inspect issue before implementation |

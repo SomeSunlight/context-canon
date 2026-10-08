@@ -134,6 +134,11 @@ class StructureMaterializationTests(unittest.TestCase):
         self.assertEqual(parsed_root.metadata.name, "AI Workstation")
         self.assertNotEqual(parsed_root.metadata.id, ROOT_ID)
         self.assertTrue((repo / ".context" / "onboarding").is_dir())
+        for source in created:
+            text = source.read_text(encoding="utf-8")
+            self.assertEqual(next(line for line in text.splitlines() if line.startswith("## ")), "## Context Imports")
+            self.assertIn("contextcanon:format Local Overview", text)
+            self.assertTrue((source.parent / "CONTEXT-format.md").is_file())
 
         second = preview_structure_materialization(
             prepared.snapshot_root,
@@ -154,6 +159,15 @@ class StructureMaterializationTests(unittest.TestCase):
                 workspace.structure_path,
             )
         self.assertFalse((repo / "CONTEXT.src.md").exists())
+
+    def test_skeleton_preview_refuses_user_owned_format_guide_before_source_creation(self):
+        repo, prepared, workspace = self.make_project(existing_root=False)
+        guide = repo / "compose" / "goose" / "CONTEXT-format.md"
+        guide.write_text("Project-authored document\n", encoding="utf-8")
+        with self.assertRaisesRegex(ContextCanonError, "project-owned path already exists: CONTEXT-format.md"):
+            preview_structure_materialization(prepared.snapshot_root, workspace.structure_proposal_path, workspace.structure_path)
+        self.assertFalse((repo / "CONTEXT.src.md").exists())
+        self.assertEqual(guide.read_text(encoding="utf-8"), "Project-authored document\n")
 
     def test_materialize_creates_only_missing_skeletons_and_is_idempotent(self):
         repo, prepared, workspace = self.make_project()

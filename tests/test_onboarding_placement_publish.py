@@ -228,6 +228,10 @@ class PlacementPublicationTests(unittest.TestCase):
         parent = preview.parents[0]
         self.assertEqual((parent.child_key, parent.parent_key), ("N-002", "N-001"))
         child = next(delta for delta in preview.nodes if delta.key == "N-002")
+        for delta in preview.nodes:
+            self.assertEqual(next(line for line in delta.after.splitlines() if line.startswith("## ")), "## Context Imports")
+            self.assertIn("contextcanon:format Context Imports", delta.after)
+            self.assertIn("[the source format guide](CONTEXT-format.md)", delta.after)
         self.assertIn("## Context Imports", child.after)
         self.assertIn("`relationship=parent`", child.after)
         self.assertIn('ctx:source id="aea56adf-2a26-43f0-b712-3bbeab7a3097"', child.after)
@@ -277,6 +281,10 @@ class PlacementPublicationTests(unittest.TestCase):
         self.assertEqual(parse_node(child_root, repo).metadata.id, child_id)
         root_text = (repo / "CONTEXT.src.md").read_text(encoding="utf-8")
         child_text = (child_root / "CONTEXT.src.md").read_text(encoding="utf-8")
+        self.assertTrue((repo / "CONTEXT-format.md").is_file())
+        self.assertTrue((child_root / "CONTEXT-format.md").is_file())
+        self.assertRegex(root_text, r'- Migration is in progress\.\n  <!-- cc:placement-state id="[^"]+" -->')
+        self.assertNotIn("contextcanon:format", (repo / "CONTEXT.md").read_text(encoding="utf-8"))
         self.assertIn("Existing authored root orientation that placement must preserve.", root_text)
         self.assertIn("contextcanon-placement-rules:start", root_text)
         self.assertIn("contextcanon-placement-state:start", root_text)

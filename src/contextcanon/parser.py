@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 
 from .model import NodeMetadata, ParentRef, ParsedNode, RelationshipKind, Rule, RuleChange, SourceRef, Topic, TopicTarget
 from .links import markdown_target_locator
+from .source_help import explain_source_error, semantic_lines
 
 NODE_COMMENT_RE = re.compile(r'<!--\s*ctx:node\s+(?P<attrs>.*?)\s*-->')
 RULE_COMMENT_RE = re.compile(r'<!--\s*ctx:rule\s+(?P<attrs>.*?)\s*-->')
@@ -22,6 +24,9 @@ SOURCE_RE = re.compile(
 RULE_RE = re.compile(r'^- \*\*(?P<title>.+?):\*\*\s+(?P<statement>.+?)\s*$')
 CHANGE_TARGET_RE = re.compile(r'^- `(?P<source>.+?) / (?P<rule_id>[^`]+)`(?:\s+—\s+.*)?\s*$')
 TARGET_RE = re.compile(r'^- (?P<label>Resource|Context Node):\s+`(?P<path>[^`]+)`\s*$')
+RESOURCE_LINE_RE = re.compile(
+    r'^(?P<indent>[ \t]*)- Resource:\s+`(?P<locator>[^`]+)`\s*$'
+)
 
 
 class ContextCanonError(ValueError):
@@ -71,6 +76,22 @@ def parse_node(
     *,
     source_text: str | None = None,
 ) -> ParsedNode:
+    try:
+        return _parse_node(node_root, repo_root, source_text=source_text)
+    except ContextCanonError as exc:
+        path = node_root.resolve() / "CONTEXT.src.md"
+        if not path.is_file():
+            raise
+        text = source_text if source_text is not None else path.read_text(encoding="utf-8-sig")
+        raise ContextCanonError(explain_source_error(str(exc), path, text)) from exc
+
+
+def _parse_node(
+    node_root: Path,
+    repo_root: Path | None = None,
+    *,
+    source_text: str | None = None,
+) -> ParsedNode:
     node_root = node_root.resolve()
     source_path = node_root / "CONTEXT.src.md"
     if not source_path.is_file():
@@ -78,16 +99,18 @@ def parse_node(
 
     repo_root = (repo_root or find_repo_root(node_root)).resolve()
     text = source_text if source_text is not None else source_path.read_text(encoding="utf-8")
-    lines = text.splitlines()
+    lines = semantic_lines(text)
 
     node_attrs = _find_ctx_attrs(lines, NODE_COMMENT_RE)
+    if sum(bool(NODE_COMMENT_RE.search(line)) for line in lines) > 1:
+        raise ContextCanonError(f"{source_path}: duplicate ctx:node metadata; keep one Node header")
     if not node_attrs or not all(node_attrs.get(key) for key in ("id", "name", "version")):
         raise ContextCanonError(f"{source_path}: missing compiler-managed ctx:node id/name/version metadata")
     name = node_attrs["name"].strip()
     adapters = tuple(filter(None, (part.strip() for part in node_attrs.get("adapters", "").split(","))))
     metadata = NodeMetadata(node_attrs["id"], name, node_attrs["version"], adapters)
 
-    sections = _section_ranges(lines)
+    sections = _section_ranges(lines, source_path)
     overview = _parse_overview(lines, _section_range(sections, source_path, "Local Overview", "Overview"))
     state = _parse_overview(lines, _section_range(sections, source_path, "Local State", "State"))
     plan = _parse_overview(lines, _section_range(sections, source_path, "Local Plan", "Plan"))
@@ -127,13 +150,15 @@ def parse_node(
     )
 
 
-def _section_ranges(lines: list[str]) -> dict[str, tuple[int, int]]:
+def _section_ranges(lines: list[str], source_path: Path | None = None) -> dict[str, tuple[int, int]]:
     starts: list[tuple[str, int]] = []
     for i, line in enumerate(lines):
         if line.startswith("## "):
             starts.append((line[3:].strip(), i + 1))
     result: dict[str, tuple[int, int]] = {}
     for idx, (name, start) in enumerate(starts):
+        if name in result:
+            raise ContextCanonError(f"{source_path}:{start}: duplicate section ## {name}; keep a single section")
         end = starts[idx + 1][1] - 1 if idx + 1 < len(starts) else len(lines)
         result[name] = (start, end)
     return result
@@ -165,6 +190,8 @@ def _parse_parents(lines: list[str], section: tuple[int, int] | None, source_pat
 
     result: list[ParentRef] = []
     for index, (i, match) in enumerate(entries):
+        if match.group("relationship") not in {None, "parent"}:
+            raise ContextCanonError(f"{source_path}:{i+1}: a legacy Parent entry cannot declare relationship=reference; use Context Imports for explicit reclassification")
         block_end = entries[index + 1][0] if index + 1 < len(entries) else end
         attrs = _find_ctx_attrs(lines, PARENT_COMMENT_RE, i + 1, block_end)
         if not attrs or not attrs.get("id") or not attrs.get("version"):
@@ -207,6 +234,8 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
     while i < end:
         match = SOURCE_RE.match(lines[i])
         if not match:
+            if lines[i].lstrip().startswith("- "):
+                raise ContextCanonError(f"{source_path}:{i+1}: unsupported Context import line: {lines[i].strip()}")
             i += 1
             continue
         raw_relationship = match.group("relationship")
@@ -262,11 +291,12 @@ def _parse_sources(lines: list[str], section: tuple[int, int] | None, source_pat
         while block_end < end and SOURCE_RE.match(lines[block_end]) is None:
             block_end += 1
         why = None
-        for detail in lines[i + 1 : block_end]:
+        for detail_index, detail in enumerate(lines[i + 1 : block_end], i + 1):
             stripped = detail.strip()
             if stripped.startswith("Why:"):
-                why = stripped[4:].strip() or None
-                break
+                if not detail[:1].isspace() or why is not None or not stripped[4:].strip():
+                    raise ContextCanonError(f"{source_path}:{detail_index+1}: Context import Why: must be indented, non-empty and appear once")
+                why = stripped[4:].strip()
 
         relationship: RelationshipKind = raw_relationship or "parent"  # type: ignore[assignment]
         result.append(
@@ -311,20 +341,32 @@ def _parse_rules(lines: list[str], section: tuple[int, int] | None, source_path:
             continue
         match = RULE_RE.match(line)
         if not match:
+            if line.strip() and not line.strip().startswith("<!--"):
+                raise ContextCanonError(f"{source_path}:{i+1}: unsupported Rule line: {line.strip()}")
             i += 1
             continue
         block_end = i + 1
-        while block_end < end and not lines[block_end].startswith("- **") and not lines[block_end].startswith("### "):
+        while block_end < end and not lines[block_end].startswith("- ") and not lines[block_end].startswith("### "):
             block_end += 1
         why = None
         attrs = None
-        for detail in lines[i + 1:block_end]:
+        for detail_index, detail in enumerate(lines[i + 1:block_end], i + 1):
             stripped = detail.strip()
+            if not stripped:
+                continue
             if stripped.startswith("Why:"):
+                if not detail[:1].isspace() or why is not None:
+                    raise ContextCanonError(f"{source_path}:{detail_index+1}: Rule needs exactly one indented Why: rationale")
                 why = stripped[4:].strip()
+                continue
             comment = RULE_COMMENT_RE.search(detail)
             if comment:
+                if attrs is not None:
+                    raise ContextCanonError(f"{source_path}:{detail_index+1}: duplicate ctx:rule metadata")
                 attrs = _attrs(comment.group("attrs"))
+                continue
+            if not stripped.startswith("<!--"):
+                raise ContextCanonError(f"{source_path}:{detail_index+1}: unsupported Rule detail: {stripped}")
         if not why:
             raise ContextCanonError(f"{source_path}:{i+1}: Rule needs an indented Why: rationale")
         if not attrs or not attrs.get("id"):
@@ -420,38 +462,64 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
         return []
     start, end = section
     topic_starts = [i for i in range(start, end) if lines[i].startswith("### ")]
+    first_topic = topic_starts[0] if topic_starts else end
+    for i in range(start, first_topic):
+        if lines[i].strip() and not lines[i].strip().startswith("<!--"):
+            raise ContextCanonError(f"{source_path}:{i+1}: Topic must start with ### Title")
     result: list[Topic] = []
     for index, topic_start in enumerate(topic_starts):
         topic_end = topic_starts[index + 1] if index + 1 < len(topic_starts) else end
         title = lines[topic_start][4:].strip()
+        if not title:
+            raise ContextCanonError(f"{source_path}:{topic_start+1}: Topic needs a title after ###")
         block = lines[topic_start + 1:topic_end]
         attrs = _find_ctx_attrs(block, TOPIC_COMMENT_RE)
+        if sum(bool(TOPIC_COMMENT_RE.search(line)) for line in block) > 1:
+            raise ContextCanonError(f"{source_path}:{topic_start+1}: duplicate ctx:topic metadata; keep one Topic ID")
         if not attrs or not attrs.get("id"):
             raise ContextCanonError(f"{source_path}:{topic_start+1}: Topic needs compiler-managed ctx:topic ID")
 
         condition_lines: list[str] = []
         targets: list[TopicTarget] = []
         intent = None
+        resource_target_index = None
         for offset, raw in enumerate(block):
+            line_number = topic_start + offset + 2
             stripped = raw.strip()
             if not stripped or stripped.startswith("<!--"):
                 continue
             if stripped == "Required:":
                 intent = "required"
+                resource_target_index = None
                 continue
             if stripped == "Optional:":
                 intent = "optional"
+                resource_target_index = None
                 continue
-            target_match = TARGET_RE.match(stripped)
+            if stripped.startswith("Why:"):
+                if resource_target_index is None or not raw[:1].isspace():
+                    raise ContextCanonError(f"{source_path}:{line_number}: Why: must be indented below a Resource target")
+                why = stripped[len("Why:"):].strip()
+                if not why:
+                    raise ContextCanonError(f"{source_path}:{line_number}: Resource Why: must not be empty")
+                target = targets[resource_target_index]
+                if target.why is not None:
+                    raise ContextCanonError(f"{source_path}:{line_number}: duplicate Resource Why:")
+                targets[resource_target_index] = replace(target, why=why)
+                continue
+            resource_match = RESOURCE_LINE_RE.match(stripped)
+            target_match = resource_match or TARGET_RE.match(stripped)
             if target_match:
                 if intent is None:
-                    raise ContextCanonError(f"{source_path}: Topic target appears before Required:/Optional:")
-                kind = "resource" if target_match.group("label") == "Resource" else "context-node"
+                    raise ContextCanonError(f"{source_path}:{line_number}: Topic target appears before Required:/Optional:")
+                kind = "resource" if resource_match else "context-node"
                 resource_id = None
                 if kind == "resource":
                     for following in block[offset + 1:]:
                         following_stripped = following.strip()
                         if not following_stripped:
+                            continue
+                        if following[:1].isspace() and following_stripped.startswith("Why:"):
                             continue
                         comment = RESOURCE_COMMENT_RE.search(following)
                         if comment:
@@ -465,16 +533,17 @@ def _parse_topics(lines: list[str], section: tuple[int, int] | None, source_path
                 targets.append(
                     TopicTarget(
                         kind=kind,
-                        locator=target_match.group("path"),
+                        locator=target_match.group("locator" if resource_match else "path"),
                         intent=intent,
                         resource_id=resource_id,
                     )
                 )
+                resource_target_index = len(targets) - 1 if kind == "resource" else None
                 continue
-            if intent is None:
+            if intent is None and not stripped.startswith(("- Resource:", "- Context Node:")):
                 condition_lines.append(stripped)
             else:
-                raise ContextCanonError(f"{source_path}: unsupported Topic line: {stripped}")
+                raise ContextCanonError(f"{source_path}:{line_number}: unsupported Topic line: {stripped}")
         if not condition_lines:
             raise ContextCanonError(f"{source_path}:{topic_start+1}: Topic needs a condition")
         if not targets:

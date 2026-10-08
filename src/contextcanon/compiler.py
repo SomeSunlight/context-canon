@@ -446,7 +446,7 @@ class Compiler:
             seen[rule.id] = rule
 
     @staticmethod
-    def _topic_target_key(target: TopicTarget) -> tuple[str, str, str, str, str, str]:
+    def _topic_target_key(target: TopicTarget) -> tuple[str, ...]:
         return (
             target.intent,
             target.kind,
@@ -454,6 +454,7 @@ class Compiler:
             target.target_node_id or "",
             target.target_node_name or "",
             target.resource_id or "",
+            target.why or "",
         )
 
     def _topics_equivalent(self, left: Topic, right: Topic) -> bool:
@@ -632,6 +633,7 @@ class Compiler:
                             locator=f"CONTEXT/references/{namespace}/{seed_rel}",
                             intent=target.intent,
                             resource_id=target.resource_id,
+                            why=target.why,
                         )
                     )
                     continue

@@ -2473,6 +2473,11 @@ def main(argv: list[str] | None = None) -> int:
         if not node_roots:
             raise ContextCanonError(f"No Context Nodes found under {repo_root}")
         compiler = Compiler(repo_root)
+        if args.command == "build":
+            from .source_authoring import migrate_sources
+            migrated = migrate_sources(repo_root, node_roots)
+            for root in migrated:
+                print(f"migrated {(root / 'CONTEXT.src.md').relative_to(repo_root).as_posix()} (authoring help/layout/IDs)")
         failed = False
         for node_root in node_roots:
             label = node_root.relative_to(repo_root).as_posix() or "."
