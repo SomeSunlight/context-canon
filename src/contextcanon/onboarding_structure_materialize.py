@@ -249,6 +249,15 @@ def _preflight_new_node(
     project_root: Path,
     recovery_identity: _RecoveredNodeIdentity | None = None,
 ) -> None:
+    from .source_help import GUIDE_NAME, GUIDE_MARKER
+    guide = root / GUIDE_NAME
+    if guide.exists() or guide.is_symlink():
+        try:
+            owned = not guide.is_symlink() and guide.is_file() and guide.read_text(encoding="utf-8").startswith(GUIDE_MARKER + "\n")
+        except (OSError, UnicodeDecodeError):
+            owned = False
+        if not owned:
+            raise ContextCanonError(f"Refusing to materialize Context Node at {root}: project-owned path already exists: {GUIDE_NAME}")
     source = root / "CONTEXT.src.md"
     if source.exists() or source.is_symlink():
         raise ContextCanonError(f"Structure materialization expected a missing Node but found {source}")
@@ -411,7 +420,8 @@ def _render_skeleton(
     name = canonical_name or node.name
     if '"' in name:
         raise ContextCanonError('Context Node name must not contain a double quote')
-    return (
+    from .source_authoring import format_source
+    return format_source(
         f"# {name} — Local Context Source\n"
         f'<!-- ctx:node id="{node_id}" name="{name}" version="{version}" -->\n\n'
         "## Local Overview\n\n"

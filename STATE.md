@@ -1,5 +1,13 @@
 # Current State
 
+## Complete source authoring usability (#115 / #89) — 2026-10-08
+
+The owner clarifies that the original task was broader than Resource Why: source-only format help, Imports first, trailing IDs/provenance, a format guide and links, actionable diagnostics and automatic build migration of existing Nodes. Expand open #114 on its existing branch; the green Why-only snapshot is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`. Main remains the #111 squash baseline. The owner explicitly authorizes narrow authoring-source writes during build; check remains read-only. See the active PLAN block. No merge is authorized; Topic inheritance visibility remains deferred.
+
+The full authoring change is implemented. Build stages and validates all selected sources before replacing any; it preserves existing IDs/import pins and frozen packages, allocates genuinely missing new-entry IDs once, maintains source-only format help and an offline guide, places Imports first and trails State/Plan placement identity. Onboarding uses the same formatter. Diagnostics include the original unchanged file/line, expected syntax and both local/full documentation. Hidden comment examples are excluded from semantic parsing and Markdown Resource/link discovery.
+
+All 475 deterministic/repository-consistency tests pass, including 22 source-authoring regressions and updated onboarding preview/publication/recovery contracts. Installed-wheel offline migration, ID allocation, guide loading and check also pass. All six self-hosted sources are migrated; repeated build changes nothing, all six Nodes have zero drift and all four normative edges are current. Gateway and Framework Development are `0.3.24-draft`; Foundation is `0.2.6-draft`, with its explicit local development import advanced and previous immutable publications retained. Executable release remains 0.10.0 with checkout provenance. Implementation checkpoint is `2ef067d`; final publication/exact-head Linux/Windows evidence and review status belong in #114, without a status-only commit invalidating the tested head. No merge is authorized.
+
 ## Accepted Phase 2; Resource notes review (#113) — 2026-10-08
 
 The owner squash-merged #111 into main as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`. Phase 2 is accepted; the preceding migration/path owner-test boundary still applies and fresh onboarding remains deferred to the next adoption. Earlier pre-merge entries below are historical.

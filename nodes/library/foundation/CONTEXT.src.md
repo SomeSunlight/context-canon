@@ -1,5 +1,18 @@
 # ContextCanon Foundation — Local Context Source
-<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.2.5-draft" -->
+<!-- ctx:node id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" name="ContextCanon Foundation" version="0.2.6-draft" -->
+
+<!-- contextcanon:format Node
+Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.
+Details: CONTEXT-format.md
+-->
+
+<!-- contextcanon:source-help:intro:start -->
+Edit this local Context source; ContextCanon generates CONTEXT.md from it.
+Some sections use a strict syntax. The comments below show the expected format.
+New Rules, Topics and Resources receive IDs automatically during build; preserve existing IDs.
+See [the source format guide](CONTEXT-format.md) for examples and editing instructions.
+<!-- contextcanon:source-help:intro:end -->
+
 
 > [!IMPORTANT]
 > **Edit this file to change the reusable ContextCanon baseline.**
@@ -13,7 +26,19 @@
 >
 > Full format documentation: [docs/source-format.md](docs/source-format.md)
 
+## Context Imports
+
+<!-- contextcanon:format Context Imports
+Format: - [Name](location) — `version` — `relationship=parent|reference`; optional indented Why:, then ctx:source metadata. Preserve exact pins; use source list/adopt/update for package identity.
+Details: CONTEXT-format.md
+-->
+
 ## Local Rules
+
+<!-- contextcanon:format Local Rules
+Format: ### Group, then - **Title:** Statement, then indented Why: Rationale. build adds a missing ctx:rule ID after the entry; preserve existing IDs.
+Details: CONTEXT-format.md
+-->
 
 ### Canonical context
 
@@ -86,6 +111,11 @@
   <!-- ctx:rule id="CC-011" -->
 
 ## Local Topics
+
+<!-- contextcanon:format Local Topics
+Format: ### Title, condition text, Required: and/or Optional:, then - Resource: `path` or - Context Node: `node-path`. Resource may have indented Why:. build adds missing Topic/Resource IDs after their entries; preserve existing IDs.
+Details: CONTEXT-format.md
+-->
 
 ### Context authoring
 

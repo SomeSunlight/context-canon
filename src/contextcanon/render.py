@@ -201,6 +201,7 @@ def render_node_readme(compiled: CompiledNode) -> str:
         "> ContextCanon creates this doorplate only when this Node directory has no project-owned `README.md`.\n\n"
         "Start with [**CONTEXT.md**](CONTEXT.md): it is the generated Official Context that actually applies in this Node, including inherited Contexts and their provenance.\n\n"
         "Edit [**CONTEXT.src.md**](CONTEXT.src.md) for this Node's local authored context. `Local` means authored here; inherited Rule overrides/removals are explicit separate Changes.\n\n"
+        "See [**CONTEXT-format.md**](CONTEXT-format.md) for the source syntax and examples of adding Rules, Topics and Resources. Build refreshes source-only authoring help and supplies missing IDs for valid new entries.\n\n"
         "ContextCanon project and documentation: https://github.com/SomeSunlight/context-canon\n"
     )
 

@@ -60,7 +60,7 @@ contextcanon source normalize --all .
 
 This mechanically changes `Sources` to `Context Imports` and adds `relationship=parent` where the type was implicit. It does not make a semantic choice for the owner. Change an individual import to `relationship=reference` only when that is the intended relationship.
 
-Normalization is explicit because ordinary `build` and `check` remain non-mutating with respect to human-authored semantic source. After normalization or an intentional reclassification, rebuild and verify normally.
+Normal `build --all` now performs this meaning-preserving source migration automatically, together with Imports-first layout, format comments and missing Rule/Topic/Resource IDs. The dedicated normalization command remains available. Existing identity and accepted pins stay intact; `check` remains read-only. After an intentional reclassification, rebuild and verify normally. See [Editing CONTEXT.src.md](context-source-format.md) for the authoring contract.
 
 ## Propagation is downstream review, not blind copying
 

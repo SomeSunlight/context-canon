@@ -21,7 +21,7 @@ contextcanon source review <source-node-id> <candidate-package> --node <consumer
 contextcanon source accept <source-node-id> <candidate-package> --node <consumer-node>
 ```
 
-`build` and `check` always consume accepted state. They never use package-discovery metadata to discover or download a newer import. They also never rewrite a human-authored legacy relationship marker; `source normalize` is the explicit migration action.
+`build` and `check` always consume accepted state. They never use package-discovery metadata to discover or download a newer import. Build first stages a meaning-preserving source migration: Imports first, explicit legacy Parent defaults, source-only format help and a local guide, trailing placement markers and missing stable IDs for valid new entries. All selected candidates are parsed/compiled before source writes; invalid or conflicting metadata is never repaired by guessing. Accepted pins and frozen packages stay intact. Check remains read-only; `source normalize` is still available separately.
 
 `source fetch` is candidate discovery only. `source review` computes an exact package diff and runs the candidate through the consumer's structural composition checks. `source accept` requires the resulting review receipt before it can install the candidate and change the exact Source pin.
 

@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "a2f4c7e1-9b63-4c48-a19f-3de0c5b28f11"
   name: "ContextCanon Gateway"
-  version: "0.3.23-draft"
+  version: "0.3.24-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -83,6 +83,7 @@ targets:
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
   - {"source": "docs/cli.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/cli.md"}
+  - {"source": "docs/context-source-format.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/context-source-format.md"}
   - {"source": "docs/maintenance.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/maintenance.md"}
   - {"source": "docs/node-versions.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/node-versions.md"}
   - {"source": "docs/onboarding-cli.md", "published": "CONTEXT/references/n0e1d966532e8ef4/docs/onboarding-cli.md"}
@@ -96,5 +97,5 @@ resources:
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "e4b6bbe7b779b225c0c0390b6de92e05efd1df4b5e3a72b7afd2b9f05d464c59"
-  package_digest: "2be9ebd3a76d1f9acbef6bea78da716e4ebd94686822aa61245a20bc0fa2f1e6"
+  normalized_digest: "076fdc1c9b480a5d3bd40c445c53cea6333ff60b688cf97a6efe96d440b19987"
+  package_digest: "514cde0aba3e521f99ac35061fb7cd485fbd286099f55191ce3ad7a4618d07e5"

@@ -13,8 +13,8 @@ This is a navigation page, not a dump of every flag. Use `contextcanon <command>
 | Review downstream impact | `contextcanon propagate` | Reviews changed Parent → Child relationships top-down from the current Node and asks before each acceptance. |
 | Inspect propagation status | `contextcanon propagate --status --all .` | Read-only check for local Parent/Child edges whose accepted normative Parent snapshot is behind the current local Parent. Returns exit code 1 when propagation is pending. |
 | Review every Parent graph | `contextcanon propagate --all` | Broadens the review scope to all semantic Parent edges in the repository; it does not imply blanket acceptance. |
-| Normalize legacy import authoring | `contextcanon source normalize --all .` | Makes historical implicit Source → Parent semantics explicit; ordinary build/check do not rewrite authored relationship semantics. |
-| Render generated Context | `contextcanon build --all .` | Rebuilds every Context Node in the repository. |
+| Normalize legacy import authoring | `contextcanon source normalize --all .` | Makes historical implicit Source → Parent semantics explicit; build also performs this meaning-preserving migration. |
+| Build and migrate editable sources | `contextcanon build --all .` | Rebuilds every selected Node, puts Imports first, refreshes source-only format help/local guide and allocates missing Rule/Topic/Resource IDs. Existing identities and pins stay intact. |
 | Verify repository health | `contextcanon check --all .` | Reports generated drift, version/consistency problems, and pending local normative Parent propagation. A clean result means every discovered Node is internally consistent and every local Parent/Child edge is normatively current. |
 | Inspect central discovery config | `contextcanon config show` | Validates and prints `contextcanon.yaml`. |
 
@@ -55,7 +55,7 @@ Direct Topic Resources have stable identities independent of their current repos
 | --- | --- | --- |
 | List Resources | `contextcanon resource list` | Shows a labeled Markdown table: Resource ID, Context Node using the Resource, Resource path, and explicit Topic dependency with Topic ID, title, and required/optional intent. |
 | Inspect changes | `contextcanon resource status` | Git-like view of Resource deviations from the last built package: modifications, missing paths, moves, and exact-hash rename candidates. Clean Resources are hidden by default; add `--all` to show them. |
-| Register an older project | `contextcanon resource register` | Explicitly adds stable IDs to legacy path-only direct Topic Resources. Normal `build`/`check` never performs this migration silently. |
+| Register an older project | `contextcanon resource register` | Explicitly adds stable IDs to legacy path-only direct Topic Resources. Normal build also allocates missing IDs; check stays read-only. |
 | Move a Resource explicitly | `contextcanon resource move OLD NEW` | Moves the physical file and updates every affected ContextCanon Resource locator atomically while preserving stable Resource IDs. `resource mv` is an alias. |
 | Reconcile external renames | `contextcanon resource reconcile` | Reviews files already renamed by an IDE, file manager, or Git operation and asks before preserving their Resource identities at the new paths. |
 

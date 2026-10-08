@@ -2,6 +2,18 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Complete source authoring usability (#115 / #89; expands #114)
+
+The owner clarified the missing original scope on 2026-10-08. Extend the open Resource-Why PR #114 on `agent/issue-113-resource-notes`; do not merge. Accepted main remains `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`; the green Why-only candidate is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`.
+
+Purpose: every new/existing CONTEXT.src.md must explain its authoring contract. The owner's explicit request authorizes normal build to migrate source-only orientation, marked format help, import placement, trailing identity/provenance markers and missing stable IDs for valid new Rules/Topics/Resources. This narrowly supersedes the older no-source-write build convention. Never infer malformed prose, change Parent/Reference meaning, reallocate existing identity, alter accepted pins or mutate frozen packages. check remains read-only.
+
+- [x] Add shared source-only authoring help/diagnostics, a visible format-guide link, section examples and a complete root documentation/README entry. The distributed guide is bundled for offline use; root documentation exposes the complete same contract.
+- [x] Implement idempotent build migration across the selected Nodes: Imports first, help refresh, trailing placement markers, allocate missing IDs once, validate before writing and preserve user bytes/meaning outside the narrow authoring changes. Candidate diagnostics point to the original unchanged file; all selected candidates compile before any source write, with rollback/concurrent-edit/ownership checks.
+- [x] Apply the same layout/help to onboarding skeletons, compatibility publication and reviewed placement preview/publication; keep managed blocks and frozen/review state compatible. Existing 451 tests and 53 focused authoring/onboarding tests pass; final full-suite verification follows the last review changes.
+- [x] Regress existing/new/nested/offline Nodes, parent/reference pins, missing-ID authoring, invalid Rules/Topics/Resources, help isolation, State/Plan identity placement, idempotence, failed writes and onboarding contracts; run complete tests and document real migration usage. All 475 tests pass, including 22 source-authoring regressions and updated onboarding contracts. The installed wheel also completes offline build/migration/check with bundled guidance.
+- [x] Prepare the expanded Draft #114 with recoverable implementation/regeneration checkpoints and complete local verification. All six self-hosted sources are migrated; repeated build makes no changes, check reports zero drift and all four normative edges are current. Exact published-head hosted Linux/Windows proof and owner-review status are live PR metadata; no status-only commit should invalidate that head. Leave owner review and merge as explicit gates.
+
 ## Resource target notes (#113)
 
 Accepted baseline: the owner squash-merged Phase 2 as `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80` (#111). The older Phase-2 preparation blocks below are historical. Resource notes are a separate review branch, `agent/issue-113-resource-notes`; Topic inheritance visibility remains deferred.

@@ -689,7 +689,8 @@ def _render_context_source(
                 lines.append(f'  <!-- ctx:resource id="{resource_id}" -->')
             lines.extend(["", f'<!-- ctx:topic id="{item.id}" -->', ""])
 
-    return "\n".join(lines).rstrip() + "\n"
+    from .source_authoring import format_source
+    return format_source("\n".join(lines).rstrip() + "\n")
 
 
 def _publishable(value: str, label: str) -> str:

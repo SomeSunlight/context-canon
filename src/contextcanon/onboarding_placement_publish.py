@@ -557,7 +557,7 @@ def _render_overviews(items: list[PlacementReviewItem]) -> str:
     lines: list[str] = []
     for item in items:
         text = _safe_line(item.payload["text"], f"item {item.proposal_id} overview")
-        lines.extend([f'<!-- cc:placement-overview id="{item.authoring_id}" -->', f"- {text}", ""])
+        lines.extend([f"- {text}", f'  <!-- cc:placement-overview id="{item.authoring_id}" -->', ""])
     return "\n".join(lines).rstrip()
 
 
@@ -565,7 +565,7 @@ def _render_summaries(items: list[PlacementReviewItem], kind: str) -> str:
     lines: list[str] = []
     for item in items:
         text = _safe_line(item.payload["text"], f"item {item.proposal_id} {kind}")
-        lines.extend([f'<!-- cc:placement-{kind} id="{item.authoring_id}" -->', f"- {text}", ""])
+        lines.extend([f"- {text}", f'  <!-- cc:placement-{kind} id="{item.authoring_id}" -->', ""])
     return "\n".join(lines).rstrip()
 
 
@@ -574,10 +574,10 @@ def _render_state(items: list[PlacementReviewItem]) -> str:
     for item in items:
         if item.kind == "state":
             text = _safe_line(item.payload["text"], f"item {item.proposal_id} state")
-            lines.extend([f'<!-- cc:placement-state id="{item.authoring_id}" -->', f"- {text}", ""])
+            lines.extend([f"- {text}", f'  <!-- cc:placement-state id="{item.authoring_id}" -->', ""])
         elif item.kind == "unresolved":
             question = _safe_line(item.payload["question"], f"item {item.proposal_id} unresolved question")
-            lines.extend([f'<!-- cc:placement-unresolved id="{item.authoring_id}" -->', f"- Open question: {question}", ""])
+            lines.extend([f"- Open question: {question}", f'  <!-- cc:placement-unresolved id="{item.authoring_id}" -->', ""])
     return "\n".join(lines).rstrip()
 
 
@@ -704,7 +704,8 @@ def _render_node_source(
     )
     text = _replace_managed_section(text, "Local Rules", "rules", _render_rules(rules), aliases=("Rules",))
     text = _replace_managed_section(text, "Local Topics", "topics", _render_topics(topics, project_root, node_root), aliases=("Topics",))
-    return text
+    from .source_authoring import format_source
+    return format_source(text)
 
 
 def _structure_order(nodes) -> list:
@@ -981,6 +982,8 @@ def build_placement_publication_preview(
                 )
             )
 
+        from .source_authoring import format_source
+        source_overrides[root] = format_source(source_overrides[root])
         compiled = Compiler(
             repository,
             source_overrides=source_overrides,

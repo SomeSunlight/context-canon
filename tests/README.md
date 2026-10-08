@@ -4,6 +4,8 @@ This directory contains ContextCanon's deterministic Python regression suite. It
 
 The suite covers compiler behavior, package identity/integrity, Source transport and acceptance, onboarding preparation/review/acceptance, failure recovery, generated folder orientation, and repository consistency such as local Markdown links.
 
+`test_source_authoring.py` exercises automatic existing-source migration, new-entry IDs, offline pinned imports, helper isolation, original-file diagnostics, CRLF/BOM/Unicode paths, ownership, rollback and concurrent edits. Onboarding suites also verify the same source layout during skeleton creation, reviewed preview and publication. The source migration suite runs on native Windows as well as Linux.
+
 Run everything with:
 
 ```text
