@@ -1,5 +1,11 @@
 # Current State
 
+## Git line-ending guidance (#112) — 2026-10-08
+
+Accepted main is the owner's #114 squash at `25553e6`; the earlier open-#114 wording below is historical. Branch `agent/issue-112-eol-guidance` contributes documentation to open #112. Current code binds frozen Evidence and package Resources to exact SHA-256 and byte sizes; changing only EOL still changes that identity. Source Markdown parsing tolerates ordinary EOL variants, but generated output checks remain byte-exact and pending reviews may bind raw source bytes. General EOL-safe publication/transport remains unresolved in #112. Scope/checkpoints are in PLAN; no runtime or accepted-package rewrite is authorized by this block.
+
+The README summary and detailed bidirectional migration guide are review-ready. Temporary LF/CRLF/mixed Evidence/package experiments, 18 Git-policy combinations and 54 real complete-package loads pass; 69 relevant existing regressions and repository links pass. All six self-hosted Nodes have zero generated drift and all four normative edges are current. Runtime, generated packages, accepted identities and repository Git settings are unchanged. Publication/hosted proof and owner review belong in the PR; no merge is authorized.
+
 ## Complete source authoring usability (#115 / #89) — 2026-10-08
 
 The owner clarifies that the original task was broader than Resource Why: source-only format help, Imports first, trailing IDs/provenance, a format guide and links, actionable diagnostics and automatic build migration of existing Nodes. Expand open #114 on its existing branch; the green Why-only snapshot is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`. Main remains the #111 squash baseline. The owner explicitly authorizes narrow authoring-source writes during build; check remains read-only. See the active PLAN block. No merge is authorized; Topic inheritance visibility remains deferred.

@@ -341,6 +341,22 @@ Topics are the first integration mechanism, not the final data model. The same p
 
 The constraint stays the same: adding knowledge must not imply eagerly loading it.
 
+## Git line endings: Windows, Linux and WSL
+
+**Normalize editable project text before freezing Evidence. Preserve frozen ContextCanon bytes.** Evidence snapshots and published/accepted packages bind exact SHA-256 hashes and byte sizes: changing CRLF to LF, or LF to CRLF, invalidates those copies even when their text and line numbers look equivalent. Original project CSVs can use LF; they do not need a blanket binary declaration.
+
+For LF project text, put this in the repository-root `.gitattributes`, with the preservation rules after general text rules:
+
+```gitattributes
+* text=auto eol=lf
+**/.context/** -text
+CONTEXT.md -text
+**/CONTEXT/** -text
+**/contextcanon-onboarding/** -text
+```
+
+These rules also cover nested Nodes. `-text` disables Git EOL conversion while retaining ordinary text diffs. Keep existing CRLF/mixed frozen copies unchanged; `git add --renormalize .` updates the index, not the current working-tree files. ContextCanon does not currently install these attributes automatically. See [line-ending migration](docs/line-endings.md) for existing projects, ongoing onboarding, Windows CRLF workflows and recovery limits ([#112](https://github.com/SomeSunlight/context-canon/issues/112)).
+
 ## Start here
 
 If the five-second idea above is enough, the best next reads are:
