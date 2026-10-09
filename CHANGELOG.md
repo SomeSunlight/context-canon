@@ -15,6 +15,8 @@ ContextCanon **0.10.0** is the current development release in accepted `main`. I
 
 ### Added
 
+- Document the exact-byte boundary for Git EOL normalization, LF/CRLF migration in both directions, and root/nested ContextCanon preservation attributes. Frozen Evidence and accepted/history packages retain their original bytes; general automatic transport policy remains tracked separately in #112.
+
 - Resource targets support one optional indented `Why:` explanation. Generated context, immutable Parent/Reference packages and Topic review preserve it; registration, moves and rename reconciliation retain the text and stable identity. Existing unannotated targets/packages remain compatible (#113).
 
 - Onboarding now uses the same explicit Parent / Reference Context Imports as normal authoring. STEP 07 distinguishes existing enclosing Parents, additional Parents and References; STEP 08 v2 cannot invent imports; STEP 10, preview, publication and reset/recovery preserve the accepted relationship and exact package. New publication writes one canonical import section/block for structural and reusable imports. Historical untyped states remain readable as Parents.

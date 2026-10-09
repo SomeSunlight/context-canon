@@ -2,6 +2,17 @@
 
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
+## Git line-ending guidance (#112) — 2026-10-08
+
+Accepted baseline: the owner squash-merged #114 as `25553e6`. Earlier #114 review status below is historical. Purpose: answer the Windows/WSL migration question from current code and document the exact-byte boundary before users normalize existing repositories. This is a bounded documentation contribution to open #112, not implementation of its general publication/transport policy.
+
+Writable scope: README.md, docs/line-endings.md, CHANGELOG.md and PLAN/STATE recovery checkpoints. Keep runtime, package formats, generated output, existing frozen bytes, accepted pins and repository Git settings unchanged.
+
+- [x] Trace raw Evidence hashes/sizes, live acceptance checks, package digests, Resource copying, source text parsing and exact output drift; confirm the limited legacy Git-history recovery is not general EOL tolerance.
+- [x] Verify LF/CRLF/mixed Evidence and package behavior plus the proposed Git attributes in temporary repositories, including nested Nodes and both checkout directions. All three frozen variants validate unchanged and reject EOL-only edits; source semantics stay equal and generated CONTEXT.md reports drift. Eighteen real Git commit/checkout combinations preserve root/nested exact bytes with the LF policy and Windows authoring overrides.
+- [x] Add a brief README section and detailed migration/Git-attribute guidance, including working-tree versus index behavior, ongoing/completed onboarding and exact recovery limits.
+- [x] Verify documentation links, generated consistency and relevant existing regressions; prepare a review candidate that references #112 without closing its remaining transport scope. All 69 relevant existing tests pass, all six self-hosted Nodes have zero drift and all four normative edges are current. An additional 54 complete-package loads pass after real Git round trips. Publication/hosted CI and owner review remain live PR metadata; leave merge to the owner.
+
 ## Complete source authoring usability (#115 / #89; expands #114)
 
 The owner clarified the missing original scope on 2026-10-08. Extend the open Resource-Why PR #114 on `agent/issue-113-resource-notes`; do not merge. Accepted main remains `d0a9db3d3b0d1cc1dfce32caadf2a52b1eb5ae80`; the green Why-only candidate is `3a505f9f7de6226fa2ec213b910cec617c4db9a0`.
