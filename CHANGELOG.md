@@ -2,7 +2,7 @@
 
 ## Unreleased — Issue #120 (human-first propagation reviews)
 - Guided Parent propagation names original authored Resources and Topics, shows verified old/new text differences and exact source/snapshot locations, and recognizes repeated upstream changes across descendants.
-- Make normal propagation reviews deliberately compact: document/Topic, short text diff, precise `content changed` label, Child effect and decision. `d` at the prompt opens full technical details and then asks again; `--verbose` opts into details immediately. Parent automatic version bumps explicitly say they occur before Child acceptance.
+- Make normal propagation reviews deliberately compact: document/Topic, short text diff, precise `content changed` label, **plain-language description of what the Child will inherit**, and decision. `s` reprints the short review after inspecting details without affecting acceptance. `d` at the prompt opens full technical details and then asks again; `--verbose` opts into details immediately. Parent automatic version bumps explicitly say they occur before Child acceptance.
 - Keep hashes and stable IDs in technical details; make generic guidance distinguish changed Rules from Resources. No change to inherited scope, explicit accepted pins, per-Child confirmations, review receipts or immutable package formats.
 
 All notable ContextCanon changes will be documented here.
