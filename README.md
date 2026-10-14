@@ -114,6 +114,8 @@ Start with **[Maintain an existing ContextCanon project](docs/maintenance.md)**.
 
 `contextcanon propagate` reviews only semantic descendants of the selected Context Node. `--all` deliberately broadens the review scope to every Parent graph in the repository; it is not blanket approval.
 
+**Read the change before accepting it.** For changed Topic Resources, the guided review now shows the original authored path and Topic title, a bounded real text diff from the previously accepted immutable Parent snapshot to the new source, and where to inspect both versions. When the same upstream document change reaches several generations, later prompts explicitly identify it as the same change; each Child still keeps its independent acceptance decision. Binary/oversized/missing comparisons are identified rather than guessed. See [Understanding propagation evidence](docs/propagation-review.md).
+
 ## Edit the local Context source
 
 Edit `CONTEXT.src.md`; ContextCanon generates `CONTEXT.md` from it. Each meaningful section has a short format comment and the source links to an offline `CONTEXT-format.md` guide beside it. For new Rules, Topics and Resources, use the examples and omit IDs; build adds them automatically.
