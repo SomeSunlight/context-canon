@@ -2,6 +2,39 @@
 
 `contextcanon propagate --all .` inspects changed normative Parent snapshots top-down. **It is not blanket approval.** Every Child keeps its accepted Parent package until you explicitly approve that Child (or deliberately invoke the existing automated `--yes` mode).
 
+## Short review by default; details on demand
+
+A normal `contextcanon propagate --all .` run shows a short decision for each changed Child: Parent version, recognizable changed documents, a limited actual before/after diff, and a brief statement of the effective Child change. Long UUIDs, digests, review receipt paths and the full checklist are hidden until requested.
+
+At each prompt:
+- **`y`** accepts the candidate Parent for **this Child only**.
+- **`n` or Enter** rejects this step and stops the propagation run; earlier accepted edges remain unchanged.
+- **`d`** displays the exact old and new paths, more diff lines, technical IDs, checksums and detailed review guidance, then asks **the same question again**. Looking at details is never approval.
+- Use **`contextcanon propagate --all . --verbose`** to display this material immediately on each review. `contextcanon parent propagate` supports the same option. `--yes` retains its explicit existing automation behavior.
+
+For example:
+
+```text
+[1/8] aiw operator interface (bin)
+  Parent: ai-workstation 0.2.1 -> 0.2.2
+  Change: 1 resource changed
+Changed Resources:
+  docs/troubleshooting.md — content changed
+    Topic: Troubleshooting guide · Origin: ai-workstation
+    --- accepted Parent
+    +++ new Parent
+    ...
+    +# small test entry - to delete after the test
+  Effect here if accepted: 1 resource changed.
+Accept the new Parent for "aiw operator interface"? [y/N/d=details]
+```
+
+The optional `d` output is also useful if the diff was shortened or the content was binary, missing or imported from another checkout. A later Child may say that this is the **same upstream change as review 1**, while still requiring separate consent.
+
+### About automatic version increments
+
+A changed Parent source can receive its automatic **minimum patch version increase before the Child review**. This is the Parent's local authoring/version housekeeping, **not acceptance by the Child**. If the operator declines, the Child remains pinned to the previous accepted Parent package. Review the working-tree Git diff if abandoning a test change.
+
 ## Read human evidence first
 
 When a Topic Resource changes, the review names the **authored source** and, when available, the **origin Node and Topic**. A small unified text diff compares bytes from the Child's previous *immutable accepted Parent snapshot* against the live compiled Parent candidate. It shows actual removed (`-`) and added (`+`) lines; it is not a language-model explanation.
