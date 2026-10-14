@@ -144,9 +144,25 @@ def render_resource_evidence(
                 old_location = str(old_file)
             lines.append(f"  Old accepted snapshot: {old_location}")
         if repo_path and new_path:
-            lines.append(f"  New authored source: {repo_path} (compare with old accepted snapshot)")
+            authored = repo_root / repo_path
+            try:
+                locally_verified = (
+                    authored.is_file()
+                    and not authored.is_symlink()
+                    and hashlib.sha256(authored.read_bytes()).hexdigest() == new_info.get("sha256")
+                )
+            except OSError:
+                locally_verified = False
+            if locally_verified:
+                lines.append(f"  New authored source: {repo_path} (verified in this checkout)")
+            else:
+                lines.append(
+                    f"  Authored origin recorded in package: {repo_path} "
+                    "(not verified as the new bytes in this checkout; may be external)"
+                )
+                lines.append(f"  New candidate package locator: {new_path}")
         elif new_path:
-            lines.append(f"  New package file: {new_path} (authored origin path unavailable)")
+            lines.append(f"  New candidate package locator: {new_path} (authored origin path unavailable)")
         if old_info.get("sha256") != new_info.get("sha256"):
             lines.append("  Evidence: Resource content fingerprint changed.")
         elif old_path != new_path:
