@@ -8,10 +8,10 @@
 
 - [x] Reproduce owner mental-model failure from 8-step uploaded `propagate --all` log: same root Resource ID appears at each of eight reviews; absent paths, old/new content and clear repeated origin.
 - [x] Inspect existing human review renderer, Resource identity/origins, immutable package Source/Parent snapshots, and relevant test fixtures.
-- [ ] Implement deterministic review evidence from verified old/new packages, including origin Node/path/Topic where known, changed bytes with bounded real text diff, missing/binary/truncation evidence, and concise repeated upstream trail.
-- [ ] Correct Rule-specific Override/Remove guidance for Resource-only changes. Preserve per-edge confirmations, `--yes`, status, receipt and accepted-pins invariants.
-- [ ] Add focused tests for original Resource content change through multiple generations; moving/missing/binary/unknown provenance cases where practicable.
-- [ ] Update user-facing maintenance guide/changelog, run focused tests, then complete validations once for the coherent candidate.
+- [x] Implement deterministic review evidence from verified old/new packages, including origin Node/path/Topic when known, changed bytes with bounded real text diff, missing/binary/truncation evidence, and a concise repeated-upstream trail; new pure presenter in `src/contextcanon/propagation_evidence.py`.
+- [x] Correct Rule-specific Override/Remove guidance for Resource-only changes without changing per-edge confirmations, `--yes`, status, receipt or accepted-pin code.
+- [x] Add focused tests for original Resource content change through two generations, same-origin suppression, binary fallback and Resource move; execution through hosted CI pending.
+- [x] Document review reading order and exact paths from README and new `docs/propagation-review.md` without changing the self-hosted Gateway's already-published mandatory `docs/maintenance.md` Resource; update CHANGELOG. More extensive maintenance-guide consolidation may follow reviewed package regeneration. Tests and full validation pending hosted PR.
 - [ ] Create review PR with actual outputs and limitations; leave it open pending owner acceptance. Close Fast Track in PLAN at review-ready checkpoint, then ordinary gate applies.
 
 **Baseline:** start from current `main` after owner has merged unrelated AI Workstation #32. Avoid speculative changes to ContextCanon accepted packages. Framework's existing CC-001/002/003/005/007/011 and CCI-001/005/013 apply.
