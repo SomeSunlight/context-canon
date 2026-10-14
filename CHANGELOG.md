@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — Issue #120 (human-first propagation reviews)
+- Guided Parent propagation names original authored Resources and Topics, shows verified old/new text differences and exact source/snapshot locations, and recognizes repeated upstream changes across descendants.
+- Keep hashes and stable IDs in technical details; make generic guidance distinguish changed Rules from Resources. No change to inherited scope, explicit accepted pins, per-Child confirmations, review receipts or immutable package formats.
+
 All notable ContextCanon changes will be documented here.
 
 ## Unreleased
