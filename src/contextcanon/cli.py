@@ -75,7 +75,7 @@ from .resources import (
     status_resources,
 )
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, normalize_source_relationships, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
-from .propagation_evidence import render_resource_evidence
+from .propagation_evidence import describe_resource_effect, render_resource_evidence
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
@@ -678,11 +678,11 @@ def _run_propagation_status(path: Path, *, all_edges: bool) -> int:
     return 0
 
 
-def _confirm_propagation(prompt: str, show_details) -> bool:
-    """Offer extra evidence without turning 'details' into approval."""
+def _confirm_propagation(prompt: str, show_details, show_summary) -> bool:
+    """The user may inspect or re-read either view before deciding."""
     while True:
         try:
-            answer = input(f"{prompt} [y/N/d=details] ").strip().casefold()
+            answer = input(f"{prompt} [y/N/d=details/s=summary] ").strip().casefold()
         except EOFError:
             return False
         if answer in {"y", "yes"}:
@@ -693,8 +693,14 @@ def _confirm_propagation(prompt: str, show_details) -> bool:
             print("")
             show_details()
             print("")
+            print("Press s to see the short review again, or decide at the prompt below.")
             continue
-        print("Choose y to accept, n (or Enter) to stop, or d to inspect details.")
+        if answer in {"s", "summary"}:
+            print("")
+            show_summary()
+            print("")
+            continue
+        print("Choose y to accept, n (or Enter) to stop, d for details, or s for the short review.")
 
 
 def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = False) -> int:
@@ -705,7 +711,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = 
 
     scope = "in this repository" if all_edges else f"below {parse_node(start_root, repo_root).metadata.name}"
     print(f"Propagation: reviewing {len(edges)} Parent/Child relationship(s) {scope}, top-down.")
-    print("Each Child accepts its Parent separately. Choose d at a prompt for more detail.")
+    print("Each Child accepts its Parent separately. Use d for details, s to return to the short review.")
 
     applied_count = 0
     first_seen_resources: dict[tuple[str, str, str, str], int] = {}
@@ -739,40 +745,50 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = 
         result, receipt = review_parent_candidate(child_root, parent.id)
         local_effect = preview_parent_candidate_effect(child_root, parent.id)
 
-        print(
-            f"  Parent: {live_parent.metadata.name} "
-            f"{current_parent.metadata.version} -> {live_parent.metadata.version}"
+        parent_effect_summary = _human_change_summary(result, include_categories={"rule", "topic", "resource"})
+        child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
+        document_effect = describe_resource_effect(
+            result, local_effect, current_parent, live_parent_package
         )
-        print(f"  Change: {_human_change_summary(result, exclude_categories={'node'})}")
-        # Relationship reclassification changes the normative export: explain
-        # the practical meaning even in compact mode, not behind 'details'.
-        relationship_changed = any(
-            entry.category == "source"
-            and (entry.before or {}).get("relationship") != (entry.after or {}).get("relationship")
-            for entry in result.entries
-        )
-        if relationship_changed:
-            _print_parent_change_cause(current_parent, live_parent)
-            print("Resulting normative Parent change:")
+
         evidence_args = (
             result, current_parent, live_parent_package,
             accepted_package_path(child_root, parent),
             live_parent.resources, repo_root, first_seen_resources, index,
         )
-        evidence = render_resource_evidence(*evidence_args)
-        if evidence:
-            print(evidence)
-        _print_human_change_details(result, exclude_categories={"node", "resource", "parent", "source"})
+
+        def show_summary() -> None:
+            print(f"  Parent: {live_parent.metadata.name} "
+                  f"{current_parent.metadata.version} -> {live_parent.metadata.version}")
+            print(f"  Changed upstream: {_human_change_summary(result, exclude_categories={'node'})}")
+            # Important relationship reclassifications must remain visible.
+            relationship_changed = any(
+                entry.category == "source"
+                and (entry.before or {}).get("relationship") != (entry.after or {}).get("relationship")
+                for entry in result.entries
+            )
+            if relationship_changed:
+                _print_parent_change_cause(current_parent, live_parent)
+                print("Resulting normative Parent change:")
+            evidence = render_resource_evidence(*evidence_args)
+            if evidence:
+                print(evidence)
+            _print_human_change_details(result, exclude_categories={"node", "resource", "parent", "source"})
+
+            if result.is_empty:
+                print("  No new Parent package to accept.")
+            elif document_effect:
+                print(f"  If accepted, this Child will {document_effect}.")
+                print("  Its local Rules and Topics are not changed by this acceptance.")
+            else:
+                print(f"  If accepted, this Child's effective Context would change: {child_effect_summary}.")
+                if child_effect_summary != parent_effect_summary:
+                    print("  The Child's impact differs from the upstream change; press d for details.")
+
+        show_summary()
 
         if result.is_empty:
-            print("  No new Parent package to accept.")
             continue
-
-        parent_effect_summary = _human_change_summary(result, include_categories={"rule", "topic", "resource"})
-        child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
-        print(f"  Effect here if accepted: {child_effect_summary}.")
-        if child_effect_summary != parent_effect_summary:
-            print("  Child impact differs from the raw Parent change; press d to inspect exact differences.")
 
         def show_details() -> None:
             print("Detailed Parent review")
@@ -830,7 +846,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = 
             show_details()
 
         if not yes and not _confirm_propagation(
-            f'Accept the new Parent for "{child.metadata.name}"?', show_details
+            f'Accept the new Parent for "{child.metadata.name}"?', show_details, show_summary
         ):
             print(f'No Parent update applied to Child "{child.metadata.name}".')
             print("Propagation stopped. Earlier approvals, if any, remain; later Children were not reviewed.")
