@@ -122,7 +122,7 @@ class PropagationReviewUXTests(unittest.TestCase):
                 rc = cli_main(["propagate", str(repo)])
             self.assertEqual(rc, 0, second.getvalue())
             text = second.getvalue()
-            self.assertIn("------------------------------------------------------------------------", text)
+            self.assertIn("Propagation: reviewing 2 Parent/Child relationship(s)", text)
             self.assertIn("[1/2] Child (child)", text)
             self.assertIn("Already current: Root 1.1.0.", text)
             self.assertIn("[2/2] Grand (child/grand)", text)
