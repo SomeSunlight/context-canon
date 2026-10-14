@@ -62,7 +62,7 @@ from .onboarding_workspace import open_inventory_workspace, open_onboarding_work
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .version_history import publish_outputs, render_inventory
-from .version_store import library_root
+from .version_store import accepted_package_path, library_root
 from .package import compiled_package, export_digest
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .resources import (
@@ -75,6 +75,7 @@ from .resources import (
     status_resources,
 )
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, normalize_source_relationships, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
+from .propagation_evidence import render_resource_evidence
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
@@ -698,6 +699,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
     print("Each Child keeps its current Parent Context until you choose Y for that Child.")
 
     applied_count = 0
+    first_seen_resources: dict[tuple[str, str, str, str], int] = {}
     for index, (child_root, parent, parent_root) in enumerate(edges, start=1):
         _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
         child = parse_node(child_root, repo_root)
@@ -743,7 +745,14 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
             print(f'What changed in Parent "{live_parent.metadata.name}" since the version used by this Child:')
         print(f"  Version: {current_parent.metadata.version} -> {live_parent.metadata.version}")
         print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
-        _print_human_change_details(result, exclude_categories={"node"})
+        evidence = render_resource_evidence(
+            result, current_parent, live_parent_package,
+            accepted_package_path(child_root, parent),
+            live_parent.resources, repo_root, first_seen_resources, index,
+        )
+        if evidence:
+            print(evidence)
+        _print_human_change_details(result, exclude_categories={"node", "resource"})
 
         if result.is_empty:
             print("")
@@ -764,7 +773,10 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
 
         print("")
         print(f'Before choosing Y for Child "{child.metadata.name}", check:')
-        print(f"  1. Should these Parent changes apply to {child.metadata.name}? If not, use a justified Override/Remove.")
+        if any(entry.category == "rule" for entry in result.entries):
+            print(f"  1. Should these Parent changes apply to {child.metadata.name}? If not, review a justified local Rule Override/Remove or fix the Parent.")
+        else:
+            print(f"  1. Should these Parent changes apply to {child.metadata.name}? Review the changed documents above; Override/Remove applies to Rules, not to arbitrary Resources.")
         print("  2. Do they fit with this Child's other imported Contexts and local Rules? Import order is never precedence.")
         print(
             f"  3. Does {child.metadata.name} expose a problem in the Parent change itself? "
