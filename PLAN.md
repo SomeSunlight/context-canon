@@ -16,7 +16,9 @@
 - [x] **Fast Track exit:** one coherent tested review candidate published. Return to ordinary owner review / exact-head merge gate; no automatic merge.
 - [x] Owner tested a real `docs/troubleshooting.md` Resource edit from ai-workstation and confirmed the evidence is technically correct; feedback: excessive repeated explanatory prose and unsolicited UUIDs/hashes separated the diff from the actual approval. This triggers a focused in-PR readability refinement (same Issue #120).
 - [x] Refine the default into a compact change/diff/effect/prompt flow, offer `d` to inspect the complete existing review evidence before deciding again, and add a `--verbose` flag for both propagation entrypoints. Keep `--yes`, status, Parent pins and receipts unchanged; clarify Parent automatic patch bumps before Child acceptance.
-- [ ] Verify this refinement with focused regressions and native Windows/Linux CI; then hand off the exact review branch for a fresh owner test on the same pending AI Workstation change. **No merge without approval.**
+- [x] Owner tested the compact view on real ai-workstation 0.2.1 → 0.2.2: concise document diff and interactive `d` work. Owner feedback: `Effect here if accepted: 1 resource changed` is a redundant count, not a human explanation; after `d`, provide a way to return to the concise card.
+- [x] Add precise, evidence-bound plain-language Child impact for single, unchanged-through-inheritance Resource changes; use a safe general fallback for more complex or mismatching effective diffs. Add `s` = reprint short review at every confirmation prompt, allowing `d → s → y/N` without accepting accidentally.
+- [ ] Verify this final refinement with focused regressions and native Windows/Linux CI; then hand off the exact review branch for owner retest on the same pending AI Workstation change. **No merge without approval.**
 
 **Baseline:** start from current `main` after owner has merged unrelated AI Workstation #32. Avoid speculative changes to ContextCanon accepted packages. Framework's existing CC-001/002/003/005/007/011 and CCI-001/005/013 apply.
 
