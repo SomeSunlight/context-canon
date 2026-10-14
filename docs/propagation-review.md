@@ -31,6 +31,8 @@ Changed Resources:
 Accept the new Parent for "aiw operator interface"? [y/N/d=details/s=summary]
 ```
 
+The impact line describes what this specific Child would *inherit* (for example, the updated troubleshooting document), not an additional independent edit made inside that Child. If the Child's computed impact differs from the incoming Parent diff, ContextCanon reports that and the `d` view shows the details.
+
 The optional `d` output is also useful if the diff was shortened or the content was binary, missing or imported from another checkout. A later Child may say that this is the **same upstream change as review 1**, while still requiring separate consent.
 
 ### About automatic version increments
