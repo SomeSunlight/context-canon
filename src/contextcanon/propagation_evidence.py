@@ -73,6 +73,65 @@ def _diff_lines(old: bytes | None, new: bytes | None, old_name: str, new_name: s
     ]
 
 
+def describe_resource_effect(
+    parent_diff: ContextDiff,
+    child_diff: ContextDiff,
+    old_package: CompiledPackage,
+    new_package: CompiledPackage,
+) -> str | None:
+    """Explain one unchanged-through-inheritance Resource effect in plain language.
+
+    Never claim that a particular document changed this Child unless its
+    Resource identity, action and fingerprints match the effective Child diff.
+    """
+    parent_resources = [entry for entry in parent_diff.entries if entry.category == "resource"]
+    child_resources = [entry for entry in child_diff.entries if entry.category == "resource"]
+    if len(parent_resources) != 1 or len(child_resources) != 1:
+        return None
+    parent_entry, child_entry = parent_resources[0], child_resources[0]
+    if any(entry.category in {"rule", "topic", "change"} for entry in child_diff.entries):
+        return None
+    if any(entry.category in {"rule", "topic", "change"} for entry in parent_diff.entries):
+        return None
+    if (
+        parent_entry.identity != child_entry.identity
+        or parent_entry.change != child_entry.change
+        or (parent_entry.before or {}).get("sha256") != (child_entry.before or {}).get("sha256")
+        or (parent_entry.after or {}).get("sha256") != (child_entry.after or {}).get("sha256")
+    ):
+        return None
+
+    old_info = parent_entry.before or {}
+    new_info = parent_entry.after or {}
+    fallback = (
+        parent_entry.identity if "#" not in parent_entry.identity
+        and parent_entry.identity.startswith("CONTEXT/") else None
+    )
+    old_path = old_info.get("path") or (fallback if parent_entry.before else None)
+    new_path = new_info.get("path") or (fallback if parent_entry.after else None)
+    old_origin, _ = _resource_details(old_package, old_path, parent_entry.identity)
+    new_origin, _ = _resource_details(new_package, new_path, parent_entry.identity)
+    origin = new_origin or old_origin
+    name = origin.repo_path if origin else (new_path or old_path)
+    if not name:
+        return None
+
+    if parent_entry.change == "modified":
+        action = (
+            "use the updated document" if old_info.get("sha256") != new_info.get("sha256")
+            else "use the updated document metadata for"
+        )
+    elif parent_entry.change == "added":
+        action = "gain the new document"
+    elif parent_entry.change == "removed":
+        action = "no longer inherit the document"
+    elif parent_entry.change == "moved":
+        action = "use the moved document"
+    else:
+        return None
+    return f'{action} "{name}"'
+
+
 def render_resource_evidence(
     diff: ContextDiff,
     old_package: CompiledPackage,
