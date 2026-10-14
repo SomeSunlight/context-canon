@@ -18,7 +18,7 @@ For example:
 ```text
 [1/8] aiw operator interface (bin)
   Parent: ai-workstation 0.2.1 -> 0.2.2
-  Change: 1 resource changed
+  Changed upstream: 1 resource changed
 Changed Resources:
   docs/troubleshooting.md — content changed
     Topic: Troubleshooting guide · Origin: ai-workstation
