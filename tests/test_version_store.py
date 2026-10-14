@@ -417,8 +417,9 @@ class VersionStoreTests(unittest.TestCase):
             self.assertEqual(prompt.call_count, 1)
             rendered = output.getvalue()
             self.assertIn("1 resource moved", rendered)
-            self.assertIn(f"R provider#GUIDE-DOC [{old_path} -> {new_path}]", rendered)
-            self.assertIn("R resource: provider#GUIDE-DOC", rendered)
+            self.assertIn("provider/docs/renamed guide #1.md — moved (same content)", rendered)
+            self.assertIn("Moved from: provider/docs/guide.md", rendered)
+            self.assertNotIn("R resource: provider#GUIDE-DOC", rendered)
             accepted = Compiler(self.repo).compile(child).source_packages[0]
             self.assertEqual(accepted.package_digest, old.package_digest if answer == "n" else new.package_digest)
             if answer == "n":
