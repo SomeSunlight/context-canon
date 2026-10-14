@@ -10,6 +10,7 @@ At each prompt:
 - **`y`** accepts the candidate Parent for **this Child only**.
 - **`n` or Enter** rejects this step and stops the propagation run; earlier accepted edges remain unchanged.
 - **`d`** displays the exact old and new paths, more diff lines, technical IDs, checksums and detailed review guidance, then asks **the same question again**. Looking at details is never approval.
+- **`s`** prints the **short review again** after reading details; this works repeatedly, without accepting the Parent. The console scrollback is not erased, but the concise change and decision are back together near the prompt.
 - Use **`contextcanon propagate --all . --verbose`** to display this material immediately on each review. `contextcanon parent propagate` supports the same option. `--yes` retains its explicit existing automation behavior.
 
 For example:
