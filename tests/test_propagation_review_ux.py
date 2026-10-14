@@ -54,8 +54,6 @@ def write_resource_root(repo: Path, *, version: str, filename: str = "troublesho
 
 ## Local Topics
 
-<!-- ctx:topic id="TOPIC-TROUBLESHOOT" -->
-
 ### Troubleshooting guide
 
 When diagnosing WSL installation issues, read this guide.
@@ -63,6 +61,7 @@ When diagnosing WSL installation issues, read this guide.
 Required:
 - Resource: `docs/{filename}`
   <!-- ctx:resource id="RESOURCE-TROUBLESHOOT" -->
+<!-- ctx:topic id="TOPIC-TROUBLESHOOT" -->
 ''',
         encoding="utf-8",
     )
