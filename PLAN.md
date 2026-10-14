@@ -1,5 +1,22 @@
 # Plan
 
+## Human-first propagation evidence — Issue #120 (Fast Track, 2026-10-14)
+
+**Owner explicitly approved Fast Track.** Goal: turn the repetitive eight-edge `ai-workstation/docs/troubleshooting.md` propagation into informed, human-scale approvals with recognized origin/path, exact before/after differences, and repeated-change orientation. No intermediate product-review stops; present one coherent PR candidate to owner when ready. **Do not merge without owner approval** and require exact-head green checks before any owner-approved merge.
+
+**Writable scope:** `src/contextcanon/cli.py` (presentation/orchestration only), optionally a focused new pure review-rendering module, `tests/test_propagation_review_ux.py` and focused tests, `docs/maintenance.md`, `CHANGELOG.md`, `PLAN.md`, `STATE.md` for recovery. Exclude version/pin/receipt formats, compilation, storage, new propagation policy, explicit Resource/Topic scope changes, regenerated package content unless unavoidable and separately documented. Issue #121 owns semantic cascade/storage design.
+
+- [x] Reproduce owner mental-model failure from 8-step uploaded `propagate --all` log: same root Resource ID appears at each of eight reviews; absent paths, old/new content and clear repeated origin.
+- [x] Inspect existing human review renderer, Resource identity/origins, immutable package Source/Parent snapshots, and relevant test fixtures.
+- [ ] Implement deterministic review evidence from verified old/new packages, including origin Node/path/Topic where known, changed bytes with bounded real text diff, missing/binary/truncation evidence, and concise repeated upstream trail.
+- [ ] Correct Rule-specific Override/Remove guidance for Resource-only changes. Preserve per-edge confirmations, `--yes`, status, receipt and accepted-pins invariants.
+- [ ] Add focused tests for original Resource content change through multiple generations; moving/missing/binary/unknown provenance cases where practicable.
+- [ ] Update user-facing maintenance guide/changelog, run focused tests, then complete validations once for the coherent candidate.
+- [ ] Create review PR with actual outputs and limitations; leave it open pending owner acceptance. Close Fast Track in PLAN at review-ready checkpoint, then ordinary gate applies.
+
+**Baseline:** start from current `main` after owner has merged unrelated AI Workstation #32. Avoid speculative changes to ContextCanon accepted packages. Framework's existing CC-001/002/003/005/007/011 and CCI-001/005/013 apply.
+
+
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
 ## Git line-ending guidance (#112) — 2026-10-08
