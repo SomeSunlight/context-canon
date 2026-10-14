@@ -26,8 +26,9 @@ Changed Resources:
     +++ new Parent
     ...
     +# small test entry - to delete after the test
-  Effect here if accepted: 1 resource changed.
-Accept the new Parent for "aiw operator interface"? [y/N/d=details]
+  If accepted, this Child will use the updated document "docs/troubleshooting.md".
+  Its local Rules and Topics are not changed by this acceptance.
+Accept the new Parent for "aiw operator interface"? [y/N/d=details/s=summary]
 ```
 
 The optional `d` output is also useful if the diff was shortened or the content was binary, missing or imported from another checkout. A later Child may say that this is the **same upstream change as review 1**, while still requiring separate consent.
