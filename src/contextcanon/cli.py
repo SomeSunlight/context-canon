@@ -744,6 +744,16 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = 
             f"{current_parent.metadata.version} -> {live_parent.metadata.version}"
         )
         print(f"  Change: {_human_change_summary(result, exclude_categories={'node'})}")
+        # Relationship reclassification changes the normative export: explain
+        # the practical meaning even in compact mode, not behind 'details'.
+        relationship_changed = any(
+            entry.category == "source"
+            and (entry.before or {}).get("relationship") != (entry.after or {}).get("relationship")
+            for entry in result.entries
+        )
+        if relationship_changed:
+            _print_parent_change_cause(current_parent, live_parent)
+            print("Resulting normative Parent change:")
         evidence_args = (
             result, current_parent, live_parent_package,
             accepted_package_path(child_root, parent),
@@ -762,8 +772,7 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = 
         child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
         print(f"  Effect here if accepted: {child_effect_summary}.")
         if child_effect_summary != parent_effect_summary:
-            print("  This Child's effective change differs from the incoming Parent change:")
-            _print_human_change_details(local_effect, exclude_categories={"node", "parent", "source"})
+            print("  Child impact differs from the raw Parent change; press d to inspect exact differences.")
 
         def show_details() -> None:
             print("Detailed Parent review")
