@@ -94,7 +94,11 @@ def render_resource_evidence(
     lines = ["Changed document evidence (before approving this Child):"]
     for entry in resources:
         old_info, new_info = entry.before or {}, entry.after or {}
-        old_path, new_path = old_info.get("path"), new_info.get("path")
+        # Older path-identified Resources store the path as identity rather than
+        # under the "path" key; preserve readable evidence for those packages.
+        fallback = entry.identity if "#" not in entry.identity and entry.identity.startswith("CONTEXT/") else None
+        old_path = old_info.get("path") or (fallback if entry.before else None)
+        new_path = new_info.get("path") or (fallback if entry.after else None)
         old_origin, old_uses = _resource_details(old_package, old_path, entry.identity)
         new_origin, new_uses = _resource_details(new_package, new_path, entry.identity)
         origin = new_origin or old_origin
