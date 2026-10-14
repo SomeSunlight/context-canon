@@ -86,15 +86,15 @@ class PropagationReviewUXTests(unittest.TestCase):
             text = out.getvalue()
             self.assertIn("[1/1] Child (child)", text)
             self.assertIn("Parent: Root 1.0.0 -> 1.1.0", text)
-            self.assertIn("Change: 1 rule changed", text)
+            self.assertIn("Changed upstream: 1 rule changed", text)
             self.assertIn("Rules:", text)
             self.assertIn("RULE-1 — Policy", text)
             self.assertIn("before: Root old.", text)
             self.assertIn("after:  Root new.", text)
-            self.assertIn("Effect here if accepted: 1 rule changed.", text)
+            self.assertIn("If accepted, this Child's effective Context would change: 1 rule changed.", text)
             self.assertNotIn("Technical details:", text)
             self.assertNotIn("Review guidance:", text)
-            self.assertLess(text.index("Parent: Root"), text.index("Effect here if accepted:"))
+            self.assertLess(text.index("Parent: Root"), text.index("If accepted, this Child"))
             self.assertNotIn("Review receipt:", text)
             self.assertNotIn("Parent Node ID:", text)
             self.assertIn('No Parent update applied to Child "Child".', text)
@@ -148,7 +148,7 @@ class PropagationReviewUXTests(unittest.TestCase):
                 rc = cli_main(["propagate", str(repo), "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
             self.assertIn("Propagation: reviewing", out.getvalue())
-            self.assertIn("Effect here if accepted:", out.getvalue())
+            self.assertIn("If accepted, this Child", out.getvalue())
             self.assertNotIn("Technical details:", out.getvalue())
             grand = Compiler(repo).compile(repo / "child" / "grand")
             self.assertIn("Root new.", [rule.statement for rule in grand.inherited_rules])
@@ -181,7 +181,8 @@ class PropagationReviewUXTests(unittest.TestCase):
                 "Changed Resources:", "docs/troubleshooting.md — content changed",
                 "Topic: Troubleshooting guide", "Origin: Root",
                 "-Old WSL recovery guidance.", "+New WSL recovery guidance.",
-                "Change: 1 resource changed", "Effect here if accepted: 1 resource changed",
+                "Changed upstream: 1 resource changed",
+                'If accepted, this Child will use the updated document "docs/troubleshooting.md".',
                 "Parent: Root 1.0.0 -> 1.1.0",
             ):
                 self.assertIn(expected, text)
@@ -258,13 +259,15 @@ class PropagationReviewUXTests(unittest.TestCase):
 
             out = io.StringIO()
             with contextlib.redirect_stdout(out), mock.patch(
-                "builtins.input", side_effect=["d", "n"]
+                "builtins.input", side_effect=["d", "s", "n"]
             ) as prompt:
                 rc = cli_main(["propagate", str(repo)])
             self.assertEqual(rc, 0, out.getvalue())
             text = out.getvalue()
-            self.assertEqual(prompt.call_count, 2)
+            self.assertEqual(prompt.call_count, 3)
             self.assertIn("Detailed Parent review", text)
+            self.assertIn("Press s to see the short review again", text)
+            self.assertEqual(text.count('If accepted, this Child will use the updated document "docs/troubleshooting.md".'), 2)
             self.assertIn("Old accepted snapshot:", text)
             self.assertIn("New authored source: docs/troubleshooting.md", text)
             self.assertIn("Parent Node ID: root-id", text)
