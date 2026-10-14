@@ -44,6 +44,32 @@ def write_child(repo: Path, root: Path, node_id: str, name: str, parent_path: st
     write_outputs(compiled)
     return Compiler(repo).compile(root)
 
+def write_resource_root(repo: Path, *, version: str, filename: str = "troubleshooting.md",
+                        content: bytes = b"Old WSL recovery guidance.\n"):
+    (repo / "docs").mkdir(exist_ok=True)
+    (repo / "docs" / filename).write_bytes(content)
+    repo.joinpath("CONTEXT.src.md").write_text(
+        f'''# Root — Local Context Source
+<!-- ctx:node id="root-id" name="Root" version="{version}" -->
+
+## Local Topics
+
+<!-- ctx:topic id="TOPIC-TROUBLESHOOT" -->
+
+### Troubleshooting guide
+
+When diagnosing WSL installation issues, read this guide.
+
+Required:
+- Resource: `docs/{filename}`
+  <!-- ctx:resource id="RESOURCE-TROUBLESHOOT" -->
+''',
+        encoding="utf-8",
+    )
+    compiled = Compiler(repo).compile(repo)
+    write_outputs(compiled)
+    return Compiler(repo).compile(repo)
+
 
 class PropagationReviewUXTests(unittest.TestCase):
     def test_propagation_review_tells_parent_change_and_effective_child_story_before_ids(self):
@@ -137,6 +163,88 @@ class PropagationReviewUXTests(unittest.TestCase):
             self.assertEqual(rc, 0, out.getvalue())
             updated_other = Compiler(repo).compile(repo / "other" / "leaf")
             self.assertIn("Other new.", [rule.statement for rule in updated_other.inherited_rules])
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_resource_review_shows_authored_path_topic_and_exact_change_not_only_id(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            for expected in (
+                "Changed document evidence", "Document: docs/troubleshooting.md",
+                "Origin: Root", "Topic: Troubleshooting guide",
+                "-Old WSL recovery guidance.", "+New WSL recovery guidance.",
+                "Old accepted snapshot:", "New authored source: docs/troubleshooting.md",
+                "Override/Remove applies to Rules, not to arbitrary Resources",
+            ):
+                self.assertIn(expected, text)
+            self.assertLess(text.index("Document: docs/troubleshooting.md"), text.index("Technical details:"))
+            self.assertIn("No Parent update applied", text)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_same_upstream_resource_change_recognized_in_grandchild(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            child = write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_child(repo, repo / "child" / "grand", "grand-id", "Grand", "..", child)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["propagate", str(repo), "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertIn("Same upstream Resource change as review 1", text)
+            self.assertEqual(text.count("+New WSL recovery guidance."), 1)
+            self.assertEqual(text.count("Applied Parent update to Child"), 2)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_binary_resource_change_warns_without_fake_text_diff(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0", content=b"binary\x00old")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"binary\x00new")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            self.assertIn("Binary content changed; a text diff is not applicable.", out.getvalue())
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_resource_move_shows_old_and_new_locations(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            (repo / "docs" / "troubleshooting.md").unlink()
+            write_resource_root(
+                repo, version="1.1.0", filename="recovery.md",
+                content=b"Old WSL recovery guidance.\n",
+            )
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertIn("Document: docs/recovery.md", text)
+            self.assertIn("Change: moved", text)
+            self.assertIn("Document bytes are identical", text)
+            self.assertIn("New authored source: docs/recovery.md", text)
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 
