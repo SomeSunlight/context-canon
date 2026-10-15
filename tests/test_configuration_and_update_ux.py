@@ -456,7 +456,7 @@ class ConfigurationAndUpdateUXTests(unittest.TestCase):
             self.assertEqual(rc, 0, out.getvalue())
             grand = Compiler(repo).compile(grand_root)
             self.assertEqual([rule.statement for rule in grand.inherited_rules], ["Updated meaning."])
-            self.assertIn("Propagation review complete: applied 2 changed Parent/Child update(s).", out.getvalue())
+            self.assertIn("Propagation complete: accepted 2 changed Parent/Child update(s).", out.getvalue())
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 

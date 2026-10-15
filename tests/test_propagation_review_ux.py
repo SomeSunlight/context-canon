@@ -44,6 +44,31 @@ def write_child(repo: Path, root: Path, node_id: str, name: str, parent_path: st
     write_outputs(compiled)
     return Compiler(repo).compile(root)
 
+def write_resource_root(repo: Path, *, version: str, filename: str = "troubleshooting.md",
+                        content: bytes = b"Old WSL recovery guidance.\n"):
+    (repo / "docs").mkdir(exist_ok=True)
+    (repo / "docs" / filename).write_bytes(content)
+    repo.joinpath("CONTEXT.src.md").write_text(
+        f'''# Root — Local Context Source
+<!-- ctx:node id="root-id" name="Root" version="{version}" -->
+
+## Local Topics
+
+### Troubleshooting guide
+
+When diagnosing WSL installation issues, read this guide.
+
+Required:
+- Resource: `docs/{filename}`
+  <!-- ctx:resource id="RESOURCE-TROUBLESHOOT" -->
+<!-- ctx:topic id="TOPIC-TROUBLESHOOT" -->
+''',
+        encoding="utf-8",
+    )
+    compiled = Compiler(repo).compile(repo)
+    write_outputs(compiled)
+    return Compiler(repo).compile(repo)
+
 
 class PropagationReviewUXTests(unittest.TestCase):
     def test_propagation_review_tells_parent_change_and_effective_child_story_before_ids(self):
@@ -59,19 +84,19 @@ class PropagationReviewUXTests(unittest.TestCase):
                 rc = cli_main(["propagate", str(repo)])
             self.assertEqual(rc, 0, out.getvalue())
             text = out.getvalue()
-            self.assertIn("Review 1/1 — Child: Child (child)", text)
-            self.assertIn("This Child currently uses: Root 1.0.0", text)
-            self.assertIn("New Parent version available: Root 1.1.0", text)
-            self.assertIn('What changed in Parent "Root" since the version used by this Child:', text)
+            self.assertIn("[1/1] Child (child)", text)
+            self.assertIn("Parent: Root 1.0.0 -> 1.1.0", text)
+            self.assertIn("Changed upstream: 1 rule changed", text)
+            self.assertIn("Rules:", text)
             self.assertIn("RULE-1 — Policy", text)
             self.assertIn("before: Root old.", text)
             self.assertIn("after:  Root new.", text)
-            self.assertIn('What would change in Child "Child" if you choose Y:', text)
-            self.assertIn("Effective Context: 1 rule changed", text)
-            self.assertIn('Before choosing Y for Child "Child", check:', text)
-            self.assertLess(text.index('What changed in Parent "Root"'), text.index("Technical details:"))
-            self.assertLess(text.index('What would change in Child "Child"'), text.index("Technical details:"))
-            self.assertIn("Parent Node ID: root-id", text)
+            self.assertIn("If accepted, this Child's effective Context would change: 1 rule changed.", text)
+            self.assertNotIn("Technical details:", text)
+            self.assertNotIn("Review guidance:", text)
+            self.assertLess(text.index("Parent: Root"), text.index("If accepted, this Child"))
+            self.assertNotIn("Review receipt:", text)
+            self.assertNotIn("Parent Node ID:", text)
             self.assertIn('No Parent update applied to Child "Child".', text)
         finally:
             shutil.rmtree(repo, ignore_errors=True)
@@ -97,12 +122,12 @@ class PropagationReviewUXTests(unittest.TestCase):
                 rc = cli_main(["propagate", str(repo)])
             self.assertEqual(rc, 0, second.getvalue())
             text = second.getvalue()
-            self.assertIn("------------------------------------------------------------------------", text)
-            self.assertIn("Review 1/2 — Child: Child (child)", text)
-            self.assertIn("Already current: Child uses Root 1.1.0. No action needed.", text)
-            self.assertIn("Review 2/2 — Child: Grand (child/grand)", text)
+            self.assertIn("Propagation: reviewing 2 Parent/Child relationship(s)", text)
+            self.assertIn("[1/2] Child (child)", text)
+            self.assertIn("Already current: Root 1.1.0.", text)
+            self.assertIn("[2/2] Grand (child/grand)", text)
             self.assertEqual(prompt.call_count, 1)
-            self.assertIn('Apply this Parent update to Child "Grand"?', prompt.call_args.args[0])
+            self.assertIn('Accept the new Parent for "Grand"?', prompt.call_args.args[0])
         finally:
             shutil.rmtree(repo, ignore_errors=True)
 
@@ -122,9 +147,9 @@ class PropagationReviewUXTests(unittest.TestCase):
             with contextlib.redirect_stdout(out):
                 rc = cli_main(["propagate", str(repo), "--yes"])
             self.assertEqual(rc, 0, out.getvalue())
-            self.assertIn("Propagation review", out.getvalue())
-            self.assertIn("Should these Parent changes apply to Child?", out.getvalue())
-            self.assertIn("Import order is never precedence", out.getvalue())
+            self.assertIn("Propagation: reviewing", out.getvalue())
+            self.assertIn("If accepted, this Child", out.getvalue())
+            self.assertNotIn("Technical details:", out.getvalue())
             grand = Compiler(repo).compile(repo / "child" / "grand")
             self.assertIn("Root new.", [rule.statement for rule in grand.inherited_rules])
             unchanged_other = Compiler(repo).compile(repo / "other" / "leaf").parent_packages[0]
@@ -139,6 +164,155 @@ class PropagationReviewUXTests(unittest.TestCase):
             self.assertIn("Other new.", [rule.statement for rule in updated_other.inherited_rules])
         finally:
             shutil.rmtree(repo, ignore_errors=True)
+
+    def test_resource_review_shows_authored_path_topic_and_exact_change_not_only_id(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            for expected in (
+                "Changed Resources:", "docs/troubleshooting.md — content changed",
+                "Topic: Troubleshooting guide", "Origin: Root",
+                "-Old WSL recovery guidance.", "+New WSL recovery guidance.",
+                "Changed upstream: 1 resource changed",
+                'If accepted, this Child will use the updated document "docs/troubleshooting.md".',
+                "Parent: Root 1.0.0 -> 1.1.0",
+            ):
+                self.assertIn(expected, text)
+            self.assertNotIn("Technical details:", text)
+            self.assertIn("No Parent update applied", text)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_same_upstream_resource_change_recognized_in_grandchild(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            child = write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_child(repo, repo / "child" / "grand", "grand-id", "Grand", "..", child)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rc = cli_main(["propagate", str(repo), "--yes"])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertIn("Same upstream change as review 1", text)
+            self.assertEqual(text.count("+New WSL recovery guidance."), 1)
+            self.assertEqual(text.count("Applied Parent update to Child"), 2)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_binary_resource_change_warns_without_fake_text_diff(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0", content=b"binary\x00old")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"binary\x00new")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            self.assertIn("Binary content changed; a text diff is not applicable.", out.getvalue())
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_resource_move_shows_old_and_new_locations(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            (repo / "docs" / "troubleshooting.md").unlink()
+            write_resource_root(
+                repo, version="1.1.0", filename="recovery.md",
+                content=b"Old WSL recovery guidance.\n",
+            )
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertIn("docs/recovery.md — moved (same content)", text)
+            self.assertIn("Moved from: docs/troubleshooting.md", text)
+            self.assertIn("Document bytes are identical", text)
+            self.assertNotIn("Old accepted snapshot:", text)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_details_key_discloses_provenance_without_approving(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            before = (repo / "child" / "CONTEXT.src.md").read_bytes()
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch(
+                "builtins.input", side_effect=["d", "s", "n"]
+            ) as prompt:
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            text = out.getvalue()
+            self.assertEqual(prompt.call_count, 3)
+            self.assertIn("Detailed Parent review", text)
+            self.assertIn("Press s to see the short review again", text)
+            self.assertEqual(text.count('If accepted, this Child will use the updated document "docs/troubleshooting.md".'), 2)
+            self.assertIn("Old accepted snapshot:", text)
+            self.assertIn("New authored source: docs/troubleshooting.md", text)
+            self.assertIn("Parent Node ID: root-id", text)
+            self.assertIn("Parent normalized digest:", text)
+            self.assertIn("Review receipt:", text)
+            self.assertIn("Review guidance:", text)
+            self.assertIn('No Parent update applied to Child "Child".', text)
+            self.assertEqual((repo / "child" / "CONTEXT.src.md").read_bytes(), before)
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_verbose_option_and_compatibility_parent_alias_expose_details(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_resource_root(repo, version="1.0.0")
+            write_child(repo, repo / "child", "child-id", "Child", "..", root)
+            write_resource_root(repo, version="1.1.0", content=b"New WSL recovery guidance.\n")
+            for command in (["propagate", str(repo), "--verbose"],
+                            ["parent", "propagate", str(repo), "--verbose"]):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out), mock.patch("builtins.input", return_value="n"):
+                    rc = cli_main(command)
+                self.assertEqual(rc, 0, out.getvalue())
+                self.assertIn("Detailed Parent review", out.getvalue())
+                self.assertIn("Technical details:", out.getvalue())
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
+    def test_bad_choice_reprompts_and_empty_choice_rejects(self):
+        repo = Path(tempfile.mkdtemp())
+        try:
+            (repo / ".git").mkdir()
+            root = write_node(repo, repo, "root", "Root", "1.0.0", "Before")
+            write_child(repo, repo / "child", "child", "Child", "..", root)
+            write_node(repo, repo, "root", "Root", "1.1.0", "After")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), mock.patch("builtins.input", side_effect=["maybe", ""]):
+                rc = cli_main(["propagate", str(repo)])
+            self.assertEqual(rc, 0, out.getvalue())
+            self.assertIn("Choose y to accept", out.getvalue())
+            self.assertEqual(Compiler(repo).compile(repo / "child").parent_packages[0].metadata.version, "1.0.0")
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
+
 
 
 if __name__ == "__main__":

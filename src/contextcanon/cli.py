@@ -62,7 +62,7 @@ from .onboarding_workspace import open_inventory_workspace, open_onboarding_work
 from .onboarding_reset import add_reset_parser, handle_reset_args
 from .outputs import check_outputs, write_outputs
 from .version_history import publish_outputs, render_inventory
-from .version_store import library_root
+from .version_store import accepted_package_path, library_root
 from .package import compiled_package, export_digest
 from .parser import ContextCanonError, find_repo_root, parse_node
 from .resources import (
@@ -75,6 +75,7 @@ from .resources import (
     status_resources,
 )
 from .sources import adopt_source_package, accept_parent_candidate, accept_source_candidate, normalize_source_relationships, preview_parent_candidate_effect, preview_source_candidate_effect, review_parent_candidate, review_source_candidate
+from .propagation_evidence import describe_resource_effect, render_resource_evidence
 from .versioning import VersionBump, ensure_node_version_advanced, version_reuse_problem
 
 
@@ -677,29 +678,45 @@ def _run_propagation_status(path: Path, *, all_edges: bool) -> int:
     return 0
 
 
-def _print_propagation_review_guide(scope: str, edge_count: int) -> None:
-    print("Propagation review")
-    print(f"{edge_count} Parent/Child update(s) will be checked {scope}, top-down.")
-    print("Each Child keeps its current Parent Context until you choose Y for that Child.")
+def _confirm_propagation(prompt: str, show_details, show_summary) -> bool:
+    """The user may inspect or re-read either view before deciding."""
+    while True:
+        try:
+            answer = input(f"{prompt} [y/N/d=details/s=summary] ").strip().casefold()
+        except EOFError:
+            return False
+        if answer in {"y", "yes"}:
+            return True
+        if answer in {"n", "no", ""}:
+            return False
+        if answer in {"d", "details"}:
+            print("")
+            show_details()
+            print("")
+            print("Press s to see the short review again, or decide at the prompt below.")
+            continue
+        if answer in {"s", "summary"}:
+            print("")
+            show_summary()
+            print("")
+            continue
+        print("Choose y to accept, n (or Enter) to stop, d for details, or s for the short review.")
 
 
-def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
+def _run_propagation(path: Path, *, all_edges: bool, yes: bool, verbose: bool = False) -> int:
     repo_root, start_root, edges = _propagation_scope(path, all_edges)
     if not edges:
         print("No Parent/Child relationships found in the selected propagation scope.")
         return 0
-    if all_edges:
-        scope = "across all Context Nodes in this repository"
-    else:
-        start = parse_node(start_root, repo_root)
-        scope = f"below {start.metadata.name}"
-    print("Propagation review")
-    print(f"{len(edges)} Parent/Child relationship(s) will be checked {scope}, top-down.")
-    print("Each Child keeps its current Parent Context until you choose Y for that Child.")
+
+    scope = "in this repository" if all_edges else f"below {parse_node(start_root, repo_root).metadata.name}"
+    print(f"Propagation: reviewing {len(edges)} Parent/Child relationship(s) {scope}, top-down.")
+    print("Each Child accepts its Parent separately. Use d for details, s to return to the short review.")
 
     applied_count = 0
+    first_seen_resources: dict[tuple[str, str, str, str], int] = {}
     for index, (child_root, parent, parent_root) in enumerate(edges, start=1):
-        _report_version_bump(ensure_node_version_advanced(parent_root, repo_root))
+        parent_bump = ensure_node_version_advanced(parent_root, repo_root)
         child = parse_node(child_root, repo_root)
         child_label = child_root.relative_to(repo_root).as_posix() or "."
         child_compiled = Compiler(repo_root).compile(child_root)
@@ -707,90 +724,132 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
         live_parent = Compiler(repo_root).compile(parent_root)
 
         print("")
-        print("------------------------------------------------------------------------")
-        print(f"Review {index}/{len(edges)} — Child: {child.metadata.name} ({child_label})")
-        print("------------------------------------------------------------------------")
+        print(f"[{index}/{len(edges)}] {child.metadata.name} ({child_label})")
+        if parent_bump is not None:
+            print(
+                f"  Parent's local version auto-updated: {parent_bump.before} -> {parent_bump.after} "
+                "(the Parent source changed; no Child approval yet)."
+            )
 
         live_parent_package = compiled_package(live_parent)
         if current_parent.package_digest == live_parent_package.package_digest:
-            print(
-                f"Already current: {child.metadata.name} uses "
-                f"{live_parent.metadata.name} {live_parent.metadata.version}. No action needed."
-            )
+            print(f"  Already current: {live_parent.metadata.name} {live_parent.metadata.version}.")
             continue
         if export_digest(current_parent) == export_digest(live_parent_package):
             print(
-                f"Normative Parent Context already current for {child.metadata.name}: "
-                f"{live_parent.metadata.name} has no changed export for this Child. "
-                "Reference-only or other local-only Parent changes do not propagate."
+                f"  No changed normative export from {live_parent.metadata.name}; "
+                "informational-only changes do not propagate."
             )
             continue
 
         result, receipt = review_parent_candidate(child_root, parent.id)
         local_effect = preview_parent_candidate_effect(child_root, parent.id)
 
-        print("Parent Context:")
-        print(f"  This Child currently uses: {current_parent.metadata.name} {current_parent.metadata.version}")
-        print(f"  New Parent version available: {live_parent.metadata.name} {live_parent.metadata.version}")
-        print(f"  Nothing in {child.metadata.name} has changed yet.")
-
-        print("")
-        explained_cause = _print_parent_change_cause(current_parent, live_parent)
-        if explained_cause:
-            print("")
-            print("Resulting normative Parent change:")
-        else:
-            print(f'What changed in Parent "{live_parent.metadata.name}" since the version used by this Child:')
-        print(f"  Version: {current_parent.metadata.version} -> {live_parent.metadata.version}")
-        print(f"  Summary: {_human_change_summary(result, exclude_categories={'node'})}")
-        _print_human_change_details(result, exclude_categories={"node"})
-
-        if result.is_empty:
-            print("")
-            print(f"Result: {child.metadata.name} already uses this exact Parent package; no update is needed.")
-            continue
-
         parent_effect_summary = _human_change_summary(result, include_categories={"rule", "topic", "resource"})
         child_effect_summary = _human_change_summary(local_effect, include_categories={"rule", "topic", "resource"})
-        print("")
-        print(f'What would change in Child "{child.metadata.name}" if you choose Y:')
-        print(f"  Effective Context: {child_effect_summary}")
-        print("  Existing Overrides/Removes, local Rules and other imported Contexts are already reflected in this preview.")
-        if child_effect_summary != parent_effect_summary:
-            print("  The effective Child change differs from the raw Parent change:")
-            _print_human_change_details(local_effect, exclude_categories={"node", "parent", "source"})
-        print("  This Child's own version will be checked and may receive the automatic minimum patch bump.")
-        print("  Its generated CONTEXT.md will continue to show the previous Context until you rebuild later.")
-
-        print("")
-        print(f'Before choosing Y for Child "{child.metadata.name}", check:')
-        print(f"  1. Should these Parent changes apply to {child.metadata.name}? If not, use a justified Override/Remove.")
-        print("  2. Do they fit with this Child's other imported Contexts and local Rules? Import order is never precedence.")
-        print(
-            f"  3. Does {child.metadata.name} expose a problem in the Parent change itself? "
-            f"If so, fix {live_parent.metadata.name} upstream rather than patching every Child."
+        document_effect = describe_resource_effect(
+            result, local_effect, current_parent, live_parent_package
         )
 
-        print("")
-        print("Technical details:")
-        print(f"  Parent Node ID: {parent.id}")
-        print(f"  Child Node ID: {child.metadata.id}")
-        print(f"  Parent normalized digest: {result.before_normalized_digest} -> {result.after_normalized_digest}")
-        print(f"  Parent package digest: {result.before_package_digest} -> {result.after_package_digest}")
-        print("  Exact changed identities:")
-        for entry in result.entries:
-            if entry.category == "node":
-                continue
-            print(f"    {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
-        try:
-            receipt_label = receipt.relative_to(child_root).as_posix()
-        except ValueError:
-            receipt_label = str(receipt)
-        print(f"  Review receipt: {receipt_label}")
+        evidence_args = (
+            result, current_parent, live_parent_package,
+            accepted_package_path(child_root, parent),
+            live_parent.resources, repo_root, first_seen_resources, index,
+        )
 
-        if not yes and not _confirm(f'Apply this Parent update to Child "{child.metadata.name}"?'):
+        def show_summary() -> None:
+            print(f"  Parent: {live_parent.metadata.name} "
+                  f"{current_parent.metadata.version} -> {live_parent.metadata.version}")
+            print(f"  Changed upstream: {_human_change_summary(result, exclude_categories={'node'})}")
+            # Important relationship reclassifications must remain visible.
+            relationship_changed = any(
+                entry.category == "source"
+                and (entry.before or {}).get("relationship") != (entry.after or {}).get("relationship")
+                for entry in result.entries
+            )
+            if relationship_changed:
+                _print_parent_change_cause(current_parent, live_parent)
+                print("Resulting normative Parent change:")
+            evidence = render_resource_evidence(*evidence_args)
+            if evidence:
+                print(evidence)
+            _print_human_change_details(result, exclude_categories={"node", "resource", "parent", "source"})
+
+            if result.is_empty:
+                print("  No new Parent package to accept.")
+            elif document_effect:
+                print(f"  If accepted, this Child will {document_effect}.")
+                print("  Its local Rules and Topics are not changed by this acceptance.")
+            else:
+                print(f"  If accepted, this Child's effective Context would change: {child_effect_summary}.")
+                if child_effect_summary != parent_effect_summary:
+                    print("  The Child's impact differs from the upstream change; press d for details.")
+
+        show_summary()
+
+        if result.is_empty:
+            continue
+
+        def show_details() -> None:
+            print("Detailed Parent review")
+            print(f"  Child: {child.metadata.name} ({child_label})")
+            print(
+                f"  Accepted Parent: {current_parent.metadata.name} "
+                f"{current_parent.metadata.version}"
+            )
+            print(
+                f"  Candidate Parent: {live_parent.metadata.name} "
+                f"{live_parent.metadata.version}"
+            )
+            print("  This Child's Parent pin stays unchanged until you accept.")
+            _print_parent_change_cause(current_parent, live_parent)
+            detailed_evidence = render_resource_evidence(*evidence_args, verbose=True)
+            if detailed_evidence:
+                print(detailed_evidence)
+            print("  Complete changed Parent elements:")
+            _print_human_change_details(result, exclude_categories={"node"})
+            print(f"  Effective Child change: {child_effect_summary}")
+            if child_effect_summary != parent_effect_summary:
+                _print_human_change_details(local_effect, exclude_categories={"node", "parent", "source"})
+
+            print("  Review guidance:")
+            if any(entry.category == "rule" for entry in result.entries):
+                print("    - Check changed Rules for applicability; justified Rule Override/Remove is possible.")
+            if any(entry.category == "resource" for entry in result.entries):
+                print("    - Review changed documents; Rule Override/Remove does not apply to arbitrary Resources.")
+            print("    - Check interactions with other Parents and local context; import order is not precedence.")
+            print("    - If the upstream change is wrong or incorrectly scoped, correct the Parent itself.")
+            print("  Accepted Child package remains unchanged until acceptance and rebuild.")
+            print("  Technical details:")
+            print(f"    Parent Node ID: {parent.id}")
+            print(f"    Child Node ID: {child.metadata.id}")
+            print(
+                f"    Parent normalized digest: "
+                f"{result.before_normalized_digest} -> {result.after_normalized_digest}"
+            )
+            print(
+                f"    Parent package digest: "
+                f"{result.before_package_digest} -> {result.after_package_digest}"
+            )
+            print("    Exact changed identities:")
+            for entry in result.entries:
+                if entry.category != "node":
+                    print(f"      {_HUMAN_CHANGE_SYMBOLS[entry.change]} {entry.category}: {entry.identity}")
+            try:
+                receipt_label = receipt.relative_to(child_root).as_posix()
+            except ValueError:
+                receipt_label = str(receipt)
+            print(f"    Review receipt: {receipt_label}")
+
+        if verbose:
+            print("")
+            show_details()
+
+        if not yes and not _confirm_propagation(
+            f'Accept the new Parent for "{child.metadata.name}"?', show_details, show_summary
+        ):
             print(f'No Parent update applied to Child "{child.metadata.name}".')
-            print("Propagation stopped here; earlier applied steps remain in place, and later Children were not reviewed yet.")
+            print("Propagation stopped. Earlier approvals, if any, remain; later Children were not reviewed.")
             return 0
 
         accepted = accept_parent_candidate(child_root, parent.id)
@@ -799,18 +858,16 @@ def _run_propagation(path: Path, *, all_edges: bool, yes: bool) -> int:
             f'Applied Parent update to Child "{child.metadata.name}": '
             f"{current_parent.metadata.name} {current_parent.metadata.version} -> {accepted.metadata.name} {accepted.metadata.version}"
         )
-        _report_version_bump(ensure_node_version_advanced(child_root, repo_root))
+        child_bump = ensure_node_version_advanced(child_root, repo_root)
+        if child_bump is not None:
+            print(f"  Child's local version auto-updated: {child_bump.before} -> {child_bump.after}.")
 
     print("")
-    print("------------------------------------------------------------------------")
-    print(f"Propagation review complete: applied {applied_count} changed Parent/Child update(s).")
-    print("The generated CONTEXT.md files still show their previous generated Context until rebuild.")
-    print("Next from the repository root:")
-    print("  contextcanon build --all .")
-    print("  contextcanon check --all .")
+    print(f"Propagation complete: accepted {applied_count} changed Parent/Child update(s).")
+    print("Generated CONTEXT.md views update when you rebuild.")
+    print("Next: contextcanon build --all .")
+    print("      contextcanon check --all .")
     return 0
-
-
 
 class _RuntimeVersionAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None) -> None:
@@ -1186,6 +1243,10 @@ def main(argv: list[str] | None = None) -> int:
         "--all", action="store_true",
         help="broaden review scope to every semantic Parent edge in the repository",
     )
+    propagate_parser.add_argument(
+        "--verbose", action="store_true",
+        help="show technical identities, package fingerprints and full review guidance by default",
+    )
     propagate_mode = propagate_parser.add_mutually_exclusive_group()
     propagate_mode.add_argument(
         "--yes", action="store_true",
@@ -1215,6 +1276,10 @@ def main(argv: list[str] | None = None) -> int:
     parent_propagate = parent_sub.add_parser("propagate", help="explicit Parent-oriented form of guided downstream propagation")
     parent_propagate.add_argument("path", nargs="?", default=".", help="starting Context Node; with --all any path inside the repository")
     parent_propagate.add_argument("--all", action="store_true", help="broaden review scope to every semantic Parent edge in the repository")
+    parent_propagate.add_argument(
+        "--verbose", action="store_true",
+        help="show technical review details by default (equivalent to propagate --verbose)",
+    )
     parent_propagate_mode = parent_propagate.add_mutually_exclusive_group()
     parent_propagate_mode.add_argument("--yes", action="store_true", help="accept each displayed changed Parent edge without interactive confirmation (controlled automation)")
     parent_propagate_mode.add_argument("--status", action="store_true", help="read-only check for pending normative Parent propagation; exit 1 when updates are pending")
@@ -2196,13 +2261,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "propagate":
             if args.status:
                 return _run_propagation_status(Path(args.path), all_edges=args.all)
-            return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
+            return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes, verbose=args.verbose)
 
         if args.command == "parent":
             if args.parent_command == "propagate":
                 if args.status:
                     return _run_propagation_status(Path(args.path), all_edges=args.all)
-                return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes)
+                return _run_propagation(Path(args.path), all_edges=args.all, yes=args.yes, verbose=args.verbose)
 
             node_root = _node_root(Path(args.node))
             if args.parent_command == "review":

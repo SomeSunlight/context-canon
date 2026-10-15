@@ -1,5 +1,28 @@
 # Plan
 
+## Human-first propagation evidence — Issue #120 (Fast Track, 2026-10-14)
+
+**Owner explicitly approved Fast Track.** Goal: turn the repetitive eight-edge `ai-workstation/docs/troubleshooting.md` propagation into informed, human-scale approvals with recognized origin/path, exact before/after differences, and repeated-change orientation. No intermediate product-review stops; present one coherent PR candidate to owner when ready. **Do not merge without owner approval** and require exact-head green checks before any owner-approved merge.
+
+**Writable scope:** `src/contextcanon/cli.py` (presentation/orchestration only), focused new pure renderer `src/contextcanon/propagation_evidence.py`, `tests/test_propagation_review_ux.py`, `tests/test_configuration_and_update_ux.py` and `tests/test_version_store.py` (only assertions invalidated by the new default output), `README.md`, new standalone user guide `docs/propagation-review.md`, `CHANGELOG.md`, `PLAN.md` and review-only `STATE.md` if recovery facts require it. Editing the already-published normative `docs/maintenance.md` Resource is deferred to a separate coherent self-hosted regeneration, avoiding unrelated generated-package churn in this UI-only Fast Track. Exclude version/pin/receipt formats, compilation, storage, new propagation policy, explicit Resource/Topic scope changes, regenerated package content unless unavoidable and separately documented. Issue #121 owns semantic cascade/storage design.
+
+- [x] Reproduce owner mental-model failure from 8-step uploaded `propagate --all` log: same root Resource ID appears at each of eight reviews; absent paths, old/new content and clear repeated origin.
+- [x] Inspect existing human review renderer, Resource identity/origins, immutable package Source/Parent snapshots, and relevant test fixtures.
+- [x] Implement deterministic review evidence from verified old/new packages, including origin Node/path/Topic when known, changed bytes with bounded real text diff, missing/binary/truncation evidence, and a concise repeated-upstream trail; new pure presenter in `src/contextcanon/propagation_evidence.py`.
+- [x] Correct Rule-specific Override/Remove guidance for Resource-only changes without changing per-edge confirmations, `--yes`, status, receipt or accepted-pin code.
+- [x] Add focused tests for original Resource content change through two generations, same-origin suppression, binary fallback and Resource move. Complete Linux and native Windows CI both passed on implementation head `a99efee4696bd8e8bc9628924b62d8923790f215`: [Validate run 38609647565](https://github.com/SomeSunlight/context-canon/actions/runs/38609647565).
+- [x] Document review reading order and exact paths from README and new `docs/propagation-review.md` without changing the self-hosted Gateway's already-published mandatory `docs/maintenance.md` Resource; update CHANGELOG. Any later consolidation into that Reference-managed guide must regenerate published Context with its own coherent review. Hosted CI passed on the code/docs head.
+- [x] Create [PR #122](https://github.com/SomeSunlight/context-canon/pull/122) for owner review and practical testing; both Linux and native Windows jobs passed on the actual reviewed code/docs head `a99efee4696bd8e8bc9628924b62d8923790f215` in [run 38609647565](https://github.com/SomeSunlight/context-canon/actions/runs/38609647565). This PLAN-only record commit does not modify executable behavior.
+- [x] **Fast Track exit:** one coherent tested review candidate published. Return to ordinary owner review / exact-head merge gate; no automatic merge.
+- [x] Owner tested a real `docs/troubleshooting.md` Resource edit from ai-workstation and confirmed the evidence is technically correct; feedback: excessive repeated explanatory prose and unsolicited UUIDs/hashes separated the diff from the actual approval. This triggers a focused in-PR readability refinement (same Issue #120).
+- [x] Refine the default into a compact change/diff/effect/prompt flow, offer `d` to inspect the complete existing review evidence before deciding again, and add a `--verbose` flag for both propagation entrypoints. Keep `--yes`, status, Parent pins and receipts unchanged; clarify Parent automatic patch bumps before Child acceptance.
+- [x] Owner tested the compact view on real ai-workstation 0.2.1 → 0.2.2: concise document diff and interactive `d` work. Owner feedback: `Effect here if accepted: 1 resource changed` is a redundant count, not a human explanation; after `d`, provide a way to return to the concise card.
+- [x] Add precise, evidence-bound plain-language Child impact for single, unchanged-through-inheritance Resource changes; use a safe general fallback for more complex or mismatching effective diffs. Add `s` = reprint short review at every confirmation prompt, allowing `d → s → y/N` without accepting accidentally.
+- [ ] Verify this final refinement with focused regressions and native Windows/Linux CI; then hand off the exact review branch for owner retest on the same pending AI Workstation change. **No merge without approval.**
+
+**Baseline:** start from current `main` after owner has merged unrelated AI Workstation #32. Avoid speculative changes to ContextCanon accepted packages. Framework's existing CC-001/002/003/005/007/011 and CCI-001/005/013 apply.
+
+
 This is the recovery index, not the implementation diary. Read [STATE.md](STATE.md) for current facts, then the linked detail plan for the work you are doing. Check off completed detail items immediately; keep older checkpoints in the archive.
 
 ## Git line-ending guidance (#112) — 2026-10-08
