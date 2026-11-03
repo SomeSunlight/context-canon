@@ -91,6 +91,76 @@ class VersionStoreTests(unittest.TestCase):
         write_outputs(compiled)
         return root, compiled
 
+    def test_orphaned_fileless_versions_are_pruned_by_build_but_not_check(self):
+        root = self.repo / "product"
+        node(root, "product")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", str(root)]), 0)
+        orphan = library_root(root) / "24a0b948f60d3e9a"
+        (orphan / ".context").mkdir(parents=True)
+        (orphan / "CONTEXT/references/some-id/docs").mkdir(parents=True)
+        self.assertEqual(len(version_inventory(self.repo)), 1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["check", str(root)]), 0)
+        self.assertTrue(orphan.exists(), "check must be read-only")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", str(root)]), 0)
+        self.assertFalse(orphan.exists())
+        self.assertEqual(len(version_inventory(self.repo)), 1)
+
+    def test_locked_orphan_is_ignored_by_inventory_and_retried_later(self):
+        root = self.repo / "product"
+        node(root, "product")
+        orphan = library_root(root) / "24a0b948f60d3e9a"
+        (orphan / "CONTEXT/references/example").mkdir(parents=True)
+        from contextcanon.fs_cleanup import is_fileless_directory, remove_empty_directory
+        self.assertTrue(is_fileless_directory(orphan))
+        with patch("contextcanon.fs_cleanup.Path.rmdir", side_effect=PermissionError("sharing violation")):
+            self.assertFalse(remove_empty_directory(orphan, delays=(0, 0)))
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(main(["build", str(root)]), 0)
+        self.assertTrue(orphan.exists())
+        self.assertEqual(len(version_inventory(self.repo)), 1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["build", str(root)]), 0)
+        self.assertFalse(orphan.exists())
+
+    def test_nonempty_broken_version_is_never_discarded(self):
+        root = self.repo / "product"
+        node(root, "product")
+        broken = library_root(root) / "24a0b948f60d3e9a"
+        broken.mkdir(parents=True)
+        (broken / "important.txt").write_text("do not remove", encoding="utf-8")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(["build", str(root)]), 2)
+        self.assertEqual((broken / "important.txt").read_text(encoding="utf-8"), "do not remove")
+
+    def test_fileless_prefix_collision_allocates_a_longer_token(self):
+        root = self.repo / "product"
+        node(root, "product")
+        compiled = Compiler(self.repo).compile(root)
+        package = compiled_package(compiled)
+        orphan = library_root(root) / package_key(package)[:16]
+        (orphan / ".context").mkdir(parents=True)
+        path = store_package(library_root(root), package, artifact_files(compiled),
+                             action="test", node_root=root)
+        self.assertEqual(len(path.name), 24)
+        self.assertEqual(load_package(path).metadata.id, "product")
+        self.assertTrue(orphan.exists())
+
+    def test_orphan_detection_rejects_symlinks(self):
+        from contextcanon.fs_cleanup import is_fileless_directory
+        root = self.repo / "scratch"
+        root.mkdir()
+        target = self.repo / "elsewhere"
+        target.mkdir()
+        try:
+            (root / "link").symlink_to(target, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("directory symlinks unavailable on this platform")
+        self.assertFalse(is_fileless_directory(root))
+        self.assertTrue(target.is_dir())
+
     def test_one_exact_version_shared_across_children_and_offline(self):
         provider, compiled = self.provider(topic=True)
         package = compiled_package(compiled)

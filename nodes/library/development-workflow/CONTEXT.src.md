@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.7-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.8-draft" -->
 
 <!-- contextcanon:format Node
 Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.
@@ -70,6 +70,12 @@ Details: CONTEXT-format.md
   Why: Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions.
   <!-- ctx:rule id="CCW-015" -->
 
+### Filesystem robustness
+
+- **Treat directory cleanup as best-effort, but authoritative data as strict:** For tool-owned disposable directories, use a shared bounded-retry deletion method, tolerate empty leftovers from temporary filesystem locks, and retry later. Never follow links or remove unknown files; fail on missing or corrupt authoritative data. Follow the detailed method in `docs/filesystem-cleanup.md`.
+  Why: Windows antivirus/indexers and other concurrent processes can outlive a cleanup attempt. One transient lock must not break a later unrelated build, but cleanup tolerance must never hide lost project data.
+  <!-- ctx:rule id="CCW-016" -->
+
 ### Proportional verification
 
 - **Batch related edits before expensive final verification:** For one coherent correction block, make the related authoring/code changes and run proportionate focused checks first; do not repeat the project's most expensive generated-output, integration, packaging, or full verification cycle after every micro-edit.
@@ -133,3 +139,12 @@ Required:
 - Resource: `docs/version-provenance-python.md`
   <!-- ctx:resource id="RESOURCE-7C6F7E4D126B" -->
 <!-- ctx:topic id="CCW-TOPIC-VERSION-PROVENANCE" -->
+
+### Resilient filesystem cleanup
+
+When implementing, modifying, reviewing, or troubleshooting deletion of generated or temporary files and directories on Windows, WSL or Linux:
+
+Required:
+- Resource: `docs/filesystem-cleanup.md`
+  <!-- ctx:resource id="RESOURCE-CCW-FS-001" -->
+<!-- ctx:topic id="CCW-TOPIC-FILESYSTEM-CLEANUP" -->

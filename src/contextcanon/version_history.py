@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .compiler import discover_nodes
+from .fs_cleanup import is_fileless_directory
 from .links import markdown_link_target
 from .model import CompiledNode, CompiledPackage
 from .outputs import expected_outputs, write_outputs
@@ -32,6 +33,10 @@ def version_inventory(repo_root: Path) -> tuple[VersionEntry, ...]:
                 continue
             if path.is_symlink():
                 raise ContextCanonError(f"Version library entry is a symbolic link: {path}")
+            if is_fileless_directory(path):
+                # Empty directory skeletons are not packages. check/list are
+                # read-only; only build opportunistically prunes these trees.
+                continue
             package = load_package(path)
             if not package_key(package).startswith(path.name):
                 raise ContextCanonError(f"Version token does not match complete identity: {path}")
