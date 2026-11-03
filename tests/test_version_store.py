@@ -125,6 +125,38 @@ class VersionStoreTests(unittest.TestCase):
             self.assertEqual(main(["build", str(root)]), 0)
         self.assertFalse(orphan.exists())
 
+    def test_empty_directory_retry_succeeds_after_transient_lock(self):
+        from contextcanon.fs_cleanup import remove_empty_directory
+        path = self.repo / "scratch"
+        path.mkdir()
+        real_rmdir = Path.rmdir
+        attempts = []
+
+        def flaky(directory):
+            attempts.append(directory)
+            if len(attempts) == 1:
+                raise PermissionError("simulated transient Windows lock")
+            return real_rmdir(directory)
+
+        with patch("contextcanon.fs_cleanup.Path.rmdir", autospec=True, side_effect=flaky):
+            self.assertTrue(remove_empty_directory(path, delays=(0, 0)))
+        self.assertEqual(len(attempts), 2)
+        self.assertFalse(path.exists())
+
+    def test_empty_directory_cleanup_never_removes_racing_new_file(self):
+        import errno
+        from contextcanon.fs_cleanup import remove_empty_directory
+        path = self.repo / "scratch"
+        path.mkdir()
+
+        def concurrent_writer(directory):
+            (directory / "user.txt").write_text("keep", encoding="utf-8")
+            raise OSError(errno.ENOTEMPTY, "directory became nonempty")
+
+        with patch("contextcanon.fs_cleanup.Path.rmdir", autospec=True, side_effect=concurrent_writer):
+            self.assertFalse(remove_empty_directory(path, delays=(0, 0)))
+        self.assertEqual((path / "user.txt").read_text(encoding="utf-8"), "keep")
+
     def test_nonempty_broken_version_is_never_discarded(self):
         root = self.repo / "product"
         node(root, "product")
