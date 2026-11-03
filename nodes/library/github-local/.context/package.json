@@ -2,19 +2,19 @@
   "changes": [],
   "compiler_version": "0.8.0",
   "digests": {
-    "normalized": "4ad030512c9a4753e8400eecabb744f9b9dc2d7575ca9f3f654a5658423e11ab",
-    "package": "87f1416dc0e178c740d1975a25fa9f815576bbde224de3ad248f9579cf9e83ec"
+    "normalized": "880e24665f0ae37beca3ae9f648b35fb07b65052bf37587c657aaf8259ed6b66",
+    "package": "39bd5b1469872921fbfe2708af96606da088b366c22153e84df254c351498dd3"
   },
   "files": [
     {
       "path": ".context/resource-origins.json",
-      "sha256": "e51843bdbee120bd091f059a9f7d27101d4d3abab893b2d0d1367807855520f4",
-      "size": 751
+      "sha256": "fd4a6e191712460668bbe8fdbb24f39dc7babe09281f192d2dc50fe65163cedf",
+      "size": 984
     },
     {
       "path": "CONTEXT.md",
-      "sha256": "aa801d6dfe9691d86b11261d8e5151aa1192cfb9403481bdf752beafb0405442",
-      "size": 8497
+      "sha256": "74e0161e50c135dafa825d32036cf2997a582c2119a0ec2790785897be4a2607",
+      "size": 9253
     },
     {
       "path": "CONTEXT/README.md",
@@ -32,6 +32,11 @@
       "size": 9670
     },
     {
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md",
+      "sha256": "d4a218e41916fe83ffd2345744a0843cffd9c52ad7ba014d7f0fd1bb8889c9da",
+      "size": 4438
+    },
+    {
       "path": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
       "sha256": "124440f4a2ed17d7bfbf265ac2936fa38695e6699069acc94f19f38a92b4351f",
       "size": 6107
@@ -41,16 +46,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b",
-      "package_digest": "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731",
-      "version": "0.3.7-draft",
+      "normalized_digest": "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5",
+      "package_digest": "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5",
+      "version": "0.3.8-draft",
       "why": null
     }
   ],
   "node": {
     "id": "63b92022-db1a-4875-be99-017726cbfce7",
     "name": "GitHub Local",
-    "version": "0.1.7-draft"
+    "version": "0.1.8-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -124,6 +129,16 @@
       "statement": "When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.",
       "title": "Render repository-local Markdown links URL-safely",
       "why": "Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions."
+    },
+    {
+      "group": "Filesystem robustness",
+      "id": "CCW-016",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "For tool-owned disposable directories, use a shared bounded-retry deletion method, tolerate empty leftovers from temporary filesystem locks, and retry later. Never follow links or remove unknown files; fail on missing or corrupt authoritative data. Follow the detailed method in `docs/filesystem-cleanup.md`.",
+      "title": "Treat directory cleanup as best-effort, but authoritative data as strict",
+      "why": "Windows antivirus/indexers and other concurrent processes can outlive a cleanup attempt. One transient lock must not break a later unrelated build, but cleanup tolerance must never hide lost project data."
     },
     {
       "group": "Proportional verification",
@@ -241,10 +256,10 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b",
-      "package_digest": "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731",
+      "normalized_digest": "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5",
+      "package_digest": "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5",
       "relationship": "parent",
-      "version": "0.3.7-draft",
+      "version": "0.3.8-draft",
       "why": null
     }
   ],
@@ -278,6 +293,21 @@
         }
       ],
       "title": "Implementing executable version identity"
+    },
+    {
+      "condition": "When implementing, modifying, reviewing, or troubleshooting deletion of generated or temporary files and directories on Windows, WSL or Linux:",
+      "id": "CCW-TOPIC-FILESYSTEM-CLEANUP",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md",
+          "resource_id": "RESOURCE-CCW-FS-001"
+        }
+      ],
+      "title": "Resilient filesystem cleanup"
     },
     {
       "condition": "When installing, configuring, integrating, troubleshooting, or extending the local GitHub-compatible provider or its MCP bridge:",

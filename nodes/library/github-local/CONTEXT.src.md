@@ -1,5 +1,5 @@
 # GitHub Local — Local Context Source
-<!-- ctx:node id="63b92022-db1a-4875-be99-017726cbfce7" name="GitHub Local" version="0.1.7-draft" -->
+<!-- ctx:node id="63b92022-db1a-4875-be99-017726cbfce7" name="GitHub Local" version="0.1.8-draft" -->
 
 <!-- contextcanon:format Node
 Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.
