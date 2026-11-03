@@ -2,19 +2,19 @@
   "changes": [],
   "compiler_version": "0.8.0",
   "digests": {
-    "normalized": "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b",
-    "package": "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+    "normalized": "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5",
+    "package": "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
   },
   "files": [
     {
       "path": ".context/resource-origins.json",
-      "sha256": "086ac8e51a93c878e24601d529e411fda16d7d4c94fb0f4fd8ddf56eed1a437e",
-      "size": 546
+      "sha256": "9b4c128f98c7df147217727877efd39c55c3d71e0bf4b223ee8a3e1c41d1ea28",
+      "size": 779
     },
     {
       "path": "CONTEXT.md",
-      "sha256": "f88fcb6a49ca64c93a862e06ed330e0e060808d427273ac161f2c177580ea63f",
-      "size": 7422
+      "sha256": "c61035856a15d100b71f9510f853dcb28abca00dec2d9256e5518e08f37e7856",
+      "size": 8178
     },
     {
       "path": "CONTEXT/README.md",
@@ -27,6 +27,11 @@
       "size": 9670
     },
     {
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md",
+      "sha256": "d4a218e41916fe83ffd2345744a0843cffd9c52ad7ba014d7f0fd1bb8889c9da",
+      "size": 4438
+    },
+    {
       "path": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
       "sha256": "124440f4a2ed17d7bfbf265ac2936fa38695e6699069acc94f19f38a92b4351f",
       "size": 6107
@@ -36,7 +41,7 @@
   "node": {
     "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
     "name": "Development Workflow",
-    "version": "0.3.7-draft"
+    "version": "0.3.8-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -110,6 +115,16 @@
       "statement": "When writing Markdown links to repository-local files or directories, keep the real filesystem path as the semantic source of truth but percent-encode the Markdown link destination as a URI path instead of embedding raw spaces or Markdown/URL-sensitive path characters.",
       "title": "Render repository-local Markdown links URL-safely",
       "why": "Valid repository filenames can contain spaces, `#`, `%`, parentheses and other characters that Markdown consumers parse differently; URL-safe link destinations keep links portable across IDEs, GitHub and other renderers without forcing artificial filename restrictions."
+    },
+    {
+      "group": "Filesystem robustness",
+      "id": "CCW-016",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "For tool-owned disposable directories, use a shared bounded-retry deletion method, tolerate empty leftovers from temporary filesystem locks, and retry later. Never follow links or remove unknown files; fail on missing or corrupt authoritative data. Follow the detailed method in `docs/filesystem-cleanup.md`.",
+      "title": "Treat directory cleanup as best-effort, but authoritative data as strict",
+      "why": "Windows antivirus/indexers and other concurrent processes can outlive a cleanup attempt. One transient lock must not break a later unrelated build, but cleanup tolerance must never hide lost project data."
     },
     {
       "group": "Proportional verification",
@@ -224,6 +239,21 @@
         }
       ],
       "title": "Implementing executable version identity"
+    },
+    {
+      "condition": "When implementing, modifying, reviewing, or troubleshooting deletion of generated or temporary files and directories on Windows, WSL or Linux:",
+      "id": "CCW-TOPIC-FILESYSTEM-CLEANUP",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "required",
+          "kind": "resource",
+          "locator": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md",
+          "resource_id": "RESOURCE-CCW-FS-001"
+        }
+      ],
+      "title": "Resilient filesystem cleanup"
     }
   ]
 }

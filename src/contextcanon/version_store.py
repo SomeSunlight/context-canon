@@ -16,6 +16,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from .fs_cleanup import is_fileless_directory
 from .model import CompiledPackage, PackageDependency, SourceRef, ParentRef
 from .package import PACKAGE_MANIFEST_PATH, load_package
 from .parser import ContextCanonError, find_repo_root, parse_node
@@ -56,6 +57,10 @@ def package_location(store: Path, key: str, *, lengths=TOKEN_LENGTHS) -> Path:
             continue
         if path.is_symlink():
             raise ContextCanonError(f"Package store entry is a symbolic link: {path}")
+        if is_fileless_directory(path):
+            # Windows/Git can leave directory-only skeletons behind. Do not
+            # trust or reuse this occupied token; seek a free longer prefix.
+            continue
         existing_key = package_key(load_package(path))
         if existing_key == key:
             return path

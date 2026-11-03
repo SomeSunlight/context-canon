@@ -9,6 +9,7 @@ from .authoring import add_rule, add_topic
 from .config import CONFIG_FILENAME, configured_source, config_path, load_project_config, upsert_git_source
 from .version import display_version
 from .compiler import Compiler, discover_nodes
+from .fs_cleanup import prune_context_directories
 from .diff import diff_compiled, render_diff, render_diff_technical
 from .git_transport import fetch_git_candidate, load_candidate_provenance
 from .onboarding import prepare_onboarding_evidence, project_root_from_snapshot
@@ -2543,6 +2544,7 @@ def main(argv: list[str] | None = None) -> int:
             migrated = migrate_sources(repo_root, node_roots)
             for root in migrated:
                 print(f"migrated {(root / 'CONTEXT.src.md').relative_to(repo_root).as_posix()} (authoring help/layout/IDs)")
+            prune_context_directories(repo_root, discover_nodes(repo_root))
         failed = False
         for node_root in node_roots:
             label = node_root.relative_to(repo_root).as_posix() or "."

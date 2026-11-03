@@ -13,6 +13,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from .fs_cleanup import remove_empty_directory
 from .compiler import discover_nodes
 from .gitignore import ensure_candidate_gitignore
 from .model import CompiledPackage
@@ -262,17 +263,11 @@ def migrate_versions(path: Path, *, apply: bool = False) -> str:
             raise ContextCanonError(f"Unowned migration retirement destination: {trash}")
         os.replace(row.source, trash)
         _remove_retired(repo, receipt)
-        try:
-            row.source.parent.rmdir()
-        except OSError:
-            pass
+        remove_empty_directory(row.source.parent)
     store = library_root(repo)
     if store.exists():
         (store / "README.md").write_text(render_inventory(repo, relative_to=store), encoding="utf-8")
-    try:
-        trash_store.rmdir()
-    except OSError:
-        pass
+    remove_empty_directory(trash_store)
     lines.extend(["", "Verified versions are shared. Exact accepted pins are unchanged; only owned carrier locators may be moved.",
                   "Next: contextcanon build --all .", "Then: contextcanon check --all .", ""])
     return "\n".join(lines)

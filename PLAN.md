@@ -1,5 +1,18 @@
 # Plan
 
+## Active review block — resilient filesystem cleanup (#127)
+
+Purpose: Windows may leave recursively fileless directory skeletons after cleanup/branch operations; these must not block later builds. Define one reusable Development Workflow method, preserve strict immutable package integrity, and make ContextCanon build retry deletion of harmless tool-owned leftovers.
+
+- [x] Record [Issue #127](https://github.com/SomeSunlight/context-canon/issues/127) and scope the cross-platform method.
+- [x] Author the Development Workflow Rule/Topic and filesystem-cleanup reference under the owning Node.
+- [x] Add shared best-effort directory helper, safe orphan classification, build cleanup, and regression cases.
+- [x] Explicitly stage Development Workflow 0.3.8-draft in all three in-repository normative consumers for owner review (no downstream repository pins changed).
+- [x] Run complete unit tests and regenerate official Context via `contextcanon build --all .` using the actual compiler, review/commit generated artifacts, propagate the newer Development Workflow Parent with explicit acceptance, and verify exact-head `check --all .` before merge.
+- [ ] Owner review and merge approval; then close the accepted-baseline checkpoint.
+
+
+
 ## Human-first propagation evidence — Issue #120 (Fast Track, 2026-10-14)
 
 **Owner explicitly approved Fast Track.** Goal: turn the repetitive eight-edge `ai-workstation/docs/troubleshooting.md` propagation into informed, human-scale approvals with recognized origin/path, exact before/after differences, and repeated-change orientation. No intermediate product-review stops; present one coherent PR candidate to owner when ready. **Do not merge without owner approval** and require exact-head green checks before any owner-approved merge.

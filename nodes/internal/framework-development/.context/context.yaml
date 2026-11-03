@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.24-draft"
+  version: "0.3.25-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -25,11 +25,11 @@ sources:
     package_digest: "374338bff85e17418bfa705c224a99f3d7b16017ebf275f0a316a98d217bbffe"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.7-draft"
+    version: "0.3.8-draft"
     relationship: "parent"
     locator: "../../library/development-workflow/"
-    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
-    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+    normalized_digest: "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5"
+    package_digest: "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
 
 # Direct informational References. Their Rules are not effective and they are not exported to Children.
 references: []
@@ -43,9 +43,9 @@ imports:
     package_digest: "374338bff85e17418bfa705c224a99f3d7b16017ebf275f0a316a98d217bbffe"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.7-draft"
-    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
-    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+    version: "0.3.8-draft"
+    normalized_digest: "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5"
+    package_digest: "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -100,6 +100,7 @@ official:
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-016", "title": "Treat directory cleanup as best-effort, but authoritative data as strict", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -122,7 +123,7 @@ official:
     - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES", "CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES", "CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "CCW-TOPIC-FILESYSTEM-CLEANUP", "CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -167,6 +168,12 @@ targets:
     intent: "required"
     kind: "resource"
     locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
+    target_node_id: null
+    target_node_name: null
+  - topic: "CCW-TOPIC-FILESYSTEM-CLEANUP"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"
     target_node_id: null
     target_node_name: null
   - topic: "CCI-TOPIC-COMPILER"
@@ -278,9 +285,10 @@ resources:
   - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md"}
   - {"source": "../../../plans/issue-107-onboarding-owner-test.md", "published": "CONTEXT/references/nd268d581199b5a7/plans/issue-107-onboarding-owner-test.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "69cf034a96eca8226c7757eb72163204b3a4408babb2f0beef576a7a32b2f624"
-  package_digest: "484f1912e71e049fc96758b1dd393e73ee2b989f096aea9cd066db79fef33a23"
+  normalized_digest: "b4a274e9b6608c932014c94f5e04769f7fbae3d29cbf445f0de4c12276875176"
+  package_digest: "a8aa7e6ab5e823e522434359e83dcab7f3bdfa3ea988445a84f3ee018b0fd3b5"

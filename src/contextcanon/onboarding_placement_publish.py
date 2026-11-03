@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
+from .fs_cleanup import remove_empty_directory, prune_empty_owned_directories
 from .compiler import Compiler
 from .onboarding_storage import enclosing_parent, provenance_path, require_project
 from .version_store import install_version, library_root, package_key, store_package, version_path
@@ -1209,15 +1210,8 @@ def _restore_files(root: Path, snapshot: dict[str, bytes | None], extra_rels: It
             path.write_bytes(before)
     context = root / "CONTEXT"
     if context.is_dir():
-        for directory in sorted((path for path in context.rglob("*") if path.is_dir()), key=lambda p: len(p.parts), reverse=True):
-            try:
-                directory.rmdir()
-            except OSError:
-                pass
-        try:
-            context.rmdir()
-        except OSError:
-            pass
+        prune_empty_owned_directories(context)
+        remove_empty_directory(context)
 
 
 def _acceptance_payload(

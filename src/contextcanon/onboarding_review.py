@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
+from .fs_cleanup import remove_empty_directory
 from .compiler import Compiler
 from .links import markdown_link_target
 from .model import CompiledPackage
@@ -598,19 +599,14 @@ def _rollback_first_adoption(
             path.unlink(missing_ok=True)
         parent = path.parent
         while parent != project_root and parent != project_root / ".context":
-            try:
-                parent.rmdir()
-            except OSError:
+            if not remove_empty_directory(parent):
                 break
             parent = parent.parent
     for path in new_source_store_paths:
         if path.exists():
             shutil.rmtree(path)
     sources_dir = project_root / ".context" / "sources"
-    try:
-        sources_dir.rmdir()
-    except OSError:
-        pass
+    remove_empty_directory(sources_dir)
 
 
 def _onboarding_resource_id(node_id: str, topic_id: str, ordinal: int) -> str:

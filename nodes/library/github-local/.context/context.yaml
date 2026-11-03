@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "63b92022-db1a-4875-be99-017726cbfce7"
   name: "GitHub Local"
-  version: "0.1.7-draft"
+  version: "0.1.8-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -18,11 +18,11 @@ parents: []
 sources:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.7-draft"
+    version: "0.3.8-draft"
     relationship: "parent"
     locator: "../development-workflow/"
-    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
-    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+    normalized_digest: "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5"
+    package_digest: "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
 
 # Direct informational References. Their Rules are not effective and they are not exported to Children.
 references: []
@@ -31,9 +31,9 @@ references: []
 imports:
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.7-draft"
-    normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
-    package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+    version: "0.3.8-draft"
+    normalized_digest: "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5"
+    package_digest: "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -57,6 +57,7 @@ official:
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
+    - {"id": "CCW-016", "title": "Treat directory cleanup as best-effort, but authoritative data as strict", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": false, "overrides": []}
@@ -69,7 +70,7 @@ official:
     - {"id": "GHL-002", "title": "Keep Issues visible project documentation", "origin_node_id": "63b92022-db1a-4875-be99-017726cbfce7", "origin_node_name": "GitHub Local", "local": true, "overrides": []}
     - {"id": "GHL-003", "title": "Do not silently switch providers", "origin_node_id": "63b92022-db1a-4875-be99-017726cbfce7", "origin_node_name": "GitHub Local", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "GHL-TOPIC-PROVIDER"]
+  topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "CCW-TOPIC-FILESYSTEM-CLEANUP", "GHL-TOPIC-PROVIDER"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -86,6 +87,12 @@ targets:
     locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
     target_node_id: null
     target_node_name: null
+  - topic: "CCW-TOPIC-FILESYSTEM-CLEANUP"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"
+    target_node_id: null
+    target_node_name: null
   - topic: "GHL-TOPIC-PROVIDER"
     intent: "required"
     kind: "resource"
@@ -97,9 +104,10 @@ targets:
 resources:
   - {"source": "docs/provider.md", "published": "CONTEXT/references/n984d6955e19f92e/docs/provider.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "4ad030512c9a4753e8400eecabb744f9b9dc2d7575ca9f3f654a5658423e11ab"
-  package_digest: "87f1416dc0e178c740d1975a25fa9f815576bbde224de3ad248f9579cf9e83ec"
+  normalized_digest: "880e24665f0ae37beca3ae9f648b35fb07b65052bf37587c657aaf8259ed6b66"
+  package_digest: "39bd5b1469872921fbfe2708af96606da088b366c22153e84df254c351498dd3"

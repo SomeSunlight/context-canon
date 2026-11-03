@@ -1,5 +1,5 @@
 # GitHub — Local Context Source
-<!-- ctx:node id="ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc" name="GitHub" version="0.1.8-draft" -->
+<!-- ctx:node id="ccf4d7ee-4db1-4110-9ddc-5d70c69cf2bc" name="GitHub" version="0.1.9-draft" -->
 
 <!-- contextcanon:format Node
 Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.
@@ -20,8 +20,8 @@ Format: - [Name](location) — `version` — `relationship=parent|reference`; op
 Details: CONTEXT-format.md
 -->
 
-- [Development Workflow](../development-workflow/) — `0.3.7-draft` — `relationship=parent`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.7-draft" -->
+- [Development Workflow](../development-workflow/) — `0.3.8-draft` — `relationship=parent`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.8-draft" -->
 
 ## Local Overview
 

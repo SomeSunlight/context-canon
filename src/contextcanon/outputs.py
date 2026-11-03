@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .fs_cleanup import remove_empty_directory
 from .path_budget import preflight_paths
 from .model import CompiledNode
 from .package import PACKAGE_MANIFEST_PATH
@@ -60,16 +61,10 @@ def write_outputs(compiled: CompiledNode) -> list[str]:
             key=lambda path: len(path.parts),
             reverse=True,
         ):
-            try:
-                directory.rmdir()
-            except OSError:
-                pass
+            remove_empty_directory(directory)
         if not expected_context_paths:
-            try:
-                context_dir.rmdir()
+            if remove_empty_directory(context_dir):
                 changed.append("removed CONTEXT/")
-            except OSError:
-                pass
 
     if ORIGINS_PATH not in outputs and (root / ORIGINS_PATH).is_file():
         (root / ORIGINS_PATH).unlink()
