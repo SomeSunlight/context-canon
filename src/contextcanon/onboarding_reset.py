@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path, PurePosixPath
 from typing import Callable, Iterable
 
+from .fs_cleanup import remove_empty_directory
 from .compiler import Compiler, discover_nodes
 from .onboarding_workspace import (
     CHECKLIST_END,
@@ -292,10 +293,7 @@ def _prune_empty(project: Path, paths: Iterable[Path]) -> None:
             candidates.add(parent)
             parent = parent.parent
     for directory in sorted(candidates, key=lambda value: len(value.parts), reverse=True):
-        try:
-            directory.rmdir()
-        except OSError:
-            pass
+        remove_empty_directory(directory)
 
 
 def _restore_journal(snapshot_root: Path, project: Path, from_step: int) -> tuple[list[int], list[str]]:
@@ -575,10 +573,7 @@ def _clear_machine_state(project: Path, *, keep_inventory_state: bool) -> list[s
             removed.append(path.name)
     if not keep_inventory_state:
         for directory in (root, root.parent):
-            try:
-                directory.rmdir()
-            except OSError:
-                pass
+            remove_empty_directory(directory)
     return sorted(removed)
 
 

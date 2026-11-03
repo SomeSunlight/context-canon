@@ -7,6 +7,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from .fs_cleanup import remove_empty_directory
 from .compiler import Compiler
 from .onboarding_storage import require_project
 from .onboarding_structure import (
@@ -438,9 +439,7 @@ def _remove_created_output(node_root: Path, rel: str) -> None:
         return
     parent = path.parent
     while parent != node_root:
-        try:
-            parent.rmdir()
-        except OSError:
+        if not remove_empty_directory(parent):
             break
         parent = parent.parent
 
@@ -502,9 +501,7 @@ def materialize_structure_skeletons(preview: StructureMaterializationPreview) ->
             source.unlink(missing_ok=True)
             parent = source.parent
             while parent != project:
-                try:
-                    parent.rmdir()
-                except OSError:
+                if not remove_empty_directory(parent):
                     break
                 parent = parent.parent
         raise
