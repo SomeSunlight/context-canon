@@ -20,8 +20,8 @@ Format: - [Name](location) — `version` — `relationship=parent|reference`; op
 Details: CONTEXT-format.md
 -->
 
-- [Development Workflow](../development-workflow/) — `0.3.7-draft` — `relationship=parent`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.7-draft" -->
+- [Development Workflow](../development-workflow/) — `0.3.8-draft` — `relationship=parent`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.8-draft" -->
 
 ## Local Overview
 

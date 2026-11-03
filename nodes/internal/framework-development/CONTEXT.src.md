@@ -55,8 +55,8 @@ Details: CONTEXT-format.md
 - [ContextCanon Foundation](../../library/foundation/) — `0.2.6-draft` — `relationship=parent`
   <!-- ctx:source id="4ca9d92c-59f2-4b1f-b7b3-0e2ff91fd001" version="0.2.6-draft" -->
 
-- [Development Workflow](../../library/development-workflow/) — `0.3.7-draft` — `relationship=parent`
-  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.7-draft" -->
+- [Development Workflow](../../library/development-workflow/) — `0.3.8-draft` — `relationship=parent`
+  <!-- ctx:source id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" version="0.3.8-draft" -->
 
 ## Local Rules
 
