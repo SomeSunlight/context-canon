@@ -1,5 +1,5 @@
 # ContextCanon Framework Development — Local Context Source
-<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.24-draft" -->
+<!-- ctx:node id="8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a" name="ContextCanon Framework Development" version="0.3.25-draft" -->
 
 <!-- contextcanon:format Node
 Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.

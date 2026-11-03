@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
   name: "Development Workflow"
-  version: "0.3.7-draft"
+  version: "0.3.8-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -35,6 +35,7 @@ local:
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "group": "Recoverable planning"}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "group": "Transparent machine semantics"}
     - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "group": "Transparent machine semantics"}
+    - {"id": "CCW-016", "title": "Treat directory cleanup as best-effort, but authoritative data as strict", "group": "Filesystem robustness"}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "group": "Proportional verification"}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "group": "Proportional verification"}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "group": "Proportional verification"}
@@ -47,6 +48,7 @@ local:
   topics:
     - {"id": "CCW-TOPIC-CHANGE-WORKFLOW", "title": "Executing a development block"}
     - {"id": "CCW-TOPIC-VERSION-PROVENANCE", "title": "Implementing executable version identity"}
+    - {"id": "CCW-TOPIC-FILESYSTEM-CLEANUP", "title": "Resilient filesystem cleanup"}
 
 # Compiled effective Rule/Topic view with provenance.
 official:
@@ -58,6 +60,7 @@ official:
     - {"id": "CCW-007", "title": "Resume recent explicit continuation without re-proving unchanged state", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-012", "title": "Mark machine-significant Markdown explicitly", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-015", "title": "Render repository-local Markdown links URL-safely", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
+    - {"id": "CCW-016", "title": "Treat directory cleanup as best-effort, but authoritative data as strict", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-004", "title": "Batch related edits before expensive final verification", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-009", "title": "Use owner-approved Fast Track blocks without weakening the final gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-005", "title": "Require exact-head green verification at the merge gate, not the first review gate", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
@@ -67,7 +70,7 @@ official:
     - {"id": "CCW-006", "title": "Do not merge without explicit project-owner approval", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
     - {"id": "CCW-008", "title": "Close the post-merge baseline checkpoint before new development", "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40", "origin_node_name": "Development Workflow", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE"]
+  topic_ids: ["CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "CCW-TOPIC-FILESYSTEM-CLEANUP"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -84,13 +87,20 @@ targets:
     locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
     target_node_id: null
     target_node_name: null
+  - topic: "CCW-TOPIC-FILESYSTEM-CLEANUP"
+    intent: "required"
+    kind: "resource"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"
+    target_node_id: null
+    target_node_name: null
 
 # Mapping from author-facing Resource paths to generated package paths.
 resources:
   - {"source": "docs/change-workflow.md", "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": "docs/filesystem-cleanup.md", "published": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"}
   - {"source": "docs/version-provenance-python.md", "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "c63c332918c6f2209abac5be453342d07b10c52fb3a21022f7ad25ab7ea8860b"
-  package_digest: "04e53389249e34b248b18c80df0adf1767261285c8a152df418b69720a83f731"
+  normalized_digest: "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5"
+  package_digest: "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5"
