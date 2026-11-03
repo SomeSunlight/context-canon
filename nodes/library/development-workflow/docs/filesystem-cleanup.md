@@ -14,7 +14,7 @@ Use this reference whenever a project creates and later removes generated, scrat
 
 ## Python reference pattern
 
-Put the implementation in **one project helper**, then call it everywhere instead of repeating `except OSError: pass`. For Python-based ContextCanon the runnable implementation lives in [`src/contextcanon/fs_cleanup.py`](../../../../src/contextcanon/fs_cleanup.py). The minimal nonrecursive primitive is:
+Put the implementation in **one project helper**, then call it everywhere instead of repeating `except OSError: pass`. For Python-based ContextCanon the runnable implementation lives in `src/contextcanon/fs_cleanup.py` (repository root; implementation detail, not a Topic Resource). The minimal nonrecursive primitive is:
 
 ```python
 from pathlib import Path
