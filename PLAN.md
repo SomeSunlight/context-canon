@@ -8,7 +8,7 @@ Purpose: Windows may leave recursively fileless directory skeletons after cleanu
 - [x] Author the Development Workflow Rule/Topic and filesystem-cleanup reference under the owning Node.
 - [x] Add shared best-effort directory helper, safe orphan classification, build cleanup, and regression cases.
 - [x] Explicitly stage Development Workflow 0.3.8-draft in all three in-repository normative consumers for owner review (no downstream repository pins changed).
-- [ ] Run complete unit tests and regenerate official Context via `contextcanon build --all .` using the actual compiler, review/commit generated artifacts, propagate the newer Development Workflow Parent with explicit acceptance, and verify exact-head `check --all .` before merge.
+- [x] Run complete unit tests and regenerate official Context via `contextcanon build --all .` using the actual compiler, review/commit generated artifacts, propagate the newer Development Workflow Parent with explicit acceptance, and verify exact-head `check --all .` before merge.
 - [ ] Owner review and merge approval; then close the accepted-baseline checkpoint.
 
 
