@@ -1,5 +1,20 @@
 # Plan
 
+## Version provenance and opt-in GitHub check — Issue #130 (2026-11-07)
+
+Purpose: identify the exact installed ContextCanon commit from a uv Git URL, and compare it on demand with the corresponding GitHub branch without ever making \`--version\` network-dependent.
+
+Writable scope: \`src/contextcanon/version.py\`, new \`src/contextcanon/version_check.py\`, CLI integration, focused tests, README, Development Workflow authored provenance guide plus only its necessary reviewed generated packages/accepted pins, CHANGELOG and these PLAN/STATE checkpoints. Separate downstream tool Issues follow the reusable guide's publication; #131's architecture decision remains independent.
+
+- [x] Extend #130 with the owner's opt-in check contract and inspect github-local's working PEP 610 implementation.
+- [x] Implement installed commit provenance and explicit read-only remote Git history comparison, including safe unknown status.
+- [x] Add focused regression tests for offline \`--version\`, VCS metadata, ancestry directions, override/default branch and failures.
+- [ ] Update Development Workflow's reusable pattern and ContextCanon user documentation.
+- [ ] Regenerate/review self-hosted Context packages and propagate accepted changes without direct edits to generated state.
+- [ ] Pass focused/full tests plus exact generated drift check; prepare a PR for owner review.
+- [ ] Owner approval and merge; post-merge accepted baseline checkpoint.
+
+
 ## Active review block — resilient filesystem cleanup (#127)
 
 Purpose: Windows may leave recursively fileless directory skeletons after cleanup/branch operations; these must not block later builds. Define one reusable Development Workflow method, preserve strict immutable package integrity, and make ContextCanon build retry deletion of harmless tool-owned leftovers.
