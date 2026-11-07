@@ -73,14 +73,17 @@ def _github_coordinates(source: str) -> tuple[str, str] | None:
     if source.startswith("git@github.com:"):
         path = source.removeprefix("git@github.com:")
     else:
-        parsed = urlsplit(source)
-        if parsed.hostname != "github.com" or parsed.password or parsed.username not in (None, "git"):
+        try:
+            parsed = urlsplit(source)
+            if parsed.hostname != "github.com" or parsed.password or parsed.username not in (None, "git"):
+                return None
+            if parsed.scheme not in ("https", "ssh"):
+                return None
+            if parsed.query or parsed.fragment or parsed.port not in (None, 22, 443):
+                return None
+            path = parsed.path.lstrip("/")
+        except ValueError:
             return None
-        if parsed.scheme not in ("https", "ssh"):
-            return None
-        if parsed.query or parsed.fragment or parsed.port not in (None, 22, 443):
-            return None
-        path = parsed.path.lstrip("/")
     path = path.removesuffix(".git").strip("/")
     parts = path.split("/")
     if len(parts) != 2 or not all(re.fullmatch(r"[a-zA-Z0-9_.-]+", p) for p in parts):
