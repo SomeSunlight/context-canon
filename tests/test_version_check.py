@@ -64,7 +64,9 @@ class InstalledVersionTests(unittest.TestCase):
     def test_offline_version_does_not_call_network(self):
         with patch("contextcanon.version_check._read_json", side_effect=AssertionError("network")):
             with redirect_stdout(io.StringIO()) as output:
-                self.assertEqual(main(["--version"]), 0)
+                with self.assertRaises(SystemExit) as ended:
+                    main(["--version"])
+                self.assertEqual(ended.exception.code, 0)
             self.assertIn("contextcanon 0.10.0", output.getvalue())
 
 

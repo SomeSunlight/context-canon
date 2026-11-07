@@ -98,6 +98,10 @@ Details: CONTEXT-format.md
   Why: Humans and agents must be able to distinguish different development code behind the same release baseline without turning every branch, documentation edit, or review iteration into release-version ceremony.
   <!-- ctx:rule id="CCW-014" -->
 
+- **Check remote versions only on request:** Keep --version fully offline and report the exact installed Git identity when available; for executable tools where remote currency matters, provide an explicit read-only version check. Compare exact commits with the selected remote branch, distinguish behind/ahead/diverged, and report unknown rather than guessing when verification is impossible.
+  Why: Operators need a fast trustworthy check during active development without automatic network access, covert updates, or confusing an unchanged release label with the executing code revision.
+  <!-- ctx:rule id="CCW-017" -->
+
 ### Human review gate
 
 - **Expand change scope explicitly:** Applicable Context constrains a task; it does not silently expand its writable scope.
@@ -133,7 +137,7 @@ Required:
 
 ### Implementing executable version identity
 
-When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:
+When adding or changing `--version`, package version lookup, Git checkout provenance, or an opt-in remote version check for an executable Python tool:
 
 Required:
 - Resource: `docs/version-provenance-python.md`

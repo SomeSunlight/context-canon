@@ -9,7 +9,7 @@ Writable scope: \`src/contextcanon/version.py\`, new \`src/contextcanon/version_
 - [x] Extend #130 with the owner's opt-in check contract and inspect github-local's working PEP 610 implementation.
 - [x] Implement installed commit provenance and explicit read-only remote Git history comparison, including safe unknown status.
 - [x] Add focused regression tests for offline \`--version\`, VCS metadata, ancestry directions, override/default branch and failures.
-- [ ] Update Development Workflow's reusable pattern and ContextCanon user documentation.
+- [x] Update Development Workflow's reusable pattern and ContextCanon user documentation.
 - [ ] Regenerate/review self-hosted Context packages and propagate accepted changes without direct edits to generated state.
 - [ ] Pass focused/full tests plus exact generated drift check; prepare a PR for owner review.
 - [ ] Owner approval and merge; post-merge accepted baseline checkpoint.

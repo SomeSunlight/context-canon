@@ -50,10 +50,13 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Then install ContextCanon directly from GitHub:
 
 ```text
-uv tool install git+https://github.com/SomeSunlight/context-canon.git
+uv tool install "git+https://github.com/SomeSunlight/context-canon.git@main"
 uv tool update-shell
-contextcanon --version
+contextcanon --version       # offline: installed release + resolved Git commit
+contextcanon version check   # optional GitHub lookup; never updates/installs
 ```
+
+To **install a newer main revision intentionally**, run `uv tool install --force --refresh "git+https://github.com/SomeSunlight/context-canon.git@main"`. `--version` is strictly offline. `version check` compares the installed commit with the selected GitHub branch, reporting `up to date`, `behind`, `ahead`, `diverged`, or `unknown`. Neither command modifies the installation. See the reusable [Development Workflow version guide](nodes/library/development-workflow/docs/version-provenance-python.md).
 
 ContextCanon requires Python 3.11 or newer; uv can obtain a compatible managed Python automatically when needed. If the shell has just been updated, open a new terminal before retrying `contextcanon --version`.
 
