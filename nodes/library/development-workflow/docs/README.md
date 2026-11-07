@@ -2,7 +2,7 @@
 
 This directory contains the **human-authored explanation** of the reusable Development Workflow Node.
 
-Read [`change-workflow.md`](change-workflow.md) when you need the practical sequence for planning, resuming, reviewing, finalizing a coherent change, merging it, and closing the accepted baseline afterwards.
+Read [`version-provenance-python.md`](version-provenance-python.md) when implementing offline CLI version identity, PEP 610 Git installs, or an explicit read-only remote version check. Read [`change-workflow.md`](change-workflow.md) when you need the practical sequence for planning, resuming, reviewing, finalizing a coherent change, merging it, and closing the accepted baseline afterwards.
 
 The durable normative Rules live one level up in [`../CONTEXT.src.md`](../CONTEXT.src.md). This directory explains how to apply them in practice; it is not a second rule source.
 

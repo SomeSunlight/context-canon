@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Issue #130 (offline provenance and opt-in version check)
+- Git URL installations identify the resolved commit using PEP 610 metadata; `--version` never contacts the network.
+- `contextcanon version check` makes an explicit read-only GitHub comparison with branch override, ancestry-aware statuses and fail-closed unknown responses.
+- Reusable Development Workflow documents this opt-in convention for sibling CLI tools.
+
 ## Unreleased — Issue #120 (human-first propagation reviews)
 - Guided Parent propagation names original authored Resources and Topics, shows verified old/new text differences and exact source/snapshot locations, and recognizes repeated upstream changes across descendants.
 - Make normal propagation reviews deliberately compact: document/Topic, short text diff, precise `content changed` label, **plain-language description of what the Child will inherit**, and decision. `s` reprints the short review after inspecting details without affecting acceptance. `d` at the prompt opens full technical details and then asks again; `--verbose` opts into details immediately. Parent automatic version bumps explicitly say they occur before Child acceptance.
