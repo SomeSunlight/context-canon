@@ -10,8 +10,9 @@ Writable scope: \`src/contextcanon/version.py\`, new \`src/contextcanon/version_
 - [x] Implement installed commit provenance and explicit read-only remote Git history comparison, including safe unknown status.
 - [x] Add focused regression tests for offline \`--version\`, VCS metadata, ancestry directions, override/default branch and failures.
 - [x] Update Development Workflow's reusable pattern and ContextCanon user documentation.
-- [ ] Regenerate/review self-hosted Context packages and propagate accepted changes without direct edits to generated state.
-- [ ] Pass focused/full tests plus exact generated drift check; prepare a PR for owner review.
+- [x] Regenerate/review self-hosted Context packages, author all three local consumer pins in Markdown, and confirm all four accepted Parent relations via `contextcanon check --all .`. Workflow 0.3.9-draft; Framework 0.3.26-draft; GitHub 0.1.10-draft; GitHub Local 0.1.9-draft. One exact historical package byte was restored from a hash-verified donor (#133); the temporary branch-only regeneration CI workflow was removed.
+- [ ] Pass exact-head Linux/full and native Windows tests, plus generated drift check, and present PR #132 for owner review.
+- [x] Create downstream version-contract Issues: github-local #25, Llama_Dispatcher #33, ai-workstation #56, ConfluenceBridge #2, teams-chat-exporter #2; defer adoption until the accepted Development Workflow is published. Track the local Source/Parent propagation limitation separately in context-canon #134.
 - [ ] Owner approval and merge; post-merge accepted baseline checkpoint.
 
 
