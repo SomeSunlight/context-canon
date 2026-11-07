@@ -49,8 +49,25 @@ jobs:
         run: |
           set -euxo pipefail
           contextcanon build nodes/library/development-workflow
-          contextcanon propagate --all . --yes
+          # In-repository Source carriers intentionally bind only a local Node
+          # version (not immutable package digests). Author its new accepted
+          # version in Markdown before the compiler can load that live Parent.
+          python - <<'PY'
+          from pathlib import Path
+          paths = (
+              Path("nodes/internal/framework-development/CONTEXT.src.md"),
+              Path("nodes/library/github/CONTEXT.src.md"),
+              Path("nodes/library/github-local/CONTEXT.src.md"),
+          )
+          for path in paths:
+              original = path.read_text(encoding="utf-8")
+              assert original.count("0.3.8-draft") == 2, f"Unexpected Source pin layout: {path}"
+              updated = original.replace("0.3.8-draft", "0.3.9-draft")
+              path.write_text(updated, encoding="utf-8")
+              print(f"Authored new local Development Workflow version in {path}")
+          PY
           contextcanon build --all .
+          contextcanon propagate --all . --yes
           contextcanon check --all .
       - name: Commit generated and accepted state only to the review branch
         shell: bash
