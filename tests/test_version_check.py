@@ -135,6 +135,7 @@ class RemoteVersionTests(unittest.TestCase):
         self.assertEqual(_github_coordinates("ssh://git@github.com/owner/repo.git"), ("owner", "repo"))
         self.assertIsNone(_github_coordinates("https://github.com.evil.example/owner/repo"))
         self.assertIsNone(_github_coordinates("https://example.com/owner/repo"))
+        self.assertIsNone(_github_coordinates("https://github.com:invalid/owner/repo"))
 
     def test_cli_output_and_exit_code(self):
         result = VersionCheck("contextcanon 0.10.0 (main@aaaaaaa)", "main@bbbbbbb", "behind")
