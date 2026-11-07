@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          contextcanon build --all .
+          contextcanon build nodes/library/development-workflow
           contextcanon propagate --all . --yes
           contextcanon build --all .
           contextcanon check --all .
