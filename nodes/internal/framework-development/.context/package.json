@@ -2,8 +2,8 @@
   "changes": [],
   "compiler_version": "0.8.0",
   "digests": {
-    "normalized": "b4a274e9b6608c932014c94f5e04769f7fbae3d29cbf445f0de4c12276875176",
-    "package": "a8aa7e6ab5e823e522434359e83dcab7f3bdfa3ea988445a84f3ee018b0fd3b5"
+    "normalized": "e913d0e6468e9a635b236d0f879a20078b13cb165ca6b166e30f6e174aa350fe",
+    "package": "9267397a86e54cd0daddbe27e1d413bfc9ba4385344c2889c39cc66a1fd22888"
   },
   "files": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "path": "CONTEXT.md",
-      "sha256": "b9076533695fbc765750f4bd98b3f864fca2c4d2d5332d229cd16a8e8c976224",
-      "size": 20831
+      "sha256": "b342b0fa67710f6502844cd8986a7baf3f1348ed0d497fce91653fec0b3fda63",
+      "size": 21271
     },
     {
       "path": "CONTEXT/README.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md",
-      "sha256": "124440f4a2ed17d7bfbf265ac2936fa38695e6699069acc94f19f38a92b4351f",
-      "size": 6107
+      "sha256": "990b1b964ddfa53b07a683032502785f77e91b86833fcb6642d7441b758e4a06",
+      "size": 11155
     }
   ],
   "imports": [
@@ -154,16 +154,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5",
-      "package_digest": "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5",
-      "version": "0.3.8-draft",
+      "normalized_digest": "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6",
+      "package_digest": "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c",
+      "version": "0.3.9-draft",
       "why": null
     }
   ],
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.25-draft"
+    "version": "0.3.26-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -429,6 +429,16 @@
       "why": "Humans and agents must be able to distinguish different development code behind the same release baseline without turning every branch, documentation edit, or review iteration into release-version ceremony."
     },
     {
+      "group": "Proportional verification",
+      "id": "CCW-017",
+      "modifications": [],
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "statement": "Keep --version fully offline and report the exact installed Git identity when available; for executable tools where remote currency matters, provide an explicit read-only version check. Compare exact commits with the selected remote branch, distinguish behind/ahead/diverged, and report unknown rather than guessing when verification is impossible.",
+      "title": "Check remote versions only on request",
+      "why": "Operators need a fast trustworthy check during active development without automatic network access, covert updates, or confusing an unchanged release label with the executing code revision."
+    },
+    {
       "group": "Human review gate",
       "id": "CCW-011",
       "modifications": [],
@@ -603,10 +613,10 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "1076c1f49996c5e253610a3ae2f1a860b495a02ade6100b4237e41ef2933cda5",
-      "package_digest": "1a564962bf4bb831e397809503b4208189ce775bb5f2e1f99be6cdc7f27ef1d5",
+      "normalized_digest": "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6",
+      "package_digest": "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c",
       "relationship": "parent",
-      "version": "0.3.8-draft",
+      "version": "0.3.9-draft",
       "why": null
     }
   ],
@@ -684,7 +694,7 @@
       "title": "Executing a development block"
     },
     {
-      "condition": "When adding or changing `--version`, package version lookup, or Git checkout provenance for an executable Python tool:",
+      "condition": "When adding or changing `--version`, package version lookup, Git checkout provenance, or an opt-in remote version check for an executable Python tool:",
       "id": "CCW-TOPIC-VERSION-PROVENANCE",
       "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "origin_node_name": "Development Workflow",
