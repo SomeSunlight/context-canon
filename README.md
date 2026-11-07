@@ -50,7 +50,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Then install ContextCanon directly from GitHub:
 
 ```text
-uv tool install "git+https://github.com/SomeSunlight/context-canon.git@main"
+uv tool install git+https://github.com/SomeSunlight/context-canon.git
 uv tool update-shell
 contextcanon --version       # offline: installed release + resolved Git commit
 contextcanon version check   # optional GitHub lookup; never updates/installs
