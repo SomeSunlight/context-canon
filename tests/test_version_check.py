@@ -7,7 +7,7 @@ from contextlib import redirect_stdout
 from unittest.mock import Mock, patch
 
 from contextcanon.cli import main
-from contextcanon.version import display_version, installed_git_origin, installed_git_provenance
+from contextcanon.version import display_version, installed_git_origin, installed_git_provenance, release_version
 from contextcanon.version_check import (
     InstallIdentity, VersionCheck, _github_coordinates, check_remote_version,
 )
@@ -36,7 +36,7 @@ class InstalledVersionTests(unittest.TestCase):
             ))
             self.assertEqual(installed_git_provenance(), "main@aaaaaaa")
             with patch("contextcanon.version._project_root", return_value=None):
-                self.assertEqual(display_version(), "0.10.0 (main@aaaaaaa)")
+                self.assertEqual(display_version(), f"{release_version()} (main@aaaaaaa)")
 
     def test_pinned_sha_and_unlabelled_git(self):
         for revision, label in ((LOCAL_SHA, "detached"), (None, "git")):
@@ -67,7 +67,7 @@ class InstalledVersionTests(unittest.TestCase):
                 with self.assertRaises(SystemExit) as ended:
                     main(["--version"])
                 self.assertEqual(ended.exception.code, 0)
-            self.assertIn("contextcanon 0.10.0", output.getvalue())
+            self.assertIn(f"contextcanon {release_version()}", output.getvalue())
 
 
 class RemoteVersionTests(unittest.TestCase):
