@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
+import re
 import subprocess
 import tomllib
-from importlib.metadata import PackageNotFoundError, version as distribution_version
+from importlib.metadata import PackageNotFoundError, distribution, version as distribution_version
 from pathlib import Path
 
 
@@ -92,9 +94,55 @@ def git_provenance(project_root: Path | None = None) -> str | None:
     return result
 
 
+def installed_git_origin() -> tuple[str, str, str | None] | None:
+    """Return (repository URL, resolved commit, requested revision) from PEP 610.
+
+    A uv/pip Git-URL tool installation has no .git checkout, but direct_url.json
+    identifies the immutable installed commit. Do not consult the current CWD.
+    """
+    try:
+        data = distribution(_DISTRIBUTION_NAME).read_text("direct_url.json")
+    except (PackageNotFoundError, OSError):
+        return None
+    if not data:
+        return None
+    try:
+        record = json.loads(data)
+        info = record["vcs_info"]
+        if info["vcs"] != "git":
+            return None
+        url = record["url"]
+        commit = info["commit_id"]
+        if not isinstance(url, str) or not url or not isinstance(commit, str):
+            return None
+        if not re.fullmatch(r"[a-fA-F0-9]{40}|[a-fA-F0-9]{64}", commit):
+            return None
+        requested = info.get("requested_revision")
+        if requested is not None and (not isinstance(requested, str) or
+                                      any(c in requested for c in "\r\n\t")):
+            return None
+        return url, commit.lower(), requested or None
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+
+
+def installed_git_provenance() -> str | None:
+    """Display installed Git-URL identity using the resolved, not requested, SHA."""
+    origin = installed_git_origin()
+    if origin is None:
+        return None
+    _, commit, requested = origin
+    label = (requested or "git").removeprefix("refs/heads/").removeprefix("refs/tags/")
+    if not label or re.fullmatch(r"[a-fA-F0-9]{7,64}", label):
+        label = "detached"
+    return f"{label}@{commit[:7]}"
+
+
 def display_version(project_root: Path | None = None) -> str:
     release = release_version(project_root)
     provenance = git_provenance(project_root)
+    if provenance is None and project_root is None:
+        provenance = installed_git_provenance()
     return f"{release} ({provenance})" if provenance else release
 
 

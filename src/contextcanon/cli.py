@@ -880,6 +880,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="contextcanon", description="Deterministic ContextCanon compiler")
     parser.add_argument("--version", action=_RuntimeVersionAction, nargs=0)
     sub = parser.add_subparsers(dest="command", required=True)
+    version_parser = sub.add_parser("version", help="inspect the executable version and optionally check GitHub")
+    version_sub = version_parser.add_subparsers(dest="version_command", required=True)
+    version_check_parser = version_sub.add_parser("check", help="check installed commit against a GitHub branch (network; read-only)")
+    version_check_parser.add_argument("--branch", help="explicit branch to compare (default: installed ref or remote default)")
     for name in ("build", "check"):
         command = sub.add_parser(name)
         command.add_argument("path", nargs="?", default=".", help="Node root, or repository root with --all")
@@ -1370,6 +1374,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        if args.command == "version":
+            from .version_check import check_remote_version
+            result = check_remote_version(branch=args.branch)
+            print(result.render(), end="")
+            return result.exit_code
+
         if args.command == "diff":
             before = _compile_one(Path(args.before))
             after = _compile_one(Path(args.after))
