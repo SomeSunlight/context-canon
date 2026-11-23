@@ -1,0 +1,52 @@
+name: Issue 141 - isolated storage research
+
+on:
+  pull_request:
+    paths:
+      - "scripts/prototype_issue141_storage.py"
+      - "scripts/measure_issue141_git_trees.py"
+      - ".github/workflows/issue141-storage-research.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-commit-storage-comparison:
+    name: Exact #137 - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Record read-only Git-tree baseline
+        run: python scripts/measure_issue141_git_trees.py --repo . > issue141-git-inventory.json
+      - name: Run isolated v4/CAS/TAR comparison on exact same #137 commits
+        run: python scripts/prototype_issue141_storage.py --repo . > issue141-real-git-comparison.json
+      - name: Validate report structure without asserting an unproven optimization
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          data = json.loads(Path("issue141-real-git-comparison.json").read_text(encoding="utf-8"))
+          base = data["results"]["v4"]
+          cas = data["results"]["cas"]
+          assert base["new_versions"] == cas["new_versions"] == 4, data
+          assert cas["paths_changed"] < base["paths_changed"], data
+          print(json.dumps(data, indent=2))
+      - name: Upload standalone benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue141-${{ matrix.os }}
+          path: |
+            issue141-git-inventory.json
+            issue141-real-git-comparison.json
+          if-no-files-found: warn
