@@ -1,5 +1,16 @@
 # Current State
 
+## Physical history storage research #141 — accepted main and unresolved compatibility gate (2026-11-23)
+
+**Accepted main:** `5e872f417a3a390dbd0b701506150dd8bcbef6c8` includes the owner's squash merge of [PR #140](https://github.com/SomeSunlight/context-canon/pull/140) at 2026-11-23 21:02:52 UTC. The previous Priority-A handoff block below is now a historical pre-merge checkpoint, not current status. Issue #139 is closed; #141 is the physical storage research, #135 wider IDE isolation and #121 semantic governance.
+
+**Research branch, not ready for production:** `research/141-history-storage-prototype` contains [ADR/evidence](plans/issue-141-storage-architecture.md) and a read-only Git-tree inventory script. Real #137 immutable historical growth is verified from exact Git trees: 54 added version paths totaling 543,280 B, 12 genuinely new distinct blobs totaling 172,611 B, 55 historical changed paths including inventory; 8,677 historical added lines. A *conditional analytical* all-prior-history-CAS path bound is 12 new byte objects + four refs + one changed inventory rather than 54 + one. That is not a demonstrated migrated-system result.
+
+A separate standalone scratch prototype has run v4/CAS/canonical tar/tar.gz on **synthetic** four-Node and eight-edge workloads, with exact-byte restoration and missing/corrupt CAS object refusal. Its generated numbers are not real #137 replay or the real #121 128-file case. Native Windows, exact-clone real workload, complete legacy v4 loader semantic checks, branch/merge, secure browsing and failure recovery are not yet green. No project migration, Git history deletion or implicit acceptance has occurred. Owner architecture approval is required before any production PR.
+
+**Key risks:** Git already deduplicates bytes; lower path count can increase Git pack size. Raw CAS objects remain editable by naive IDE Find/Replace (#135). Shared storage must not replace distinct human Node approvals (#121). Private readonly chat originals are future optional inputs and must not be silently committed to Git.
+
+
 ## Priority A handoff — local Parent propagation accepted for owner squash (2026-11-23)
 
 **Proposed, not merged:** [PR #140](https://github.com/SomeSunlight/context-canon/pull/140), branch `fix/139-local-parent-propagation`, based on accepted `main` `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (#137 owner's squash). The owner is content to accept the focused correctness repair using automated and real-graph verification rather than repeating a difficult manual test within ContextCanon's own self-hosted graph. **Only the owner performs the squash-merge**; no automatic merge has occurred.
