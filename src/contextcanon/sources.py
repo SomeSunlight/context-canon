@@ -763,6 +763,12 @@ def _render_parent_pin_text(node_root: Path, parent_id: str, candidate: Compiled
             continue
         search_end = min(index + 5, len(lines))
         for comment_index in range(index + 1, search_end):
+            # The ctx:source metadata belongs to this visible import only.
+            # Stop at the next import; otherwise a later Parent's marker
+            # can be misbound to both adjacent list entries (as in the real
+            # Framework Development + Development Workflow graph).
+            if _SOURCE_LINE_RE.match(lines[comment_index]):
+                break
             source_comment = _SOURCE_COMMENT_RE.match(lines[comment_index])
             parent_comment = _PARENT_COMMENT_RE.match(lines[comment_index])
             comment = source_comment or parent_comment
