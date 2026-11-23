@@ -64,7 +64,14 @@ def package(folder: Path) -> dict[str, bytes]:
             raise ValueError("missing/symlink member")
         data = path.read_bytes()
         if digest(data) != entry["sha256"] or len(data) != entry["size"]:
-            raise ValueError("v4 member corrupted")
+            # Some retained packages bind original CRLF bytes while Git
+            # historically stored the LF form. Recover only when exact
+            # SHA-256 AND byte length authenticate the result (#112).
+            candidate = data.replace(b"\n", b"\r\n")
+            if len(candidate) == entry["size"] and digest(candidate) == entry["sha256"]:
+                data = candidate
+            else:
+                raise ValueError(f"v4 member corrupted: {folder / name}; stored_size={len(data)}, expected_size={entry['size']}")
         result[name] = data
     if v4_digest({k: v for k, v in result.items() if k != PKG}) != manifest["digests"]["package"]:
         raise ValueError("v4 package digest changed")
@@ -75,9 +82,12 @@ def package(folder: Path) -> dict[str, bytes]:
 
 
 def all_packages(root: Path) -> dict[str, dict[str, bytes]]:
+    # Legacy v0-v3 remain byte-for-byte intact; this bounded prototype
+    # transforms only verified v4, never silently migrates a legacy package.
     return {folder.name: package(folder)
             for folder in sorted((root / VERSIONS).iterdir())
-            if folder.is_dir() and (folder / PKG).is_file()}
+            if folder.is_dir() and (folder / PKG).is_file()
+            and json.loads((folder / PKG).read_bytes()).get("schema") == "contextcanon/package/v4"}
 
 
 def stage(root: Path, mode: str) -> None:
