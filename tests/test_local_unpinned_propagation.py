@@ -210,10 +210,16 @@ class LocalUnpinnedPropagationTests(unittest.TestCase):
         )
         self._publish(other)
         child_source = self.child / "CONTEXT.src.md"
+        # The changed Parent is intentionally the *second* adjacent import.
+        # The previous pin rewriter looked ahead into that import from the
+        # preceding Parent and counted the target metadata twice (#139).
         child_source.write_text(
-            child_source.read_text(encoding="utf-8")
-            + '\n- [Other Parent](../second%20parent/) — `1.0.0` — `relationship=parent`\n'
-              '  <!-- ctx:source id="other-id" version="1.0.0" -->\n',
+            child_source.read_text(encoding="utf-8").replace(
+                "## Context Imports\n\n",
+                "## Context Imports\n\n"
+                '- [Other Parent](../second%20parent/) — `1.0.0` — `relationship=parent`\n'
+                '  <!-- ctx:source id="other-id" version="1.0.0" -->\n\n',
+            ),
             encoding="utf-8",
         )
         # Publish the expanded accepted Child before the upstream change.
