@@ -98,6 +98,40 @@ identity, branch/merge, Linux/Windows, offline clones, migration and recovery.
 A safe migration must preserve old v4 history and not alter onboarding's
 user-visible state or operator steps. The owner retains the architecture gate.
 
+## Exact real-graph correctness reproduction after the A fix
+
+The automated [`scripts/reproduce_issue139.py`](../scripts/reproduce_issue139.py)
+runs against **all six existing ContextCanon Nodes in an isolated Git worktree**
+from the tested PR head. It edits *only the existing optional*
+`nodes/library/development-workflow/docs/external-github-publication.md`
+Resource, without manually adjusting any `ctx:source` version. Linux CI
+[run 45219377649](https://github.com/SomeSunlight/context-canon/actions/runs/45219377649)
+reports:
+
+- Parent `0.3.10-draft → 0.3.11-draft`; read-only propagation status
+  reports pending, and pre-review `build --all` writes no new accepted Child
+  imports but returns exit code 1 (pending).
+- **Three separate prompted yes decisions** advance the three direct
+  Children. The fourth local edge (Foundation) remains normatively current.
+  `build --all` and `check --all` both finish cleanly afterward.
+- The scratch worktree's staged Git diff: **77 changed paths,
+  +8,813/-96 lines**, with **54 newly added immutable historical files**
+  from **four new accepted package identities**.
+- The real graph also exposed a second bug absent from the original small
+  fixture: adjacent Source entries could both match the second Parent's
+  marker during acceptance. Stopping at the next import fixes this;
+  targeted multi-Parent regression and the complete replay now pass.
+
+This is a separate observed **Resource edit** whereas #137 added a previously
+absent Resource, so 77 versus 82 paths is **not a measured storage
+optimization**. Crucially, both cases still add **54 complete historical
+artifact files**. Under the unchanged self-contained v4 contract, PR #140
+corrects approval mechanics but does not reduce Git history amplification.
+The measured B hypothesis and safe compatibility prototype are tracked in
+[#141](https://github.com/SomeSunlight/context-canon/issues/141), separate from
+#135's wider IDE visibility and encapsulation research. Any future approach
+must measure a *paired identical* scenario with the old/current layout.
+
 ## Reproduction/validation commands for an independent checkout
 
 ```sh
@@ -107,7 +141,8 @@ git diff --numstat 5a1f2bff24a9f6c6af49d96044eaf15b80d0d0b6 359f7efe6b02d59b75d3
 git ls-tree -r -l 5a1f2bff24a9f6c6af49d96044eaf15b80d0d0b6
 git ls-tree -r -l 359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c
 
-# After branch implementation, run tests and exact drift gate:
+# After branch implementation, reproduce the real graph and verify drift:
+python scripts/reproduce_issue139.py
 python -m unittest discover -s tests
 contextcanon build --all .
 contextcanon check --all .

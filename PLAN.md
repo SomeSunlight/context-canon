@@ -9,10 +9,10 @@ Architecture boundary: historical accepted Source identity is derived from the l
 - [x] Confirm accepted main after #137; audit compiler's live-Source mismatch and propagation/review machinery.
 - [x] Quantify #137 physical/Git baseline by changed artifact class; record duplicate Resource blobs and immutable-history cost in [the measurement note](plans/issue-139-amplification.md).
 - [x] Implement the initial accepted-Child history fallback and build-all pending diagnostic on branch `fix/139-local-parent-propagation` (Draft PR #140).
-- [ ] Pass deterministic regressions: review n/y, version advance, Resource-only, version-only, descendants, multi-Parent, stale receipt, corrupted/missing immutable history, Windows paths, offline restore.
+- [x] Pass deterministic regressions: eight focused tests exercise review n/y, scoped propagation, Resource-only and version-only changes, descendant/resume, adjacent multi-Parent imports, stale review, corrupt/missing history, Windows paths and offline restore. Linux 509 tests and native Windows 119 on code candidate; final-head gates remain separate.
 - [ ] Pass hosted Linux full suite, generated drift (all six self-hosted Nodes / four local edges), native Windows portability, exact final PR head.
-- [ ] Verify real self-hosted reproduction from a disposable clean clone, and document before/after physical/Git metrics. No unmeasured performance claim.
-- [ ] Decide bounded physical optimization from the measured invariants; if no safe incremental storage reduction is achievable without migrating package format, give #135 an explicit testable follow-up instead of speculative rewrite.
+- [x] Reproduce in a disposable Git worktree from the actual six self-hosted Nodes using `python scripts/reproduce_issue139.py` (Linux CI #45219377649): Workflow 0.3.10→0.3.11, three explicit accept prompts, all four normative edges current, check zero drift. Physical result for a Resource **edit**: 77 tracked paths, +8,813/-96 lines, 54 added immutable history files for four new packages. This differs from #137's Resource *addition*; do not credit smaller file counts to a storage optimization.
+- [x] Decide B's bounded boundary from measurement: the current v4 standalone package contract demands four complete new history packages, so no safe physical file-path reduction is implemented in A. Dedicated compatibility and benchmark prototype is [#141](https://github.com/SomeSunlight/context-canon/issues/141), coordinated with #135. No speculative rewrite, history removal or misleading optimization claim.
 - [ ] Owner reviews the final PR(s); no automatic merge. Reconcile PLAN/STATE only when owner acceptance is known.
 
 ## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
