@@ -189,17 +189,46 @@ def restored(root: Path, mode: str, token: str) -> dict[str, bytes]:
 
 
 def unpack(repo: Path, ref: str, dest: Path) -> None:
-    raw = git(repo, "archive", "--format=tar", ref, binary=True)
-    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as stream:
-        for member in stream:
-            path = dest / safe(member.name.rstrip("/"))
-            if member.isdir():
-                path.mkdir(parents=True, exist_ok=True)
-            elif member.isfile():
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(stream.extractfile(member).read())
-            else:
-                raise ValueError("symlinks not supported in this isolated experiment")
+    """Extract exact committed *blob* bytes, not Git-archive export conversions.
+
+    Git for Windows can apply CRLF filters during git archive despite no
+    explicit worktree checkout. The benchmark's input must instead be the
+    actual Git objects; otherwise cross-platform comparisons are invalid.
+    """
+    entries = []
+    for row in git(repo, "ls-tree", "-r", "-z", ref, binary=True).split(b"\0"):
+        if not row:
+            continue
+        header, name = row.split(b"\t", 1)
+        mode, kind, obj = header.decode("ascii").split()
+        if kind != "blob" or mode == "120000":
+            raise ValueError("unsupported Git tree member (symlinks forbidden)")
+        entries.append((name.decode("utf-8"), obj))
+    unique = list(dict.fromkeys(sha for _, sha in entries))
+    output = subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "--batch"],
+        input=("\n".join(unique) + "\n").encode("ascii"), check=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    ).stdout
+    pos = 0
+    objects: dict[str, bytes] = {}
+    for sha in unique:
+        end = output.index(b"\n", pos)
+        head = output[pos:end].split(b" ")
+        if len(head) != 3 or head[0] != sha.encode("ascii") or head[1] != b"blob":
+            raise ValueError("invalid Git batch object header")
+        size = int(head[2])
+        offset = end + 1
+        if output[offset + size:offset + size + 1] != b"\n":
+            raise ValueError("invalid Git batch object framing")
+        objects[sha] = output[offset:offset + size]
+        pos = offset + size + 1
+    if pos != len(output):
+        raise ValueError("unexpected Git batch bytes")
+    for name, sha in entries:
+        path = dest / safe(name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(objects[sha])
 
 
 def replace(root: Path, src: Path) -> None:
