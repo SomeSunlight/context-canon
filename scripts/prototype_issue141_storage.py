@@ -247,6 +247,20 @@ def replace(root: Path, src: Path) -> None:
         shutil.copytree(child, root / child.name) if child.is_dir() else shutil.copy2(child, root / child.name)
 
 
+
+def unique_git_blobs(repo: Path) -> tuple[int, int]:
+    hashes = sorted({line.split()[1] for line in git(repo, "ls-files", "-s").splitlines()})
+    result = subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "--batch-check=%(objectname) %(objectsize)"],
+        input=("\n".join(hashes) + "\n").encode("ascii"),
+        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    pairs = [row.split() for row in result.stdout.decode("ascii").splitlines()]
+    if len(pairs) != len(hashes) or sorted(p[0] for p in pairs) != hashes:
+        raise ValueError("Git batch blob inventory incomplete")
+    return len(hashes), sum(int(pair[1]) for pair in pairs)
+
+
 def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
     a, b, gitroot = (scratch / (mode + suffix) for suffix in ("-a", "-b", "-git"))
     shutil.copytree(before, a)
@@ -290,6 +304,7 @@ def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
     replace(gitroot, a)
     git(gitroot, "add", "-A", "-f")
     git(gitroot, "commit", "-qm", "before")
+    before_blobs, before_bytes = unique_git_blobs(gitroot)
     git(gitroot, "gc", "--prune=now")
     packdir = gitroot / ".git/objects/pack"
     first = sum(p.stat().st_size for p in packdir.glob("*.pack"))
@@ -298,6 +313,7 @@ def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
     stat = git(gitroot, "diff", "--cached", "--numstat").splitlines()
     status = git(gitroot, "diff", "--cached", "--name-status").splitlines()
     tracked = git(gitroot, "ls-files", "-s").splitlines()
+    after_blobs, after_bytes = unique_git_blobs(gitroot)
     metrics = {
         "paths_changed": len(status),
         "paths_added": sum(s.startswith("A\t") for s in status),
@@ -307,6 +323,11 @@ def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
         "binary_diff_paths": sum(s.startswith("-\t-") for s in stat),
         "checkout_bytes": sum(p.stat().st_size for p in gitroot.rglob("*") if p.is_file() and ".git" not in p.relative_to(gitroot).parts),
         "tracked_paths": len(tracked),
+        "unique_git_blobs_before": before_blobs,
+        "unique_git_blobs_after": after_blobs,
+        "unique_git_blob_bytes_before": before_bytes,
+        "unique_git_blob_bytes_after": after_bytes,
+        "unique_git_blob_bytes_delta": after_bytes - before_bytes,
         "new_versions": len(originals) - len(all_packages(before)),
         "retained_versions": len(originals),
     }
