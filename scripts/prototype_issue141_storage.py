@@ -136,7 +136,7 @@ def stage(root: Path, mode: str) -> None:
     if mode == "cas":
         attrs = root / ".gitattributes"
         with attrs.open("a", encoding="utf-8", newline="\n") as output:
-            output.write("\n.context/objects/sha256/** -text\n")
+            output.write("\n.context/objects/sha256/** -text\n.context/revisions/** -text\n")
     # Existing browsing README contains links to old v4 folders (known gap).
     # A production format needs new on-demand read-only export links.
 
