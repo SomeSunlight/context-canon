@@ -8,11 +8,11 @@
 > Edit [CONTEXT.src.md](CONTEXT.src.md) instead.
 
 **Node:** GitHub  
-**Context version:** `0.1.10-draft`
+**Context version:** `0.1.11-draft`
 
 **Resulting imported Contexts:**
 
-- **Development Workflow** — `0.3.9-draft` — direct Parent Context — [inspect accepted carrier](../development-workflow/CONTEXT.md)
+- **Development Workflow** — `0.3.10-draft` — direct Parent Context — [inspect accepted carrier](../development-workflow/CONTEXT.md)
 
 ## Local Overview
 
@@ -131,6 +131,15 @@ When adding or changing `--version`, package version lookup, Git checkout proven
 **Required**
 
 - [`CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md`](CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md)
+
+### Publishing contributions to external GitHub repositories
+
+When preparing or publishing an issue or pull request in an external GitHub repository, especially when the connected GitHub integration cannot write:
+
+**Optional**
+
+- [`CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md`](CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md)
+  Why: A reusable, non-mandatory best practice for authenticated GitHub CLI publication and alternatives, without assuming organization-level GitHub App permissions.
 
 ### Resilient filesystem cleanup
 

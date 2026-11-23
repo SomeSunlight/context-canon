@@ -9,7 +9,7 @@ compiler_version: "0.8.0"
 node:
   id: "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a"
   name: "ContextCanon Framework Development"
-  version: "0.3.26-draft"
+  version: "0.3.27-draft"
 
 # Accepted semantic Parent packages. Locators are discovery metadata; build uses only exact pins.
 parents: []
@@ -25,11 +25,11 @@ sources:
     package_digest: "374338bff85e17418bfa705c224a99f3d7b16017ebf275f0a316a98d217bbffe"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.9-draft"
+    version: "0.3.10-draft"
     relationship: "parent"
     locator: "../../library/development-workflow/"
-    normalized_digest: "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6"
-    package_digest: "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c"
+    normalized_digest: "8e1d2a6f9881cceda5180d490215800a00686a87883ddce510c924b5747f3979"
+    package_digest: "276b35f0502ce5549536560ded9bd97ebece89b2271db1e6bad617c66cd9d194"
 
 # Direct informational References. Their Rules are not effective and they are not exported to Children.
 references: []
@@ -43,9 +43,9 @@ imports:
     package_digest: "374338bff85e17418bfa705c224a99f3d7b16017ebf275f0a316a98d217bbffe"
   - id: "c4c94726-3cc7-4df6-b779-72bbf9c06f40"
     name: "Development Workflow"
-    version: "0.3.9-draft"
-    normalized_digest: "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6"
-    package_digest: "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c"
+    version: "0.3.10-draft"
+    normalized_digest: "8e1d2a6f9881cceda5180d490215800a00686a87883ddce510c924b5747f3979"
+    package_digest: "276b35f0502ce5549536560ded9bd97ebece89b2271db1e6bad617c66cd9d194"
 
 # Elements authored in this Node's CONTEXT.src.md.
 local:
@@ -124,7 +124,7 @@ official:
     - {"id": "CCI-010", "title": "Prefer uv for ContextCanon development and tool installation", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
     - {"id": "CCI-004", "title": "Keep reusable Node dependencies explicit", "origin_node_id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a", "origin_node_name": "ContextCanon Framework Development", "local": true, "overrides": []}
   removed_rules: []
-  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES", "CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "CCW-TOPIC-FILESYSTEM-CLEANUP", "CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
+  topic_ids: ["CC-TOPIC-AUTHORING", "CC-TOPIC-COMPOSITION", "CC-TOPIC-HARNESSES", "CCW-TOPIC-CHANGE-WORKFLOW", "CCW-TOPIC-VERSION-PROVENANCE", "TOPIC-B962FDA5CF65", "CCW-TOPIC-FILESYSTEM-CLEANUP", "CCI-TOPIC-COMPILER", "CCI-TOPIC-TESTS", "CCI-TOPIC-DEVELOPMENT-WORKFLOW", "CCI-TOPIC-ARCHITECTURE", "CCI-TOPIC-ONBOARDING", "CCI-TOPIC-FORMATS", "CCI-TOPIC-COMPOSITION", "CCI-TOPIC-HARNESSES", "CCI-TOPIC-STATE"]
   resource_root: "CONTEXT/"
 
 # Topic edges are explicit: kind is resource or context-node; intent is required or optional.
@@ -171,6 +171,13 @@ targets:
     locator: "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"
     target_node_id: null
     target_node_name: null
+  - topic: "TOPIC-B962FDA5CF65"
+    intent: "optional"
+    kind: "resource"
+    locator: "CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md"
+    target_node_id: null
+    target_node_name: null
+    why: "A reusable, non-mandatory best practice for authenticated GitHub CLI publication and alternatives, without assuming organization-level GitHub App permissions."
   - topic: "CCW-TOPIC-FILESYSTEM-CLEANUP"
     intent: "required"
     kind: "resource"
@@ -286,10 +293,11 @@ resources:
   - {"source": "../../library/foundation/docs/topics.md", "published": "CONTEXT/references/nd268d581199b5a7/nodes/library/foundation/docs/topics.md"}
   - {"source": "../../../plans/issue-107-onboarding-owner-test.md", "published": "CONTEXT/references/nd268d581199b5a7/plans/issue-107-onboarding-owner-test.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/change-workflow.md"}
+  - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md"}
   - {"source": null, "published": "CONTEXT/references/ne68be75ed7bf392/docs/version-provenance-python.md"}
 
 # Exact deterministic identities. package_digest covers CONTEXT.md plus CONTEXT/ resources.
 package:
-  normalized_digest: "e913d0e6468e9a635b236d0f879a20078b13cb165ca6b166e30f6e174aa350fe"
-  package_digest: "9267397a86e54cd0daddbe27e1d413bfc9ba4385344c2889c39cc66a1fd22888"
+  normalized_digest: "1e775438967c7c7ed000d0368509618701e48d13cd8b94ef0dcfb2b412a74a99"
+  package_digest: "5241907730c3b77a222e2699d0ef0756f6e81c80a6d646009b0b261c817dfc55"

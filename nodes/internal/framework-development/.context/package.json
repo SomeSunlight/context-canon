@@ -2,19 +2,19 @@
   "changes": [],
   "compiler_version": "0.8.0",
   "digests": {
-    "normalized": "e913d0e6468e9a635b236d0f879a20078b13cb165ca6b166e30f6e174aa350fe",
-    "package": "9267397a86e54cd0daddbe27e1d413bfc9ba4385344c2889c39cc66a1fd22888"
+    "normalized": "1e775438967c7c7ed000d0368509618701e48d13cd8b94ef0dcfb2b412a74a99",
+    "package": "5241907730c3b77a222e2699d0ef0756f6e81c80a6d646009b0b261c817dfc55"
   },
   "files": [
     {
       "path": ".context/resource-origins.json",
-      "sha256": "ebe6bd2167fa414313a431276e474668e5ffebe65929a5a82b78712c8904bef8",
-      "size": 5610
+      "sha256": "0e7cd03ae304842d21893a4685f1d2f3eb4fe346acb36935ea283f1728902071",
+      "size": 5861
     },
     {
       "path": "CONTEXT.md",
-      "sha256": "b342b0fa67710f6502844cd8986a7baf3f1348ed0d497fce91653fec0b3fda63",
-      "size": 21271
+      "sha256": "a188e3a43c1a03b75f5d0701ab867c74fca0353f1b04a7cbad4331a8e6efc96b",
+      "size": 21818
     },
     {
       "path": "CONTEXT/README.md",
@@ -132,6 +132,11 @@
       "size": 9670
     },
     {
+      "path": "CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md",
+      "sha256": "604c769e7bc566ac168affa9edfe110d5666663110f7d7ce50fd2df343023eab",
+      "size": 4113
+    },
+    {
       "path": "CONTEXT/references/ne68be75ed7bf392/docs/filesystem-cleanup.md",
       "sha256": "d4a218e41916fe83ffd2345744a0843cffd9c52ad7ba014d7f0fd1bb8889c9da",
       "size": 4438
@@ -154,16 +159,16 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6",
-      "package_digest": "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c",
-      "version": "0.3.9-draft",
+      "normalized_digest": "8e1d2a6f9881cceda5180d490215800a00686a87883ddce510c924b5747f3979",
+      "package_digest": "276b35f0502ce5549536560ded9bd97ebece89b2271db1e6bad617c66cd9d194",
+      "version": "0.3.10-draft",
       "why": null
     }
   ],
   "node": {
     "id": "8b8f6ad7-2d17-4f9f-9a6c-8cb0bc5d8c2a",
     "name": "ContextCanon Framework Development",
-    "version": "0.3.26-draft"
+    "version": "0.3.27-draft"
   },
   "parents": [],
   "removed_rules": [],
@@ -613,10 +618,10 @@
     {
       "id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
       "name": "Development Workflow",
-      "normalized_digest": "f65995239d42a95e91f1f3353772c1c867e8cdac71ba7a8a271cd2ae3e84ddf6",
-      "package_digest": "a9cfabdda18aaf0ad33f06708757bd9e73b58243778913e674737e491c31a36c",
+      "normalized_digest": "8e1d2a6f9881cceda5180d490215800a00686a87883ddce510c924b5747f3979",
+      "package_digest": "276b35f0502ce5549536560ded9bd97ebece89b2271db1e6bad617c66cd9d194",
       "relationship": "parent",
-      "version": "0.3.9-draft",
+      "version": "0.3.10-draft",
       "why": null
     }
   ],
@@ -707,6 +712,22 @@
         }
       ],
       "title": "Implementing executable version identity"
+    },
+    {
+      "condition": "When preparing or publishing an issue or pull request in an external GitHub repository, especially when the connected GitHub integration cannot write:",
+      "id": "TOPIC-B962FDA5CF65",
+      "origin_node_id": "c4c94726-3cc7-4df6-b779-72bbf9c06f40",
+      "origin_node_name": "Development Workflow",
+      "targets": [
+        {
+          "intent": "optional",
+          "kind": "resource",
+          "locator": "CONTEXT/references/ne68be75ed7bf392/docs/external-github-publication.md",
+          "resource_id": "RESOURCE-5254ABE40EF8",
+          "why": "A reusable, non-mandatory best practice for authenticated GitHub CLI publication and alternatives, without assuming organization-level GitHub App permissions."
+        }
+      ],
+      "title": "Publishing contributions to external GitHub repositories"
     },
     {
       "condition": "When implementing, modifying, reviewing, or troubleshooting deletion of generated or temporary files and directories on Windows, WSL or Linux:",
