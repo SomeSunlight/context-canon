@@ -2589,7 +2589,9 @@ def main(argv: list[str] | None = None) -> int:
                     "If the failing file is unrelated, rerun from the intended repository/project root."
                 ) from exc
 
-        if args.command == "check" and args.all:
+        if args.all and args.command in {"build", "check"}:
+            # A build publishes the current accepted view; it must not report
+            # full graph success while an unreviewed local Parent is pending.
             propagation_rows = _collect_propagation_status(repo_root, _parent_edges(repo_root))
             pending = tuple(row for row in propagation_rows if row.pending)
             if pending:
@@ -2598,7 +2600,7 @@ def main(argv: list[str] | None = None) -> int:
                 _print_pending_propagation(pending, repo_root)
                 print("  - local Parent/Child graph is not fully propagated")
                 print("  - Next: contextcanon propagate --all .")
-            else:
+            elif args.command == "check":
                 print(
                     "ok propagation: "
                     f"all {len(propagation_rows)} local Parent/Child relationship(s) are normatively current"
