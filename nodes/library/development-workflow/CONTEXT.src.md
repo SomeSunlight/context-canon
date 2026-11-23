@@ -1,5 +1,5 @@
 # Development Workflow — Local Context Source
-<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.9-draft" -->
+<!-- ctx:node id="c4c94726-3cc7-4df6-b779-72bbf9c06f40" name="Development Workflow" version="0.3.10-draft" -->
 
 <!-- contextcanon:format Node
 Format: Node metadata follows the # title: ctx:node id="..." name="..." version="...". Preserve existing identity.
@@ -143,6 +143,17 @@ Required:
 - Resource: `docs/version-provenance-python.md`
   <!-- ctx:resource id="RESOURCE-7C6F7E4D126B" -->
 <!-- ctx:topic id="CCW-TOPIC-VERSION-PROVENANCE" -->
+
+
+### Publishing contributions to external GitHub repositories
+
+When preparing or publishing an issue or pull request in an external GitHub repository, especially when the connected GitHub integration cannot write:
+
+Optional:
+- Resource: `docs/external-github-publication.md`
+  Why: A reusable, non-mandatory best practice for authenticated GitHub CLI publication and alternatives, without assuming organization-level GitHub App permissions.
+  <!-- ctx:resource id="RESOURCE-5254ABE40EF8" -->
+<!-- ctx:topic id="TOPIC-B962FDA5CF65" -->
 
 ### Resilient filesystem cleanup
 

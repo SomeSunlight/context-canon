@@ -1,5 +1,18 @@
 # Plan
 
+## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
+
+Purpose: capture a successful operator-owned `gh issue create` fallback when the connected GitHub App cannot post to an external public upstream repository. This is guidance, **not a new mandatory Rule**, and is evidence for the classification work in #121.
+
+Writable scope: Development Workflow `CONTEXT.src.md` optional Topic, `docs/external-github-publication.md`, docs index, PLAN checkpoint, and the compiler-generated packages plus reviewed local Source version references in its three in-repository consumers. Never edit generated machine manifests directly; preserve immutable historical packages.
+
+- [x] Verify upstream publication at [NVIDIA/NemoClaw #14784](https://github.com/NVIDIA/NemoClaw/issues/14784) and record the non-binding guidance decision in [#136](https://github.com/SomeSunlight/context-canon/issues/136).
+- [x] Add an optional Topic and human-readable publication guide; link the guide in the Development Workflow docs index.
+- [x] Supply the real-world classification example to [#121](https://github.com/SomeSunlight/context-canon/issues/121), without implementing any new schema.
+- [ ] Review the proposed best practice in a PR, including its deliberately non-mandatory status.
+- [x] Build new Topic/Resource IDs; use documented #134 manual local Source version update for Framework Development, GitHub and GitHub Local; regenerate all affected packages. `contextcanon check --all .` passed 6 Nodes and all 4 Parent/Child edges. Exact published head `74745a2` passed Linux/full suite plus generated drift and native Windows portability (Actions run 45202352252).
+- [ ] Final owner review and squash merge; close the accepted-baseline checkpoint after the merge. Follow-up for the recurrent #134 blocker and #135 write amplification: [#139](https://github.com/SomeSunlight/context-canon/issues/139).
+
 ## Version provenance and opt-in GitHub check — Issue #130 (2026-11-07)
 
 Purpose: identify the exact installed ContextCanon commit from a uv Git URL, and compare it on demand with the corresponding GitHub branch without ever making \`--version\` network-dependent.
