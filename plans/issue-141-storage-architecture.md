@@ -25,11 +25,35 @@ Immutable baseline commits: before 5a1f2bff24a9f6c6af49d96044eaf15b80d0d0b6; aft
 
 Counts were independently recomputed from exact recursive Git tree API objects and 82 PR #137 changed-file records. The 12 genuinely new historical blobs are 4 package.json, 4 CONTEXT.md, 3 resource-origins.json and 1 Resource. Existing Git content reuse explains the physical/diff mismatch. See plans/issue-139-amplification.md.
 
-**CAS analytical projection, NOT a measured production implementation:** if *all prior v4 history had first been represented as the same object store*, the exact same #137 delta would introduce **12 new unique byte objects + 4 per-package reference manifests**, rather than 54 complete historical paths; plus the already modified inventory (17 versus 55 history changes). Holding the 27 non-history paths fixed gives a **provisional 44 versus 82 changed-path bound**. This projection omits actual reference serialization size, any format-conversion migration, and changes needed for a correct browsing index; it must not be quoted as a passing implementation benchmark. New object bytes are 172,611 B before reference overhead, versus 543,280 B of materialized historical paths. Unique Git blobs will not fall just because their names change.
+**Initial CAS analytical projection (subsequently confirmed in a controlled exact-commit replay; NOT production implementation):** if *all prior v4 history had first been represented as the same object store*, the exact same #137 delta would introduce **12 new unique byte objects + 4 per-package reference manifests**, rather than 54 complete historical paths; plus the already modified inventory (17 versus 55 history changes). Holding the 27 non-history paths fixed gives a **provisional 44 versus 82 changed-path bound**. This projection omits actual reference serialization size, any format-conversion migration, and changes needed for a correct browsing index; it must not be quoted as a passing implementation benchmark. New object bytes are 172,611 B before reference overhead, versus 543,280 B of materialized historical paths. Unique Git blobs will not fall just because their names change.
+
+## Paired exact #137 counterfactual: real contents, isolated Git repositories
+
+On the **same two Git commits** as the original #137, `scripts/prototype_issue141_storage.py` materializes the full tracked tree into temporary repositories and applies exactly the same historical storage transform to *both* sides. It preserves pre-existing legacy v3 directory packages unchanged, transforms 30 existing accepted v4 packages in the after tree, reconstructs each package to identical member bytes, then commits before/after and measures the real Git delta. It neither changes main nor performs a migration. The before/after comparison therefore measures a **counterfactual fully converted v4-history repository**; the one-time conversion cost, new loader, CLI/UX and long-lived migration are NOT included.
+
+| Real #137 exact-commit result | Existing v4 | SHA-256 objects + immutable references | Deterministic tar | Deterministic tar.gz |
+| --- | ---: | ---: | ---: | ---: |
+| Changed tracked paths | 82 | **44** | 32 | 32 |
+| Added text lines | 9,198 | **3,814** | 529 | 529 |
+| Deleted text lines | 101 | 101 | 101 | 101 |
+| New tracked paths | 59 | **21** | 9 | 9 |
+| Binary diff files | 0 | **0** | 4 | 4 |
+| Tracked file paths after transformation | 808 | **509** | 391 | 391 |
+| Linux checkout file bytes after | 9,183,552 | **5,987,110** | 9,711,851 | 5,755,577 |
+| Linux incremental Git gc pack bytes | +20,689 | +23,685 | +28,658 | +180,579 |
+| Windows incremental Git gc pack bytes | +20,687 | +23,689 | +31,124 | +180,406 |
+
+Raw Git blobs are used for Windows materialization because Git archive/worktree EOL conversion can alter historical manifest-bound resource bytes. The experiment's package reconstruction checks exact SHA-256, length and complete v4 package digest; the prototype also rejects missing/corrupt CAS objects and demonstrates local offline Git clone recovery of all **30 v4 versions** on Linux and native Windows. A later consistency hardening writes byte-canonical LF references and adds `-text` Git attributes for the object pool and references. **The complete ContextCanon `load_package_files` semantic/normalized-digest validator and native production installer are not yet wired into the test prototype.**
+
+Relative to v4, CAS saves **38 changed paths (46.3%)** and **5,384 added lines (58.5%)**, reduces the transformed checkout by about **3.2 MB (34.8%)** in this example, and has a modestly larger packed Git increment (approx +3 KB; 14–15%). This is a meaningful improvement in Git diff *without replacing changed textual data by opaque archive binaries*. The 529-line archive result is misleading as a review improvement because the four new archives are binary changes. The compressed archive grows Git pack storage much faster; a smaller compressed checkout does **not** imply a smaller Git history.
+
+Proof: [Linux and native Windows exact-commit CI #45270259788](https://github.com/SomeSunlight/context-canon/actions/runs/45270259788), artifact JSON for both platforms; commit `b9da419f2030f91c970c2e3f8b881202aba345c7`. Later hardening commits must pass their own fresh CI; do not treat an earlier green run as exact-head proof.
+
+**Review burden versus semantic governance:** this is 4 new accepted versions and at least three separate owner approvals for the three direct self-hosted Children (plus unrelated unaffected edge); none of the four storage strategies changes that approval count. For the #121 eight-edge case, keep eight independent decisions until product authority is separately redesigned.
 
 ## Bounded local comparative prototype: synthetic scenario, not real-tree replay
 
-Standalone reproducible prototype: prototype_issue141_storage.py (delivered with this handoff; not integrated into runtime). It constructs byte-identical v4 materialization for each candidate, compares actual temporary Git repositories before/after each identical synthetic workload, and measures Git diff, checkout, deduplicated blobs and packed repository size after git gc. It checks content-address corruption and missing objects. Its optional --repo mode reads exact before/after #137 commits via read-only git archive into temporary directories, without touching the checked-out source. **The real --repo mode and native Windows execution remain to be performed in a clone with those commits.**
+Standalone reproducible prototype: prototype_issue141_storage.py (delivered with this handoff; not integrated into runtime). It constructs byte-identical v4 materialization for each candidate, compares actual temporary Git repositories before/after each identical synthetic workload, and measures Git diff, checkout, deduplicated blobs and packed repository size after git gc. It checks content-address corruption and missing objects. The GitHub research script uses raw Git blobs and temporary local Git repositories; its exact-commit comparison has run on Linux and Windows as recorded above. The standalone synthetic script is an independent simplified fixture, not a replacement for that proof.
 
 | Synthetic four-Node addition | v4 directories | SHA-256 objects + refs | canonical tar | canonical tar.gz |
 | --- | ---: | ---: | ---: | ---: |
@@ -86,8 +110,8 @@ Do **not** automatically commit private chats, prompts, credentials, excerpts, p
 
 ## Required owner gate before production
 
-- Real **same #137 Resource-addition** replay from the exact two commits on v4, CAS and archives using the local prototype --repo mode, with actual counts, Git pack bytes, exact object and manifest size, and working history browse/export (not a projection). Preserve a machine-readable result fixture.
-- Real **#121 eight-edge / 128-file** workload: recover the exact old/new ai-workstation commits or construct and explicitly approve an equivalent full repo fixture; don't relabel a synthetic shape as the actual case. Count independent prompts separately.
+- [x] Exact **same #137 Resource-addition** Git-tree transformation and paired Git measurements on Linux and Windows; JSON CI artifacts and complete historical v4 member-byte restoration. [ ] Still missing: working *production* history browsing, verified standalone export UX, one-time migration costs and complete loader/accepted identity integration.
+- [ ] Real **#121 eight-edge / 128-file** workload: recover the exact old/new ai-workstation commits or construct and explicitly approve an equivalent full repo fixture; don't relabel a synthetic shape as the actual case. Count independent prompts separately.
 - Complete v4/v5 dual loader, exact existing digest tests, legacy/mixed/nested/partly onboarded projects, full and offline Windows/Linux clones including core.autocrlf=true, branch switch/merge, rematerialization, ambiguous/missing/corrupted objects, crash/retry and portability/path lengths. No converted v4, no deletion or pruning.
 - Demonstrate useful human inspection after moving history; quantify search/IDE exposure in #135 separately. Preserve unchanged onboarding #117 workflow.
 - Present measured simplification **including implementation/recovery cost**, then seek owner's architectural approval before an implementation PR or actual migration. If gains do not justify the new reference format, retain v4.
@@ -97,6 +121,6 @@ Do **not** automatically commit private chats, prompts, credentials, excerpts, p
 - **#141:** measured physical history representation, exact byte/identity restoration, Git/offline compatibility and safe optional dual read.
 - **#135:** IDE isolation, Find/Replace prevention, ordinary discoverability versus explicit readonly inspection, storage visibility across onboarding and caches.
 - **#121:** Context classification, policy/acceptance distribution and whether eight separate semantic decisions are justified; *never infer consent from shared storage*.
-- **Future separate issue:** read-only external originals, confidential chat persistence policy, independent interpretation/version/provenance, explicit Context promotion. This ADR only preserves the design separation.
+- **Future [#143](https://github.com/SomeSunlight/context-canon/issues/143):** read-only external originals, confidential chat persistence policy, independent interpretation/version/provenance, explicit Context promotion. This ADR only preserves the design separation.
 
 Research branch contains no runtime modification and is not authorized for automatic merge.
