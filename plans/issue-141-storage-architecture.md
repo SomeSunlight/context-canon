@@ -39,15 +39,15 @@ On the **same two Git commits** as the original #137, `scripts/prototype_issue14
 | New tracked paths | 59 | **21** | 9 | 9 |
 | Binary diff files | 0 | **0** | 4 | 4 |
 | Tracked file paths after transformation | 808 | **509** | 391 | 391 |
-| Linux checkout file bytes after | 9,183,552 | **5,987,110** | 9,711,851 | 5,755,577 |
-| Linux incremental Git gc pack bytes | +20,689 | +23,685 | +28,658 | +180,579 |
-| Windows incremental Git gc pack bytes | +20,687 | +23,689 | +31,124 | +180,406 |
+| Linux checkout file bytes after | 9,183,552 | **5,987,138** | 9,711,851 | 5,755,577 |
+| Linux incremental Git gc pack bytes | +20,689 | +23,672 | +31,942 | +180,395 |
+| Windows incremental Git gc pack bytes | +20,690 | +23,685 | +28,671 | +180,407 |
 
-Raw Git blobs are used for Windows materialization because Git archive/worktree EOL conversion can alter historical manifest-bound resource bytes. The experiment's package reconstruction checks exact SHA-256, length and complete v4 package digest; the prototype also rejects missing/corrupt CAS objects and demonstrates local offline Git clone recovery of all **30 v4 versions** on Linux and native Windows. A later consistency hardening writes byte-canonical LF references and adds `-text` Git attributes for the object pool and references. **The complete ContextCanon `load_package_files` semantic/normalized-digest validator and native production installer are not yet wired into the test prototype.**
+Raw Git blobs are used for Windows materialization because Git archive/worktree EOL conversion can alter historical manifest-bound resource bytes. The experiment's package reconstruction checks exact SHA-256, length, full Node/version identity key and complete v4 package digest; the prototype also rejects missing/corrupt CAS objects and demonstrates local offline Git clone recovery of all **30 v4 versions** on Linux and native Windows. The cross-platform implementation writes byte-canonical LF references and applies `-text` Git attributes to both the byte object pool and immutable references; Linux and Windows now report the same CAS checkout byte count. **The complete ContextCanon `load_package_files` semantic/normalized-digest validator and native production installer are not yet wired into the test prototype.**
 
 Relative to v4, CAS saves **38 changed paths (46.3%)** and **5,384 added lines (58.5%)**, reduces the transformed checkout by about **3.2 MB (34.8%)** in this example, and has a modestly larger packed Git increment (approx +3 KB; 14–15%). This is a meaningful improvement in Git diff *without replacing changed textual data by opaque archive binaries*. The 529-line archive result is misleading as a review improvement because the four new archives are binary changes. The compressed archive grows Git pack storage much faster; a smaller compressed checkout does **not** imply a smaller Git history.
 
-Proof: [Linux and native Windows exact-commit CI #45270259788](https://github.com/SomeSunlight/context-canon/actions/runs/45270259788), artifact JSON for both platforms; commit `b9da419f2030f91c970c2e3f8b881202aba345c7`. Later hardening commits must pass their own fresh CI; do not treat an earlier green run as exact-head proof.
+Proof: [Linux and native Windows exact-commit CI #45270823570](https://github.com/SomeSunlight/context-canon/actions/runs/45270823570), artifact JSON for both platforms; verified code commit `735fc37421d02404b4ff7b2dac2dda879a04811a`. Both platform jobs passed on this exact prototype code head; the later ADR/PLAN/STATE documentation commits do not modify the benchmark implementation.
 
 **Review burden versus semantic governance:** this is 4 new accepted versions and at least three separate owner approvals for the three direct self-hosted Children (plus unrelated unaffected edge); none of the four storage strategies changes that approval count. For the #121 eight-edge case, keep eight independent decisions until product authority is separately redesigned.
 
