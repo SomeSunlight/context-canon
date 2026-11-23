@@ -1,5 +1,18 @@
 # Plan
 
+## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
+
+Purpose: capture a successful operator-owned `gh issue create` fallback when the connected GitHub App cannot post to an external public upstream repository. This is guidance, **not a new mandatory Rule**, and is evidence for the classification work in #121.
+
+Writable scope: Development Workflow `CONTEXT.src.md` optional Topic, new `docs/external-github-publication.md`, documentation index, and PLAN checkpoint. Generated packages, version/pin updates and their exact-head checks are deferred to the finalization gate; do not edit compiled Context output manually.
+
+- [x] Verify upstream publication at [NVIDIA/NemoClaw #14784](https://github.com/NVIDIA/NemoClaw/issues/14784) and record the non-binding guidance decision in [#136](https://github.com/SomeSunlight/context-canon/issues/136).
+- [x] Add an optional Topic and human-readable publication guide; link the guide in the Development Workflow docs index.
+- [x] Supply the real-world classification example to [#121](https://github.com/SomeSunlight/context-canon/issues/121), without implementing any new schema.
+- [ ] Review the proposed best practice in a PR, including its deliberately non-mandatory status.
+- [ ] After owner approval, regenerate affected ContextCanon packages, reconcile accepted pins, verify zero generated drift and pass exact-head CI/merge gate.
+- [ ] Owner-approved merge and accepted-baseline checkpoint.
+
 ## Version provenance and opt-in GitHub check — Issue #130 (2026-11-07)
 
 Purpose: identify the exact installed ContextCanon commit from a uv Git URL, and compare it on demand with the corresponding GitHub branch without ever making \`--version\` network-dependent.
