@@ -1,5 +1,24 @@
 # Plan
 
+## Priority A — local unpinned Parent propagation: handoff to owner (#134 / #139, 2026-11-23)
+
+**Current disposition:** [PR #140](https://github.com/SomeSunlight/context-canon/pull/140) implements Priority A, is ready for the owner's **squash-merge**, and is not yet merged. The owner has accepted the automated/real-graph evidence as a practical alternative to repeating a complex manual reproduction inside self-hosted ContextCanon. Operational monitoring after merge is sufficient for now; it is **not** a claim that future regressions are impossible.
+
+Accepted base remains `main` at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (owner's squash of #137). This checkpoint is a PR-branch handoff, **not** an already accepted main checkpoint.
+
+- [x] Identify and correct the local unpinned Source-version deadlock: compile a Child against the byte-verified historical Parent identity already recorded in its verified last publication, and discover the changed live Parent for explicit review. Missing or altered history fails closed; external pinned imports remain strict.
+- [x] Fix adjacent local Source entry marker lookahead exposed by the real six-Node reproduction. Do not bind an import to metadata belonging to the next import.
+- [x] Preserve separate decline/accept/partial-resume behavior and exact adopted identity, auto-bump semantics, offline verification and onboarding's user-visible behavior. Report pending normative propagation from `build --all` rather than silently calling it complete.
+- [x] Test eight new focused regressions plus the complete six-Node self-hosted Resource-edit reproduction in a **disposable** Git worktree. Three direct Child approvals, four graph edges, and zero generated drift after acceptance.
+- [x] Pass the exact-head [Linux and native Windows CI run #45220263243](https://github.com/SomeSunlight/context-canon/actions/runs/45220263243): **509 Linux tests, 119 native Windows tests**, real-graph reproduction, generated drift check, both jobs green at `aed97dc9a0e96ff9952a57392dc5c6afb51b967b`.
+- [x] Measure PR #137: 82 changed paths, +9,198/-101 lines, including 54 new immutable version files. The real Resource-edit reproduction yielded 77 changed paths, +8,813/-96 lines, again 54 historical files. These are *different logical changes*, **not** evidence of storage savings; see [the quantified report](plans/issue-139-amplification.md).
+- [x] Separate Priority B instead of changing storage or weakening historical identity in this PR: [#141](https://github.com/SomeSunlight/context-canon/issues/141) is the bounded cross-platform storage prototype; [#135](https://github.com/SomeSunlight/context-canon/issues/135) retains the wider visibility/IDE problem. No #121 governance/classification changes here.
+- [x] Owner agreed that the focused fix may be accepted on this evidence and assessed in ordinary future usage instead of attempting a further manual reproduction.
+- [ ] **Final handoff:** latest commit's hosted Linux/Windows gates green; owner performs the squash-merge of PR #140. Do not merge automatically.
+- [ ] **After the merge only:** record the resulting squash SHA and acceptance in `STATE.md`; close #134 after verifying the merged result, and close or re-scope the combined #139 while retaining #141/#135 for Priority B. Avoid further A changes unless a concrete regression appears.
+
+**Scope stop:** Priority A is finished for owner review. No speculative storage migration, new propagation-governance policy, broad Find/Replace protection, or onboarding redesign in this PR. Subsequent architectural discussion begins from #141/#135 as separate work.
+
 ## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
 
 Purpose: capture a successful operator-owned `gh issue create` fallback when the connected GitHub App cannot post to an external public upstream repository. This is guidance, **not a new mandatory Rule**, and is evidence for the classification work in #121.
@@ -9,9 +28,9 @@ Writable scope: Development Workflow `CONTEXT.src.md` optional Topic, `docs/exte
 - [x] Verify upstream publication at [NVIDIA/NemoClaw #14784](https://github.com/NVIDIA/NemoClaw/issues/14784) and record the non-binding guidance decision in [#136](https://github.com/SomeSunlight/context-canon/issues/136).
 - [x] Add an optional Topic and human-readable publication guide; link the guide in the Development Workflow docs index.
 - [x] Supply the real-world classification example to [#121](https://github.com/SomeSunlight/context-canon/issues/121), without implementing any new schema.
-- [ ] Review the proposed best practice in a PR, including its deliberately non-mandatory status.
+- [x] Review the proposed best practice in PR #137, including its deliberately non-mandatory status.
 - [x] Build new Topic/Resource IDs; use documented #134 manual local Source version update for Framework Development, GitHub and GitHub Local; regenerate all affected packages. `contextcanon check --all .` passed 6 Nodes and all 4 Parent/Child edges. Exact published head `74745a2` passed Linux/full suite plus generated drift and native Windows portability (Actions run 45202352252).
-- [ ] Final owner review and squash merge; close the accepted-baseline checkpoint after the merge. Follow-up for the recurrent #134 blocker and #135 write amplification: [#139](https://github.com/SomeSunlight/context-canon/issues/139).
+- [x] Owner squash-merged PR #137 into main at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (2026-11-23). Coordinated follow-up: [#139](https://github.com/SomeSunlight/context-canon/issues/139).
 
 ## Version provenance and opt-in GitHub check — Issue #130 (2026-11-07)
 

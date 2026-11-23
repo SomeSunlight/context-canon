@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import hashlib
+import json
 import os
 import posixpath
 from pathlib import Path
@@ -149,16 +150,12 @@ class Compiler:
                     raise ContextCanonError(
                         f"{node_root}: Source {source.name} expects Node ID {source.id}, got {source_node.metadata.id}"
                     )
-                if source_node.metadata.version != source.version:
-                    raise ContextCanonError(
-                        f"{node_root}: Source {source.name} expects version {source.version}, got {source_node.metadata.version}"
-                    )
-                source_package = compiled_package(source_node)
+                source_package, source_resources = self._local_source_package(
+                    node_root, compiled.metadata.id, source, source_node
+                )
                 compiled.source_packages.append(source_package)
                 if source.relationship == "parent":
                     composition_packages.append(source_package)
-                exported_paths = {file.path for file in exported_resource_files(source_package)}
-                source_resources = {path: content for path, content in source_node.resources.items() if path in exported_paths}
                 context_resource_sets.append(source_resources)
                 imported_origins.append((source_package, source_resources))
 
@@ -228,6 +225,79 @@ class Compiler:
             return compiled
         finally:
             self._active.pop()
+
+    def _local_source_package(
+        self,
+        node_root: Path,
+        child_id: str,
+        source: SourceRef,
+        live: CompiledNode,
+    ) -> tuple[CompiledPackage, dict[str, bytes]]:
+        """Resolve an unpinned local import without losing its last accepted Parent.
+
+        Local Source metadata has a version but no digest pin. The last published
+        Child package *does* retain the full binding, and the central immutable
+        store has the exact Parent bytes. If the live Parent has advanced, keep
+        compiling the Child against that accepted package until a reviewed
+        propagation explicitly replaces the binding. This is not an external
+        Source fallback and never substitutes arbitrary same-version bytes.
+        """
+        candidate = compiled_package(live)
+        if source.relationship == "parent":
+            manifest = node_root / ".context" / "package.json"
+            if manifest.is_file():
+                try:
+                    recorded = json.loads(manifest.read_text(encoding="utf-8"))
+                except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise ContextCanonError(
+                        f"{node_root}: invalid published Child package manifest: {exc}"
+                    ) from exc
+                if not isinstance(recorded, dict) or not isinstance(recorded.get("node"), dict):
+                    raise ContextCanonError(f"{node_root}: invalid published Child package identity")
+                if recorded["node"].get("id") != child_id:
+                    raise ContextCanonError(f"{node_root}: published Child package Node ID changed")
+                entries = recorded.get("sources")
+                if not isinstance(entries, list):
+                    raise ContextCanonError(f"{node_root}: invalid published Child Source bindings")
+                matches = [entry for entry in entries
+                           if isinstance(entry, dict) and entry.get("id") == source.id]
+                if len(matches) > 1:
+                    raise ContextCanonError(
+                        f"{node_root}: duplicate published Source binding for {source.id}"
+                    )
+                if matches and matches[0].get("version") == source.version:
+                    previous = matches[0]
+                    if (
+                        candidate.metadata.version != source.version
+                        or candidate.normalized_digest != previous.get("normalized_digest")
+                        or candidate.package_digest != previous.get("package_digest")
+                    ):
+                        # The quick manifest comparison is only a detection hint.
+                        # Verify all published Child bytes and the historical
+                        # Source's complete ID/version/digest before composing.
+                        published = load_package(node_root)
+                        dependencies = [
+                            dependency for dependency in published.sources
+                            if dependency.id == source.id
+                        ]
+                        if len(dependencies) != 1 or dependencies[0].version != source.version:
+                            raise ContextCanonError(
+                                f"{node_root}: accepted local Parent {source.name} "
+                                "binding is inconsistent with its published Child package"
+                            )
+                        return self._load_pinned_dependency(
+                            node_root, dependencies[0], relation="accepted local Parent"
+                        )
+        if live.metadata.version != source.version:
+            raise ContextCanonError(
+                f"{node_root}: Source {source.name} expects version {source.version}, "
+                f"got {live.metadata.version}; no matching published accepted local "
+                "Parent binding is available. Restore the exact historical package "
+                "before reviewing propagation; do not edit generated manifests."
+            )
+        exported = {file.path for file in exported_resource_files(candidate)}
+        resources = {path: content for path, content in live.resources.items() if path in exported}
+        return candidate, resources
 
     def _load_pinned_dependency(
         self,
