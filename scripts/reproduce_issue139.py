@@ -81,6 +81,27 @@ def exercise(checkout: Path) -> None:
                 "Pre-review build silently accepted a Parent")
 
     propagated, out, prompts = command("propagate", "--all", root_arg, approve=True)
+    if propagated != 0 or prompts < 3:
+        # Preserve the exact offending source layout in CI diagnostics. The
+        # normal review remains short; failures need enough evidence to debug
+        # parser/rewriter assumptions without access to the ephemeral clone.
+        from contextcanon.sources import _ATTR_RE, _SOURCE_COMMENT_RE, _SOURCE_LINE_RE
+        text = (checkout / "nodes/internal/framework-development/CONTEXT.src.md").read_text(
+            encoding="utf-8"
+        )
+        lines = text.splitlines(keepends=True)
+        diagnostic = []
+        for i, line in enumerate(lines):
+            if "Development Workflow" in line or "c4c94726-3cc7-4df6-b779-72bbf9c06f40" in line:
+                match = _SOURCE_LINE_RE.match(line)
+                comment = _SOURCE_COMMENT_RE.match(line)
+                diagnostic.append(
+                    f"  line {i + 1}: {line!r}; visible={bool(match)} "
+                    f"relationship={match.group('relationship') if match else None!r}; "
+                    f"comment={bool(comment)} "
+                    f"attrs={_ATTR_RE.findall(comment.group('attrs')) if comment else None}"
+                )
+        out += "\nExact Framework source diagnostics:\n" + "\n".join(diagnostic)
     require(propagated == 0 and prompts >= 3,
             "Interactive propagation failed or skipped explicit review decisions", out)
     changed_imports = sum(
