@@ -250,19 +250,44 @@ def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
     for token, content in originals.items():
         if restored(b, mode, token) != content:
             raise AssertionError("materialization not byte identical")
+    if mode == "cas":
+        # Fail closed for damaged or missing Git-tracked byte objects.
+        token = next(iter(originals))
+        ref = json.loads((b / ".context/revisions" / (token + ".json")).read_bytes())
+        entry = ref["members"][0]
+        h = entry["sha256"]
+        obj = b / ".context/objects/sha256" / h[:2] / h[2:]
+        intact = obj.read_bytes()
+        try:
+            obj.write_bytes((bytes([intact[0] ^ 1]) + intact[1:]) if intact else b"x")
+            try:
+                restored(b, mode, token)
+                raise AssertionError("corrupt object was accepted")
+            except ValueError:
+                pass
+            obj.unlink()
+            try:
+                restored(b, mode, token)
+                raise AssertionError("missing object was accepted")
+            except ValueError:
+                pass
+        finally:
+            obj.write_bytes(intact)
+        if restored(b, mode, token) != originals[token]:
+            raise AssertionError("failed to recover original after corruption test")
     gitroot.mkdir()
     git(gitroot, "init", "-q", "--initial-branch=main")
     git(gitroot, "config", "user.name", "Issue 141 research")
     git(gitroot, "config", "user.email", "research@example.invalid")
     git(gitroot, "config", "core.autocrlf", "false")
     replace(gitroot, a)
-    git(gitroot, "add", "-A")
+    git(gitroot, "add", "-A", "-f")
     git(gitroot, "commit", "-qm", "before")
     git(gitroot, "gc", "--prune=now")
     packdir = gitroot / ".git/objects/pack"
     first = sum(p.stat().st_size for p in packdir.glob("*.pack"))
     replace(gitroot, b)
-    git(gitroot, "add", "-A")
+    git(gitroot, "add", "-A", "-f")
     stat = git(gitroot, "diff", "--cached", "--numstat").splitlines()
     status = git(gitroot, "diff", "--cached", "--name-status").splitlines()
     tracked = git(gitroot, "ls-files", "-s").splitlines()
@@ -279,6 +304,18 @@ def experiment(before: Path, after: Path, mode: str, scratch: Path) -> dict:
         "retained_versions": len(originals),
     }
     git(gitroot, "commit", "-qm", "after")
+    # The repository must be reconstructible with NO provider, server or
+    # special filters. Exercise an offline local clone for all v4 packages.
+    clone = scratch / (mode + "-offline-clone")
+    subprocess.run(
+        ["git", "-c", "core.autocrlf=true" if mode == "cas" else "core.autocrlf=false",
+         "clone", "-q", "--no-hardlinks", str(gitroot), str(clone)],
+        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    for token, expected in originals.items():
+        if restored(clone, mode, token) != expected:
+            raise AssertionError("offline clone changed accepted package bytes")
+    metrics["offline_cloned_packages_verified"] = len(originals)
     git(gitroot, "gc", "--prune=now")
     metrics["git_gc_pack_delta"] = sum(p.stat().st_size for p in packdir.glob("*.pack")) - first
     return metrics
