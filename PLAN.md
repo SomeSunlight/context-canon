@@ -1,5 +1,20 @@
 # Plan
 
+## Local Parent propagation and physical amplification — Issue #139 (2026-11-23)
+
+Accepted base: owner-squashed PR #137 on main at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c`. Coordinated issues: #134 (correctness), #135 (storage/visibility research), #139 (focused implementation). This block excludes #121 governance design and onboarding UX changes.
+
+Architecture boundary: historical accepted Source identity is derived from the last **verified published Child package** and resolved only to an **exact retained immutable package**. Live Parent compilation remains candidate discovery; explicit review/receipt/decision is unchanged. Pinned external Sources remain byte-exact. Storage format and migration are not implicitly authorized.
+
+- [x] Confirm accepted main after #137; audit compiler's live-Source mismatch and propagation/review machinery.
+- [x] Quantify #137 physical/Git baseline by changed artifact class; record duplicate Resource blobs and immutable-history cost in [the measurement note](plans/issue-139-amplification.md).
+- [x] Implement the initial accepted-Child history fallback and build-all pending diagnostic on branch `fix/139-local-parent-propagation` (Draft PR #140).
+- [ ] Pass deterministic regressions: review n/y, version advance, Resource-only, version-only, descendants, multi-Parent, stale receipt, corrupted/missing immutable history, Windows paths, offline restore.
+- [ ] Pass hosted Linux full suite, generated drift (all six self-hosted Nodes / four local edges), native Windows portability, exact final PR head.
+- [ ] Verify real self-hosted reproduction from a disposable clean clone, and document before/after physical/Git metrics. No unmeasured performance claim.
+- [ ] Decide bounded physical optimization from the measured invariants; if no safe incremental storage reduction is achievable without migrating package format, give #135 an explicit testable follow-up instead of speculative rewrite.
+- [ ] Owner reviews the final PR(s); no automatic merge. Reconcile PLAN/STATE only when owner acceptance is known.
+
 ## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
 
 Purpose: capture a successful operator-owned `gh issue create` fallback when the connected GitHub App cannot post to an external public upstream repository. This is guidance, **not a new mandatory Rule**, and is evidence for the classification work in #121.
@@ -9,9 +24,9 @@ Writable scope: Development Workflow `CONTEXT.src.md` optional Topic, `docs/exte
 - [x] Verify upstream publication at [NVIDIA/NemoClaw #14784](https://github.com/NVIDIA/NemoClaw/issues/14784) and record the non-binding guidance decision in [#136](https://github.com/SomeSunlight/context-canon/issues/136).
 - [x] Add an optional Topic and human-readable publication guide; link the guide in the Development Workflow docs index.
 - [x] Supply the real-world classification example to [#121](https://github.com/SomeSunlight/context-canon/issues/121), without implementing any new schema.
-- [ ] Review the proposed best practice in a PR, including its deliberately non-mandatory status.
+- [x] Review the proposed best practice in PR #137, including its deliberately non-mandatory status.
 - [x] Build new Topic/Resource IDs; use documented #134 manual local Source version update for Framework Development, GitHub and GitHub Local; regenerate all affected packages. `contextcanon check --all .` passed 6 Nodes and all 4 Parent/Child edges. Exact published head `74745a2` passed Linux/full suite plus generated drift and native Windows portability (Actions run 45202352252).
-- [ ] Final owner review and squash merge; close the accepted-baseline checkpoint after the merge. Follow-up for the recurrent #134 blocker and #135 write amplification: [#139](https://github.com/SomeSunlight/context-canon/issues/139).
+- [x] Owner squash-merged PR #137 into main at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (2026-11-23). Coordinated follow-up: [#139](https://github.com/SomeSunlight/context-canon/issues/139).
 
 ## Version provenance and opt-in GitHub check — Issue #130 (2026-11-07)
 
