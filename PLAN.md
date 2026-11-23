@@ -1,19 +1,23 @@
 # Plan
 
-## Local Parent propagation and physical amplification — Issue #139 (2026-11-23)
+## Priority A — local unpinned Parent propagation: handoff to owner (#134 / #139, 2026-11-23)
 
-Accepted base: owner-squashed PR #137 on main at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c`. Coordinated issues: #134 (correctness), #135 (storage/visibility research), #139 (focused implementation). This block excludes #121 governance design and onboarding UX changes.
+**Current disposition:** [PR #140](https://github.com/SomeSunlight/context-canon/pull/140) implements Priority A, is ready for the owner's **squash-merge**, and is not yet merged. The owner has accepted the automated/real-graph evidence as a practical alternative to repeating a complex manual reproduction inside self-hosted ContextCanon. Operational monitoring after merge is sufficient for now; it is **not** a claim that future regressions are impossible.
 
-Architecture boundary: historical accepted Source identity is derived from the last **verified published Child package** and resolved only to an **exact retained immutable package**. Live Parent compilation remains candidate discovery; explicit review/receipt/decision is unchanged. Pinned external Sources remain byte-exact. Storage format and migration are not implicitly authorized.
+Accepted base remains `main` at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (owner's squash of #137). This checkpoint is a PR-branch handoff, **not** an already accepted main checkpoint.
 
-- [x] Confirm accepted main after #137; audit compiler's live-Source mismatch and propagation/review machinery.
-- [x] Quantify #137 physical/Git baseline by changed artifact class; record duplicate Resource blobs and immutable-history cost in [the measurement note](plans/issue-139-amplification.md).
-- [x] Implement the initial accepted-Child history fallback and build-all pending diagnostic on branch `fix/139-local-parent-propagation` (Draft PR #140).
-- [x] Pass deterministic regressions: eight focused tests exercise review n/y, scoped propagation, Resource-only and version-only changes, descendant/resume, adjacent multi-Parent imports, stale review, corrupt/missing history, Windows paths and offline restore. Linux 509 tests and native Windows 119 on code candidate; final-head gates remain separate.
-- [ ] Pass hosted Linux full suite, generated drift (all six self-hosted Nodes / four local edges), native Windows portability, exact final PR head.
-- [x] Reproduce in a disposable Git worktree from the actual six self-hosted Nodes using `python scripts/reproduce_issue139.py` (Linux CI #45219377649): Workflow 0.3.10→0.3.11, three explicit accept prompts, all four normative edges current, check zero drift. Physical result for a Resource **edit**: 77 tracked paths, +8,813/-96 lines, 54 added immutable history files for four new packages. This differs from #137's Resource *addition*; do not credit smaller file counts to a storage optimization.
-- [x] Decide B's bounded boundary from measurement: the current v4 standalone package contract demands four complete new history packages, so no safe physical file-path reduction is implemented in A. Dedicated compatibility and benchmark prototype is [#141](https://github.com/SomeSunlight/context-canon/issues/141), coordinated with #135. No speculative rewrite, history removal or misleading optimization claim.
-- [ ] Owner reviews the final PR(s); no automatic merge. Reconcile PLAN/STATE only when owner acceptance is known.
+- [x] Identify and correct the local unpinned Source-version deadlock: compile a Child against the byte-verified historical Parent identity already recorded in its verified last publication, and discover the changed live Parent for explicit review. Missing or altered history fails closed; external pinned imports remain strict.
+- [x] Fix adjacent local Source entry marker lookahead exposed by the real six-Node reproduction. Do not bind an import to metadata belonging to the next import.
+- [x] Preserve separate decline/accept/partial-resume behavior and exact adopted identity, auto-bump semantics, offline verification and onboarding's user-visible behavior. Report pending normative propagation from `build --all` rather than silently calling it complete.
+- [x] Test eight new focused regressions plus the complete six-Node self-hosted Resource-edit reproduction in a **disposable** Git worktree. Three direct Child approvals, four graph edges, and zero generated drift after acceptance.
+- [x] Pass the exact-head [Linux and native Windows CI run #45220263243](https://github.com/SomeSunlight/context-canon/actions/runs/45220263243): **509 Linux tests, 119 native Windows tests**, real-graph reproduction, generated drift check, both jobs green at `aed97dc9a0e96ff9952a57392dc5c6afb51b967b`.
+- [x] Measure PR #137: 82 changed paths, +9,198/-101 lines, including 54 new immutable version files. The real Resource-edit reproduction yielded 77 changed paths, +8,813/-96 lines, again 54 historical files. These are *different logical changes*, **not** evidence of storage savings; see [the quantified report](plans/issue-139-amplification.md).
+- [x] Separate Priority B instead of changing storage or weakening historical identity in this PR: [#141](https://github.com/SomeSunlight/context-canon/issues/141) is the bounded cross-platform storage prototype; [#135](https://github.com/SomeSunlight/context-canon/issues/135) retains the wider visibility/IDE problem. No #121 governance/classification changes here.
+- [x] Owner agreed that the focused fix may be accepted on this evidence and assessed in ordinary future usage instead of attempting a further manual reproduction.
+- [ ] **Final handoff:** latest commit's hosted Linux/Windows gates green; owner performs the squash-merge of PR #140. Do not merge automatically.
+- [ ] **After the merge only:** record the resulting squash SHA and acceptance in `STATE.md`; close #134 after verifying the merged result, and close or re-scope the combined #139 while retaining #141/#135 for Priority B. Avoid further A changes unless a concrete regression appears.
+
+**Scope stop:** Priority A is finished for owner review. No speculative storage migration, new propagation-governance policy, broad Find/Replace protection, or onboarding redesign in this PR. Subsequent architectural discussion begins from #141/#135 as separate work.
 
 ## Optional external GitHub publication best practice — Issue #136 (2026-11-23)
 
