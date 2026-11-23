@@ -1,5 +1,22 @@
 # Plan
 
+## Issue #141 — physical history storage architecture, controlled research (2026-11-23)
+
+**Current checkpoint:** Owner has squash-merged PR #140 into main (current accepted main `5e872f417a3a390dbd0b701506150dd8bcbef6c8`; correctness is outside #141). Work continues ONLY on research branch `research/141-history-storage-prototype`, without production storage modifications. [Decision/evidence](plans/issue-141-storage-architecture.md).
+
+- [x] Reconcile latest #141/#135/#121/#139, accepted main, PR #140, existing byte identity and ownership boundaries.
+- [x] Independently cross-check the real #137 exact Git-tree baseline: 54 added historical files, 543,280 B summed path bytes, 12 new distinct Git historical blobs totaling 172,611 B; 55 history changes of 82 total, 8,677 of 9,198 added lines.
+- [x] Compare explicit exact-byte CAS references, canonical tar and deterministic tar.gz against v4 using isolated four-Node and eight-edge **synthetic** Git repositories; include pack bytes, file counts, diff lines and byte-for-byte restore. The synthetic eight-edge case does NOT claim to replay the real #121 128-file operation.
+- [x] Record data authority/lifetime and future read-only originals versus versioned interpretations and accepted Context without designing a chat importer.
+- [x] State #135 search safety limits: even Git-tracked CAS object files can still be damaged by IDE-wide replacements; detecting digest mismatch is not prevention.
+- [ ] Run actual same-workload full-clone `--repo .` benchmark against both #137 Git commits with both alternate store formats (no Git clone access in the isolated execution container). Publish exact storage/diff/pack results before claiming a real measured alternative.
+- [ ] Acquire actual #121 before/after revisions or explicitly define an approved full-scale equivalent; do not confuse a synthetic fixture with the owner-observed eight-edge/128-path result.
+- [ ] Complete mixed-v4/v5 runtime compatibility/export, corrupted/missing-object, branch/merge, recovery, offline fresh-clone and Windows autocrlf/path tests; establish a working historical inspection interface.
+- [ ] Owner reviews architecture before ANY production storage-format implementation PR, project migration, history retirement or merge.
+
+**Stop boundary:** Research only. No runtime rewrite; do not merge this branch automatically. #121 retains per-Child approval/governance, #135 owns IDE protection, #117 onboarding guarantees are unchanged.
+
+
 ## Priority A — local unpinned Parent propagation: handoff to owner (#134 / #139, 2026-11-23)
 
 **Current disposition:** [PR #140](https://github.com/SomeSunlight/context-canon/pull/140) implements Priority A, is ready for the owner's **squash-merge**, and is not yet merged. The owner has accepted the automated/real-graph evidence as a practical alternative to repeating a complex manual reproduction inside self-hosted ContextCanon. Operational monitoring after merge is sufficient for now; it is **not** a claim that future regressions are impossible.
