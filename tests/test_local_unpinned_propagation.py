@@ -108,7 +108,8 @@ class LocalUnpinnedPropagationTests(unittest.TestCase):
         self.assertIn("0.3.9-draft -> 0.3.10-draft", out)
 
         old_text = (self.child / "CONTEXT.src.md").read_bytes()
-        rc, out = self._command(["propagate", "--all", str(self.repo)], decisions=["n"])
+        # Normal scoped propagation from the changed Parent must also work.
+        rc, out = self._command(["propagate", str(self.parent)], decisions=["n"])
         self.assertEqual(rc, 0, out)
         self.assertIn("No Parent update applied", out)
         self.assertEqual((self.child / "CONTEXT.src.md").read_bytes(), old_text)
@@ -120,7 +121,7 @@ class LocalUnpinnedPropagationTests(unittest.TestCase):
         self.assertIn("pending propagation", out)
         self.assertNotIn("drift child:", out)
 
-        rc, out = self._command(["propagate", "--all", str(self.repo)], decisions=["y"])
+        rc, out = self._command(["propagate", str(self.parent)], decisions=["y"])
         self.assertEqual(rc, 0, out)
         self.assertIn("Parent: Parent 0.3.9-draft -> 0.3.10-draft", out)
         self.assertIn("Applied Parent update", out)
@@ -233,9 +234,17 @@ class LocalUnpinnedPropagationTests(unittest.TestCase):
         )
         self._publish(grand)
         self._advance_parent()
-        rc, out = self._command(["propagate", "--all", str(self.repo)], decisions=["y", "y"])
+        rc, out = self._command(["propagate", "--all", str(self.repo)], decisions=["y", "n"])
         self.assertEqual(rc, 0, out)
         self.assertIn('Applied Parent update to Child "Child"', out)
+        self.assertIn('No Parent update applied to Child "Grandchild"', out)
+        self.assertEqual(parse_node(grand, self.repo).sources[0].version,
+                         child_before.metadata.version)
+        # Resume after partial acceptance: no second approval of the already
+        # accepted first edge, only the as-yet-unaccepted grandchild.
+        rc, out = self._command(["propagate", "--all", str(self.repo)], decisions=["y"])
+        self.assertEqual(rc, 0, out)
+        self.assertIn("Already current: Parent", out)
         self.assertIn('Applied Parent update to Child "Grandchild"', out)
         accepted_other = next(ref for ref in parse_node(self.child, self.repo).sources
                               if ref.id == "other-id")
