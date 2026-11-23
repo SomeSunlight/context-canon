@@ -144,6 +144,15 @@ Required:
   <!-- ctx:resource id="RESOURCE-7C6F7E4D126B" -->
 <!-- ctx:topic id="CCW-TOPIC-VERSION-PROVENANCE" -->
 
+
+### Publishing contributions to external GitHub repositories
+
+When preparing or publishing an issue or pull request in an external GitHub repository, especially when the connected GitHub integration cannot write:
+
+Optional:
+- Resource: `docs/external-github-publication.md`
+  Why: A reusable, non-mandatory best practice for authenticated GitHub CLI publication and alternatives, without assuming organization-level GitHub App permissions.
+
 ### Resilient filesystem cleanup
 
 When implementing, modifying, reviewing, or troubleshooting deletion of generated or temporary files and directories on Windows, WSL or Linux:
