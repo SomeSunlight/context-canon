@@ -1,5 +1,15 @@
 # Current State
 
+## Accepted #137 baseline and Issue #139 engineering initiative — 2026-11-23
+
+The owner squash-merged PR #137 into `main` at `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (previous accepted main `5a1f2bff24a9f6c6af49d96044eaf15b80d0d0b6`). The single optional Development Workflow Resource is accepted. Unlike older historical checkpoints below, the current implementation work is **Draft PR #140**, branch `fix/139-local-parent-propagation`, focused on issue #139/#134. It is not merged.
+
+The core fix retains an unpinned local Child's last accepted Parent identity from its last byte-verified published package and resolves the old Parent only through its exact retained immutable package. The live local Parent stays a candidate until review and explicit approval. `build --all` now reports pending normative graph updates with a nonzero exit status; `check --all` remains read-only. Pinned external Sources retain strict checks. No manual Source text/manifest replacement, automatic approval, package-format change, onboarding user-visible change, or #121 governance redesign is part of this PR.
+
+The first complete hosted candidate (head `d25fbb38cdbe08febbfaf3e01e014ff3a23a1520`, Actions run [45213801501](https://github.com/SomeSunlight/context-canon/actions/runs/45213801501)) passed **505 Linux deterministic/repository tests**, six self-hosted Nodes with zero generated drift and all four normative edges current, plus native Windows portability. An expanded regression candidate adding Resource-only, version-only, multi-Parent/descendant and corrupt-history cases is awaiting an exact-head gate. Preserve the strict no-merge rule; update these results only from actual CI.
+
+The measured PR #137 baseline and storage decision are in [plans/issue-139-amplification.md](plans/issue-139-amplification.md). **82 changed paths / +9,198/-101 lines**, of which **55 paths / +8,677 lines** were historical version storage; 54 new immutable artifact files for four new version identities. The current storage format keeps self-contained exact packages, and Git already deduplicates equal blobs. Workstream A alone does **not** deliver B's physical reduction. Do not conflate no-rewrite safety with an achieved optimization; the larger archival representation needs a bounded, migration-safe follow-up/prototype, preserving exact EOL/history, Git/offline use and onboarding contracts.
+
 ## Git line-ending guidance (#112) — 2026-10-08
 
 Accepted main is the owner's #114 squash at `25553e6`; the earlier open-#114 wording below is historical. Branch `agent/issue-112-eol-guidance` contributes documentation to open #112. Current code binds frozen Evidence and package Resources to exact SHA-256 and byte sizes; changing only EOL still changes that identity. Source Markdown parsing tolerates ordinary EOL variants, but generated output checks remain byte-exact and pending reviews may bind raw source bytes. General EOL-safe publication/transport remains unresolved in #112. Scope/checkpoints are in PLAN; no runtime or accepted-package rewrite is authorized by this block.
