@@ -107,11 +107,12 @@ def stage(root: Path, mode: str) -> None:
             target = root / ".context/revisions" / (token + ".json")
             target.parent.mkdir(parents=True, exist_ok=True)
             metadata = json.loads(contents[PKG])
-            target.write_text(json.dumps({
+            # Explicit UTF-8 LF bytes; Path.write_text would emit CRLF on Windows.
+            target.write_bytes((json.dumps({
                 "schema": "contextcanon/history-ref/research-1", "token": token,
-                "node": metadata.get("node"), "digests": metadata["digests"],
+                "node": metadata["node"], "digests": metadata["digests"],
                 "members": refs,
-            }, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+            }, sort_keys=True, indent=2) + "\n").encode("utf-8"))
         else:
             name = token + (".tar.gz" if mode == "tgz" else ".tar")
             target = root / ".context/archives" / name
@@ -163,8 +164,14 @@ def restored(root: Path, mode: str, token: str) -> dict[str, bytes]:
             if len(data) != entry["size"] or digest(data) != h:
                 raise ValueError("corrupt byte object")
             found[rel] = data
-        if json.loads(found[PKG])["digests"] != ref["digests"]:
+        manifest = json.loads(found[PKG])
+        if manifest["digests"] != ref["digests"] or manifest["node"] != ref["node"]:
             raise ValueError("wrong identity reference")
+        key_parts = [manifest["node"]["id"], manifest["digests"]["normalized"],
+                     manifest["digests"]["package"]]
+        full_key = digest(json.dumps(key_parts, separators=(",", ":")).encode("utf-8"))
+        if not full_key.startswith(token):
+            raise ValueError("version directory token does not bind exact Node identity")
     else:
         extension = ".tar.gz" if mode == "tgz" else ".tar"
         target = root / ".context/archives" / (token + extension)
