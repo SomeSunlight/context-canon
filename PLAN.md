@@ -9,10 +9,12 @@ Accepted main at `5e872f417a3a390dbd0b701506150dd8bcbef6c8` includes owner squas
 - [x] Inventory actual main source, compiler/model/package boundaries, onboarding implementation/documentation, active-run/version migration, planning and related issue decisions; identify verified facts versus open experiments.
 - [x] Record recommended domain model, alternatives, migration/onboarding parity contract, staged gates and E2E exercise in [target architecture research](plans/issue-144-target-architecture.md).
 - [x] Link the research checkpoint from #144 and coordinate #121/#123/#124/#135/#141 without closing or superseding existing requirements.
-- [ ] Owner reviews architecture principles and open choices. Stop here until explicit approval.
-- [ ] Subsequent separately authorized work: characterize legacy parity and prototype a model-input compiler boundary; no format conversion on real projects.
-- [ ] Subsequent separately authorized work: disposable onboarding/migration and end-to-end governance/lineage/storage comparisons, Windows/Linux and offline/branch proofs.
-- [ ] Separate owner approval before production implementation, format activation, actual project migration or legacy retirement.
+- [x] Capture owner refinement: decentralized Hdez, rebuildable new engine, one live accepted contract per relationship/aggregate, Git history rather than all historical copies, one-time conversion instead of permanent dual runtime; no active onboarding runs.
+- [ ] Owner reviews refined direction (section 0 of architecture study) and clarifies acceptance vs implementation/verification. Stop until explicit prototype approval.
+- [ ] Subsequently, in a disposable existing-project copy only: prove converter/importer to Hdez, rebuild from scratch, accepted context parity, exact historical recovery and contract replacement; compare human/LLM change views and State/Plan. Measure durable data and user burden.
+- [ ] Subsequently prove fresh twelve-step onboarding against Hdez, native Windows/Linux, offline/branch/recovery, and only then consider storage/HTML interactivity choices.
+- [ ] Separate owner approval before production implementation, actual project migration, retirement or merge.
+
 
 ## Priority A — local unpinned Parent propagation: handoff to owner (#134 / #139, 2026-11-23)
 
