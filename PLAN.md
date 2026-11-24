@@ -10,8 +10,9 @@ Accepted main at `5e872f417a3a390dbd0b701506150dd8bcbef6c8` includes owner squas
 - [x] Record recommended domain model, alternatives, migration/onboarding parity contract, staged gates and E2E exercise in [target architecture research](plans/issue-144-target-architecture.md).
 - [x] Link the research checkpoint from #144 and coordinate #121/#123/#124/#135/#141 without closing or superseding existing requirements.
 - [x] Capture owner refinement: decentralized Hdez, rebuildable new engine, one live accepted contract per relationship/aggregate, Git history rather than all historical copies, one-time conversion instead of permanent dual runtime; no active onboarding runs.
+- [x] Record owner refinement: direct human Hdez editing plus small LLM/programmatic write interface, reimport/rebuild, rule/acceptance/validation/State round trip as a first-prototype gate.
 - [ ] Owner reviews refined direction (section 0 of architecture study) and clarifies acceptance vs implementation/verification. Stop until explicit prototype approval.
-- [ ] Subsequently, in a disposable existing-project copy only: prove converter/importer to Hdez, rebuild from scratch, accepted context parity, exact historical recovery and contract replacement; compare human/LLM change views and State/Plan. Measure durable data and user burden.
+- [ ] Subsequently, in a disposable existing-project copy only: prove converter/importer to Hdez, rebuild from scratch, accepted context parity, exact historical recovery and contract replacement; compare human/LLM change views and State/Plan; demonstrate manual and programmatic Hdez edits, stale-write refusal, validation evidence and contract replacement followed by rebuild. Measure durable data and user burden.
 - [ ] Subsequently prove fresh twelve-step onboarding against Hdez, native Windows/Linux, offline/branch/recovery, and only then consider storage/HTML interactivity choices.
 - [ ] Separate owner approval before production implementation, actual project migration, retirement or merge.
 
