@@ -7,8 +7,8 @@ Research and owner decision only. Preserve the successful official Context contr
 Accepted main at `5e872f417a3a390dbd0b701506150dd8bcbef6c8` includes owner squash of #140; the pre-merge handoff below is historical. #139 is closed, #134 remains open pending its separate closure verification. #141 and Draft #142 remain research, not accepted production storage. No changes to their branches.
 
 - [x] Inventory actual main source, compiler/model/package boundaries, onboarding implementation/documentation, active-run/version migration, planning and related issue decisions; identify verified facts versus open experiments.
-- [ ] Record recommended domain model, alternatives, migration/onboarding parity contract, staged gates and E2E exercise in [target architecture research](plans/issue-144-target-architecture.md).
-- [ ] Link the research checkpoint from #144 and coordinate #121/#123/#124/#135/#141 without closing or superseding existing requirements.
+- [x] Record recommended domain model, alternatives, migration/onboarding parity contract, staged gates and E2E exercise in [target architecture research](plans/issue-144-target-architecture.md).
+- [x] Link the research checkpoint from #144 and coordinate #121/#123/#124/#135/#141 without closing or superseding existing requirements.
 - [ ] Owner reviews architecture principles and open choices. Stop here until explicit approval.
 - [ ] Subsequent separately authorized work: characterize legacy parity and prototype a model-input compiler boundary; no format conversion on real projects.
 - [ ] Subsequent separately authorized work: disposable onboarding/migration and end-to-end governance/lineage/storage comparisons, Windows/Linux and offline/branch proofs.
