@@ -1,5 +1,11 @@
 # Current State
 
+## Target architecture — owner decision pending (2026-11-24)
+
+Accepted main is `5e872f417a3a390dbd0b701506150dd8bcbef6c8`, including the owner's #140 squash. The pre-merge Priority A handoff below is historical. #139 is closed; #134 remains open, with separate closure verification outstanding. Research Draft #142 is unmerged and its experimental results are not production behavior.
+
+Documentation-only branch `research/144-target-architecture`: [architecture and migration proposal](plans/issue-144-target-architecture.md), active PLAN section, [#144 research checkpoint](https://github.com/SomeSunlight/context-canon/issues/144#issuecomment-7145256638). The recommendation is a shared typed relationship/revision/checkpoint engine at the existing compiler model boundary, sparse file/folder relations, existing v4 publication initially unchanged, separate derived status and storage. Strict legacy acceptance remains until #121 explicitly decides otherwise. Preserve exact historical bytes and the full twelve-step onboarding, including active-run compatibility. No schema, runtime, storage representation or migration is approved. Static inspection only; new tests and prototypes not executed. Stop at owner decision before starting any implementation or migration. No automatic merge.
+
 ## Priority A handoff — local Parent propagation accepted for owner squash (2026-11-23)
 
 **Proposed, not merged:** [PR #140](https://github.com/SomeSunlight/context-canon/pull/140), branch `fix/139-local-parent-propagation`, based on accepted `main` `359f7efe6b02d59b75d3c7e5ffedfa7ed9c9c99c` (#137 owner's squash). The owner is content to accept the focused correctness repair using automated and real-graph verification rather than repeating a difficult manual test within ContextCanon's own self-hosted graph. **Only the owner performs the squash-merge**; no automatic merge has occurred.
