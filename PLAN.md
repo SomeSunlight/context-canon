@@ -11,10 +11,13 @@ Accepted main at `5e872f417a3a390dbd0b701506150dd8bcbef6c8` includes owner squas
 - [x] Link the research checkpoint from #144 and coordinate #121/#123/#124/#135/#141 without closing or superseding existing requirements.
 - [x] Capture owner refinement: decentralized Hdez, rebuildable new engine, one live accepted contract per relationship/aggregate, Git history rather than all historical copies, one-time conversion instead of permanent dual runtime; no active onboarding runs.
 - [x] Record owner refinement: direct human Hdez editing plus small LLM/programmatic write interface, reimport/rebuild, rule/acceptance/validation/State round trip as a first-prototype gate.
-- [ ] Owner reviews refined direction (section 0 of architecture study) and clarifies acceptance vs implementation/verification. Stop until explicit prototype approval.
-- [ ] Subsequently, in a disposable existing-project copy only: prove converter/importer to Hdez, rebuild from scratch, accepted context parity, exact historical recovery and contract replacement; compare human/LLM change views and State/Plan; demonstrate manual and programmatic Hdez edits, stale-write refusal, validation evidence and contract replacement followed by rebuild. Measure durable data and user burden.
-- [ ] Subsequently prove fresh twelve-step onboarding against Hdez, native Windows/Linux, offline/branch/recovery, and only then consider storage/HTML interactivity choices.
-- [ ] Separate owner approval before production implementation, actual project migration, retirement or merge.
+- [x] Owner approved internal separation of Snapshot Engine, Dependency Core, ContextCanon and optional Artifact Tracker; record architecture boundaries, preferred YAML/sealed-object candidate, staged transition and explicit multi-project CONTEXT.src.md round-trip acceptance in section 0A.
+- [x] Record newly identified change-management gap and initial external research (NASA, FAA, IBM DOORS, NIST, engineering change propagation), with candidate work-package/closure model explicitly open in section 0B.
+- [ ] Review change-management approach with owner, resolve acceptance/implementation/verification distinctions (#121), select bounded real-project fixtures and authorize prototype. No code yet.
+- [ ] In disposable copies only, characterize multiple real-project source/effective baselines; prove independent snapshot seam then one-time Hdez conversion/new engine, regenerated CONTEXT.src.md and CONTEXT.md parity, owner review, exact historical recovery and manual/programmatic write/rebuild.
+- [ ] Prove independent dependency core with actual Hello World Extended file relations and real Parent update; then grouped change-case proof with actual verification, closure, stale evidence, interruption, exceptions and no unnecessary cascades; compare #121 real replay and user burden.
+- [ ] Prove fresh twelve-step onboarding, native Windows/Linux, offline/branch/recovery and owner multi-project source/effective parity. Separate approval before production switch and legacy runtime removal; no permanent dual authority.
+- [ ] Consider remote scopes/reporting, HTML interactivity and standalone packages only after demonstrated need; no automatic merge or production migration.
 
 
 ## Priority A — local unpinned Parent propagation: handoff to owner (#134 / #139, 2026-11-23)
