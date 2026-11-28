@@ -1,6 +1,6 @@
 # Current State
 
-## Target architecture — owner decision pending (2026-11-24)
+## Target architecture — internal separation approved; change-management design open (2026-11-28)
 
 Accepted main is `5e872f417a3a390dbd0b701506150dd8bcbef6c8`, including the owner's #140 squash. The pre-merge Priority A handoff below is historical. #139 is closed; #134 remains open, with separate closure verification outstanding. Research Draft #142 is unmerged and its experimental results are not production behavior.
 
@@ -9,6 +9,8 @@ Documentation-only branch `research/144-target-architecture`: [architecture and 
 Owner refinement (same day): the preferred research direction is now a new rebuildable engine consuming decentralized Hdez and one current valid contract per relationship/aggregate, not a persistent library of all intermediate versions. Git retains history, subject to exact legacy recovery proof. One-time project conversion replaces permanent dual-runtime complexity; owner reports no active onboarding, so no intermediate-run migration is required for this transition. Preserve fresh onboarding functionality. See section 0 of the architecture study; it supersedes incompatible earlier recommendations. Acceptance vs final validation remains to be clarified; no productive change or prototype authorized yet.
 
 Further owner refinement: the initial vertical proof now includes the full Hdez authoring round trip. Humans edit Hdez directly; LLMs and later HTML/onboarding use a small validated write interface to the same files. Engine reload/build consumes current Hdez regardless of editor. Rule edits, candidate-bound review decisions, revision-bound validation evidence, State/Plan and authorized contract replacement must be demonstrated. No second authority, mandatory server or file watcher. CLI/JSON first is a proposed prototype choice, not a final interface decision.
+
+Owner decision (2026-11-28): approve internal boundaries Snapshot Engine / Dependency Core / ContextCanon / optional Artifact Tracker, one repository first. Section 0A supersedes conflicting older recommendations. YAML Hdez with separate sealed objects is preferred but not a finalized format. Essential owner acceptance test: regenerate approximately equivalent legacy CONTEXT.src.md from Hdez across several actual projects for manual review, AND preserve effective CONTEXT.md and behavior; legacy source projection is not a second authoring authority. Retire legacy runtime only after parity, change resolution, onboarding, rollback and explicit owner approval. Section 0B records a new unresolved change-management research gate and preliminary external precedents; candidate grouped work packages and evidence-based closure are proposals, not accepted schema or process. No code, tests, actual migration, legacy deletion or merge performed. Stop before prototype until owner authorizes.
 
 ## Priority A handoff — local Parent propagation accepted for owner squash (2026-11-23)
 
